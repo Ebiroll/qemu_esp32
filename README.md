@@ -4,16 +4,13 @@ ESP32 in QEMU.
 =============
 
 This documents how the to add an esp32 cpu and a simple esp32 board 
-in order to run an app compiled with the SDK in QEMU.
-
-esp32 is a 240 MHz dual core Tensilica LX6 microcontroller 
+in order to run an app compiled with the SDK in QEMU. esp32 is a 240 MHz dual core Tensilica LX6 microcontroller 
 
 
-By following the instructions here, a new cpu of type esp32 was added to qemu.
+By following the instructions here, I added esp32 to qemu.
 http://wiki.linux-xtensa.org/index.php/Xtensa_on_QEMU
 
-Download qemu.
-
+git clone git://git.qemu.org/qemu.git
 copy qemu-esp32.tar.gz to the qemu source tree and unpack (tar zxvf)
 
 Manually add in:
@@ -27,16 +24,25 @@ mkdir ../qemu_esp32
 cd ../qemu_esp32
 Then run configure as,
 ../qemu/configure --disable-werror --prefix=`pwd`/root --target-list=xtensa-softmmu,xtensaeb-softmmu
+I also did this in qemu: git submodule update --init dtc
 
 The goal is to run the app-template or bootloader and connect the debugger.
 
-  > qemu-xtensa-softmmu/qemu-system-xtensa -d mmu  -cpu esp32 -M esp32 -m 128M  -kernel  ../../esp/myapp/build/app-template.elf  -s -S
+
+For now, I get get double exception error.
+
+When running with -d int, I get
+xtensa_cpu_do_interrupt(11) pc = 40080828, a0 = 40080828, ps = 0000001f, ccount = 00000002
+
+
+
+  > qemu-xtensa-softmmu/qemu-system-xtensa -d mmu  -cpu esp32 -M esp32 -m 128M  -kernel  ../esp/myapp/build/app-template.elf  -s -S
 
 
   > xtensa-esp32-elf-gdb build/app-template.elf
   (gdb) target remote 127.0.0.1:1234
 
-  (gdb) x/10b $pc
+  (gdb) x/10i $pc
 
   (gdb) x/10i 0x40000400
 
@@ -48,6 +54,8 @@ To disassemble you can set pc from gdb,
   (gdb) layout asm
   (gdb) si
   (gdb) ni
+
+  (gdb) set $pc=uart_tx_one_char 
 
 
   x/10b $pc
