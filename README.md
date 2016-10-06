@@ -16,6 +16,13 @@ Download qemu.
 
 copy qemu-esp32.tar.gz to the qemu source tree and unpack (tar zxvf)
 
+Manually add in:
+hw/extensa/Makefile.objs
+  obj-y += esp32.o
+
+target-xtensa/Makefile.objs
+  obj-y += core-esp32.o
+
 mkdir ../qemu_esp32
 cd ../qemu_esp32
 Then run configure as,
@@ -58,8 +65,8 @@ xtensa-esp32-elf-objdump -d -S build/bootloader/bootloader.elf
 When starting up the ESP32 it reads instructions from embedded memory, located at 40000400
 (unless this is mapped to ram by DPORT_APP_CACHE_CTRL1_REG & DPORT_PRO_CACHE_CTRL1_REG)  
 
-PROVIDE ( _ResetVector = 0x40000400 );
-#define XCHAL_RESET_VECTOR1_VADDR	0x40000400
+  PROVIDE ( _ResetVector = 0x40000400 );
+  #define XCHAL_RESET_VECTOR1_VADDR	0x40000400
 
 
 Eventually aftern initialisation the first stage bootloader will call call_start_cpu0()
@@ -73,7 +80,7 @@ The main tasks of this is:
  * and the app CPU is in reset. We do have a stack, so we can do the initialization in C.
  */
 
-#define IRAM_ATTR __attribute__((section(".iram1")))
+  #define IRAM_ATTR __attribute__((section(".iram1")))
 
 void IRAM_ATTR call_start_cpu0()
 {
