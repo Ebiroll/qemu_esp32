@@ -1,7 +1,6 @@
 # qemu_esp32
 Add tensilica esp32 cpu and a board to qemu and dump the rom to learn more about esp-idf
-ESP32 in QEMU.
-=============
+###ESP32 in QEMU.
 
 This documents how the to add an esp32 cpu and a simple esp32 board 
 in order to run an app compiled with the SDK in QEMU. esp32 is a 240 MHz dual core Tensilica LX6 microcontroller 
@@ -83,7 +82,7 @@ The main tasks of this is:
 
 1. cpu_configure_region_protection(), sets up the mmu
 
-
+```
  /* We arrive here after the bootloader finished loading the program from flash. The hardware is mostly uninitialized,
  * and the app CPU is in reset. We do have a stack, so we can do the initialization in C.
  */
@@ -122,8 +121,10 @@ void IRAM_ATTR call_start_cpu0()
 
     bootloader_main();
 }
+```
+Executions continues here
 
-
+```
 void bootloader_main()
 {
     ESP_LOGI(TAG, "Espressif ESP32 2nd stage bootloader v. %s", BOOT_VERSION);
@@ -223,9 +224,10 @@ void bootloader_main()
     // copy sections to RAM, set up caches, and start application
     unpack_load_app(&load_part_pos);
 }
+```
 
-
-// Is this correct??
+```
+// Is this correct?? _init_start should be interesting
 void IRAM_ATTR call_start_cpu1()
 {
     asm volatile (\
@@ -234,9 +236,11 @@ void IRAM_ATTR call_start_cpu1()
 
     ...
 }
+```
 
 
-// This is also an important functio, prepares for start of the applicaton
+```
+// This is also an important function, it prepares for start of the applicaton
 void start_cpu0_default(void)
 {
 400807a8:	006136        	entry	a1, 48
@@ -286,6 +290,7 @@ void start_cpu0_default(void)
 40080802:	f01d      	retw.n
 
 40080804 <call_start_cpu0>:
+```
 
 
 
@@ -304,7 +309,7 @@ static void main_task(void* args)
 ======================
 
 
-
+```
 Bus Type   |  Boundary Address     |     Size | Target
             Low Address | High Add 
             0x0000_0000  0x3F3F_FFFF             Reserved 
@@ -319,6 +324,7 @@ Instruction 0x400C_2000  0x40BF_FFFF  11512 KB   External Memory
             0x5000_0000 0x5000_1FFF   8 KB       Embedded Memory
             0x5000_2000 0xFFFF_FFFF              Reserved
 
+```
 
 
 When compiling the application an elf file, bin file and map file is generated.
@@ -332,7 +338,7 @@ The linker scripts contains information of how to layout the code and variables.
 componenets/esp32/ld
 
 
-
+```
   /* IRAM for PRO cpu. Not sure if happy with this, this is MMU area... */
   iram0_0_seg (RX) :                 org = 0x40080000, len = 0x20000
 
@@ -363,11 +369,13 @@ componenets/esp32/ld
 
 /* Heap ends at top of dram0_0_seg */
 _heap_end = 0x40000000 - CONFIG_TRACEMEM_RESERVE_DRAM;
+```
 
 
 Detailed layout of iram0
 ========================
 
+```
   /* Send .iram0 code to iram */
   .iram0.vectors : 
   {
@@ -405,14 +413,15 @@ Detailed layout of iram0
     *(.init)
     _init_end = ABSOLUTE(.);
   } > iram0_0_seg
+```
 
 
--------- Tinkering with loader scripts --------
+###Test with loader scripts 
 
 
 Tried to add a new section in loader script to place a function at reset vector,
 
-
+```
 #define RESET_ATTR __attribute__((section(".boot")))
 
 
@@ -430,13 +439,115 @@ Then we must add this to the linker script.
   {
     KEEP(*(.boot)) ;
   }
+```
 
 
 Try compile with,
 
-make VERBOSE=1 then replace the -T esp32.common.ld with your modified ld file.
+  make VERBOSE=1 then replace the -T esp32.common.ld with your modified ld file.
 
 However when we try this we get,
-In function `boot_func':
-main.c:13:(.boot+0x3): dangerous relocation: l32r: literal target out of range (try using text-section-literals): (*UND*+0x26395a4)
+  In function `boot_func':
+  main.c:13:(.boot+0x3): dangerous relocation: l32r: literal target out of range (try using text-section-literals): (*UND*+0x26395a4)
 
+# Calling convention 
+
+Xtensa ESP8266 calling convention, not same as ESP32? 
+
+
+The lx106 used in the ESP8266 implements the CALL0 ABI offering a 16-entry register file (see Diamond Standard 106Micro Controller brochure). By this we can apply the calling convention outlined in the Xtensa ISA reference manual, chapter 8.1.2 CALL0 Register Usage and Stack Layout:
+
+a0 - return address
+a1 - stack pointer
+a2..a7 - arguments (foo(int16 a,long long b) -> a2 = a, a4/5 = b), if sizefof(args) > 6 words -> use stack
+a8 - static chain (for nested functions: contains the ptr to the stack frame of the caller)
+a12..a15 - callee saved (registers containing values that must be preserved for the caller)
+a15 - optional stack frame ptr
+
+Return values are placed in AR2..AR5. If the offered space (four words) does not meet the required amount of memory to return the result, the stack is used.
+disabling interrupts
+
+According to the Xtensa ISA (Instruction Set Architecture) manual the Xtensa processor cores supporting up to 15 interrupt levels – but the used lx106 core only supports two of them (level 1 and 2). The current interrupt level is stored in CINTLEVEL (4 bit, part of the PS register, see page 88). Only interrupts at levels above CINTLEVEL are enabled.
+
+```
+In esp_iot_sdk_v1.0.0/include/osapi.h the macros os_intr_lock() and os_intr_unlock() are defined to use the ets_intr_lock() and ets_intr_unlock() functions offered by the ROM. The disassembly reveals nothing special:
+
+disassembly – ets_intr_lock() and ets_intr_unlock():
+
+ets_intr_lock():
+40000f74:  006320      rsil  a2, 3           // a2 = old level, set CINTLEVEL to 3 -> disable all interrupt levels supported by the lx106
+40000f77:  fffe31      l32r  a3, 0x40000f70  // a3 = *mem(0x40000f70) = 0x3fffcc0
+40000f7a:  0329        s32i.n  a2, a3, 0       // mem(a3) = a2 -> mem(0x3fffdcc0) = old level -> saved for what?
+40000f7c:  f00d        ret.n
+
+ets_intr_unlock():
+40000f80:  006020      rsil  a2, 0           //enable all interrupt levels
+40000f83:  f00d        ret.n
+```
+
+To avoid the overhead of the function call and the unneeded store operation the following macros to enable / disable interrupts can be used:
+
+macros for disabling/enabling interrupts:
+
+```
+#define XT_CLI __asm__("rsil a2, 3");
+#define XT_STI __asm__("rsil a2, 0");
+```
+
+NOTE: the ability to run rsil from user code without triggering a PriviledgedInstruction exception implies that all code is run on ring0. This matches the information given here https://github.com/esp8266/esp8266-wiki/wiki/Boot-Process
+the watchdog
+
+Just keep it disabled. I run into a lot of trouble with it – seemed the wdt_feed() didn’t work for me.
+…and its not (well) documented at all.
+
+Some pieces of information I found in the net:
+
+    reverse-C of wdt_feet/task/init: http://esp8266.ru/forum/threads/interesnoe-obsuzhdenie-licenzirovanija-espressif-sdk.52/page-2#post-3505
+    about the RTC memory: http://bbs.espressif.com/viewtopic.php?f=7&t=68&p=303&hilit=LIGHT_SLEEP_T#p291
+
+gpio_output_set(uint32 set_mask, uint32 clear_mask, uint32 enable_mask, uint32 disable_mask)
+
+declared in: esp_iot_sdk_v1.0.0/include/gpio.h
+defined in: ROM (eagle.rom.addr.v6.ld -> PROVIDE ( gpio_output_set = 0x40004cd0 ))
+
+C example:
+
+gpio_output_set(BIT2, 0, BIT2, 0);  // HIGH
+gpio_output_set(0, BIT2, BIT2, 0);  // LOW
+gpio_output_set(BIT2, 0, BIT2, 0);  // HIGH
+gpio_output_set(0, BIT2, BIT2, 0);  // LOW
+
+disassembly – call to gpio_output_set(BIT2, 0, BIT2, 0):
+
+```
+40243247:       420c            movi.n  a2, 4                                     // a2 = 4
+40243249:       030c            movi.n  a3, 0                                     // a3 = 0
+4024324b:       024d            mov.n   a4, a2                                    // a4 = 4
+4024324d:       205330          or      a5, a3, a3                                // a5 = 0
+40243250:       f79001          l32r    a0, 40241090 <system_relative_time+0x18>  // a0 = *mem(40241090) = 0x40004cd0
+40243253:       0000c0          callx0  a0                                        // call 0x40004cd0 - gpio_output_set
+
+disassembly – gpio_output_set (thanks to By0ff for the ROM dump):
+
+> xtensa-lx106-elf-objdump -m xtensa -EL  -b binary --adjust-vma=0x40000000 --start-address=0x40004cd0 --stop-address=0x40004ced -D 0x4000000-0x4011000/0x4000000-0x4011000.bin
+
+0x4000000-0x4011000/0x4000000-0x4011000.bin:     file format binary
+
+Disassembly of the .data section:
+
+40004cd0 <.data+0x4cd0>:
+40004cd0:       f0bd61          l32r    a6, 0x40000fc4  // a6 = *mem(0x40000fc4) = 0x60000200
+40004cd3:       0020c0          memw                    // finish all mem operations before next op
+40004cd6:       416622          s32i    a2, a6, 0x104   // mem(a6 + 0x104) = a2 -> mem(0x60000304) = 4 (SET)
+40004cd9:       0020c0          memw
+40004cdc:       426632          s32i    a3, a6, 0x108   // mem(a6 + 0x108) = a3 -> mem(0x60000308) = 0 (CLR)
+40004cdf:       0020c0          memw
+40004ce2:       446642          s32i    a4, a6, 0x110   // mem(a6 + 0x110) = a4 -> mem(0x60000310) = 4 (DIR -> OUTPUT)
+40004ce5:       0020c0          memw
+40004ce8:       456652          s32i    a5, a6, 0x114   // mem(a6 + 0x114) = a5 -> mem(0x60000314) = 0 (DIR -> INPUT)
+40004ceb:       f00d            ret.n                   // return to the caller
+
+> od -A x -j 0xfc4 -N 4 -x 0x4000000-0x4011000/0x4000000-0x4011000.bin
+000fc4 0200 6000            // *mem(0x40000fc4) = 0x60000200
+000fc8
+```
