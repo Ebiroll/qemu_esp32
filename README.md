@@ -58,7 +58,7 @@ To disassemble you can set pc from gdb,
   (gdb) si
   (gdb) ni
 ```
-Currently
+Setting programcounter to a function,
 
 ```
   (gdb) set $pc=bootloader_main
@@ -128,6 +128,96 @@ PS.EXCM ← 1
 endprocedure Exception
 ```
 
+### PS register
+
+The PS register contains miscellaneous fields that are grouped together primarily so that
+they can be saved and restored easily for interrupts and context switching. Figure 4–8
+shows its layout and Table 4–63 describes its fields. Section 5.3.5 “Processor Status
+Special Register” describes the fields of this register in greater detail. The processor ini-
+tializes these fields on processor reset: PS.INTLEVEL is set to 15, if it exists and
+PS.EXCM is set to 1, and the other fields are set to zero.
+
+```
+31                      19  18  17  16  15        12 11 8 7 6 5 4    3 0
+                                                                      Intevel
+                                                                  Excm
+                                                               UM 
+                                                          RING
+                                CALLINC
+                              WOE
+```
+
+
+EXCM 
+Exception mode 
+0 → normal operation
+1 → exception mode
+Overrides the values of certain other PS fields (Section 4.4.1.4
+
+UM
+User vector mode 
+0 → kernel vector mode — exceptions do not need to switch stacks
+1 → user vector mode — exceptions need to switch stacks
+This bit does not affect protection. It is modified by software and affects the vector
+used for a general exception.
+
+CALLINC
+Call increment 
+Set to window increment by CALL instructions. Used by ENTRY to rotate window.
+
+WOE
+Window overflow-detection enable
+0 → overflow detection disabled
+1 → overflow detection enabled
+Used to compute the current window overflow enable
+
+###Windowed call mechanism
+
+The register window operation of the {CALL, CALLX}{4,8,12}, ENTRY, and {RETW,RETW.N} instructions are:
+
+```
+CALLn/CALLXn
+    WindowCheck (2'b00, 2'b00, n)
+    PS.CALLINC ← n
+    AR[n || 2'b00] ← n || (PC + 3) 29..0
+
+ENTRY s, imm12
+     AR[PS.CALLINC || s 1..0 ] ← AR[s] − (0 17 || imm12 || 0 3 )
+     WindowBase ← WindowBase + (0 2 || PS.CALLINC)
+     WindowStart WindowBase ← 1
+```
+In the definition of ENTRY above, the AR read and the AR write refer to different registers.
+```
+RETW/RETW.N
+    n ← AR[0] 31..30
+    nextPC ← PC 31..30 || AR[0] 29..0
+    owb ← WindowBase
+    m ← if WindowStart WindowBase-4’b0001 then 2’b01
+    elsif WindowStart  WindowBase-4’b0010 then 2’b10
+    elsif WindowStart  WindowBase-4’b0011 then 2’b11
+    else 2’b00
+  if n = 2’b00 | (m ≠ 2’b00 & m ≠ n) | PS.WOE=0 | PS.EXCM=1 then
+     -- undefined operation
+    -- may raise illegal instruction exception
+  else
+     WindowBase ← WindowBase − (0^2 || n)
+     if WindowStart WindowBase ≠ 0 then
+       WindowStart owb ← 0
+     else
+       -- Underflow exception
+     PS.EXCM ← 1
+     EPC[1] ← PC
+     PS.OWB ← owb
+    nextPC ← if n = 2'b01 then WindowUnderflow4
+             if n = 2'b10 then WindowUnderflow8
+             WindowUnderflow12
+   endif
+ endif
+```
+
+The RETW opcode assignment is such that the s and t fields are both zero, so that the
+hardware may use either AR[s] or AR[t] in place of AR[0] above. Underflow is de-
+tected by the caller’s window’s WindowStart bit being clear (that is, not valid)
 ### Double exception info
 
 ###RFDE
