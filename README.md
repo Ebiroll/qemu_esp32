@@ -12,75 +12,211 @@ http://wiki.linux-xtensa.org/index.php/Xtensa_on_QEMU
 git clone git://git.qemu.org/qemu.git
 copy qemu-esp32.tar.gz to the qemu source tree and unpack (tar zxvf)
 
-Manually add in:
+Manually add to makefiles:
+```
 hw/extensa/Makefile.objs
   obj-y += esp32.o
 
 target-xtensa/Makefile.objs
   obj-y += core-esp32.o
-
+```
+###Building the patched qemu
+```
 mkdir ../qemu_esp32
 cd ../qemu_esp32
 Then run configure as,
 ../qemu/configure --disable-werror --prefix=`pwd`/root --target-list=xtensa-softmmu,xtensaeb-softmmu
 I also did this in qemu: git submodule update --init dtc
+```
 
-The goal is to run the app-template or bootloader and connect the debugger.
-
-
-For now, I get get double exception error.
-
-When running with -d int, I get
-xtensa_cpu_do_interrupt(11) pc = 40080828, a0 = 40080828, ps = 0000001f, ccount = 00000002
+The goal is to run the app-template or bootloader and connect the debugger. It works but after running a 
+few instructions , I get get double exception error.
 
 
-
+### Start qemu
+```
   > qemu-xtensa-softmmu/qemu-system-xtensa -d mmu  -cpu esp32 -M esp32 -m 128M  -kernel  ../esp/myapp/build/app-template.elf  -s -S
+```
 
-
+### Start the debugger
+```
   > xtensa-esp32-elf-gdb build/app-template.elf
   (gdb) target remote 127.0.0.1:1234
 
   (gdb) x/10i $pc
 
   (gdb) x/10i 0x40000400
+```
 
 To disassemble you can set pc from gdb,
 
+```
   (gdb) set $pc=0x40080804
 
   (gdb) set $pc=<tab>
   (gdb) layout asm
   (gdb) si
   (gdb) ni
+```
+Currently
 
+```
+  (gdb) set $pc=bootloader_main
   (gdb) set $pc=uart_tx_one_char 
+```
 
 
-  x/10b $pc
 
+```
+  (gdb) x/20i $pc
+```
 
 #More useful commands
-====================
 Dump mixed source/disassemply listing,
 xtensa-esp32-elf-objdump -d -S build/bootloader/bootloader.elf
 
 
+#Results
+Currently it is possible to load the elf file but when running we get,
+DoubleException interrupts very quickly,
+
+When running with -d int, I get this output from qemu 
+  xtensa_cpu_do_interrupt(11) pc = 40080828, a0 = 40080828, ps = 0000001f, ccount = 00000002
+
+
+##Possible solution
+It mentions that gdb can only access unprivilidge registers.
+This might be part of the problem... This could be the fixup we need. 
+https://github.com/jcmvbkbc/xtensa-toolchain-build/blob/master/fixup-gdb.sh
+```
+#! /bin/bash -ex
+#
+# Fix xtensa registers definitions so that gdb can work with QEMU
+#
+
+. `dirname "$0"`/config
+
+sed -i $GDB/gdb/xtensa-config.c -e 's/\(XTREG([^,]\+,[^,]\+,[^,]\+,[^,]\+,[^,]\+,[^,]\+,[^,]\+\)/\1 \& ~1/'
+```
+
+##Another Possible solution
+We could probably write an RFDE instruction in the DoubleException isr routine.
+
+PC is saved in the DEPC register.
+
+EXCSAVE ,on isr entry to get scratch
+RFDE , on isr return.
+
+The taking of an exceptionon has the following semantics:
+```
+procedure Exception(cause)
+   if (PS.EXCM & NDEPC=1) then
+     DEPC ← PC
+     nextPC ← DoubleExceptionVector
+  elseif PS.EXCM then
+     EPC[1] ← PC
+     nextPC ← DoubleExceptionVector
+  elseif PS.UM then
+     EPC[1] ← PC
+     nextPC ← UserExceptionVector
+  else
+     EPC[1] ← PC
+     nextPC ← KernelExceptionVector
+  endif
+EXCCAUSE ← cause
+PS.EXCM ← 1
+endprocedure Exception
+```
+
+### Double exception info
+
+###RFDE
+
+Description
+
+RFDE returns from an exception that went to the double exception vector (that is, an ex-
+ception raised while the processor was executing with PS.EXCM set). It is similar to RFE, but PS.EXCM is not cleared, and DEPC, if it exists, is used instead of EPC[1]. RFDE sim-
+ply jumps to the exception PC. PS.UM and PS.WOE are left unchanged.
+
+RFDE is a privileged instruction.
+
+Operation
+```
+   if CRING ≠ 0 then
+      Exception (PrivilegedInstructionCause)
+   elsif NDEPC=1 then
+    nextPC ← DEPC
+   else
+     nextPC ← EPC[1]
+   endif
+```
+
+
+###The Double Exception Program Counter (DEPC) 
+
+The double exception program counter (DEPC) register contains the virtual byte ad-
+dress of the instruction that caused the most recent double exception. A double excep-
+tion is one that is raised when PS.EXCM is set. This instruction has not been executed.
+
+Many double exceptions cannot be restarted, but those that can may be restarted at this address by using an RFDE instruction after fixing the cause of the exception.
+
+The DEPC register exists only if the configuration parameter NDEPC=1. 
+If DEPC does not exist, the EPC register is used in its place when a double exception is taken and when the RFDE instruction is executed. The consequence is that it is not possible to recover from most double exceptions. NDEPC=1 is required if both the Windowed Register
+
+Option and the MMU Option are configured. DEPC is undefined after processor reset.
+
+
+### The Exception Save Register (EXCSAVE) 
+
+The exception save register (EXCSAVE[1]) is simply a read/write 32-bit register intend-
+ed for saving one AR register in the exception vector software. This register is undefined after processor reset and there are many software reasons its value might change
+
+whenever PS.EXCM is 0.
+
+The Exception Option defines only one exception save register (EXCSAVE[1]). The High-Priority Interrupt Option extends this concept by adding one EXCSAVE register per
+
+high-priority interrupt level (EXCSAVE[2..NLEVEL+NNMI]). 
+
+
+
+####Handling of Exceptional Conditions 
+
+Exceptional conditions are handled by saving some state and redirecting execution to one of a set of exception vector locations. 
+
+
+The three exception vectors that use EXCCAUSE for the primary cause information form a set called the “general vector.” If PS.EXCM is set when one of the exceptional condi-
+tions is raised, then the processor is already handling an exceptional condition and the exception goes to the DoubleExceptionVector. Only a few double exceptions are recoverable, including a TLB miss during a register window overflow or underflow ex-
+ception. For these, EXCCAUSE (and EXCSAVE in Table 4–66) must be well enough understood not to need duplication. Otherwise (PS.EXCM clear), if PS.UM is set the exception goes to the UserExceptionVector, and if not the exception goes to the
+
+KernelExceptionVector. The Exception Option effectively defines two operating modes: user vector mode and kernel vector mode, controlled by the PS.UM bit. The combination of user vector mode and kernel vector mode is provided so that the user
+ vector exception handler can switch to an exception stack before processing the exception, whereas the kernel vector exception handler can continue using the kernel stack. Single or multiple high-priority interrupts can be configured for any hardware prioritized levels 2..6. These will redirect to the InterruptVector[i] where “i” is the level. One of those levels, often the highest one, can be chosen as the debug level and will redirect execution to InterruptVector[d] where “d” is the debug level. The level one higher than the highest high-priority interrupt can be chosen as an NMI, which will redirect execution to InterruptVector[n] where “n” is the NMI level (2..7).
+
+
+
 #Boot of ESP32
-======================
 
 When starting up the ESP32 it reads instructions from embedded memory, located at 40000400
 (unless this is mapped to ram by DPORT_APP_CACHE_CTRL1_REG & DPORT_PRO_CACHE_CTRL1_REG)  
 
+```
   PROVIDE ( _ResetVector = 0x40000400 );
   #define XCHAL_RESET_VECTOR1_VADDR	0x40000400
+```
 
 
 Eventually aftern initialisation the first stage bootloader will call call_start_cpu0()
 
 The main tasks of this is:
 
-1. cpu_configure_region_protection(), sets up the mmu
+1. cpu_configure_region_protection(), mmu_init(1); sets up the mmu
+
+2.  boot_cache_redirect( 0, 0x5000 );  /*register boot sector in drom0 page 0 */
+    boot from ram at next reset.
+
+3. load_partition_table(), Load partition table and take apropiate action.    
+
+4.  unpack_load_app(&load_part_pos); To be investigated.
+
 
 ```
  /* We arrive here after the bootloader finished loading the program from flash. The hardware is mostly uninitialized,
@@ -226,21 +362,22 @@ void bootloader_main()
 }
 ```
 
-```
-// Is this correct?? _init_start should be interesting
-void IRAM_ATTR call_start_cpu1()
-{
-    asm volatile (\
-                  "wsr    %0, vecbase\n" \
-                  ::"r"(&_init_start));
+start_cpu0_default() is also an important function, it prepares for start of the applicaton.
+Depending on how the application is configured. In this function app_main() is called.
 
-    ...
+```
+  xTaskCreatePinnedToCore(&main_task, "main",...)
+
+
+static void main_task(void* args)
+{
+    app_main();
+    vTaskDelete(NULL);
 }
 ```
 
 
 ```
-// This is also an important function, it prepares for start of the applicaton
 void start_cpu0_default(void)
 {
 400807a8:	006136        	entry	a1, 48
@@ -293,20 +430,24 @@ void start_cpu0_default(void)
 ```
 
 
-
-
-static void main_task(void* args)
+```
+// Is this correct?? _init_start should be interesting.
+void IRAM_ATTR call_start_cpu1()
 {
-    app_main();
-    vTaskDelete(NULL);
+    asm volatile (\
+                  "wsr    %0, vecbase\n" \
+                  ::"r"(&_init_start));
+
+    ...
 }
+```
+
 
 
 
 
 
 #The ESP32 memory layout
-======================
 
 
 ```
@@ -327,12 +468,7 @@ Instruction 0x400C_2000  0x40BF_FFFF  11512 KB   External Memory
 ```
 
 
-When compiling the application an elf file, bin file and map file is generated.
-
-The start adress of the example-app elf file is..... 0x40080804
-
-
-this is not all that should be loaded loaded. Also partitiontable and bootloader should be loaded.
+When compiling the application an elf file, bin file and map file is generated. this is not all that should be loaded loaded. Also partitiontable and the bootloader should be loaded.
 
 The linker scripts contains information of how to layout the code and variables.
 componenets/esp32/ld
@@ -416,10 +552,10 @@ Detailed layout of iram0
 ```
 
 
-###Test with loader scripts 
+###Tests with loader scripts 
 
 
-Tried to add a new section in loader script to place a function at reset vector,
+I tried to add a new section in loader script to place a function at reset vector,
 
 ```
 #define RESET_ATTR __attribute__((section(".boot")))
@@ -442,17 +578,207 @@ Then we must add this to the linker script.
 ```
 
 
-Try compile with,
+When compileing tike this,
 
-  make VERBOSE=1 then replace the -T esp32.common.ld with your modified ld file.
+  make VERBOSE=1 
+  
+  We see how the linker is called. Then replace the -T esp32.common.ld with your modified ld file.
 
 However when we try this we get,
   In function `boot_func':
   main.c:13:(.boot+0x3): dangerous relocation: l32r: literal target out of range (try using text-section-literals): (*UND*+0x26395a4)
 
+This turned out to not be necessary. qemu inserts a jump instruction after loading the elf file (esp32.c)
+entry_point is the adress ot the entry point received by load_elf()
+
+```
+        static const uint8_t jx_a0[] = {
+            0xa0, 0, 0,
+        };
+        // a0
+        env->regs[0] = entry_point;
+
+
+        cpu_physical_memory_write(env->pc, jx_a0, sizeof(jx_a0));
+```
+
+
+
 # Calling convention 
 
-Xtensa ESP8266 calling convention, not same as ESP32? 
+
+The  Xtensa  windowed  register  calling  convention  is  designed  to  efficiently  pass  arguments  and  return  values  in  
+AR registers  
+
+The  register  windows  for  the caller and the callee are not the same, but they partially overlap. As many as six words
+of arguments can be passed from the caller to the callee in these overlapping registers, and as many as four words of a return value can be returned in the same registers. If all
+the arguments do not fit in registers, the rest are passed on the stack. Similarly, if the return value needs more than four words, the value is returned on the stack instead of the AR  registers.
+
+The Windowed Register Option replaces the simple 16-entry AR register file with a larger register file from which a window of 16 entries is visible at any given time. The window
+is rotated on subroutine entry and exit, automatically saving and restoring some registers. When the window is rotated far enough to require registers to be saved to or re-
+stored from the program stack, an exception is raised to move some of the register values between the register file and the program stack. The option reduces code size and
+increases performance of programs by eliminating register saves and restores at procedure entry and exit, and by reducing argument-shuffling at calls. It allows more local
+variables to live permanently in registers, reducing the need for stack-frame maintenance in non-leaf routines.
+Xtensa ISA register windows are different from register windows in other instruction sets. Xtensa register increments are 4, 8, and 12 on a per-call basis, not a fixed incre-
+ment as in other instruction sets. Also, Xtensa processors have no global address registers. The caller specifies the increment amount, while the callee performs the actual in-
+crement by the ENTRY instruction. 
+
+The compiler uses an increment sufficient to hide the registers that are live at the point of the call (which the compiler can pack into the fewest
+possible at the low end of the register-number space). The number of physical registers is 32 or 64, which makes this a more economical configuration. Sixteen registers are vis-
+ible at one time. Assuming that the average number of live registers at the point of call is
+
+6.5 (return address, stack pointer, and 4.5 local variables), and that the last routine uses
+12 registers at its peak, this allows nine call levels to live in 64 registers (8×6.5+12=64).
+As an example, an average of 6.5 live registers might represent 50% of the calls using
+an increment of 4, 38% using an increment of 8, and 12% using an increment of 12.
+
+
+The rotation of the 16-entry visible window within the larger register file is controlled by the WindowBase Special Register added by the option. The rotation always occurs in
+units of four registers, causing the number of bits in WindowBase to be log 2 (NAREG/4). Rotation at the time of a call can instantly save some registers and provide new regis-
+ters for the called routine. Each saved register has a reserved location on the stack, to which it may be saved if the call stack extends enough farther to need to re-use the
+physical registers. The WindowStart Special Register, which is also added by the option and consists of NAREG/4 bits, indicates which four register units are currently cached in
+the physical register file instead of residing in their stack locations. An attempt to use registers live with values from a parent routine raises an Overflow Exception which saves those values and frees the registers for use. A return to a calling routine whose
+registers have been previously saved to the stack raises an Underflow Exception which restores those values. Programs without wide swings in the depth of the call stack save and restore values only occasionally.
+
+### General-Purpose Register Use
+```
+Register       Use
+a0             Return Address
+a1 (sp)        Stack Pointer
+a2 – a7        Incoming Arguments
+a7             Optional Frame Point
+```
+
+
+```
+int proc1 (int x, short y, char z) {
+// a2 = x
+// a3 = y
+// a4 = z
+// return value goes in a2
+}
+```
+
+The registers that the caller uses for arguments and return values are determined by the
+size  of  the  register  window.  The  window  size  must  be  added  to  the  register  numbers
+seen by the callee. For example, if the caller uses a  CALL8  instruction, the window size is 8 and “
+
+```
+x = proc1 (1, 2, 3)
+translates to:
+movi.n    a10, 1
+movi.n    a11, 2
+movi.n    a12, 3
+call8     proc1
+s32i      a10, sp, x_offset
+```
+
+Double-precision floating-point values and  long long  integers require two registers for storage. The calling convention requires that these registers be even/odd register pairs.
+```
+double proc2 (int x, long long y) {
+// a2 = x
+// a3 = unused
+// a4,a5 = y
+// return value goes in a2/a3
+}
+```
+
+##
+Stack Frame Layout
+The  stack  grows  down  from  high  to  low  addresses.  The  stack  pointer  must  always  be
+aligned to a 16-byte boundary. Every stack frame contains at least 16 bytes of register
+window save area. If a function call has arguments that do not fit in registers, they are
+passed  on  the  stack  beginning  at  the  stack-pointer  address. 
+
+
+## Exception-Processing States 
+The Xtensa LX processor implements basic functions needed to manage both 
+synchronous exceptions  and  asynchronous exceptions  (interrupts). However, the baseline pro-
+cessor configuration only supports synchronous exceptions, for example, those caused
+by illegal instructions, system calls, instruction-fetch errors, and load/store errors. Asyn-
+chronous exceptions are supported by processor configurations built with the interrupt,
+high-priority interrupt, and timer options.
+The Xtensa LX interrupt option implements Level-1 interrupts, which are asynchronous
+exceptions  triggered  by  processor  input  signals  or  software  exceptions.  Level-1  interrupts have the lowest priority of all interrupts and are handled differently than high-prior-
+ity  interrupts,  which  occur  at  priority  levels  2  through  15.  The  interrupt  option  is  a
+prerequisite for the high-priority-interrupt, peripheral-timer, and debug options. 
+
+The  high-priority-interrupt  option  implements  a  configurable  number  of  interrupt  levels
+(2 through  15).  In  addition,  an  optional  non-maskable  interrupt  (NMI)  has  an  implicit
+infinite  priority  level.  Like  Level-1  interrupts,  high-priority  interrupts  can  be  external  or
+software  exceptions.  Unlike  Level-1  interrupts,  each  high-priority  interrupt  level  has  its
+own interrupt vector and dedicated registers for saving processor state. These separate
+interrupt vectors and special registers permit the creation of very efficient handler mech-
+anisms  that  may  need  only  a  few  lines  of  assembler  code,  avoiding  the  need  for  a
+subroutine call.
+
+###Exception Architecture
+The Xtensa LX processor supports one exception model, Xtensa Exception Architecture 2 (XEA2).
+XEA2 Exceptions XEA2 exceptions share the use of two exception vectors. These two vector addresses,
+UserExceptionVector  and   KernelExceptionVector are  both  configuration  options. The exception-handling process saves the address of the instruction causing the
+exception into special register  EPC[1]  and the cause code for the exception into special
+register  EXCCAUSE
+
+Interrupts and exceptions are precise, so that on returning from the exception  handler,  program  execution  can  continue  exactly  where  it  left  off.  
+(Note:  Of necessity, write bus-error exceptions are not precise.)
+
+###Unaligned Exception
+This option allows an exception to be raised upon any unaligned memory access wheth-
+er it is generated by core processor memory instructions, by optional instructions, or by
+designer-defined TIE instructions. With the cooperation of system software, occasional unaligned accesses can be handled correctly.
+Note  that  instructions  that  deal  with  the  cache  lines  such  as  prefetch  and  cache-
+management instructions will not cause unaligned exceptions.
+
+###Interrupt
+The Xtensa LX exception option implements Level-1 interrupts. The processor configu-
+ration process allows for a variable number of interrupts to be defined. External interrupt
+inputs  can  be  level-sensitive  or  edge-triggered.  The  processor  can  test  the  state of these interrupt inputs at any time by reading the 
+INTERRUPT register. An arbitrary number of software interrupts (up to a total of 32 for all types of interrupts) that are not tied to an   external   signal   can   also   be   configured.   These   interrupts   use   the   general
+exception/interrupt  handler.  Software  can  then  manipulate  the  bits  of  interrupt  enable fields   to   prioritize   the   exceptions.   The   processor   accepts   an   interrupt   when   an
+interrupt   signal  is  asserted  and  the  proper  interrupt  enable  bits  are  set  in  the
+
+INTENABLE
+ register and in the 
+INTLEVEL
+ field of the PS register.
+
+
+###High-Priority Interrupt Option
+A configured Xtensa LX processor can have as many as 6 level-sensitive or edge-trig-
+gered  high-priority  interrupts.  One  NMI  or  non-maskable  interrupt  can  also  be  config-
+ured.  The  processor  can  have  as  many  as  six  high-priority  interrupt  levels  and  each
+high-priority interrupt level has its own interrupt vector. Each high-priority interrupt level
+also has its own dedicated set of three special registers (EPC, EPS, and EXCSAVE) used
+to save the processor state.
+
+
+###Timer Interrupt Option
+The  Timer  Interrupt  Option  creates  one  to  three  hardware  timers  that  can  be  used  to
+generate periodic interrupts. The timers can be configured to generate either level-one
+or high-level interrupts. Software manages the timers through one special register that
+contains  the  processor  core’s  current  clock  count  (which  increments  each  clock  cycle)
+and  additional  special  registers  (one  for  each  of  the  three  optional  timers)  for  setting
+match-count values that determine when the next timer interrupt
+
+
+### Inter processor instructions
+
+L32AI       RRI8
+Load 32-bit Acquire (8-bit shifted offset)
+This non-speculative load will perform before any subsequent loads, stores, or 
+acquires are performed. It is typically used to test the synchronization variable 
+protecting a mutual-exclusion region (for example, to acquire a lock)
+
+S32RI       RRI8
+Store 32-bit Release (8-bit shifted offset)
+All prior loads, stores, acquires, and releases will be performed before this 
+store is performed. It is typically used to write a synchronization variable to 
+indicate that this processor is no longer in a mutual-exclusion region (for 
+example, to release a lock).
+
+
+## Xtensa ESP8266
+Xtensa ESP8266 calling convention, not same as ESP32? ESP uses Windowed register ABI. 
 
 
 The lx106 used in the ESP8266 implements the CALL0 ABI offering a 16-entry register file (see Diamond Standard 106Micro Controller brochure). By this we can apply the calling convention outlined in the Xtensa ISA reference manual, chapter 8.1.2 CALL0 Register Usage and Stack Layout:
