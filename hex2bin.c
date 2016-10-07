@@ -514,6 +514,8 @@ int8_t F_TransformHexIntelFileToBin(const int8_t S_HexFile[], uint32_t VF_FileSi
 		VF_S_BinFilePos--;
 	}
 
+	printf("write to %s\n",S_BinFile);
+	// olas <=
 	for (VP_CurrentBank = 0; VP_CurrentBank < VP_MemoryBanksCounter; VP_CurrentBank++)
     {
 		if ( VF_MemoryInitAddress / VF_FileSize == A_DetectedMemoryBanks[VP_CurrentBank])
@@ -524,6 +526,7 @@ int8_t F_TransformHexIntelFileToBin(const int8_t S_HexFile[], uint32_t VF_FileSi
 		{
 			sprintf((char*)&S_BinFile[VF_S_BinFilePos], " 0x%X%s", A_DetectedMemoryBanks[VP_CurrentBank]* VF_FileSize, ".bin");
 		}
+		printf("fopen\n",S_BinFile);
 		F_BinaryFile = fopen ((const char *)S_BinFile, "wb");
 		fwrite (A_BinaryData[VP_CurrentBank] , sizeof(int8_t), VF_FileSize, F_BinaryFile);
 		fclose (F_BinaryFile);
