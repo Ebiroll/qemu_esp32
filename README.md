@@ -2,15 +2,19 @@
 Add tensilica esp32 cpu and a board to qemu and dump the rom to learn more about esp-idf
 ###ESP32 in QEMU.
 
-This documents how the to add an esp32 cpu and a simple esp32 board 
-in order to run an app compiled with the SDK in QEMU. esp32 is a 240 MHz dual core Tensilica LX6 microcontroller 
+This documents how to add an esp32 cpu and a simple esp32 board to qemu
+in order to run an app compiled with the SDK in QEMU. Esp32 is a 240 MHz dual core Tensilica LX6 microcontroller.
+It might not be possible but its a good way to learn about qemu and esp32.
 
 
 By following the instructions here, I added esp32 to qemu.
 http://wiki.linux-xtensa.org/index.php/Xtensa_on_QEMU
 
+Clone qemu and apply the patch.
+```
 git clone git://git.qemu.org/qemu.git
-copy qemu-esp32.tar.gz to the qemu source tree and unpack (tar zxvf)
+copy qemu-esp32.tar.gz to the qemu source tree and unpack it (tar zxvf)
+```
 
 Manually add to makefiles:
 ```
@@ -35,13 +39,15 @@ few instructions , I get get double exception error.
 
 ### Start qemu
 ```
-  > qemu-xtensa-softmmu/qemu-system-xtensa -d mmu  -cpu esp32 -M esp32 -m 128M  -kernel  ../esp/myapp/build/app-template.elf  -s -S
+  > xtensa-softmmu/qemu-system-xtensa -d mmu  -cpu esp32 -M esp32 -m 128M  -kernel  ../esp/myapp/build/app-template.elf  -s -S
 ```
 
 ### Start the debugger
 ```
   > xtensa-esp32-elf-gdb build/app-template.elf
   (gdb) target remote 127.0.0.1:1234
+  or  
+  (gdb) target remote:1234
 
   (gdb) x/10i $pc
 
@@ -73,7 +79,52 @@ Setting programcounter to a function,
 
 #More useful commands
 Dump mixed source/disassemply listing,
+```
 xtensa-esp32-elf-objdump -d -S build/bootloader/bootloader.elf
+xtensa-esp32-elf-objdump -d build/main/main.o
+```
+Try adding simple assembly or functions and looḱ at the generated code,
+
+```
+void retint() {
+    asm volatile (\
+    	 "RFDE\n");
+}
+
+int test(int in) {
+    return (in+1);
+}
+
+void jump() {
+    asm volatile (\
+    	 "jx a0\n");
+    retint();
+}
+```
+
+
+```
+00000000 <retint>:
+   0:	004136        	entry	a1, 32
+   3:	003200        	rfde
+   6:	f01d      	retw.n
+
+Disassembly of section .text.test:
+
+00000000 <test>:
+   0:	004136        	entry	a1, 32
+   3:	221b      	addi.n	a2, a2, 1
+   5:	f01d      	retw.n
+
+Disassembly of section .text.jump:
+
+00000000 <jump>:
+   0:	004136        	entry	a1, 32
+   3:	0000a0        	jx	a0
+   6:	000081        	l32r	a8, fffc0008 <jump+0xfffc0008>
+   9:	0008e0        	callx8	a8
+   c:	f01d      	retw.n
+```
 
 
 #Results
