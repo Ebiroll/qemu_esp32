@@ -12,6 +12,40 @@
 #include "esp_system.h"
 #include "nvs_flash.h"
 
+/* For testing of how code is generated  */
+#if 0
+/*         "wsr 	a3, ps\n"\ */
+
+void retint() {
+    asm volatile (\
+        "wsr 	a3 , ps\n"\
+        "movi.n	a8, -9\n"\
+        "and	a2, a2, a8\n"\
+        "RFDE\n");
+}
+
+int test(int in) {
+    return (in & 0xfffffff7);
+}
+
+void jump() {
+    asm volatile (\
+         "RFE\n"\
+         "jx a0\n");
+    retint();
+}
+#endif
+
+/* produce simple hex dump output */
+void simpleHex(int toOutout)
+{
+
+    printf( "%08X", toOutout);
+
+
+}
+
+
 /* produce intel hex file output... call this routine with */
 /* each byte to output and it's memory location.  The file */
 /* pointer fhex must have been opened for writing.  After */
@@ -83,8 +117,18 @@ void dump_task(void *pvParameter)
     //unsigned char*mem_location=0x40000000;
     //unsigned char*mem_location=hello_task;
     unsigned char*mem_location=test_data;
+    unsigned int*simple_mem_location=test_data;
 
     //0x400C_1FFF
+
+    while(simple_mem_location<1+test_data+sizeof(test_data)) {
+        simpleHex(*simple_mem_location);
+        printf(",");
+        simple_mem_location++;
+    }
+
+    printf("\n");
+    printf("\n");
 
 
     //void hexout(int byte, int memory_location,int end)
