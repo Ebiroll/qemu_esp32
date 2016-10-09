@@ -169,13 +169,15 @@ static void lx60_reset(void *opaque)
 static uint64_t esp_io_read(void *opaque, hwaddr addr,
         unsigned size)
 {
-    return 0;
+    printf("io read %08x\n",addr);
+
+    return 0x22;
 }
 
 static void esp_io_write(void *opaque, hwaddr addr,
         uint64_t val, unsigned size)
 {
-    printf("io write %08x\n");
+    printf("io write %08x\n",addr);
 }
 
 static const MemoryRegionOps esp_io_ops = {
@@ -199,7 +201,7 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
     MemoryRegion *system_memory = get_system_memory();
     XtensaCPU *cpu = NULL;
     CPUXtensaState *env = NULL;
-    MemoryRegion *ram, *rom, *system_io;
+    MemoryRegion *ram,*ram1,*rambb, *rom, *system_io;
     DriveInfo *dinfo;
     pflash_t *flash = NULL;
     QemuOpts *machine_opts = qemu_get_machine_opts();
@@ -236,19 +238,32 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
 
     // Map all as ram 
     ram = g_malloc(sizeof(*ram));
-    memory_region_init_ram(ram, NULL, "iram0", 0x20000000,
+    memory_region_init_ram(ram, NULL, "iram0", 0x1ff00000,
                            &error_abort);
 
     vmstate_register_ram_global(ram);
-    memory_region_add_subregion(system_memory, 0x30000000, ram);
+    memory_region_add_subregion(system_memory, 0x20000000, ram);
+
+    ram1 = g_malloc(sizeof(*ram1));
+    memory_region_init_ram(ram1, NULL, "iram1",  0xBFFFFF,  
+                           &error_abort);
+
+    vmstate_register_ram_global(ram1);
+    memory_region_add_subregion(system_memory,0x40000000, ram1);
+
+
+
+    // Cant really see this in documentation, maybe leftover from ESP31
+    rambb = g_malloc(sizeof(*rambb));
+    memory_region_init_ram(rambb, NULL, "rambb",  0xBFFFFF,  
+                           &error_abort);
+
+    vmstate_register_ram_global(rambb);
+    memory_region_add_subregion(system_memory,0x60000000, rambb);
+
 
 #if 0
-    ram = g_malloc(sizeof(*ram));
-    memory_region_init_ram(ram, NULL, "iram0", 0x20002000,  // 0x1a0000
-                           &error_abort);
-
-    vmstate_register_ram_global(ram);
-    memory_region_add_subregion(system_memory, 0x30000000, ram);
+    //0x6001f048
 #endif
     // iram0  -- 0x4008_0000, len = 0x20000
 
@@ -401,14 +416,32 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
                 0xa0, 0, 0,
             };
             env->regs[0] = entry_point;
-            // Stack ? a1
-            env->regs[1]=0x40081000;
-
-            // ??? 
-            //env->regs[193]=0x00000020;
-
 
             cpu_physical_memory_write(env->pc, jx_a0, sizeof(jx_a0));
+
+            static const uint8_t rfde[] = {
+                0x0, 0x32, 0,
+            };
+
+            // Return from double interrupt
+            cpu_physical_memory_write(0x400003c0, rfde, sizeof(rfde));
+
+
+            //	003000        	rfe
+            // Return interrupt
+            static const uint8_t rfe[] = {
+                0x0, 0x30, 0,
+            };
+
+
+            cpu_physical_memory_write(0x40000300, rfe, sizeof(rfe));
+
+
+
+            /* rfde
+            003200          rfde
+            0000a0        	jx	a0
+            */
         }
     } else {
         // No elf, try flash...
