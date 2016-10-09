@@ -39,7 +39,10 @@ few instructions , I get get double exception error.
 
 ### Start qemu
 ```
-  > xtensa-softmmu/qemu-system-xtensa -d mmu  -cpu esp32 -M esp32 -m 128M  -kernel  ../esp/myapp/build/app-template.elf  -s -S
+  > xtensa-softmmu/qemu-system-xtensa -d mmu  -cpu esp32 -M esp32 -m 4M  -kernel  ../esp/myapp/build/app-template.elf  -s -S
+With more logging
+  > xtensa-softmmu/qemu-system-xtensa -d guest_errors,int,mmu,page -cpu esp32 -M esp32 -m 4M  -kernel  ../esp/myapp/build/app-template.elf  -s -S
+
 ```
 
 ### Start the debugger
@@ -133,6 +136,69 @@ DoubleException interrupts very quickly,
 
 When running with -d int, I get this output from qemu 
   xtensa_cpu_do_interrupt(11) pc = 40080828, a0 = 40080828, ps = 0000001f, ccount = 00000002
+
+In qemu we find this exception it is EXC_DOUBLE,
+
+If setting ps to 0 we get EXC_KERNEL,
+
+Patching this in QEMU gets us further, Another solution is probably better.
+```
+void HELPER(entry)(CPUXtensaState *env, uint32_t pc, uint32_t s, uint32_t imm)
+{
+    printf("Helper entry");
+    int callinc = (env->sregs[PS] & PS_CALLINC) >> PS_CALLINC_SHIFT;
+    /* if (s > 3 || ((env->sregs[PS] & (PS_WOE | PS_EXCM)) ^ PS_WOE) != 0) {
+        qemu_log_mask(LOG_GUEST_ERROR, "Illegal entry instruction(pc = %08x), PS = %08x\n s=%d",
+                      pc, env->sregs[PS],s);
+        HELPER(exception_cause)(env, pc, ILLEGAL_INSTRUCTION_CAUSE);
+    } else */ 
+    {
+```
+
+
+
+#Setting up visual studio code to compile
+```
+{
+    "version": "0.1.0",
+    "command": "make",
+    "isShellCommand": true,
+    "options": {
+        "cwd": "${workspaceRoot}/../qemu_esp32"
+    },
+    "tasks": [
+        {
+            "taskName": "Makefile",
+            // Make this the default build command.
+            "isBuildCommand": true,
+            // Show the output window only if unrecognized errors occur.
+            "showOutput": "always",
+            // No args
+            "args": ["all"],
+            // Use the standard less compilation problem matcher.
+            "problemMatcher": {
+                "owner": "cpp",
+                "fileLocation": ["relative", "${workspaceRoot}"],
+                "pattern": {
+                    "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "severity": 4,
+                    "message": 5
+                }
+            }
+        }
+    ]
+}
+
+Now go to File->Preferences->Keyboard Shortcuts and add the following key binding for the build task:
+
+// Place your key bindings in this file to overwrite the defaults
+[
+    { "key": "f8",          "command": "workbench.action.tasks.build" }
+]
+```
 
 
 ##Possible solution
@@ -332,6 +398,16 @@ ception. For these, EXCCAUSE (and EXCSAVE in Table 4–66) must be well enough u
 KernelExceptionVector. The Exception Option effectively defines two operating modes: user vector mode and kernel vector mode, controlled by the PS.UM bit. The combination of user vector mode and kernel vector mode is provided so that the user
  vector exception handler can switch to an exception stack before processing the exception, whereas the kernel vector exception handler can continue using the kernel stack. Single or multiple high-priority interrupts can be configured for any hardware prioritized levels 2..6. These will redirect to the InterruptVector[i] where “i” is the level. One of those levels, often the highest one, can be chosen as the debug level and will redirect execution to InterruptVector[d] where “d” is the debug level. The level one higher than the highest high-priority interrupt can be chosen as an NMI, which will redirect execution to InterruptVector[n] where “n” is the NMI level (2..7).
 
+```
+The MEMW instruction causes all memory and cache accesses
+ (loads, stores, acquires, releases, prefetches, and cache operations, but not instruction fetches) before itself 
+ in program order to access memory before all memory and cache accesses (but not instruction fetches) after. 
+ At least one MEMW should be executed in between every load or store to a volatile variable. 
+The Multiprocessor Synchronization Option provides some additional instructions that also affect memory ordering in a more focused fashion.
+
+MEMW has broader applications than these other instructions (for example, when reading and writing device registers), 
+but it also may affect performance more than the synchronization instructions.
+```
 
 
 #Boot of ESP32
@@ -357,6 +433,356 @@ The main tasks of this is:
 3. load_partition_table(), Load partition table and take apropiate action.    
 
 4.  unpack_load_app(&load_part_pos); To be investigated.
+
+## BOOT/Startup in single core mode
+```
+40080828 <call_start_cpu0>:
+ * We arrive here after the bootloader finished loading the program from flash. The hardware is mostly uninitialized,
+ * and the app CPU is in reset. We do have a stack, so we can do the initialization in C.
+ */
+
+void IRAM_ATTR call_start_cpu0()
+{
+40080828:	008136        	entry	a1, 64
+    //Kill wdt
+    REG_CLR_BIT(RTC_CNTL_WDTCONFIG0_REG, RTC_CNTL_WDT_FLASHBOOT_MOD_EN);
+4008082b:	ff0121        	l32r	a2, 40080430 <_init_end+0x30>               //  Loads a2 with  0x3ff4808c, RTC_CNTL_WDTCONFIG0_REG
+4008082e:	0020c0        	memw
+40080831:	0298      	    l32i.n	a9, a2, 0                                   
+40080833:	ffab82        	movi	a8, 0xfffffbff                              // Bit(10)  description: enable WDT in flash boo
+40080836:	108980        	and	a8, a9, a8
+40080839:	0020c0        	memw
+4008083c:	0289      	    s32i.n	a8, a2, 0                                   // a2 contains     0x6001f048
+    REG_CLR_BIT(0x6001f048, BIT(14)); //DR_REG_BB_BASE+48
+4008083e:	fefd21        	l32r	a2, 40080434 <_init_end+0x34>
+40080841:	0020c0        	memw
+40080844:	0298      	    l32i.n	a9, a2, 0
+40080846:	fefc81        	l32r	a8, 40080438 <_init_end+0x38>
+40080849:	108980        	and	a8, a9, a8
+4008084c:	0020c0        	memw
+4008084f:	0289      	s32i.n	a8, a2, 0                                       // a2 still contains 0x6001f048
+ * 15 — no access, raise exception
+ */
+
+
+
+static inline void cpu_configure_region_protection()
+{
+    const uint32_t pages_to_protect[] = {0x00000000, 0x80000000, 0xa0000000, 0xc0000000, 0xe0000000};
+40080851:	01ad      	mov.n	a10, a1
+40080853:	fefab1        	l32r	a11, 4008043c <_init_end+0x3c>
+40080856:	4c1c      	movi.n	a12, 20
+40080858:	ff0281        	l32r	a8, 40080460 <_init_end+0x60>
+4008085b:	0008e0        	callx8	a8                          // a8 contains 0x4000c2c8, memcpy()...
+    for (int i = 0; i < sizeof(pages_to_protect)/sizeof(pages_to_protect[0]); ++i) {
+4008085e:	080c      	movi.n	a8, 0
+ * See Xtensa ISA Reference manual for explanation of arguments (section 4.6.3.2).
+ */
+
+static inline void cpu_write_dtlb(uint32_t vpn, unsigned attr)
+{
+    asm volatile ("wdtlb  %1, %0; dsync\n" :: "r" (vpn), "r" (attr));
+40080860:	fa0c      	movi.n	a10, 15
+40080862:	0004c6        	j	40080879 <call_start_cpu0+0x51>
+
+static inline void cpu_configure_region_protection()
+{
+    const uint32_t pages_to_protect[] = {0x00000000, 0x80000000, 0xa0000000, 0xc0000000, 0xe0000000};
+    for (int i = 0; i < sizeof(pages_to_protect)/sizeof(pages_to_protect[0]); ++i) {
+        cpu_write_dtlb(pages_to_protect[i], 0xf);
+40080865:	a09810        	addx4	a9, a8, a1
+40080868:	0998      	l32i.n	a9, a9, 0
+ * See Xtensa ISA Reference manual for explanation of arguments (section 4.6.3.2).
+ */
+
+static inline void cpu_write_dtlb(uint32_t vpn, unsigned attr)
+{
+    asm volatile ("wdtlb  %1, %0; dsync\n" :: "r" (vpn), "r" (attr));
+4008086a:	50e9a0        	wdtlb	a10, a9
+4008086d:	002030        	dsync
+}
+
+
+static inline void cpu_write_itlb(unsigned vpn, unsigned attr)
+{
+    asm volatile ("witlb  %1, %0; isync\n" :: "r" (vpn), "r" (attr));
+40080870:	5069a0        	witlb	a10, a9
+40080873:	002000        	isync
+ */
+
+static inline void cpu_configure_region_protection()
+{
+    const uint32_t pages_to_protect[] = {0x00000000, 0x80000000, 0xa0000000, 0xc0000000, 0xe0000000};
+    for (int i = 0; i < sizeof(pages_to_protect)/sizeof(pages_to_protect[0]); ++i) {
+40080876:	01c882        	addi	a8, a8, 1
+40080879:	e858b6        	bltui	a8, 5, 40080865 <call_start_cpu0+0x3d>
+ * See Xtensa ISA Reference manual for explanation of arguments (section 4.6.3.2).
+ */
+
+static inline void cpu_write_dtlb(uint32_t vpn, unsigned attr)
+{
+    asm volatile ("wdtlb  %1, %0; dsync\n" :: "r" (vpn), "r" (attr));
+4008087c:	080c      	movi.n	a8, 0
+4008087e:	fef021        	l32r	a2, 40080440 <_init_end+0x40>
+40080881:	50e280        	wdtlb	a8, a2
+40080884:	002030        	dsync
+}
+
+
+static inline void cpu_write_itlb(unsigned vpn, unsigned attr)
+{
+    asm volatile ("witlb  %1, %0; isync\n" :: "r" (vpn), "r" (attr));
+40080887:	feee21        	l32r	a2, 40080440 <_init_end+0x40>
+4008088a:	506280        	witlb	a8, a2
+4008088d:	002000        	isync
+
+    cpu_configure_region_protection();
+
+    //Move exception vectors to IRAM
+    asm volatile (\
+40080890:	feed21        	l32r	a2, 40080444 <_init_end+0x44>
+40080893:	13e720        	wsr.vecbase	a2
+                  "wsr    %0, vecbase\n" \
+                  ::"r"(&_init_start));
+
+    uartAttach();
+40080896:	fef381        	l32r	a8, 40080464 <_init_end+0x64>
+40080899:	0008e0        	callx8	a8
+    ets_install_uart_printf();
+4008089c:	fef381        	l32r	a8, 40080468 <_init_end+0x68>
+4008089f:	0008e0        	callx8	a8
+
+    memset(&_bss_start, 0, (&_bss_end - &_bss_start) * sizeof(_bss_start));
+400808a2:	feea21        	l32r	a2, 4008044c <_init_end+0x4c>
+400808a5:	02ad      	mov.n	a10, a2
+400808a7:	0b0c      	movi.n	a11, 0
+400808a9:	fee7c1        	l32r	a12, 40080448 <_init_end+0x48>
+400808ac:	c0cc20        	sub	a12, a12, a2
+400808af:	feef81        	l32r	a8, 4008046c <_init_end+0x6c>
+400808b2:	0008e0        	callx8	a8
+
+    // Initialize heap allocator
+    heap_alloc_caps_init();
+400808b5:	feee81        	l32r	a8, 40080470 <_init_end+0x70>
+400808b8:	0008e0        	callx8	a8
+
+    ESP_EARLY_LOGI(TAG, "Pro cpu up.");
+400808bb:	008f65        	call8	400811b0 <esp_log_timestamp>
+400808be:	0abd      	mov.n	a11, a10
+400808c0:	fed421        	l32r	a2, 40080410 <_init_end+0x10>
+400808c3:	fee3a1        	l32r	a10, 40080450 <_init_end+0x50>
+400808c6:	02cd      	mov.n	a12, a2
+400808c8:	feeb81        	l32r	a8, 40080474 <_init_end+0x74>
+400808cb:	0008e0        	callx8	a8
+
+    while (!app_cpu_started) {
+        ets_delay_us(100);
+    }
+#else
+    ESP_EARLY_LOGI(TAG, "Single core mode");
+400808ce:	008e25        	call8	400811b0 <esp_log_timestamp>
+400808d1:	0abd      	mov.n	a11, a10
+400808d3:	fee0a1        	l32r	a10, 40080454 <_init_end+0x54>
+400808d6:	02cd      	mov.n	a12, a2
+400808d8:	fee781        	l32r	a8, 40080474 <_init_end+0x74>
+400808db:	0008e0        	callx8	a8
+    CLEAR_PERI_REG_MASK(DPORT_APPCPU_CTRL_B_REG, DPORT_APPCPU_CLKGATE_EN);
+400808de:	fede81        	l32r	a8, 40080458 <_init_end+0x58>
+400808e1:	0020c0        	memw
+400808e4:	08a8      	l32i.n	a10, a8, 0
+400808e6:	e97c      	movi.n	a9, -2
+400808e8:	109a90        	and	a9, a10, a9
+400808eb:	0020c0        	memw
+400808ee:	0899      	s32i.n	a9, a8, 0
+#endif
+    ESP_EARLY_LOGI(TAG, "Pro cpu start user code");
+400808f0:	008be5        	call8	400811b0 <esp_log_timestamp>
+400808f3:	0abd      	mov.n	a11, a10
+400808f5:	fed9a1        	l32r	a10, 4008045c <_init_end+0x5c>
+400808f8:	02cd      	mov.n	a12, a2
+400808fa:	fede81        	l32r	a8, 40080474 <_init_end+0x74>
+400808fd:	0008e0        	callx8	a8
+    start_cpu0();
+40080900:	ffeca5        	call8	400807cc <start_cpu0_default>
+40080903:	f01d      	retw.n
+40080905:	000000        	ill
+
+40080908 <ipc_task>:
+    s_ipc_wait = IPC_WAIT_FOR_START;
+    xSemaphoreGive(s_ipc_sem[cpu_id]);
+    xSemaphoreTake(s_ipc_ack, portMAX_DELAY);
+    xSemaphoreGive(s_ipc_mutex);
+    return ESP_OK;
+}
+40080908:	004136        	entry	a1, 32
+4008090b:	02c725        	call8	4008357c <xPortGetCoreID>
+4008090e:	101a27        	beq	a10, a2, 40080922 <ipc_task+0x1a>
+40080911:	fed9a1        	l32r	a10, 40080478 <_init_end+0x78>
+40080914:	fb2c      	movi.n	a11, 47
+40080916:	fed9c1        	l32r	a12, 4008047c <_init_end+0x7c>
+40080919:	fed9d1        	l32r	a13, 40080480 <_init_end+0x80>
+4008091c:	fedf81        	l32r	a8, 40080498 <_init_end+0x98>
+4008091f:	0008e0        	callx8	a8
+40080922:	fed831        	l32r	a3, 40080484 <_init_end+0x84>
+40080925:	a02230        	addx4	a2, a2, a3
+40080928:	fed871        	l32r	a7, 40080488 <_init_end+0x88>
+4008092b:	fed861        	l32r	a6, 4008048c <_init_end+0x8c>
+4008092e:	fed851        	l32r	a5, 40080490 <_init_end+0x90>
+40080931:	02a8      	l32i.n	a10, a2, 0
+40080933:	0b0c      	movi.n	a11, 0
+40080935:	fc7c      	movi.n	a12, -1
+40080937:	0bdd      	mov.n	a13, a11
+40080939:	0155a5        	call8	40081e94 <xQueueGenericReceive>
+4008093c:	051a26        	beqi	a10, 1, 40080945 <ipc_task+0x3d>
+4008093f:	fed781        	l32r	a8, 4008049c <_init_end+0x9c>
+40080942:	0008e0        	callx8	a8
+40080945:	0020c0        	memw
+40080948:	0738      	l32i.n	a3, a7, 0
+4008094a:	0020c0        	memw
+4008094d:	0648      	l32i.n	a4, a6, 0
+4008094f:	0020c0        	memw
+40080952:	0588      	l32i.n	a8, a5, 0
+40080954:	d8cc      	bnez.n	a8, 40080965 <ipc_task+0x5d>
+40080956:	fecf81        	l32r	a8, 40080494 <_init_end+0x94>
+40080959:	08a8      	l32i.n	a10, a8, 0
+4008095b:	0b0c      	movi.n	a11, 0
+4008095d:	20cbb0        	or	a12, a11, a11
+40080960:	0bdd      	mov.n	a13, a11
+40080962:	0116e5        	call8	40081ad0 <xQueueGenericSend>
+40080965:	04ad      	mov.n	a10, a4
+40080967:	0003e0        	callx8	a3
+4008096a:	fec931        	l32r	a3, 40080490 <_init_end+0x90>
+4008096d:	0020c0        	memw
+40080970:	0338      	l32i.n	a3, a3, 0
+40080972:	bb1366        	bnei	a3, 1, 40080931 <ipc_task+0x29>
+40080975:	fec731        	l32r	a3, 40080494 <_init_end+0x94>
+40080978:	03a8      	l32i.n	a10, a3, 0
+4008097a:	0b0c      	movi.n	a11, 0
+4008097c:	0bcd      	mov.n	a12, a11
+4008097e:	20dbb0        	or	a13, a11, a11
+40080981:	0114e5        	call8	40081ad0 <xQueueGenericSend>
+40080984:	ffea46        	j	40080931 <ipc_task+0x29>
+	...
+
+40080988 <lock_init_generic>:
+static portMUX_TYPE lock_init_spinlock = portMUX_INITIALIZER_UNLOCKED;
+
+/* Initialise the given lock by allocating a new mutex semaphore
+   as the _lock_t value.
+*/
+static void IRAM_ATTR lock_init_generic(_lock_t *lock, uint8_t mutex_type) {
+40080988:	004136        	entry	a1, 32
+    portENTER_CRITICAL(&lock_init_spinlock);
+4008098b:	fec5a1        	l32r	a10, 400804a0 <_init_end+0xa0>
+4008098e:	01cba5        	call8	40082648 <vTaskEnterCritical>
+    if (xTaskGetSchedulerState() == taskSCHEDULER_NOT_STARTED) {
+40080991:	01c865        	call8	40082618 <xTaskGetSchedulerState>
+40080994:	0e1a66        	bnei	a10, 1, 400809a6 <lock_init_generic+0x1e>
+        /* nothing to do until the scheduler is running */
+        *lock = 0; /* ensure lock is zeroed out, in case it's an automatic variable */
+40080997:	00a032        	movi	a3, 0
+4008099a:	0239      	s32i.n	a3, a2, 0
+        portEXIT_CRITICAL(&lock_init_spinlock);
+4008099c:	fec1a1        	l32r	a10, 400804a0 <_init_end+0xa0>
+4008099f:	01d165        	call8	400826b4 <vTaskExitCritical>
+        return;
+400809a2:	f01d      	retw.n
+400809a4:	820000        	mull	a0, a0, a0
+    }
+
+    if (*lock) {
+400809a7:	560022        	l8ui	a2, a0, 86
+400809aa:	00f8      	l32i.n	a15, a0, 0
+           implements these as macros instead of inline functions
+           (*party like it's 1998!*) it's not possible to do this
+           without writing wrappers. Doing it this way seems much less
+           spaghetti-like.
+        */
+        xSemaphoreHandle new_sem = xQueueCreateMutex(mutex_type);
+400809ac:	20a330        	or	a10, a3, a3
+400809af:	0129a5        	call8	40081c48 <xQueueCreateMutex>
+        if (!new_sem) {
+400809b2:	4acc      	bnez.n	a10, 400809ba <lock_init_generic+0x32>
+            abort(); /* No more semaphores available or OOM */
+400809b4:	feba81        	l32r	a8, 4008049c <_init_end+0x9c>
+400809b7:	0008e0        	callx8	a8
+        }
+        *lock = (_lock_t)new_sem;
+400809ba:	02a9      	s32i.n	a10, a2, 0
+    }
+    portEXIT_CRITICAL(&lock_init_spinlock);
+400809bc:	feb9a1        	l32r	a10, 400804a0 <_init_end+0xa0>
+400809bf:	01cf65        	call8	400826b4 <vTaskExitCritical>
+400809c2:	f01d      	retw.n
+
+400809c4 <_lock_init>:
+}
+
+void IRAM_ATTR _lock_init(_lock_t *lock) {
+400809c4:	004136        	entry	a1, 32
+    lock_init_generic(lock, queueQUEUE_TYPE_MUTEX);
+400809c7:	02ad      	mov.n	a10, a2
+400809c9:	1b0c      	movi.n	a11, 1
+400809cb:	fffbe5        	call8	40080988 <lock_init_generic>
+400809ce:	f01d      	retw.n
+
+400809d0 <_lock_init_recursive>:
+}
+
+void IRAM_ATTR _lock_init_recursive(_lock_t *lock) {
+400809d0:	004136        	entry	a1, 32
+    lock_init_generic(lock, queueQUEUE_TYPE_RECURSIVE_MUTEX);
+400809d3:	02ad      	mov.n	a10, a2
+400809d5:	4b0c      	movi.n	a11, 4
+400809d7:	fffb25        	call8	40080988 <lock_init_generic>
+400809da:	f01d      	retw.n
+
+400809dc <_lock_close>:
+
+   Note that FreeRTOS doesn't account for deleting mutexes while they
+   are held, and neither do we... so take care not to delete newlib
+   locks while they may be held by other tasks!
+*/
+void IRAM_ATTR _lock_close(_lock_t *lock) {
+400809dc:	004136        	entry	a1, 32
+    portENTER_CRITICAL(&lock_init_spinlock);
+400809df:	feb0a1        	l32r	a10, 400804a0 <_init_end+0xa0>
+400809e2:	01c665        	call8	40082648 <vTaskEnterCritical>
+    if (*lock) {
+400809e5:	002232        	l32i	a3, a2, 0
+400809e8:	027316        	beqz	a3, 40080a13 <_lock_close+0x37>
+        xSemaphoreHandle h = (xSemaphoreHandle)(*lock);
+#if (INCLUDE_xSemaphoreGetMutexHolder == 1)
+        configASSERT(xSemaphoreGetMutexHolder(h) == NULL); /* mutex should not be held */
+400809eb:	03ad      	mov.n	a10, a3
+400809ed:	010be5        	call8	40081aac <xQueueGetMutexHolder>
+400809f0:	6a9c      	beqz.n	a10, 40080a0a <_lock_close+0x2e>
+400809f2:	feaca1        	l32r	a10, 400804a4 <_init_end+0xa4>
+400809f5:	feacb1        	l32r	a11, 400804a8 <_init_end+0xa8>
+400809f8:	09a1c2        	movi	a12, 0x109
+400809fb:	feacd1        	l32r	a13, 400804ac <_init_end+0xac>
+400809fe:	fe9d81        	l32r	a8, 40080474 <_init_end+0x74>
+40080a01:	0008e0        	callx8	a8
+40080a04:	fea681        	l32r	a8, 4008049c <_init_end+0x9c>
+40080a07:	0008e0        	callx8	a8
+#endif
+        vSemaphoreDelete(h);
+40080a0a:	03ad      	mov.n	a10, a3
+40080a0c:	017125        	call8	40082120 <vQueueDelete>
+        *lock = 0;
+40080a0f:	030c      	movi.n	a3, 0
+40080a11:	0239      	s32i.n	a3, a2, 0
+    }
+    portEXIT_CRITICAL(&lock_init_spinlock);
+40080a13:	fea3a1        	l32r	a10, 400804a0 <_init_end+0xa0>
+40080a16:	01c9e5        	call8	400826b4 <vTaskExitCritical>
+40080a19:	f01d      	retw.n
+	...
+
+40080a1c <lock_acquire_generic>:
+}
+```
+
 
 
 ```
