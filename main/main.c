@@ -46,55 +46,6 @@ void simpleHex(int toOutout)
 }
 
 
-/* produce intel hex file output... call this routine with */
-/* each byte to output and it's memory location.  The file */
-/* pointer fhex must have been opened for writing.  After */
-/* all data is written, call with end=1 (normally set to 0) */
-/* so it will flush the data from its static buffer */
-
-#define MAXHEXLINE 32	/* the maximum number of bytes to put in one line */
-
-void hexout(char byte, unsigned char* memory_location,int end)
-{
-    static int byte_buffer[MAXHEXLINE];
-    static unsigned char* last_mem, buffer_pos; 
-    static unsigned char* buffer_addr;
-    static int writing_in_progress=0;
-    register int i, sum;
-
-    if (!writing_in_progress) {
-        /* initial condition setup */
-        last_mem = memory_location-1;
-        buffer_pos = 0;
-        buffer_addr = memory_location;
-        writing_in_progress = 1;
-        }
-
-    if ( (memory_location != (last_mem+1)) || (buffer_pos >= MAXHEXLINE) \
-     || ((end) && (buffer_pos > 0)) ) {
-        /* it's time to dump the buffer to a line in the file */
-        printf(":%02X%04X00", (unsigned int)buffer_pos, (unsigned int)buffer_addr);
-        sum = buffer_pos + (((int)buffer_addr>>8)&255) + ((int)buffer_addr&255);
-        for (i=0; i < buffer_pos; i++) {
-            printf( "%02X", byte_buffer[i]&255);
-            sum += byte_buffer[i]&255;
-        }
-        printf("%02X\n", (-sum)&255);
-        buffer_addr = memory_location;
-        buffer_pos = 0;
-    }
-
-    if (end) {
-        printf( ":00000001FF\n");  /* end of file marker */
-        fflush(stdout);
-        writing_in_progress = 0;
-    }
-
-    last_mem = memory_location;
-    byte_buffer[buffer_pos] = byte & 255;
-    buffer_pos++;
-}
-
 unsigned char test_data[]={0xFF,0x01,0x02,0x03,0x04,0x05,0x06,0x07,
                  0x08,0x09,0x0A,0x0B,0x0C,0x0D,0x0E,0x0F,
                  0xFF,0x01,0x02,0x03,0x04,0x05,0x06,0x07,
@@ -113,41 +64,38 @@ unsigned char test_data[]={0xFF,0x01,0x02,0x03,0x04,0x05,0x06,0x07,
 
 void dump_task(void *pvParameter)
 {
-    printf("Hex Dump!\n");
     unsigned char*mem_location=(unsigned char*)0x40000000;
-    //unsigned char*mem_location=hello_task;
+    //unsigned char*mem_location=dump_task;
     //unsigned char*mem_location=test_data;
     unsigned int*simple_mem_location=(unsigned int*)mem_location;
     unsigned int* end=(unsigned int*)0x400C1FFF;
-
-    //0x400C_1FFF
 
     printf("\n");
     printf("ROM DUMP\n");
     printf("\n");
     printf("\n");
+    fflush(stdout);
+
+    unsigned int simple_crc=0;
+    unsigned int pos=0;
 
     while(simple_mem_location<end) {
         simpleHex(*simple_mem_location);
+        simple_crc=simple_crc ^ (*simple_mem_location);
         printf(",");
+        if (pos++==7) {
+            printf( ":%08X:\n", simple_crc);
+            fflush(stdout);
+            simple_crc=0;
+            pos=0;
+            //vTaskDelay(300 / portTICK_PERIOD_MS);
+        }
         simple_mem_location++;
     }
     fflush(stdout);
 
     printf("\n");
     printf("\n");
-    printf("\n");
-    printf("\n");
-
-
-    //void hexout(int byte, int memory_location,int end)
-    while(mem_location<(unsigned char *)end) {
-        hexout(*mem_location,mem_location,0);
-        //printf("%02X",*mem_location);
-        mem_location++;
-    }
-    hexout(*mem_location,mem_location,1);
-
     printf("Done.\n");
     fflush(stdout);
     //system_restart();
