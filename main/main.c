@@ -114,25 +114,34 @@ unsigned char test_data[]={0xFF,0x01,0x02,0x03,0x04,0x05,0x06,0x07,
 void dump_task(void *pvParameter)
 {
     printf("Hex Dump!\n");
-    //unsigned char*mem_location=0x40000000;
+    unsigned char*mem_location=(unsigned char*)0x40000000;
     //unsigned char*mem_location=hello_task;
-    unsigned char*mem_location=test_data;
-    unsigned int*simple_mem_location=test_data;
+    //unsigned char*mem_location=test_data;
+    unsigned int*simple_mem_location=(unsigned int*)mem_location;
+    unsigned int* end=(unsigned int*)0x400C1FFF;
 
     //0x400C_1FFF
 
-    while(simple_mem_location<1+test_data+sizeof(test_data)) {
+    printf("\n");
+    printf("ROM DUMP\n");
+    printf("\n");
+    printf("\n");
+
+    while(simple_mem_location<end) {
         simpleHex(*simple_mem_location);
         printf(",");
         simple_mem_location++;
     }
+    fflush(stdout);
 
+    printf("\n");
+    printf("\n");
     printf("\n");
     printf("\n");
 
 
     //void hexout(int byte, int memory_location,int end)
-    while(mem_location<1+test_data+sizeof(test_data)) {
+    while(mem_location<(unsigned char *)end) {
         hexout(*mem_location,mem_location,0);
         //printf("%02X",*mem_location);
         mem_location++;
