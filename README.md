@@ -6,6 +6,11 @@ This documents how to add an esp32 cpu and a simple esp32 board to qemu
 in order to run an app compiled with the SDK in QEMU. Esp32 is a 240 MHz dual core Tensilica LX6 microcontroller.
 It might not be possible but its a good way to learn about qemu and esp32.
 
+#First romdump
+I did my first romdump,
+Got fatal error when flashing my app, but will try this.
+https://github.com/espressif/esp-idf/issues/14
+
 
 By following the instructions here, I added esp32 to qemu.
 http://wiki.linux-xtensa.org/index.php/Xtensa_on_QEMU
@@ -131,6 +136,168 @@ Disassembly of section .text.jump:
 
 
 #Results
+I got my ESP32-dev board from Adafruit.
+Made a dump and mapped it into the file rom.bin
+I assume that the dump is from RAM.
+
+If booting from the romdump we start here, _ResetVector, 0x40000400
+0x40000400      j      0x40000450                    // _ResetHandler, 0x40000450
+    0x40000450      movi   a0, 0 
+    0x40000453      wsr.intenable  a0                // Turn of interrupts
+    0x40000456      rsr.prid       a2                                                                               
+    0x40000459      l32r   a3, 0x40000404            // a3 contains ABAB=43947                                                             
+    0x4000045c      bne    a2, a3, 0x40000471        // a2 contains 0                                                               
+    0x4000045f      l32r   a3, 0x40000408            |                                                               
+    0x40000462      l32i   a3, a3, 0                 |                                                               
+    0x40000465      bbci   a3, 31, 0x40000471        |                                                               
+    0x40000468      l32r   a2, 0x4000040c            |                                                               
+    0x4000046b      and    a3, a3, a2                |                                                               
+    0x4000046e      callx0 a3                        v                                                               
+    0x40000471      l32r   a2, 0x40000410                                                                           
+    0x40000474      rsr.prid       a3                                                                               
+    0x40000477      extui  a3, a3, 0, 8                                                                             
+    0x4000047a      beqz.n a2, 0x40000480            |                                                             
+    0x4000047c      bnez.n a3, 0x40000480            |                                                               
+    0x4000047e      s32i.n a0, a2, 0                 v                                                               
+    0x40000480      l32r   a2, 0x40000414            // a2 contains   0x40000000                                                            
+    0x40000483      wsr.vecbase    a2                // Special register vecbase        
+    0x40000486      movi.n a3, 21                    // a3 contains 21=0x15
+    0x40000486      movi.n a3, 21                    // a3 contains 21=0x15                                                               
+    0x40000488      wsr.atomctl    a3                                                                               
+    0x4000048b      rsil   a2, 1                     // a2 contains 0x1f                               
+    0x4000048e      l32r   a2, 0x40000418            // a2 contains    0x2222211f                                                            
+    0x40000491      l32r   a5, 0x4000041c            // a5 contains    0xe0000000                                                              
+    0x40000494      l32r   a6, 0x40000420            // a6 contains    0x400004c3                                                               
+    0x40000497      movi.n a3, 0                                                                                    
+    0x40000499      mov.n  a7, a2                    // a7 contains    0x2222211f
+    0x4000049b      and    a6, a6, a5                // a6 contains    0x40000000
+    0x4000049e      j      0x400004c3      
+    0x400004a1      ill                          |                                                                  
+    0x400004a4      ill                          |                                                                   
+    0x400004a7      ill                          |                                                                   
+    0x400004aa      ill                          |                                                                   
+    0x400004ad      ill                          |                                                                   
+    0x400004b0      witlb  a4, a3                |                                                                   
+    0x400004b3      isync                        |                                                                   
+    0x400004b6      nop.n                        |                                                                   
+    0x400004b8      nop.n                        |                                                                   
+    0x400004ba      sub    a3, a3, a5            |                                                                   
+    0x400004bd      bltui  a3, 16, 0x400004d5    |                                                                   
+^   0x400004c0      srli   a7, a7, 4             v                                                                   
+|   0x400004c3      extui  a4, a7, 0, 4                                                                             
+|   0x400004c6      beq    a3, a6, 0x400004b0                                                                       
+|   0x400004c9      witlb  a4, a3                                                                                   
+|   0x400004cc      sub    a3, a3, a5                                                                               
+ _  0x400004cf      bgeui  a3, 16, 0x400004c0                                                                       
+    0x400004d2      isync                             //  a5   0xe0000000                                                           
+    0x400004d5      l32r   a5, 0x4000041c 
+    0x400004d8      movi.n a3, 0                                                                                    
+    0x400004da      or     a7, a2, a2                                                                               
+    0x400004dd      extui  a4, a7, 0, 4                                                                             
+    0x400004e0      wdtlb  a4, a3                                                                                   
+    0x400004e3      sub    a3, a3, a5                                                                               
+    0x400004e6      srli   a7, a7, 4                                                                                
+    0x400004e9      bgeui  a3, 16, 0x400004dd                                                                       
+    0x400004ec      dsync                                                                                           
+    0x400004ef      movi   a3, 1                                                                                    
+    0x400004f2      rsr.memctl     a2                // Exception here
+    0x400004f5      or     a2, a2, a3                                                                               
+    0x400004f8      wsr.memctl     a2                                                                               
+    0x400004fb      l32r   a4, 0x40000424                                                                           
+    0x400004fe      l32r   a5, 0x40000428        
+    0x40000501      l32i.n a6, a4, 0                                                                                
+    0x40000503      l32i.n a7, a4, 4                                                                                
+    0x40000505      l32i.n a8, a4, 8                                                                                
+    0x40000507      l32i.n a2, a4, 12                                                                               
+    0x40000509      beqi   a2, 1, 0x40000515  
+
+
+we end up here,
+
+> 0x400004f2      rsr.memctl     a2                                                                               
+
+This triggers the  following exception. Double exception that looks like this
+0x400003c0      break  1, 4
+0x400003c3      j      0x400003c0 
+
+If running from the loaded elf, we get:
+x400807e0 <call_start_cpu0>    entry  a1, 64                                                                   
+    0x400807e3 <call_start_cpu0+3>  l32r   a2, 0x4008041c                                                           
+    0x400807e6 <call_start_cpu0+6>  memw                                                                            
+    0x400807e9 <call_start_cpu0+9>  l32i.n a9, a2, 0                                                                
+    0x400807eb <call_start_cpu0+11> movi   a8, 0xfffffbff                                                           
+    0x400807ee <call_start_cpu0+14> and    a8, a9, a8                                                               
+    0x400807f1 <call_start_cpu0+17> memw                                                                            
+    0x400807f4 <call_start_cpu0+20> s32i.n a8, a2, 0                                                                
+    0x400807f6 <call_start_cpu0+22> l32r   a2, 0x40080420                                                           
+    0x400807f9 <call_start_cpu0+25> memw                                                                            
+    0x400807fc <call_start_cpu0+28> l32i.n a9, a2, 0                                                                
+    0x400807fe <call_start_cpu0+30> l32r   a8, 0x40080424                                                           
+    0x40080801 <call_start_cpu0+33> and    a8, a9, a8                                                               
+    0x40080804 <call_start_cpu0+36> memw                                                                            
+    0x40080807 <call_start_cpu0+39> s32i.n a8, a2, 0                                                                
+  > 0x40080809 <call_start_cpu0+41> mov.n  a10, a1                                                                  
+    0x4008080b <call_start_cpu0+43> l32r   a11, 0x40080428                                                          
+    0x4008080e <call_start_cpu0+46> movi.n a12, 20                                                                  
+    0x40080810 <call_start_cpu0+48> l32r   a8, 0x4008044c     //    a8     0x4000c2c8,memcpy       1073791688                                                    
+    0x40080813 <call_start_cpu0+51> callx8 a8                        
+
+
+
+  cpu_configure_region_protection () at /home/olas/esp/esp-idf/components/esp32/include/soc/cpu.h:61
+
+
+memcpy...
+
+    0x4000c2c8      entry  a1, 16                                                                                   
+    0x4000c2cb      or     a5, a2, a2                                                                               
+    0x4000c2ce      bbsi   a2, 0, 0x4000c298                                                                        
+    0x4000c2d1      bbsi   a2, 1, 0x4000c2ac                                                                        
+    0x4000c2d4      srli   a7, a4, 4                                                                                
+    0x4000c2d7      slli   a8, a3, 30                                                                               
+    0x4000c2da      bnez   a8, 0x4000c338                                                                           
+    0x4000c2dd      loopnez        a7, 0x4000c2f6                                                                   
+    0x4000c2e0      l32i.n a6, a3, 0                                                                                
+    0x4000c2e2      l32i.n a7, a3, 4                                                                                
+    0x4000c2e4      s32i.n a6, a5, 0   // Crash here
+
+    a0             0x80080816       -2146957290
+a1             0xffffffb0       -80
+a2             0xffffffc0       -64
+a3             0x3f400010       1061158928
+a4             0x14     20
+a5             0xffffffc0       -64
+a6             0x0      0
+a7             0x80000000       -2147483648
+a8             0x0      0
+
+
+    0x4000c2e6      l32i.n a6, a3, 8                                                                                
+    0x4000c2e8      s32i.n a7, a5, 4                                                                                
+    0x4000c2ea      l32i.n a7, a3, 12                                                                               
+    0x4000c2ec      s32i.n a6, a5, 8                                                                                
+    0x4000c2ee      addi   a3, a3, 16                                                                               
+    0x4000c2f1      s32i.n a7, a5, 12                                                                               
+    0x4000c2f3      addi   a5, a5, 16                                                                               
+    0x4000c2f6      bbci   a4, 3, 0x4000c305                   
+    0x4000c2f9      l32i.n a6, a3, 0                                                                                
+    0x4000c2fb      l32i.n a7, a3, 4                                                                                
+    0x4000c2fd      addi.n a3, a3, 8                                                                                
+    0x4000c2ff      s32i.n a6, a5, 0                                                                                
+    0x4000c301      s32i.n a7, a5, 4                                                                                
+    0x4000c303      addi.n a5, a5, 8                                                                                
+    0x4000c305      bbsi   a4, 2, 0x4000c310                                                                        
+    0x4000c308      bbsi   a4, 1, 0x4000c320                                                                        
+    0x4000c30b      bbsi   a4, 0, 0x4000c330                                                                        
+    0x4000c30e      retw.n                                                                                          
+    0x4000c310      l32i.n a6, a3, 0                                                                                
+    0x4000c312      addi.n a3, a3, 4                                                                                
+    0x4000c314      s32i.n a6, a5, 0                                                                                
+    0x4000c316      addi.n a5, a5, 4                                                                                
+    0x4000c318      bbsi   a4, 1, 0x4000c320                                                                        
+    0x4000c31b      bbsi   a4, 0, 0x4000c330                                                                        
+    0x4000c31e      retw.n                          
+
 Currently it is possible to load the elf file but when running we get,
 DoubleException interrupts very quickly,
 
