@@ -164,6 +164,14 @@ static void lx60_reset(void *opaque)
     XtensaCPU *cpu = opaque;
 
     cpu_reset(CPU(cpu));
+
+
+    CPUXtensaState *env = &cpu->env;
+
+    env->sregs[146] = 0xABAB;
+
+
+
 }
 
 static uint64_t esp_io_read(void *opaque, hwaddr addr,
@@ -225,7 +233,11 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
         }
         env = &cpu->env;
 
-        env->sregs[PRID] = n;
+        if (n==0) {
+           env->sregs[PRID] = 0xABAB;
+        } else {
+           env->sregs[PRID] = 0xCDCD;            
+        }
         qemu_register_reset(lx60_reset, cpu);
         /* Need MMU initialized prior to ELF loading,
          * so that ELF gets loaded into virtual addresses
@@ -238,7 +250,7 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
 
     // Map all as ram 
     ram = g_malloc(sizeof(*ram));
-    memory_region_init_ram(ram, NULL, "iram0", 0x1ff00000,
+    memory_region_init_ram(ram, NULL, "iram0", 0x1fffffff,  // 00000
                            &error_abort);
 
     vmstate_register_ram_global(ram);
@@ -276,7 +288,7 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
     // sram1 -- 0x400B_0000 ~ 0x400B_7FFF
 
 
-// dram0 3ffc0000 
+    // dram0 3ffc0000 
 
     system_io = g_malloc(sizeof(*system_io));
     memory_region_init_io(system_io, NULL, &esp_io_ops, NULL, "esp32.io",
@@ -436,7 +448,7 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
 
             cpu_physical_memory_write(0x40000300, rfe, sizeof(rfe));
 
-// Add rom from files
+            // Add rom from file
             FILE *f_rom=fopen("rom.bin", "r");
             
             if (f_rom == NULL) {
@@ -448,9 +460,9 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
             }
 
             // Skip bootloader initialisation, jump to the fresh elf
-            cpu_physical_memory_write(env->pc, jx_a0, sizeof(jx_a0));
+            //cpu_physical_memory_write(env->pc, jx_a0, sizeof(jx_a0));
 
-            //cpu_physical_memory_write(0x400003c0, rfde, sizeof(rfde));
+            cpu_physical_memory_write(0x400003c0, rfde, sizeof(rfde));
 
 
 

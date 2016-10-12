@@ -66,7 +66,7 @@ Got fatal error when flashing my app, but will try this. https://github.com/espr
 
 ### Start qemu
 ```
-  > xtensa-softmmu/qemu-system-xtensa -d mmu  -cpu esp32 -M esp32 -m 4M  -kernel  ~/esp/qemu_esp32/build/app-template.elf  -s -S
+  > xtensa-softmmu/qemu-system-xtensa -d guest_errors,int,mmu,page,unimp  -cpu esp32 -M esp32 -m 4M  -kernel  ~/esp/qemu_esp32/build/app-template.elf  -s -S
 With more logging
   > xtensa-softmmu/qemu-system-xtensa -d guest_errors,int,mmu,page -cpu esp32 -M esp32 -m 4M  -kernel  ~/esp/qemu_esp32/build/app-template.elf  -s -S
 
@@ -166,6 +166,21 @@ To set a breakpoint before exception try,
 ```
 (gdb) b *0x400004ef
 0x2222211f	572662047
+after break, set $pc=0x400004fb
+
+
+
+
+Probably missing ram.. 
+static HeapRegionTagged_t regions[]={
+	{ (uint8_t *)0x3F800000, 0x20000, 15, 0}, //SPI SRAM, if available
+	{ (uint8_t *)0x3FFAE000, 0x2000, 0, 0}, //pool 16 <- used for rom code
+	{ (uint8_t *)0x3FFB0000, 0x8000, 0, 0}, //pool 15 <- can be used for BT
+	{ (uint8_t *)0x3FFB8000, 0x8000, 0, 0}, //pool 14 <- can be used for BT
+
+
+
+
 
 ```
 
@@ -256,6 +271,11 @@ If booting from the romdump we start here, _ResetVector, 0x40000400
    <0x40000523      bltu   a4, a5, 0x40000501                                                                                                         <
    <0x40000526      isync                           
 
+    // check translate.c for simcall..
+    qemu_log_mask(LOG_GUEST_ERROR, "SIMCALL but semihosting is disabled\n");
+    //gen_exception_cause(dc, ILLEGAL_INSTRUCTION_CAUSE);
+
+
 we need to stop this from createing exception...
 
 > 0x400004f2      rsr.memctl     a2                                                                               
@@ -264,6 +284,33 @@ This triggers the  following exception. Double exception that looks like this
 0x400003c0      break  1, 4
 0x400003c3      j      0x400003c0 
 ```
+
+###rom_main
+
+0x400076c4      entry  a1, 112                                                                                                                    <
+   <0x400076c7      l32r   a11, 0x40007674                                                                                                            <
+   <0x400076ca      mov.n  a10, a1                                                                                                                    <
+   <0x400076cc      movi.n a12, 68                                                                                                                    <
+   <0x400076ce      call8  0x4000c2c8             // memcpy                                                                                                     <
+   <0x400076d1      l32r   a2, 0x40000570                                                                                                             <
+   <0x400076d4      rsr.prid       a3                                                                                                                 <
+   <0x400076d7      bne    a3, a2, 0x400076e9                                                                                                         <
+   <0x400076da      l32r   a3, 0x40006898                                                                                                             <
+   <0x400076dd      memw                                                                                                                              <
+   <0x400076e0      l32i.n a2, a3, 0                                                                                                                  <
+   <0x400076e2      beqz   a2, 0x400076dd                                                                                                             <
+   <0x400076e5      j      0x40007bf0                                                                                                                 <
+   <0x400076e8      extui  a2, a0, 17, 5                                                                                                              <
+   <0x400076eb      .byte 0xfe                                                                                                                        <
+   <0x400076ec      movi.n a3, 6                                                                                                                      <
+   <0x400076ee      memw                                                                                                                              <
+   <0x400076f1      l32i.n a4, a2, 0                                                                                                                  <
+   <0x400076f3      movi   a10, 0                                                                                                                     <
+   <0x400076f6      or     a3, a4, a3                                                                                                                 <
+   <0x400076f9      memw                                                                                                                              <
+   <0x400076fc      s32i   a3, a2, 0                                                                                                                  <
+   <0x400076ff      call8  0x400081d4                
+
 
 
 ```
@@ -399,6 +446,8 @@ void HELPER(entry)(CPUXtensaState *env, uint32_t pc, uint32_t s, uint32_t imm)
 
 #Setting up visual studio code to compile
 ```
+Press ctrl-shift-P 
+type tasks, select configure task runner, select other
 {
     "version": "0.1.0",
     "command": "make",
