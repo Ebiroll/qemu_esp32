@@ -164,9 +164,69 @@ I assume that the dump is from RAM.
 
 To set a breakpoint before exception try,
 ```
+(gdb) b	*0x400076c4
+
 (gdb) b *0x400004ef
 0x2222211f	572662047
 after break, set $pc=0x400004fb
+
+b	*0x400076c4
+
+// Here we get an io read register 0x38...
+
+ <0x400076d4      rsr.prid       a3                                                                                                                 <
+   <0x400076d7      bne    a3, a2, 0x400076e9                                                                                                         <
+   <0x400076da      l32r   a3, 0x40006898                                                                                                             <
+   <0x400076dd      memw                                                                                                                              <
+   <0x400076e0      l32i.n a2, a3, 0                                                                                                                  <
+   <0x400076e2      beqz   a2, 0x400076dd  
+   <0x400076e5      j      0x40007bf0                                                                                                                 <
+   <0x400076e8      extui  a2, a0, 17, 5                                                                                                              <
+   <0x400076eb      .byte 0xfe            
+
+
+// Lots of calls to... xtos_set_exception_handler
+
+0x40007bf0      l32r   a3, 0x40006878                                                                                                             <
+   <0x40007bf3      s32i.n a2, a3, 0                                                                                                                  <
+   <0x40007bf5      l32r   a2, 0x400076bc                                                                                                             <
+   <0x40007bf8      movi.n a10, 9                                                                                                                     <
+   <0x40007bfa      mov.n  a11, a2                                                                                                                    <
+   <0x40007bfc      call8  0x4000074c                                                                                                                 <
+   <0x40007bff      mov.n  a11, a2                                                                                                                    <
+   <0x40007c01      movi.n a10, 0                                                                                                                     <
+   <0x40007c03      call8  0x4000074c                                                                                                                 <
+   <0x40007c06      mov.n  a11, a2                                                                                                                    <
+   <0x40007c08      movi.n a10, 2                                                                                                                     <
+   <0x40007c0a      call8  0x4000074c                                                                                                                 <
+   <0x40007c0d      mov.n  a11, a2                                                                                                                    <
+   <0x40007c0f      movi.n a10, 3                                                                                                                     <
+   <0x40007c11      call8  0x4000074c                                                                                                                 <
+   <0x40007c14      mov.n  a11, a2                                                                                                                    <
+   <0x40007c16      movi.n a10, 28                                                                                                                    <
+   <0x40007c18      call8  0x4000074c                                                                                                                 <
+   <0x40007c1b      mov.n  a11, a2                                                                                                                    <
+   <0x40007c1d      movi.n a10, 29                                                                                                                    <
+   <0x40007c1f      call8  0x4000074c                                                                                                                 <
+   <0x40007c22      mov.n  a11, a2                                                                                                                    <
+   <0x40007c24      movi.n a10, 8                  
+
+
+
+
+
+
+or patch qemu....
+static bool gen_check_sr(DisasContext *dc, uint32_t sr, unsigned access)
+{
+    if (!xtensa_option_bits_enabled(dc->config, sregnames[sr].opt_bits)) {
+        if (sregnames[sr].name) {
+            qemu_log_mask(LOG_GUEST_ERROR, "SR %s is not configured\n", sregnames[sr].name);
+        } else {
+            qemu_log_mask(LOG_UNIMP, "SR %d %s is not implemented\n", sr);
+        }
+        //gen_exception_cause(dc, ILLEGAL_INSTRUCTION_CAUSE);
+
 
 
 
@@ -274,16 +334,14 @@ If booting from the romdump we start here, _ResetVector, 0x40000400
     // check translate.c for simcall..
     qemu_log_mask(LOG_GUEST_ERROR, "SIMCALL but semihosting is disabled\n");
     //gen_exception_cause(dc, ILLEGAL_INSTRUCTION_CAUSE);
+// We get, this printout..
+io read 00000038
 
-
-we need to stop this from createing exception...
-
-> 0x400004f2      rsr.memctl     a2                                                                               
-
-This triggers the  following exception. Double exception that looks like this
-0x400003c0      break  1, 4
-0x400003c3      j      0x400003c0 
-```
+// We endup here. Dead end 
+   <0x40000280      wsr.excsave6   a2                                                                                                                 <
+   <0x40000283      movi.n a2, -8                                                                                                                     <
+   <0x40000285      simcall                                                                                                                           <
+  ><0x40000288      j      0x40000288  
 
 ###rom_main
 
@@ -380,18 +438,6 @@ memcpy...
     0x4000c2e0      l32i.n a6, a3, 0                                                                                
     0x4000c2e2      l32i.n a7, a3, 4                                                                                
     0x4000c2e4      s32i.n a6, a5, 0   // Crash here
-
-a0             0x80080816       -2146957290
-a1             0xffffffb0       -80
-a2             0xffffffc0       -64
-a3             0x3f400010       1061158928
-a4             0x14     20
-a5             0xffffffc0       -64
-a6             0x0      0
-a7             0x80000000       -2147483648
-a8             0x0      0
-
-
     0x4000c2e6      l32i.n a6, a3, 8                                                                                
     0x4000c2e8      s32i.n a7, a5, 4                                                                                
     0x4000c2ea      l32i.n a7, a3, 12                                                                               
