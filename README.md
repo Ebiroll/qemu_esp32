@@ -169,14 +169,15 @@ To set a breakpoint before exception try,
 
 ```
 
-
+```
 If booting from the romdump we start here, _ResetVector, 0x40000400
 0x40000400      j      0x40000450                    // _ResetHandler, 0x40000450
     0x40000450      movi   a0, 0 
     0x40000453      wsr.intenable  a0                // Turn of interrupts
-    0x40000456      rsr.prid       a2                                                                               
+    0x40000456      rsr.prid       a2                // Check processor ID. 0xABAB on app-cpu and 0xCDCD on pro-cpu 
+                                                     //  set $a2=0xABAB before si                                                              
     0x40000459      l32r   a3, 0x40000404            // a3 contains ABAB=43947                                                             
-    0x4000045c      bne    a2, a3, 0x40000471        // a2 contains 0                                                               
+    0x4000045c      bne    a2, a3, 0x40000471        // a2 should contain abab,                                                                
     0x4000045f      l32r   a3, 0x40000408            |                                                               
     0x40000462      l32i   a3, a3, 0                 |                                                               
     0x40000465      bbci   a3, 31, 0x40000471        |                                                               
@@ -230,25 +231,67 @@ If booting from the romdump we start here, _ResetVector, 0x40000400
     0x400004e9      bgeui  a3, 16, 0x400004dd                                                                       
     0x400004ec      dsync                                                                                           
     0x400004ef      movi   a3, 1                                                                                    
-    0x400004f2      rsr.memctl     a2                // Exception here
+    0x400004f2      rsr.memctl     a2                // Exception here, a2 contains..0x2222211f, read from 0x40000418 (_ResetVector + 18)
+                                                     // a3 contains 1.   
+                                                     // I guess qemu has no support for this.. set $pc=0x400004fb to continue.
     0x400004f5      or     a2, a2, a3                                                                               
     0x400004f8      wsr.memctl     a2                                                                               
-    0x400004fb      l32r   a4, 0x40000424                                                                           
-    0x400004fe      l32r   a5, 0x40000428        
-    0x40000501      l32i.n a6, a4, 0                                                                                
-    0x40000503      l32i.n a7, a4, 4                                                                                
-    0x40000505      l32i.n a8, a4, 8                                                                                
+    0x400004fb      l32r   a4, 0x40000424            // a4 contains   0x4000d4f8                                                                
+    0x400004fe      l32r   a5, 0x40000428            // a5 contains   0x4000d5c8
+    0x40000501      l32i.n a6, a4, 0                 //                                                                 
+    0x40000503      l32i.n a7, a4, 4                 // a7 contains      0x3ffae010                                                         
+    0x40000505      l32i.n a8, a4, 8                 // a8 contains      0x4000d670                                                             
     0x40000507      l32i.n a2, a4, 12                                                                               
     0x40000509      beqi   a2, 1, 0x40000515  
+   <0x4000050c      rsr.prid       a2                // I guess qemu has no support for this.. set $a2=0xABAB to continue.
+                                                     // Please fix...   qemu/target-xtensa/cpu.c  xtensa_cpu_reset                                           <
+   <0x4000050f      l32r   a3, 0x40000404            // a3 contains 0xabab                                                                                                 <
+   <0x40000512      beq    a2, a3, 0x40000520                                                                                                         <
+   <0x40000515      l32i.n a2, a8, 0                                                                                                                  <
+   <0x40000517      s32i.n a2, a6, 0                                                                                                                  <
+   <0x40000519      addi.n a6, a6, 4                                                                                                                  <
+   <0x4000051b      addi.n a8, a8, 4                                                                                                                  <
+   <0x4000051d      bltu   a6, a7, 0x40000515                                                                                                         <
+   <0x40000520      addi   a4, a4, 16                                                                                                                 <
+   <0x40000523      bltu   a4, a5, 0x40000501                                                                                                         <
+   <0x40000526      isync                           
 
-
-we end up here,
+we need to stop this from createing exception...
 
 > 0x400004f2      rsr.memctl     a2                                                                               
 
 This triggers the  following exception. Double exception that looks like this
 0x400003c0      break  1, 4
 0x400003c3      j      0x400003c0 
+```
+
+
+```
+from components/freertos/include/freertos/xtensa_context.h
+/*
+ Macro to get the current core ID. Only uses the reg given as an argument.
+ Reading PRID on the ESP108 architecture gives us 0xCDCD on the PRO processor
+ and 0xABAB on the APP CPU. We distinguish between the two by simply checking 
+ bit 1: it's 1 on the APP and 0 on the PRO processor.
+*/
+
+#ifdef __ASSEMBLER__
+	.macro getcoreid reg
+	rsr.prid \reg
+	bbci \reg,1,1f
+	movi \reg,1
+	j 2f
+1:
+	movi \reg,0
+2:
+	.endm
+#endif
+```
+
+
+
+
+
 
 If running from the loaded elf, we get:
 x400807e0 <call_start_cpu0>    entry  a1, 64                                                                   
@@ -291,7 +334,7 @@ memcpy...
     0x4000c2e2      l32i.n a7, a3, 4                                                                                
     0x4000c2e4      s32i.n a6, a5, 0   // Crash here
 
-    a0             0x80080816       -2146957290
+a0             0x80080816       -2146957290
 a1             0xffffffb0       -80
 a2             0xffffffc0       -64
 a3             0x3f400010       1061158928
@@ -666,9 +709,9 @@ void IRAM_ATTR call_start_cpu0()
 static inline void cpu_configure_region_protection()
 {
     const uint32_t pages_to_protect[] = {0x00000000, 0x80000000, 0xa0000000, 0xc0000000, 0xe0000000};
-40080851:	01ad      	mov.n	a10, a1
+40080851:	01ad      	    mov.n	a10, a1
 40080853:	fefab1        	l32r	a11, 4008043c <_init_end+0x3c>
-40080856:	4c1c      	movi.n	a12, 20
+40080856:	4c1c      	    movi.n	a12, 20
 40080858:	ff0281        	l32r	a8, 40080460 <_init_end+0x60>
 4008085b:	0008e0        	callx8	a8                          // a8 contains 0x4000c2c8, memcpy()...
     for (int i = 0; i < sizeof(pages_to_protect)/sizeof(pages_to_protect[0]); ++i) {
@@ -751,8 +794,8 @@ static inline void cpu_write_itlb(unsigned vpn, unsigned attr)
 
     memset(&_bss_start, 0, (&_bss_end - &_bss_start) * sizeof(_bss_start));
 400808a2:	feea21        	l32r	a2, 4008044c <_init_end+0x4c>
-400808a5:	02ad      	mov.n	a10, a2
-400808a7:	0b0c      	movi.n	a11, 0
+400808a5:	02ad      	    mov.n	a10, a2
+400808a7:	0b0c      	    movi.n	a11, 0
 400808a9:	fee7c1        	l32r	a12, 40080448 <_init_end+0x48>
 400808ac:	c0cc20        	sub	a12, a12, a2
 400808af:	feef81        	l32r	a8, 4008046c <_init_end+0x6c>
@@ -765,10 +808,10 @@ static inline void cpu_write_itlb(unsigned vpn, unsigned attr)
 
     ESP_EARLY_LOGI(TAG, "Pro cpu up.");
 400808bb:	008f65        	call8	400811b0 <esp_log_timestamp>
-400808be:	0abd      	mov.n	a11, a10
+400808be:	0abd      	    mov.n	a11, a10
 400808c0:	fed421        	l32r	a2, 40080410 <_init_end+0x10>
 400808c3:	fee3a1        	l32r	a10, 40080450 <_init_end+0x50>
-400808c6:	02cd      	mov.n	a12, a2
+400808c6:	02cd      	    mov.n	a12, a2
 400808c8:	feeb81        	l32r	a8, 40080474 <_init_end+0x74>
 400808cb:	0008e0        	callx8	a8
 
@@ -778,25 +821,25 @@ static inline void cpu_write_itlb(unsigned vpn, unsigned attr)
 #else
     ESP_EARLY_LOGI(TAG, "Single core mode");
 400808ce:	008e25        	call8	400811b0 <esp_log_timestamp>
-400808d1:	0abd      	mov.n	a11, a10
+400808d1:	0abd      	    mov.n	a11, a10
 400808d3:	fee0a1        	l32r	a10, 40080454 <_init_end+0x54>
-400808d6:	02cd      	mov.n	a12, a2
+400808d6:	02cd      	    mov.n	a12, a2
 400808d8:	fee781        	l32r	a8, 40080474 <_init_end+0x74>
 400808db:	0008e0        	callx8	a8
     CLEAR_PERI_REG_MASK(DPORT_APPCPU_CTRL_B_REG, DPORT_APPCPU_CLKGATE_EN);
 400808de:	fede81        	l32r	a8, 40080458 <_init_end+0x58>
 400808e1:	0020c0        	memw
-400808e4:	08a8      	l32i.n	a10, a8, 0
-400808e6:	e97c      	movi.n	a9, -2
+400808e4:	08a8      	    l32i.n	a10, a8, 0
+400808e6:	e97c      	    movi.n	a9, -2
 400808e8:	109a90        	and	a9, a10, a9
 400808eb:	0020c0        	memw
-400808ee:	0899      	s32i.n	a9, a8, 0
+400808ee:	0899      	    s32i.n	a9, a8, 0
 #endif
     ESP_EARLY_LOGI(TAG, "Pro cpu start user code");
 400808f0:	008be5        	call8	400811b0 <esp_log_timestamp>
-400808f3:	0abd      	mov.n	a11, a10
+400808f3:	0abd      	    mov.n	a11, a10
 400808f5:	fed9a1        	l32r	a10, 4008045c <_init_end+0x5c>
-400808f8:	02cd      	mov.n	a12, a2
+400808f8:	02cd      	    mov.n	a12, a2
 400808fa:	fede81        	l32r	a8, 40080474 <_init_end+0x74>
 400808fd:	0008e0        	callx8	a8
     start_cpu0();
