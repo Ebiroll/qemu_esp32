@@ -6,10 +6,6 @@ This documents how to add an esp32 cpu and a simple esp32 board to qemu
 in order to run an app compiled with the SDK in QEMU. Esp32 is a 240 MHz dual core Tensilica LX6 microcontroller.
 It might not be possible but its a good way to learn about qemu and esp32.
 
-#First romdump
-I did my first romdump,
-Got fatal error when flashing my app, but will try this.
-https://github.com/espressif/esp-idf/issues/14
 
 
 By following the instructions here, I added esp32 to qemu.
@@ -42,11 +38,37 @@ The goal is to run the app-template or bootloader and connect the debugger. It w
 few instructions , I get get double exception error.
 
 
+#Dumping the ROM
+set the environment properly. Build the romdump app and flash it.
+Use i.e screen as serial terminal.
+
+```
+screen /dev/ttyUSB0 115200
+Ctrl-A  then H   (save output)
+Press and hold the boot button, then press reset. This puts the ESP to download mode.
+Ctrl-A  then \   (exit, detach)
+make flash
+screen /dev/ttyUSB0 115200
+Ctrl-A  then H   (save output)
+press  reset on ESP to get start.
+```
+When finnished trim the capturefile (remove all before and after the dump data) and call it, test.log
+Compile the dump to rom program.
+```
+gcc torom.c -o torom
+torom
+If successfull you will have a binary rom dump, rom.bin
+This file will will be loaded by qemu
+```
+
+Got fatal error when flashing my app, but will try this. https://github.com/espressif/esp-idf/issues/14
+
+
 ### Start qemu
 ```
-  > xtensa-softmmu/qemu-system-xtensa -d mmu  -cpu esp32 -M esp32 -m 4M  -kernel  ../esp/myapp/build/app-template.elf  -s -S
+  > xtensa-softmmu/qemu-system-xtensa -d mmu  -cpu esp32 -M esp32 -m 4M  -kernel  ~/esp/qemu_esp32/build/app-template.elf  -s -S
 With more logging
-  > xtensa-softmmu/qemu-system-xtensa -d guest_errors,int,mmu,page -cpu esp32 -M esp32 -m 4M  -kernel  ../esp/myapp/build/app-template.elf  -s -S
+  > xtensa-softmmu/qemu-system-xtensa -d guest_errors,int,mmu,page -cpu esp32 -M esp32 -m 4M  -kernel  ~/esp/qemu_esp32/build/app-template.elf  -s -S
 
 ```
 
@@ -139,6 +161,14 @@ Disassembly of section .text.jump:
 I got my ESP32-dev board from Adafruit.
 Made a dump and mapped it into the file rom.bin
 I assume that the dump is from RAM.
+
+To set a breakpoint before exception try,
+```
+(gdb) b *0x400004ef
+0x2222211f	572662047
+
+```
+
 
 If booting from the romdump we start here, _ResetVector, 0x40000400
 0x40000400      j      0x40000450                    // _ResetHandler, 0x40000450
