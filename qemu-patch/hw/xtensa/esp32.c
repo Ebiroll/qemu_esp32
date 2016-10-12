@@ -436,6 +436,22 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
 
             cpu_physical_memory_write(0x40000300, rfe, sizeof(rfe));
 
+// Add rom from files
+            FILE *f_rom=fopen("rom.bin", "r");
+            
+            if (f_rom == NULL) {
+               printf("   Can't open 'rom.bin' for reading.\n");
+	        } else {
+                unsigned int *rom_data=(unsigned int *)malloc(0xC2000*sizeof(unsigned int));
+                fread(rom_data,0xC1FFF*sizeof(unsigned int),1,f_rom);
+                cpu_physical_memory_write(0x40000000, rom_data, 0xC1FFF*sizeof(unsigned int));
+            }
+
+            // Skip bootloader initialisation, jump to the fresh elf
+            cpu_physical_memory_write(env->pc, jx_a0, sizeof(jx_a0));
+
+            //cpu_physical_memory_write(0x400003c0, rfde, sizeof(rfde));
+
 
 
             /* rfde
