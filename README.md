@@ -234,6 +234,9 @@ SIMCALL but semihosting is disabled
 0x4000a498      l32i.n a8, a8, 0          // Load with 0??                                    
 0x4000a49a      jx     a8                 // Call NULL?
 
+I need another ROM dump...
+0x3FF9_0000 0x3FF9_FFFF 64   KB Internal ROM 1
+
 ```
 
 
