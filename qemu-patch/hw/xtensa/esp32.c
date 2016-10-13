@@ -187,6 +187,27 @@ static uint64_t esp_io_read(void *opaque, hwaddr addr,
            printf(" RTC_CNTL_INT_ST_REG 3ff00044=1\n");
            return 0x01;
            break;
+
+        case 0x42000:
+           printf("SPI_CMD_REG 3ff42000=0\n");
+           return 0x0;
+           break;
+
+        case 0x420f8:
+           printf("SPI_EXT2_REG 3ff420f8=0\n");
+           return 0x0;
+           break;
+
+        case 0x430f8:
+           printf("????? 3ff430f8=0\n");
+           return 0x0;
+           break;
+
+        case 0x44038:
+           printf("GPIO_STRAP_REG 3ff44038=0x13\n");
+           return 0x13;
+           break;
+        
         case 0x48034:
            printf("RTC_CNTL_RESET_STATE_REG 3ff48034=1\n");
            return 0x01;
@@ -195,6 +216,11 @@ static uint64_t esp_io_read(void *opaque, hwaddr addr,
        case 0x480b4:
            printf("RTC_CNTL_STORE5_REG 3ff480b4=%08X\n",sim_RTC_CNTL_STORE5_REG=0);
            return sim_RTC_CNTL_STORE5_REG=0;
+           break;
+        case 0x58040:
+           printf("SDIO or WAKEUP??\n"); 
+           static int silly=0;
+           return silly;
            break;
        case 0x5a010:
            printf("TIMG_T0ALARMLO_REG 3ff5a010=01\n");
@@ -208,7 +234,17 @@ static uint64_t esp_io_read(void *opaque, hwaddr addr,
             printf("RTC_CNTL_DIG_ISO_REG 3ff48088=%08X\n",sim_RTC_CNTL_DIG_ISO_REG);
             return sim_RTC_CNTL_DIG_ISO_REG;
             break;
+            case 0x40020:
+                printf("UART??=0\n");
+                return 0x0;
+             break;
        default:
+          {
+            if (addr>0x40000 && addr<0x40400) 
+            {
+                printf("UART READ");
+            }
+          }
           printf("\n");
     }
 
@@ -231,6 +267,10 @@ static void esp_io_write(void *opaque, hwaddr addr,
            break;
 
        default:
+          if (addr>0x40000 && addr<0x40400) 
+          {
+              printf("UART OUTPUT");
+          }
           printf("\n");
     }
 
@@ -350,14 +390,20 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
         printf("New serial device\n");
         serial_hds[0] = qemu_chr_new("serial0", "null", NULL);
     }
-    printf("No call to serial__mm_init\n");
+    //printf("No call to serial__mm_init\n");
 
                             //0x0d050020
     //serial_mm_init(system_io, 0x3FF40020 , 2, xtensa_get_extint(env, 0),
     //        115200, serial_hds[0], DEVICE_NATIVE_ENDIAN);
 
-    //serial_mm_init(system_io, 0x3FF40000 , 2, xtensa_get_extint(env, 0),
-    //        115200, serial_hds[0], DEVICE_NATIVE_ENDIAN);
+/*SerialState *serial_mm_init(MemoryRegion *address_space,
+                            hwaddr base, int it_shift,
+                            qemu_irq irq, int baudbase,
+                            CharDriverState *chr, enum device_endian end)
+*/
+    // What interrupt for this???
+    serial_mm_init(system_io, 0x40020 , 2, xtensa_get_extint(env, 0),
+            115200, serial_hds[0], DEVICE_LITTLE_ENDIAN);
 
     dinfo = drive_get(IF_PFLASH, 0, 0);
     if (dinfo) {
@@ -477,7 +523,7 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
         }
         if (entry_point != env->pc) {
             // elf entypoint differs, set up 
-            printf("Set jx a0");
+            printf("Elf entry %08X\n",entry_point);
             static const uint8_t jx_a0[] = {
                 0xa0, 0, 0,
             };
@@ -512,6 +558,17 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
                 fread(rom_data,0xC1FFF*sizeof(unsigned int),1,f_rom);
                 cpu_physical_memory_write(0x40000000, rom_data, 0xC1FFF*sizeof(unsigned int));
             }
+
+            FILE *f_rom1=fopen("rom1.bin", "r");
+            
+            if (f_rom == NULL) {
+               printf("   Can't open 'rom.bin' for reading.\n");
+	        } else {
+                unsigned int *rom1_data=(unsigned int *)malloc(0x10000*sizeof(unsigned int));
+                fread(rom1_data,0x10000*sizeof(unsigned int),1,f_rom1);
+                cpu_physical_memory_write(0x3FF90000, rom1_data, 0xFFFF*sizeof(unsigned int));
+            }
+
 
             // Skip bootloader initialisation, jump to the fresh elf
             //cpu_physical_memory_write(env->pc, jx_a0, sizeof(jx_a0));

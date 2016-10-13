@@ -53,48 +53,47 @@ Ctrl-A  then H   (save output)
 press  reset on ESP to get start.
 ```
 When finnished trim the capturefile (remove all before and after the dump data) and call it, test.log
+Notice that there are two dumps search for ROM and ROM1
 Compile the dump to rom program.
 ```
 gcc torom.c -o torom
 torom
 If successfull you will have a binary rom dump, rom.bin
-This file will will be loaded by qemu
+Then also create the file rom1.bin
+If you start with second part and then do
+mv rom.bin rom1.bin
+Then you can do the first part
+Those two files will be loaded by qemu and must be in same directory as you start qemu.
 ```
-
-Got fatal error when flashing my app, but will try this. https://github.com/espressif/esp-idf/issues/14
 
 
 ### Start qemu
 ```
   > xtensa-softmmu/qemu-system-xtensa -d guest_errors,int,mmu,page,unimp  -cpu esp32 -M esp32 -m 4M  -kernel  ~/esp/qemu_esp32/build/app-template.elf  -s -S
-With more logging
-  > xtensa-softmmu/qemu-system-xtensa -d guest_errors,int,mmu,page -cpu esp32 -M esp32 -m 4M  -kernel  ~/esp/qemu_esp32/build/app-template.elf  -s -S
 
 ```
 
 ### Start the debugger
 ```
   > xtensa-esp32-elf-gdb build/app-template.elf
-  (gdb) target remote 127.0.0.1:1234
-  or  
   (gdb) target remote:1234
 
   (gdb) x/10i $pc
-
   (gdb) x/10i 0x40000400
 ```
 
-To disassemble you can set pc from gdb,
+To disassemble a specific function you can set pc from gdb,
 
 ```
   (gdb) set $pc=0x40080804
 
-  (gdb) set $pc=<tab>
+  (gdb) set $pc=<tab>  to let gdb list available functions
   (gdb) layout asm
   (gdb) si
-  (gdb) ni
+  (gdb) ni  (skips calls)
+  (gdb) finish (run until ret)
 ```
-Setting programcounter to a function,
+Setting progra mcounter to a function,
 
 ```
   (gdb) set $pc=&call_start_cpu0
@@ -105,7 +104,7 @@ Setting programcounter to a function,
 
 ```
   (gdb) x/20i $pc
-  (gdb) p/x $a3          (hex)
+  (gdb) p/x $a3          (register as hex)
 
 ```
 
@@ -161,26 +160,34 @@ Disassembly of section .text.jump:
 
 #Results
 I got my ESP32-dev board from Adafruit.
-Made a dump and mapped it into the file rom.bin
-I assume that the dump is from RAM.
+I have made two dumps and mapped the dumps into the files rom.bin & rom1.bin
 
-To continue we need to implement esp_io_read in qemu/hw/xtensa/esp32.c for these,
 
-// io read 00000044 adress 3ff00044, 
-// ?? What is on io 3ff00044, DPORT-- reset button on gpio??
-
-// io read 00048034 adress 3ff48034 
-// rtc reset reason
-
-Output after running, we need to identify and simulate proper io read values..
+Output after running, It looks like we get to boot mode.. Waiting for input on serial0
+Some register name mapping is probably wrong. :-P
+The values returned are more than likely wrong.
+tlb_fill() is probably a cached read of instructions or data.
 ```
-xtensa-softmmu/qemu-system-xtensa -d guest_errors,int,mmu,page,unimp  -cpu esp32 -M esp32 -m 4M  -kernel  ~/esp/qemu_esp32/build/app-template.elf  
-No call to serial__mm_init
+Terminal 1
+>xtensa-softmmu/qemu-system-xtensa -d guest_errors,int,mmu,page,unimp  -cpu esp32 -M esp32 -m 4M  -kernel  ~/esp/qemu_esp32/build/app-template.elf   -S -s
+
+Terminal 2
+>xtensa-esp32-elf-gdb build/app-template.elf
+(gdb) target remote:1234
+
+//Uart_Init, 0x40009120
+(gdb) b *0x40009120
+(gdb) layout asm
+//uart_tx_one_char, 0x40009200
+//(gdb) b *0x40009200
+
+xtensa-softmmu/qemu-system-xtensa -d guest_errors,int,mmu,page,unimp  -cpu esp32 -M esp32 -m 4M  -kernel  ~/esp/qemu_esp32/build/app-template.elf   -S -s 
+Elf entry 400807B8
 tlb_fill(40000400, 2, 0) -> 40000400, ret = 0
 tlb_fill(400004b3, 2, 0) -> 400004b3, ret = 0
 tlb_fill(400004e3, 2, 0) -> 400004e3, ret = 0
-SR 97 � is not implemented
-SR 97 � is not implemented
+SR 97 is not implemented
+SR 97 is not implemented
 tlb_fill(4000d4f8, 0, 0) -> 4000d4f8, ret = 0
 tlb_fill(3ffae010, 1, 0) -> 3ffae010, ret = 0
 tlb_fill(4000f0d0, 0, 0) -> 4000f0d0, ret = 0
@@ -191,7 +198,7 @@ tlb_fill(4000c2c8, 2, 0) -> 4000c2c8, ret = 0
 tlb_fill(3ff9918c, 0, 0) -> 3ff9918c, ret = 0
 tlb_fill(3ffe3eb0, 1, 0) -> 3ffe3eb0, ret = 0
 tlb_fill(3ff00044, 0, 0) -> 3ff00044, ret = 0
-Set jx a0io read 00000044  RTC_CNTL_INT_ST_REG 3ff00044=1
+io read 00000044  RTC_CNTL_INT_ST_REG 3ff00044=1
 io write 00000044 00000007 
 tlb_fill(400081d4, 2, 0) -> 400081d4, ret = 0
 tlb_fill(3ff48034, 0, 0) -> 3ff48034, ret = 0
@@ -216,26 +223,121 @@ tlb_fill(40005cdc, 0, 0) -> 40005cdc, ret = 0
 io read 000480b4 RTC_CNTL_STORE5_REG 3ff480b4=00000000
 io read 000480b4 RTC_CNTL_STORE5_REG 3ff480b4=00000000
 io write 000480b4 18CB18CB RTC_CNTL_STORE5_REG 3ff480b4
-tlb_fill(4000a484, 2, 0) -> 4000a484, ret = 0
-//
-tlb_fill(00000000, 2, 0) -> 00007f0d, ret = 20
-xtensa_cpu_do_interrupt(10) pc = 00000000, a0 = 80009147, ps = 00060030, ccount = 00001911
-xtensa_cpu_do_interrupt(12) pc = 4000c02b, a0 = 80009147, ps = 00060036, ccount = 0000191e
-SIMCALL but semihosting is disabled
+----------- break Uart_Init, 0x40009120
+(gdb) finish
+// Beforere add    serial_mm_init(system_io, 0x40020 , 2, xtensa_get_extint(env, 0),
+//            115200, serial_hds[0], DEVICE_LITTLE_ENDIAN);
 
-// The fun stops here
-// a8 is 0000
+tlb_fill(4000a484, 2, 0) -> 4000a484, ret = 0
+io read 00048474 
+io write 00048474 00000032 
+io read 00048474 
+io write 00048474 00000031 
+tlb_fill(3ff49088, 0, 0) -> 3ff49088, ret = 0
+io read 00049088 
+io write 00049088 00000033 
+io read 00049088 
+io write 00049088 00000033 
+io write 00040014 00B000E1 UART OUTPUT 
+io read 00040020 UART??=0
+io write 00040020 00060000 UART OUTPUT 
+io read 00040020 UART??=0
+io write 00040020 00000000 UART OUTPUT 
+tlb_fill(400040ac, 0, 0) -> 400040ac, ret = 0
+io write 00040020 0800001C UART OUTPUT 
+io read 00040020 UART??=0
+io write 00040020 04060000 UART OUTPUT 
+io read 00040020 UART??=0
+io write 00040020 00000000 UART OUTPUT 
+io write 00040024 00000001 UART OUTPUT 
+io write 00040010 0000FFFF UART OUTPUT �
+io read 0004000c UART READ
+io write 0004000c 00000033 UART OUTPUT 3
+tlb_fill(3ff0018c, 1, 0) -> 3ff0018c, ret = 0
+io write 0000018c 00000005 
+-----------------------------------------
+// After letting serial0 initialize 
+// We get 1 char on serial output...
+// Needs further investigation. However writes and reads to 00040020 is handled by serial0
+tlb_fill(4000a484, 2, 0) -> 4000a484, ret = 0
+io read 00048474 
+io write 00048474 00000032 
+io read 00048474 
+io write 00048474 00000031 
+tlb_fill(3ff49088, 0, 0) -> 3ff49088, ret = 0
+io read 00049088 
+io write 00049088 00000033 
+io read 00049088 
+io write 00049088 00000033 
+io write 00040014 00B000E1 UART OUTPUT
+tlb_fill(400040ac, 0, 0) -> 400040ac, ret = 0
+io write 00040010 0000FFFF UART OUTPUT
+io read 0004000c UART READ
+io write 0004000c 00000033 UART OUTPUT
+tlb_fill(3ff0018c, 1, 0) -> 3ff0018c, ret = 0
+io write 0000018c 00000005 
+-------------- after finish --------------
+//ets_printf, 0x40007d54
+(gdb) b *0x40007d54
+-----------------------------
+io read 00044038 
+io read 000480b0 
+io read 00044038 
+io read 00044038 
+io read 00044038 
+io read 00044038 
+io read 00044038 
+io read 00044038 
+io read 00044038 
+io read 00044038 
+io read 00044038 
+io read 00044038 
+io read 00044038 
+io read 00044038 
+io read 00044038 
+// GPIO_STRAP_REG  
+-------------------------------
+
+/ Finally we end up in this loop
+// Probably waiting for download...
+
+(gdb) where
+#0  0x4009110c in ?? ()
+#1  0x4009118c in ?? ()
+#2  0x40090747 in wDev_AppendRxBlocks ()
+#3  0x400912ee in ?? ()
+#4  0x4005a9e1 in ?? ()
+#5  0x40007ba7 in ?? ()
+#6  0x40000740 in ?? ()
+
+
+    0x40091189      call8  0x4009110c                                                                                              
+    0x4009118c      l8ui   a8, a3, 0                                                                                               
+    0x4009118f      mov.n  a10, a3                                                                                                 
+    0x40091191      l32r   a9, 0x400900c8 <rcGetSched+108>                                                                         
+    0x40091194      bnez.n a8, 0x4009119c                                                                                          
+    0x40091196      l32i   a2, a9, 0                                                                                               
+    0x40091199      beqz   a2, 0x40091189                                                                                          
+    0x4009119c      l32i.n a2, a9, 0                                                                                               
+    0x4009119e      movi.n a3, 0                                                                                                   
+    0x400911a0      s8i    a3, a10, 0                                                                                              
+    0x400911a3      movi.n a3, 67                                                                                                  
+    0x400911a5      moveqz a3, a8, a2                                                                                              
+    0x400911a8      mov.n  a2, a3                                                                                                  
+    0x400911aa      retw.n                                
+
+
+
+// The fun before i dumped rom1.bin stopped here
+gpio_pad_unhold
 0x4000a484      entry  a1, 32                                                   0x4000a487      extui  a2, a2, 0, 8
 0x4000a48a      movi.n a8, 39
 0x4000a48c      bgeu   a8, a2, 0x4000a492
 0x4000a48f      j      0x4000a72c
 0x4000a492      l32r   a8, 0x4000a460     //
 0x4000a495      addx4  a8, a2, a8         //  a8 is 0x3ff9c180 
-0x4000a498      l32i.n a8, a8, 0          // Load with 0??                                    
-0x4000a49a      jx     a8                 // Call NULL?
-
-I need another ROM dump...
-0x3FF9_0000 0x3FF9_FFFF 64   KB Internal ROM 1
+0x4000a498      l32i.n a8, a8, 0          // 0x4000a4e5  
+0x4000a49a      jx     a8                 // 
 
 ```
 
@@ -663,7 +765,6 @@ Currently we get an exception here, probably as we are missing qme memory somewh
 ```
 void HELPER(entry)(CPUXtensaState *env, uint32_t pc, uint32_t s, uint32_t imm)
 {
-    printf("Helper entry");
     int callinc = (env->sregs[PS] & PS_CALLINC) >> PS_CALLINC_SHIFT;
     /* if (s > 3 || ((env->sregs[PS] & (PS_WOE | PS_EXCM)) ^ PS_WOE) != 0) {
         qemu_log_mask(LOG_GUEST_ERROR, "Illegal entry instruction(pc = %08x), PS = %08x\n s=%d",
