@@ -105,6 +105,8 @@ Setting programcounter to a function,
 
 ```
   (gdb) x/20i $pc
+  (gdb) p/x $a3          (hex)
+
 ```
 
 #More useful commands
@@ -162,8 +164,21 @@ I got my ESP32-dev board from Adafruit.
 Made a dump and mapped it into the file rom.bin
 I assume that the dump is from RAM.
 
+To continue you need to implement io_read in esp32.c for these,
+
+// io read 00000044 adress 3ff00044, 
+// ?? What is on io 3ff00044, DPORT-- reset button on gpio??
+
+// io read 00048034 adress 3ff48034 
+// rtc reset reason
+
+
 To set a breakpoint before exception try,
 ```
+
+// rom_main..
+(gdb) b	*0x400076c4
+
 (gdb) b	*0x400076c4
 
 (gdb) b *0x400004ef
@@ -171,6 +186,256 @@ To set a breakpoint before exception try,
 after break, set $pc=0x400004fb
 
 b	*0x400076c4
+
+
+
+
+
+
+or patch qemu....
+static bool gen_check_sr(DisasContext *dc, uint32_t sr, unsigned access)
+{
+    if (!xtensa_option_bits_enabled(dc->config, sregnames[sr].opt_bits)) {
+        if (sregnames[sr].name) {
+            qemu_log_mask(LOG_GUEST_ERROR, "SR %s is not configured\n", sregnames[sr].name);
+        } else {
+            qemu_log_mask(LOG_UNIMP, "SR %d %s is not implemented\n", sr);
+        }
+        //gen_exception_cause(dc, ILLEGAL_INSTRUCTION_CAUSE);
+
+
+
+
+
+Probably missing ram.. 
+static HeapRegionTagged_t regions[]={
+	{ (uint8_t *)0x3F800000, 0x20000, 15, 0}, //SPI SRAM, if available
+	{ (uint8_t *)0x3FFAE000, 0x2000, 0, 0}, //pool 16 <- used for rom code
+	{ (uint8_t *)0x3FFB0000, 0x8000, 0, 0}, //pool 15 <- can be used for BT
+	{ (uint8_t *)0x3FFB8000, 0x8000, 0, 0}, //pool 14 <- can be used for BT
+
+
+
+
+
+```
+
+## _ResetVector  Start of execution (0x40000400)
+```
+If booting from the romdump we start here, _ResetVector, 0x40000400
+0x40000400      j      0x40000450                    // _ResetHandler, 0x40000450
+```
+
+## _ResetHandler
+```
+    0x40000450      movi   a0, 0 
+    0x40000453      wsr.intenable  a0                // Turn of interrupts
+    0x40000456      rsr.prid       a2                // Check processor ID. 0xABAB on app-cpu and 0xCDCD on pro-cpu 
+    0x40000459      l32r   a3, 0x40000404            // a3 contains ABAB                                                             
+    0x4000045c      bne    a2, a3, 0x40000471        // a2 should contain CDCD=52685 fot PRO cpu                                                                
+    0x4000045f      l32r   a3, 0x40000408            |                                                               
+    0x40000462      l32i   a3, a3, 0                 |                                                               
+    0x40000465      bbci   a3, 31, 0x40000471        |                                                               
+    0x40000468      l32r   a2, 0x4000040c            |                                                               
+    0x4000046b      and    a3, a3, a2                |                                                               
+    0x4000046e      callx0 a3                        v                                                               
+    0x40000471      l32r   a2, 0x40000410                                                                           
+    0x40000474      rsr.prid       a3                                                                               
+    0x40000477      extui  a3, a3, 0, 8              // a3=CD Extract unsigned immediate , shift ,mask                                                                
+    0x4000047a      beqz.n a2, 0x40000480            |   branch if zero                                                           
+    0x4000047c      bnez.n a3, 0x40000480            |                                                               
+    0x4000047e      s32i.n a0, a2, 0                 v                                                               
+    0x40000480      l32r   a2, 0x40000414            // a2 contains   0x40000000                                                            
+    0x40000483      wsr.vecbase    a2                // Write special register vecbase        
+    0x40000486      movi.n a3, 21                    // load register a3 with 21=0x15
+    0x40000486      movi.n a3, 21                    // Twice??      RCW
+
+    RCW Transaction — Execute the S32C1I instruction by sending an RCW transaction on the PIF bus. 
+    External logic must then implement the atomic read-compare-write on the memory location. 
+    If the Data Cache Option is configured and the memory region is cacheable, 
+    any corresponding cache line will be flushed out of the cache by the S32C1I instruction 
+    using the equivalent of a DHWBI instruction before the RCW transaction is sent. 
+    RCW Transaction may be the only method available for certain memory types 
+    or it may be directed by the ATOMCTLregister.
+
+
+If the address of the RCW transaction targets the Inbound PIF port of another Xtensa processor, 
+the targeted Xtensa processor has the Conditional Store Option and the Data RAM Option configured, and the RCW address targets the DataRAM,
+the RCW will be performed atomically on the target processor’s DataRAM. No external logic other than PIF bus interconnects 
+is necessary to allow an Xtensa processor to atomically access a DataRAM location in another Xtensa processor in this way.
+
+    0x40000488      wsr.atomctl    a3                // Atomic CTL reg 99,                                                                
+    0x4000048b      rsil   a2, 1                     // a2 contains 0x1f                               
+    0x4000048e      l32r   a2, 0x40000418            // a2 contains    0x2222211f                                                            
+    0x40000491      l32r   a5, 0x4000041c            // a5 contains    0xe0000000                                                              
+    0x40000494      l32r   a6, 0x40000420            // a6 contains    0x400004c3                                                               
+    0x40000497      movi.n a3, 0                                                                                    
+    0x40000499      mov.n  a7, a2                    // a7 contains    0x2222211f
+    0x4000049b      and    a6, a6, a5                // a6 contains    0x40000000
+    0x4000049e      j      0x400004c3      
+    0x400004a1      ill                          |                                                                  
+    0x400004a4      ill                          |                                                                   
+    0x400004a7      ill                          |                                                                   
+    0x400004aa      ill                          |                                                                   
+    0x400004ad      ill                          |          
+
+// configure_region_protection    
+
+    0x400004b0      witlb  a4, a3                |                                                                   
+    0x400004b3      isync                        |                                                                   
+    0x400004b6      nop.n                        |                                                                   
+    0x400004b8      nop.n                        |                                                                   
+    0x400004ba      sub    a3, a3, a5            |                                                                   
+    0x400004bd      bltui  a3, 16, 0x400004d5    |                                                                   
+^   0x400004c0      srli   a7, a7, 4             v                                                                   
+|   0x400004c3      extui  a4, a7, 0, 4          // a4 contains 0xf                                                                   
+|   0x400004c6      beq    a3, a6, 0x400004b0    // a6 starts at 0x40000000                                                                    
+|   0x400004c9      witlb  a4, a3                                                                                   
+|   0x400004cc      sub    a3, a3, a5                                                                               
+ _  0x400004cf      bgeui  a3, 16, 0x400004c0                                                                       
+    0x400004d2      isync                             //  a5   0xe0000000                                                           
+    0x400004d5      l32r   a5, 0x4000041c 
+    0x400004d8      movi.n a3, 0                                                                                    
+    0x400004da      or     a7, a2, a2                                                                               
+^   0x400004dd      extui  a4, a7, 0, 4                                                                             
+|   0x400004e0      wdtlb  a4, a3                                                                                   
+|   0x400004e3      sub    a3, a3, a5                                                                               
+|   0x400004e6      srli   a7, a7, 4                                                                                
+| _ 0x400004e9      bgeui  a3, 16, 0x400004dd                                                                       
+    0x400004ec      dsync                                                                                           
+    0x400004ef      movi   a3, 1                                                                                    
+    0x400004f2      rsr.memctl     a2                // Exception here, (patch qemu) a2 contains..0x2222211f, read from 0x40000418 (_ResetVector + 18)
+                                                     // I guess qemu has no support for this.. patch qemu or set $pc=0x400004fb to continue.
+                                                // a3 contains 1.   
+    0x400004f5      or     a2, a2, a3                                                                               
+    0x400004f8      wsr.memctl     a2                                                                               
+    0x400004fb      l32r   a4, 0x40000424            // a4 contains   0x4000d4f8                                                                
+    0x400004fe      l32r   a5, 0x40000428            // a5 contains   0x4000d5c8
+    0x40000501      l32i.n a6, a4, 0                 //                                                                 
+    0x40000503      l32i.n a7, a4, 4                 // a7 contains      0x3ffae010                                                         
+    0x40000505      l32i.n a8, a4, 8                 // a8 contains      0x4000d670                                                             
+    0x40000507      l32i.n a2, a4, 12                                                                               
+    0x40000509      beqi   a2, 1, 0x40000515  
+    0x4000050c      rsr.prid       a2                // Read process id                                                                                                <
+    0x4000050f      l32r   a3, 0x40000404            // a3 contains 0xabab                                                                                                 <
+    0x40000512      beq    a2, a3, 0x40000520                                                                                                             
+ ^   0x40000515      l32i.n a2, a8, 0                                       
+ |   0x40000517      s32i.n a2, a6, 0                                                                                                                  
+ |   0x40000519      addi.n a6, a6, 4                                                                                                                  
+ |   0x4000051b      addi.n a8, a8, 4                                                                                                                  
+ |  0x4000051d       bltu   a6, a7, 0x40000515                                                                                                         
+ |   0x40000520      addi   a4, a4, 16                                                                                                                  
+ |_  0x40000523      bltu   a4, a5, 0x40000501 
+    0x40000526      isync
+
+// Initiate registers
+
+    0x40000529      movi.n a1, 1                                                                   
+    0x4000052b      wsr.windowstart        a1                                                      
+    0x4000052e      wsr.windowbase a0                                                              
+    0x40000531      rsync                                                                          
+    0x40000534      movi.n a0, 0                                                                   
+    0x40000536      l32r   a4, 0x4000042c    // a4= 0x40000954                                                  
+    0x40000539      wsr.excsave2   a4                                                              
+    0x4000053c      l32r   a4, 0x40000430    // a4=0x40000a28                                                  
+    0x4000053f      wsr.excsave3   a4                                                              
+    0x40000542      l32r   a4, 0x40000434                                                          
+    0x40000545      wsr.excsave4   a4                                                              
+    0x40000548      l32r   a5, 0x40000438                                                          
+    0x4000054b      s32i   a4, a5, 0                                                               
+    0x4000054e      l32r   a4, 0x4000043c                                                          
+    0x40000551      wsr.excsave5   a4        // a4=0x40000c68                     
+    0x40000554      l32r   a5, 0x40000440    // a5=0x3ffe064c                                                   
+    0x40000557      s32i   a4, a5, 0         // a4=0x40000c68                                                     
+    0x4000055a      call0  0x40000704      // call _start
+```
+## _start
+```
+   0x40000704       movi.n a0, 0                                                                   
+    0x40000706      l32r   a1, 0x40000560   // a1=0x3ffe3f20                                                       
+    0x40000709      l32r   a3, 0x40000564   // a3= 0x40020                                                   
+    0x4000070c      wsr.ps a3               // UM=1 , WOE=1       
+       // UM 1 → user vector mode — exceptions need to switch stacks
+       // Overflow detection                                                 
+    0x4000070f      rsync                                                                          
+    0x40000712      l32r   a6, 0x40000568    //  a6=0x4000d5d0                                                   
+    0x40000715      l32r   a7, 0x4000056c    // a7=0x4000d66c                                                      
+    0x40000718      movi.n a0, 0                                                                   
+    0x4000071a      l32i.n a4, a6, 0                                                               
+    0x4000071c      l32i.n a5, a6, 4                                                               
+    0x4000071e      l32i.n a3, a6, 8                                                               
+    0x40000720      beqi   a3, 1, 0x40000735                                                       
+    0x40000723      rsr.prid       a2                                                              
+    0x40000726      l32r   a3, 0x40000570                                                          
+    0x40000729      beq    a2, a3, 0x40000738                                                      
+    0x4000072c      j      0x40000735          
+
+    // loop         a4 goes from ?? -   0x3ffae020 -
+    0x40000731      s32i.n a0, a4, 0                                                               
+    0x40000733      addi.n a4, a4, 4                                                               
+    0x40000735      bltu   a4, a5, 0x40000731  
+    0x40000738      addi.n a6, a6, 12                                                              
+    0x4000073a      bltu   a6, a7, 0x4000071a                                                      
+    0x4000073d      call4  0x400076c4    // call rom_main                                                    
+    0x40000740      movi.n a2, 1                                                                   
+    0x40000742      simcall             // ?? simcall
+    0x40000745      break  1, 15            
+```
+
+
+
+## rom_main
+```
+   0x400076c4      entry  a1, 112                                                                                                                    <
+   0x400076c7      l32r   a11, 0x40007674        // a11=0x3ff9918c                                                                                                   <
+   0x400076ca      mov.n  a10, a1                // a10=0x3ffe3eb0                                                                                                  <
+   0x400076cc      movi.n a12, 68                // a12=0x44                                                                                                    <
+   0x400076ce      call8  0x4000c2c8             // call memcpy                                                                                                     <
+   0x400076d1      l32r   a2, 0x40000570         // a2=abab                                                                                                    <
+   0x400076d4      rsr.prid       a3                                                                                                                 <
+   0x400076d7      bne    a3, a2, 0x400076e9                                                                                                         <
+   0x400076da      l32r   a3, 0x40006898                                                                                                             <
+   0x400076dd      memw                                                                                                                              <
+   0x400076e0      l32i.n a2, a3, 0                                                                                                                  <
+   0x400076e2      beqz   a2, 0x400076dd                                                                                                             <
+   0x400076e5      j      0x40007bf0                                                                                                                 <
+
+...
+
+...
+    0x400076e9      l32r   a2, 0x40007000         // a2=  0x3ff00044                                               
+    0x400076ec      movi.n a3, 6                                                                   
+    0x400076ee      memw                                                                           
+    0x400076f1      l32i.n a4, a2, 0                                                               
+    0x400076f3      movi   a10, 0                                                                  
+    0x400076f6      or     a3, a4, a3                                                              
+    0x400076f9      memw                                                                           
+    0x400076fc      s32i   a3, a2, 0                                                               
+    0x400076ff      call8  0x400081d4   // rtc_get_reset_reason .. a2=0x3ff00044 , a3=0x26 a4=0x22                                                           
+    0x40007702      l32r   a2, 0x40007678                                                          
+    0x40007705      l32r   a4, 0x4000767c                                                          
+    0x40007708      memw                                                                           
+    0x4000770b      l32i.n a5, a2, 0                                                               
+    0x4000770d      mov.n  a3, a10                
+...
+
+// io read 00000044
+// What is on io 3ff00044
+
+// io read 00048034
+// rtc reset reason
+## rtc_get_reset_reason
+...
+    0x400081d4      entry  a1, 32                                                                  
+    0x400081d7      l32r   a8, 0x400081d0            // a8=0x3ff48034                                              
+    0x400081da      bnez.n a2, 0x400081e8                                                          
+    0x400081dc      memw                                                                           
+    0x400081df      l32i.n a2, a8, 0                                                               
+    0x400081e1      extui  a2, a2, 0, 6                                                            
+    0x400081e4      retw.n      
+...
+
+
 
 // Here we get an io read register 0x38...
 
@@ -212,125 +477,6 @@ b	*0x400076c4
    <0x40007c24      movi.n a10, 8                  
 
 
-
-
-
-
-or patch qemu....
-static bool gen_check_sr(DisasContext *dc, uint32_t sr, unsigned access)
-{
-    if (!xtensa_option_bits_enabled(dc->config, sregnames[sr].opt_bits)) {
-        if (sregnames[sr].name) {
-            qemu_log_mask(LOG_GUEST_ERROR, "SR %s is not configured\n", sregnames[sr].name);
-        } else {
-            qemu_log_mask(LOG_UNIMP, "SR %d %s is not implemented\n", sr);
-        }
-        //gen_exception_cause(dc, ILLEGAL_INSTRUCTION_CAUSE);
-
-
-
-
-
-Probably missing ram.. 
-static HeapRegionTagged_t regions[]={
-	{ (uint8_t *)0x3F800000, 0x20000, 15, 0}, //SPI SRAM, if available
-	{ (uint8_t *)0x3FFAE000, 0x2000, 0, 0}, //pool 16 <- used for rom code
-	{ (uint8_t *)0x3FFB0000, 0x8000, 0, 0}, //pool 15 <- can be used for BT
-	{ (uint8_t *)0x3FFB8000, 0x8000, 0, 0}, //pool 14 <- can be used for BT
-
-
-
-
-
-```
-
-```
-If booting from the romdump we start here, _ResetVector, 0x40000400
-0x40000400      j      0x40000450                    // _ResetHandler, 0x40000450
-    0x40000450      movi   a0, 0 
-    0x40000453      wsr.intenable  a0                // Turn of interrupts
-    0x40000456      rsr.prid       a2                // Check processor ID. 0xABAB on app-cpu and 0xCDCD on pro-cpu 
-                                                     //  set $a2=0xABAB before si                                                              
-    0x40000459      l32r   a3, 0x40000404            // a3 contains ABAB=43947                                                             
-    0x4000045c      bne    a2, a3, 0x40000471        // a2 should contain abab,                                                                
-    0x4000045f      l32r   a3, 0x40000408            |                                                               
-    0x40000462      l32i   a3, a3, 0                 |                                                               
-    0x40000465      bbci   a3, 31, 0x40000471        |                                                               
-    0x40000468      l32r   a2, 0x4000040c            |                                                               
-    0x4000046b      and    a3, a3, a2                |                                                               
-    0x4000046e      callx0 a3                        v                                                               
-    0x40000471      l32r   a2, 0x40000410                                                                           
-    0x40000474      rsr.prid       a3                                                                               
-    0x40000477      extui  a3, a3, 0, 8                                                                             
-    0x4000047a      beqz.n a2, 0x40000480            |                                                             
-    0x4000047c      bnez.n a3, 0x40000480            |                                                               
-    0x4000047e      s32i.n a0, a2, 0                 v                                                               
-    0x40000480      l32r   a2, 0x40000414            // a2 contains   0x40000000                                                            
-    0x40000483      wsr.vecbase    a2                // Special register vecbase        
-    0x40000486      movi.n a3, 21                    // a3 contains 21=0x15
-    0x40000486      movi.n a3, 21                    // a3 contains 21=0x15                                                               
-    0x40000488      wsr.atomctl    a3                                                                               
-    0x4000048b      rsil   a2, 1                     // a2 contains 0x1f                               
-    0x4000048e      l32r   a2, 0x40000418            // a2 contains    0x2222211f                                                            
-    0x40000491      l32r   a5, 0x4000041c            // a5 contains    0xe0000000                                                              
-    0x40000494      l32r   a6, 0x40000420            // a6 contains    0x400004c3                                                               
-    0x40000497      movi.n a3, 0                                                                                    
-    0x40000499      mov.n  a7, a2                    // a7 contains    0x2222211f
-    0x4000049b      and    a6, a6, a5                // a6 contains    0x40000000
-    0x4000049e      j      0x400004c3      
-    0x400004a1      ill                          |                                                                  
-    0x400004a4      ill                          |                                                                   
-    0x400004a7      ill                          |                                                                   
-    0x400004aa      ill                          |                                                                   
-    0x400004ad      ill                          |                                                                   
-    0x400004b0      witlb  a4, a3                |                                                                   
-    0x400004b3      isync                        |                                                                   
-    0x400004b6      nop.n                        |                                                                   
-    0x400004b8      nop.n                        |                                                                   
-    0x400004ba      sub    a3, a3, a5            |                                                                   
-    0x400004bd      bltui  a3, 16, 0x400004d5    |                                                                   
-^   0x400004c0      srli   a7, a7, 4             v                                                                   
-|   0x400004c3      extui  a4, a7, 0, 4                                                                             
-|   0x400004c6      beq    a3, a6, 0x400004b0                                                                       
-|   0x400004c9      witlb  a4, a3                                                                                   
-|   0x400004cc      sub    a3, a3, a5                                                                               
- _  0x400004cf      bgeui  a3, 16, 0x400004c0                                                                       
-    0x400004d2      isync                             //  a5   0xe0000000                                                           
-    0x400004d5      l32r   a5, 0x4000041c 
-    0x400004d8      movi.n a3, 0                                                                                    
-    0x400004da      or     a7, a2, a2                                                                               
-    0x400004dd      extui  a4, a7, 0, 4                                                                             
-    0x400004e0      wdtlb  a4, a3                                                                                   
-    0x400004e3      sub    a3, a3, a5                                                                               
-    0x400004e6      srli   a7, a7, 4                                                                                
-    0x400004e9      bgeui  a3, 16, 0x400004dd                                                                       
-    0x400004ec      dsync                                                                                           
-    0x400004ef      movi   a3, 1                                                                                    
-    0x400004f2      rsr.memctl     a2                // Exception here, a2 contains..0x2222211f, read from 0x40000418 (_ResetVector + 18)
-                                                     // a3 contains 1.   
-                                                     // I guess qemu has no support for this.. set $pc=0x400004fb to continue.
-    0x400004f5      or     a2, a2, a3                                                                               
-    0x400004f8      wsr.memctl     a2                                                                               
-    0x400004fb      l32r   a4, 0x40000424            // a4 contains   0x4000d4f8                                                                
-    0x400004fe      l32r   a5, 0x40000428            // a5 contains   0x4000d5c8
-    0x40000501      l32i.n a6, a4, 0                 //                                                                 
-    0x40000503      l32i.n a7, a4, 4                 // a7 contains      0x3ffae010                                                         
-    0x40000505      l32i.n a8, a4, 8                 // a8 contains      0x4000d670                                                             
-    0x40000507      l32i.n a2, a4, 12                                                                               
-    0x40000509      beqi   a2, 1, 0x40000515  
-   <0x4000050c      rsr.prid       a2                // I guess qemu has no support for this.. set $a2=0xABAB to continue.
-                                                     // Please fix...   qemu/target-xtensa/cpu.c  xtensa_cpu_reset                                           <
-   <0x4000050f      l32r   a3, 0x40000404            // a3 contains 0xabab                                                                                                 <
-   <0x40000512      beq    a2, a3, 0x40000520                                                                                                         <
-   <0x40000515      l32i.n a2, a8, 0                                                                                                                  <
-   <0x40000517      s32i.n a2, a6, 0                                                                                                                  <
-   <0x40000519      addi.n a6, a6, 4                                                                                                                  <
-   <0x4000051b      addi.n a8, a8, 4                                                                                                                  <
-   <0x4000051d      bltu   a6, a7, 0x40000515                                                                                                         <
-   <0x40000520      addi   a4, a4, 16                                                                                                                 <
-   <0x40000523      bltu   a4, a5, 0x40000501                                                                                                         <
-   <0x40000526      isync                           
-
     // check translate.c for simcall..
     qemu_log_mask(LOG_GUEST_ERROR, "SIMCALL but semihosting is disabled\n");
     //gen_exception_cause(dc, ILLEGAL_INSTRUCTION_CAUSE);
@@ -342,33 +488,6 @@ io read 00000038
    <0x40000283      movi.n a2, -8                                                                                                                     <
    <0x40000285      simcall                                                                                                                           <
   ><0x40000288      j      0x40000288  
-
-###rom_main
-
-0x400076c4      entry  a1, 112                                                                                                                    <
-   <0x400076c7      l32r   a11, 0x40007674                                                                                                            <
-   <0x400076ca      mov.n  a10, a1                                                                                                                    <
-   <0x400076cc      movi.n a12, 68                                                                                                                    <
-   <0x400076ce      call8  0x4000c2c8             // memcpy                                                                                                     <
-   <0x400076d1      l32r   a2, 0x40000570                                                                                                             <
-   <0x400076d4      rsr.prid       a3                                                                                                                 <
-   <0x400076d7      bne    a3, a2, 0x400076e9                                                                                                         <
-   <0x400076da      l32r   a3, 0x40006898                                                                                                             <
-   <0x400076dd      memw                                                                                                                              <
-   <0x400076e0      l32i.n a2, a3, 0                                                                                                                  <
-   <0x400076e2      beqz   a2, 0x400076dd                                                                                                             <
-   <0x400076e5      j      0x40007bf0                                                                                                                 <
-   <0x400076e8      extui  a2, a0, 17, 5                                                                                                              <
-   <0x400076eb      .byte 0xfe                                                                                                                        <
-   <0x400076ec      movi.n a3, 6                                                                                                                      <
-   <0x400076ee      memw                                                                                                                              <
-   <0x400076f1      l32i.n a4, a2, 0                                                                                                                  <
-   <0x400076f3      movi   a10, 0                                                                                                                     <
-   <0x400076f6      or     a3, a4, a3                                                                                                                 <
-   <0x400076f9      memw                                                                                                                              <
-   <0x400076fc      s32i   a3, a2, 0                                                                                                                  <
-   <0x400076ff      call8  0x400081d4                
-
 
 
 ```
@@ -425,24 +544,25 @@ x400807e0 <call_start_cpu0>    entry  a1, 64
   cpu_configure_region_protection () at /home/olas/esp/esp-idf/components/esp32/include/soc/cpu.h:61
 
 
-memcpy...
-
+## memcpy.
+Currently we get an exception here, probably as we are missing qme memory somewhere..
+```
     0x4000c2c8      entry  a1, 16                                                                                   
     0x4000c2cb      or     a5, a2, a2                                                                               
-    0x4000c2ce      bbsi   a2, 0, 0x4000c298                                                                        
-    0x4000c2d1      bbsi   a2, 1, 0x4000c2ac                                                                        
+    0x4000c2ce      bbsi   a2, 0, 0x4000c298       // Branch if bit set
+    0x4000c2d1      bbsi   a2, 1, 0x4000c2ac    
     0x4000c2d4      srli   a7, a4, 4                                                                                
     0x4000c2d7      slli   a8, a3, 30                                                                               
     0x4000c2da      bnez   a8, 0x4000c338                                                                           
     0x4000c2dd      loopnez        a7, 0x4000c2f6                                                                   
     0x4000c2e0      l32i.n a6, a3, 0                                                                                
     0x4000c2e2      l32i.n a7, a3, 4                                                                                
-    0x4000c2e4      s32i.n a6, a5, 0   // Crash here
+    0x4000c2e4      s32i.n a6, a5, 0   
     0x4000c2e6      l32i.n a6, a3, 8                                                                                
     0x4000c2e8      s32i.n a7, a5, 4                                                                                
     0x4000c2ea      l32i.n a7, a3, 12                                                                               
     0x4000c2ec      s32i.n a6, a5, 8                                                                                
-    0x4000c2ee      addi   a3, a3, 16                                                                               
+    0x4000c2ee      addi   a3, a3, 16                                                                                
     0x4000c2f1      s32i.n a7, a5, 12                                                                               
     0x4000c2f3      addi   a5, a5, 16                                                                               
     0x4000c2f6      bbci   a4, 3, 0x4000c305                   
@@ -455,26 +575,18 @@ memcpy...
     0x4000c305      bbsi   a4, 2, 0x4000c310                                                                        
     0x4000c308      bbsi   a4, 1, 0x4000c320                                                                        
     0x4000c30b      bbsi   a4, 0, 0x4000c330                                                                        
-    0x4000c30e      retw.n                                                                                          
+    0x4000c30e      retw.n                        // return 
     0x4000c310      l32i.n a6, a3, 0                                                                                
     0x4000c312      addi.n a3, a3, 4                                                                                
     0x4000c314      s32i.n a6, a5, 0                                                                                
     0x4000c316      addi.n a5, a5, 4                                                                                
     0x4000c318      bbsi   a4, 1, 0x4000c320                                                                        
     0x4000c31b      bbsi   a4, 0, 0x4000c330                                                                        
-    0x4000c31e      retw.n                          
+    0x4000c31e      retw.n                        // return
+```
 
-Currently it is possible to load the elf file but when running we get,
-DoubleException interrupts very quickly,
 
-When running with -d int, I get this output from qemu 
-  xtensa_cpu_do_interrupt(11) pc = 40080828, a0 = 40080828, ps = 0000001f, ccount = 00000002
 
-In qemu we find this exception it is EXC_DOUBLE,
-
-If setting ps to 0 we get EXC_KERNEL,
-
-Patching this in QEMU gets us further, Another solution is probably better.
 ```
 void HELPER(entry)(CPUXtensaState *env, uint32_t pc, uint32_t s, uint32_t imm)
 {
