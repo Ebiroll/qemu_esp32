@@ -97,8 +97,8 @@ To disassemble you can set pc from gdb,
 Setting programcounter to a function,
 
 ```
-  (gdb) set $pc=bootloader_main
-  (gdb) set $pc=uart_tx_one_char 
+  (gdb) set $pc=&call_start_cpu0
+  (gdb) set $pc=&uart_tx_one_char 
 ```
 
 
@@ -174,12 +174,13 @@ To continue we need to implement esp_io_read in qemu/hw/xtensa/esp32.c for these
 
 Output after running, we need to identify and simulate proper io read values..
 ```
-xtensa-softmmu/qemu-system-xtensa -d guest_errors,int,mmu,page,unimp  -cpu esp32 -M esp32 -m 4M  -kernel  ~/esp/qemu_esp32/build/app-template.elf  -s -S
+xtensa-softmmu/qemu-system-xtensa -d guest_errors,int,mmu,page,unimp  -cpu esp32 -M esp32 -m 4M  -kernel  ~/esp/qemu_esp32/build/app-template.elf  
+No call to serial__mm_init
 tlb_fill(40000400, 2, 0) -> 40000400, ret = 0
 tlb_fill(400004b3, 2, 0) -> 400004b3, ret = 0
 tlb_fill(400004e3, 2, 0) -> 400004e3, ret = 0
-SR 97 is not implemented
-SR 97 is not implemented
+SR 97 � is not implemented
+SR 97 � is not implemented
 tlb_fill(4000d4f8, 0, 0) -> 4000d4f8, ret = 0
 tlb_fill(3ffae010, 1, 0) -> 3ffae010, ret = 0
 tlb_fill(4000f0d0, 0, 0) -> 4000f0d0, ret = 0
@@ -190,36 +191,36 @@ tlb_fill(4000c2c8, 2, 0) -> 4000c2c8, ret = 0
 tlb_fill(3ff9918c, 0, 0) -> 3ff9918c, ret = 0
 tlb_fill(3ffe3eb0, 1, 0) -> 3ffe3eb0, ret = 0
 tlb_fill(3ff00044, 0, 0) -> 3ff00044, ret = 0
-Set jx a0
-io read 00000044
-io write 00000044
+Set jx a0io read 00000044  RTC_CNTL_INT_ST_REG 3ff00044=1
+io write 00000044 00000007 
 tlb_fill(400081d4, 2, 0) -> 400081d4, ret = 0
 tlb_fill(3ff48034, 0, 0) -> 3ff48034, ret = 0
-io read 00048034
-io read 00048088
-io write 00048088
-io read 00048088
-io write 00048088
+io read 00048034 RTC_CNTL_RESET_STATE_REG 3ff48034=1
+io read 00048088 RTC_CNTL_DIG_ISO_REG 3ff48088=00000000
+io write 00048088 00000000 RTC_CNTL_DIG_ISO_REG 3ff48088
+io read 00048088 RTC_CNTL_DIG_ISO_REG 3ff48088=00000000
+io write 00048088 00000400 RTC_CNTL_DIG_ISO_REG 3ff48088
 tlb_fill(40009000, 2, 0) -> 40009000, ret = 0
 tlb_fill(3ff40010, 1, 0) -> 3ff40010, ret = 0
-io write 00040010
+io write 00040010 00000001 
 tlb_fill(3ff50010, 1, 0) -> 3ff50010, ret = 0
-io write 00050010
+io write 00050010 00000001 
 tlb_fill(400067fc, 2, 0) -> 400067fc, ret = 0
 tlb_fill(4000bfac, 2, 0) -> 4000bfac, ret = 0
 tlb_fill(3ff9c2b9, 0, 0) -> 3ff9c2b9, ret = 0
 tlb_fill(3ff5f06c, 0, 0) -> 3ff5f06c, ret = 0
-io read 0005f06c
+io read 0005f06c TIMG_RTCCALICFG1_REG 3ff5f06c=25
 tlb_fill(3ff5a010, 0, 0) -> 3ff5a010, ret = 0
-io read 0005a010
+io read 0005a010 TIMG_T0ALARMLO_REG 3ff5a010=01
 tlb_fill(40005cdc, 0, 0) -> 40005cdc, ret = 0
-io read 000480b4
-io read 000480b4
-io write 000480b4
+io read 000480b4 RTC_CNTL_STORE5_REG 3ff480b4=00000000
+io read 000480b4 RTC_CNTL_STORE5_REG 3ff480b4=00000000
+io write 000480b4 18CB18CB RTC_CNTL_STORE5_REG 3ff480b4
 tlb_fill(4000a484, 2, 0) -> 4000a484, ret = 0
-tlb_fill(00000000, 2, 0) -> 00007f0f, ret = 20
-xtensa_cpu_do_interrupt(10) pc = 00000000, a0 = 80009147, ps = 00060030, ccount = 00001910
-xtensa_cpu_do_interrupt(12) pc = 4000c02b, a0 = 80009147, ps = 00060036, ccount = 0000191d
+//
+tlb_fill(00000000, 2, 0) -> 00007f0d, ret = 20
+xtensa_cpu_do_interrupt(10) pc = 00000000, a0 = 80009147, ps = 00060030, ccount = 00001911
+xtensa_cpu_do_interrupt(12) pc = 4000c02b, a0 = 80009147, ps = 00060036, ccount = 0000191e
 SIMCALL but semihosting is disabled
 ```
 

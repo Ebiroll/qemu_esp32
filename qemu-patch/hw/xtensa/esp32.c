@@ -171,21 +171,69 @@ static void lx60_reset(void *opaque)
     env->sregs[146] = 0xABAB;
 
 
-
 }
+
+static unsigned int sim_RTC_CNTL_DIG_ISO_REG;
+
+static unsigned int sim_RTC_CNTL_STORE5_REG=0;
 
 static uint64_t esp_io_read(void *opaque, hwaddr addr,
         unsigned size)
 {
-    printf("io read %08x\n",addr);
+    printf("io read %08x ",addr);
 
-    return 0x22;
+    switch (addr) {
+       case 0x44:
+           printf(" RTC_CNTL_INT_ST_REG 3ff00044=1\n");
+           return 0x01;
+           break;
+        case 0x48034:
+           printf("RTC_CNTL_RESET_STATE_REG 3ff48034=1\n");
+           return 0x01;
+           break;
+
+       case 0x480b4:
+           printf("RTC_CNTL_STORE5_REG 3ff480b4=%08X\n",sim_RTC_CNTL_STORE5_REG=0);
+           return sim_RTC_CNTL_STORE5_REG=0;
+           break;
+       case 0x5a010:
+           printf("TIMG_T0ALARMLO_REG 3ff5a010=01\n");
+           return 0x01;
+           break;
+       case 0x5f06c:
+           printf("TIMG_RTCCALICFG1_REG 3ff5f06c=25\n");
+           return 0x25;
+           break;
+        case 0x48088:
+            printf("RTC_CNTL_DIG_ISO_REG 3ff48088=%08X\n",sim_RTC_CNTL_DIG_ISO_REG);
+            return sim_RTC_CNTL_DIG_ISO_REG;
+            break;
+       default:
+          printf("\n");
+    }
+
+    return 0x33;
 }
 
 static void esp_io_write(void *opaque, hwaddr addr,
         uint64_t val, unsigned size)
 {
-    printf("io write %08x\n",addr);
+    printf("io write %08x %08X ",addr,val);
+
+    switch (addr) {
+        case 0x48088:
+           printf("RTC_CNTL_DIG_ISO_REG 3ff48088\n");
+           sim_RTC_CNTL_DIG_ISO_REG=val;
+           break;
+       case 0x480b4:
+           printf("RTC_CNTL_STORE5_REG 3ff480b4\n",sim_RTC_CNTL_STORE5_REG);
+           sim_RTC_CNTL_STORE5_REG=val;
+           break;
+
+       default:
+          printf("\n");
+    }
+
 }
 
 static const MemoryRegionOps esp_io_ops = {
@@ -234,9 +282,9 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
         env = &cpu->env;
 
         if (n==0) {
-           env->sregs[PRID] = 0xABAB;
+           env->sregs[PRID] = 0xCDCD;
         } else {
-           env->sregs[PRID] = 0xCDCD;            
+           env->sregs[PRID] = 0xABAB;            
         }
         qemu_register_reset(lx60_reset, cpu);
         /* Need MMU initialized prior to ELF loading,
@@ -299,11 +347,17 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
 
 
     if (!serial_hds[0]) {
+        printf("New serial device\n");
         serial_hds[0] = qemu_chr_new("serial0", "null", NULL);
     }
+    printf("No call to serial__mm_init\n");
+
                             //0x0d050020
-    serial_mm_init(system_io, 0x3FF40020 , 2, xtensa_get_extint(env, 0),
-            115200, serial_hds[0], DEVICE_NATIVE_ENDIAN);
+    //serial_mm_init(system_io, 0x3FF40020 , 2, xtensa_get_extint(env, 0),
+    //        115200, serial_hds[0], DEVICE_NATIVE_ENDIAN);
+
+    //serial_mm_init(system_io, 0x3FF40000 , 2, xtensa_get_extint(env, 0),
+    //        115200, serial_hds[0], DEVICE_NATIVE_ENDIAN);
 
     dinfo = drive_get(IF_PFLASH, 0, 0);
     if (dinfo) {
