@@ -222,6 +222,18 @@ tlb_fill(00000000, 2, 0) -> 00007f0d, ret = 20
 xtensa_cpu_do_interrupt(10) pc = 00000000, a0 = 80009147, ps = 00060030, ccount = 00001911
 xtensa_cpu_do_interrupt(12) pc = 4000c02b, a0 = 80009147, ps = 00060036, ccount = 0000191e
 SIMCALL but semihosting is disabled
+
+// The fun stops here
+// a8 is 0000
+0x4000a484      entry  a1, 32                                                   0x4000a487      extui  a2, a2, 0, 8
+0x4000a48a      movi.n a8, 39
+0x4000a48c      bgeu   a8, a2, 0x4000a492
+0x4000a48f      j      0x4000a72c
+0x4000a492      l32r   a8, 0x4000a460     //
+0x4000a495      addx4  a8, a2, a8         //  a8 is 0x3ff9c180 
+0x4000a498      l32i.n a8, a8, 0          // Load with 0??                                    
+0x4000a49a      jx     a8                 // Call NULL?
+
 ```
 
 
