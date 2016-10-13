@@ -1,4 +1,4 @@
-# qemu_esp32
+ qemu_esp32
 Add tensilica esp32 cpu and a board to qemu and dump the rom to learn more about esp-idf
 ###ESP32 in QEMU.
 
@@ -491,7 +491,10 @@ io read 00000038
 
 
 ```
+
 from components/freertos/include/freertos/xtensa_context.h
+
+```
 /*
  Macro to get the current core ID. Only uses the reg given as an argument.
  Reading PRID on the ESP108 architecture gives us 0xCDCD on the PRO processor
@@ -587,6 +590,7 @@ Currently we get an exception here, probably as we are missing qme memory somewh
 
 
 
+#Useful qemu patch but should be done differently.
 ```
 void HELPER(entry)(CPUXtensaState *env, uint32_t pc, uint32_t s, uint32_t imm)
 {
@@ -604,6 +608,7 @@ void HELPER(entry)(CPUXtensaState *env, uint32_t pc, uint32_t s, uint32_t imm)
 
 #Setting up visual studio code to compile
 ```
+Visual studio code works fine for navigating both qemu and esp32 sources
 Press ctrl-shift-P 
 type tasks, select configure task runner, select other
 {
