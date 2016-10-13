@@ -164,13 +164,66 @@ I got my ESP32-dev board from Adafruit.
 Made a dump and mapped it into the file rom.bin
 I assume that the dump is from RAM.
 
-To continue you need to implement io_read in esp32.c for these,
+To continue we need to implement esp_io_read in qemu/hw/xtensa/esp32.c for these,
 
 // io read 00000044 adress 3ff00044, 
 // ?? What is on io 3ff00044, DPORT-- reset button on gpio??
 
 // io read 00048034 adress 3ff48034 
 // rtc reset reason
+
+Output after running, we need to identify and simulate proper io read values..
+```
+xtensa-softmmu/qemu-system-xtensa -d guest_errors,int,mmu,page,unimp  -cpu esp32 -M esp32 -m 4M  -kernel  ~/esp/qemu_esp32/build/app-template.elf  -s -S
+tlb_fill(40000400, 2, 0) -> 40000400, ret = 0
+tlb_fill(400004b3, 2, 0) -> 400004b3, ret = 0
+tlb_fill(400004e3, 2, 0) -> 400004e3, ret = 0
+SR 97 is not implemented
+SR 97 is not implemented
+tlb_fill(4000d4f8, 0, 0) -> 4000d4f8, ret = 0
+tlb_fill(3ffae010, 1, 0) -> 3ffae010, ret = 0
+tlb_fill(4000f0d0, 0, 0) -> 4000f0d0, ret = 0
+tlb_fill(3ffe0010, 1, 0) -> 3ffe0010, ret = 0
+tlb_fill(3ffe1000, 1, 0) -> 3ffe1000, ret = 0
+tlb_fill(400076c4, 2, 0) -> 400076c4, ret = 0
+tlb_fill(4000c2c8, 2, 0) -> 4000c2c8, ret = 0
+tlb_fill(3ff9918c, 0, 0) -> 3ff9918c, ret = 0
+tlb_fill(3ffe3eb0, 1, 0) -> 3ffe3eb0, ret = 0
+tlb_fill(3ff00044, 0, 0) -> 3ff00044, ret = 0
+Set jx a0
+io read 00000044
+io write 00000044
+tlb_fill(400081d4, 2, 0) -> 400081d4, ret = 0
+tlb_fill(3ff48034, 0, 0) -> 3ff48034, ret = 0
+io read 00048034
+io read 00048088
+io write 00048088
+io read 00048088
+io write 00048088
+tlb_fill(40009000, 2, 0) -> 40009000, ret = 0
+tlb_fill(3ff40010, 1, 0) -> 3ff40010, ret = 0
+io write 00040010
+tlb_fill(3ff50010, 1, 0) -> 3ff50010, ret = 0
+io write 00050010
+tlb_fill(400067fc, 2, 0) -> 400067fc, ret = 0
+tlb_fill(4000bfac, 2, 0) -> 4000bfac, ret = 0
+tlb_fill(3ff9c2b9, 0, 0) -> 3ff9c2b9, ret = 0
+tlb_fill(3ff5f06c, 0, 0) -> 3ff5f06c, ret = 0
+io read 0005f06c
+tlb_fill(3ff5a010, 0, 0) -> 3ff5a010, ret = 0
+io read 0005a010
+tlb_fill(40005cdc, 0, 0) -> 40005cdc, ret = 0
+io read 000480b4
+io read 000480b4
+io write 000480b4
+tlb_fill(4000a484, 2, 0) -> 4000a484, ret = 0
+tlb_fill(00000000, 2, 0) -> 00007f0f, ret = 20
+xtensa_cpu_do_interrupt(10) pc = 00000000, a0 = 80009147, ps = 00060030, ccount = 00001910
+xtensa_cpu_do_interrupt(12) pc = 4000c02b, a0 = 80009147, ps = 00060036, ccount = 0000191d
+SIMCALL but semihosting is disabled
+```
+
+
 
 
 To set a breakpoint before exception try,
