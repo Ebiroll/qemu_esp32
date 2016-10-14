@@ -180,12 +180,17 @@ static unsigned int sim_RTC_CNTL_STORE5_REG=0;
 static uint64_t esp_io_read(void *opaque, hwaddr addr,
         unsigned size)
 {
-    printf("io read %08x ",addr);
+    //if (addr!=0x04001c) printf("io read %08x ",addr);
 
     switch (addr) {
+       case 0x40:
+           printf(" DPORT  3ff00040=28\n");
+           return 0x28;
+           break;
+
        case 0x44:
-           printf(" RTC_CNTL_INT_ST_REG 3ff00044=1\n");
-           return 0x01;
+           printf(" DPORT  3ff00044=8E6\n");
+           return 0x8E6;
            break;
 
         case 0x42000:
@@ -208,9 +213,14 @@ static uint64_t esp_io_read(void *opaque, hwaddr addr,
            return 0x13;
            break;
         
+        case 0x48044:
+           printf("RTC_CNTL_INT_ST_REG 3ff48044=0x0\n");
+           return 0x0;
+           break;
+
         case 0x48034:
-           printf("RTC_CNTL_RESET_STATE_REG 3ff48034=1\n");
-           return 0x01;
+           printf("RTC_CNTL_RESET_STATE_REG 3ff48034=3390\n");
+           return 0x0003390;
            break;
 
        case 0x480b4:
@@ -242,20 +252,24 @@ static uint64_t esp_io_read(void *opaque, hwaddr addr,
           {
             if (addr>0x40000 && addr<0x40400) 
             {
-                printf("UART READ");
+                if (addr!=0x04001c) printf("UART READ");
             }
           }
-          printf("\n");
+          //if (addr!=0x04001c) printf("\n");
     }
 
-    return 0x33;
+    return 0x0;
 }
 
 static void esp_io_write(void *opaque, hwaddr addr,
         uint64_t val, unsigned size)
 {
-    printf("io write %08x %08X ",addr,val);
 
+    if (addr>0x10000 && addr<0x11ffc) {
+        // Cache MMU table
+    } else {
+       //if (addr!=0x40000) printf("io write %08x %08X ",addr,val);
+    }
     switch (addr) {
         case 0x48088:
            printf("RTC_CNTL_DIG_ISO_REG 3ff48088\n");
@@ -266,12 +280,15 @@ static void esp_io_write(void *opaque, hwaddr addr,
            sim_RTC_CNTL_STORE5_REG=val;
            break;
 
+       case 0x40000:
+            fprintf(stderr,"%c",val);
+            break;
        default:
           if (addr>0x40000 && addr<0x40400) 
           {
               printf("UART OUTPUT");
           }
-          printf("\n");
+         // printf("\n");
     }
 
 }
@@ -402,8 +419,8 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
                             CharDriverState *chr, enum device_endian end)
 */
     // What interrupt for this???
-    serial_mm_init(system_io, 0x40020 , 2, xtensa_get_extint(env, 0),
-            115200, serial_hds[0], DEVICE_LITTLE_ENDIAN);
+    //serial_mm_init(system_io, 0x40000 , 2, xtensa_get_extint(env, 0),
+    //        115200, serial_hds[0], DEVICE_LITTLE_ENDIAN);
 
     dinfo = drive_get(IF_PFLASH, 0, 0);
     if (dinfo) {

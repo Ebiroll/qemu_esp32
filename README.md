@@ -14,10 +14,12 @@ http://wiki.linux-xtensa.org/index.php/Xtensa_on_QEMU
 Clone qemu and apply the patch.
 ```
 git clone git://git.qemu.org/qemu.git
-copy qemu-esp32.tar.gz to the qemu source tree and unpack it (tar zxvf)
+cd qemu_esp32/qemu-patch
+./maketar.sh
+copy qemu-esp32.tar to the qemu source tree and unpack it (tar xvf)
 ```
 
-Manually add to makefiles:
+in qemu source tree, manually add to makefiles:
 ```
 hw/extensa/Makefile.objs
   obj-y += esp32.o
@@ -34,8 +36,8 @@ Then run configure as,
 I also did this in qemu: git submodule update --init dtc
 ```
 
-The goal is to run the app-template or bootloader and connect the debugger. It works but after running a 
-few instructions , I get get double exception error.
+The goal is to run the app-template or bootloader and connect the debugger. It works quite well
+but we fall back to the command line interpreter. UART emulation is not so good either. stderr only. :-P
 
 
 #Dumping the ROM
@@ -101,7 +103,6 @@ Setting progra mcounter to a function,
 ```
 
 
-
 ```
   (gdb) x/20i $pc
   (gdb) p/x $a3          (register as hex)
@@ -159,11 +160,36 @@ Disassembly of section .text.jump:
 
 
 #Results
-I got my ESP32-dev board from Adafruit.
-I have made two dumps and mapped the dumps into the files rom.bin & rom1.bin
+I got my ESP32-dev board from Adafruit. I have made two dumps and mapped the dumps into the files rom.bin & rom1.bin
+It actually runs from the rom dump. Amazing. :-)
+wsr.memctl does not work but it the exception could be patched in qemu.
+
+```
+static bool gen_check_sr(DisasContext *dc, uint32_t sr, unsigned access)
+{
+    if (!xtensa_option_bits_enabled(dc->config, sregnames[sr].opt_bits)) {
+        if (sregnames[sr].name) {
+            qemu_log_mask(LOG_GUEST_ERROR, "SR %s is not configured\n", sregnames[sr].name);
+        } else {
+            qemu_log_mask(LOG_UNIMP, "SR %d %s is not implemented\n", sr);
+        }
+        //gen_exception_cause(dc, ILLEGAL_INSTRUCTION_CAUSE);
+```
 
 
-Output after running, It looks like we get to boot mode.. Waiting for input on serial0
+Output after running, flash read err, 1000
+(we need to emulate flash) or boot our loaded elf differently.
+Or emulate serial device differently. Now serial output goes to stderr.
+```
+xtensa-softmmu/qemu-system-xtensa -d guest_errors,int,mmu,page,unimp  -cpu esp32 -M esp32 -m 4M  -kernel  ~/esp/qemu_esp32/build/app-template.elf    2> result.txt 
+ets Jun  8 2016 00:22:57
+
+rst:0x10 (RTCWDT_RTC_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+flash read err, 1000
+Falling back to built-in command interpreter.
+```
+
+When running with debugger.
 Some register name mapping is probably wrong. :-P
 The values returned are more than likely wrong.
 tlb_fill() is probably a cached read of instructions or data.
