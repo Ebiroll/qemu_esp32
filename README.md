@@ -7,7 +7,6 @@ in order to run an app compiled with the SDK in QEMU. Esp32 is a 240 MHz dual co
 It might not be possible but its a good way to learn about qemu and esp32.
 
 
-
 By following the instructions here, I added esp32 to qemu.
 http://wiki.linux-xtensa.org/index.php/Xtensa_on_QEMU
 
@@ -36,8 +35,9 @@ Then run configure as,
 I also did this in qemu: git submodule update --init dtc
 ```
 
-The goal is to run the app-template or bootloader and connect the debugger. It works quite well
-but we fall back to the command line interpreter. UART emulation is not so good either. stderr only. :-P
+The goal is to run the app-template or bootloader and connect the debugger. Connecting the debugger works quite well
+but we fall back to the command line interpreter. 
+UART emulation is not so good as output is only on stderr. It would be much better if we could use the qemu driver with, serial_mm_init()
 
 
 #Dumping the ROM
@@ -139,7 +139,7 @@ void jump() {
 00000000 <retint>:
    0:	004136        	entry	a1, 32
    3:	003200        	rfde
-   6:	f01d      	retw.n
+   6:	f01d      	    retw.n
 
 Disassembly of section .text.test:
 
@@ -155,14 +155,15 @@ Disassembly of section .text.jump:
    3:	0000a0        	jx	a0
    6:	000081        	l32r	a8, fffc0008 <jump+0xfffc0008>
    9:	0008e0        	callx8	a8
-   c:	f01d      	retw.n
+   c:	f01d      	    retw.n
 ```
 
 
 #Results
 I got my ESP32-dev board from Adafruit. I have made two dumps and mapped the dumps into the files rom.bin & rom1.bin
-It actually runs from the rom dump. Amazing. :-)
-wsr.memctl does not work but it the exception could be patched in qemu.
+It actually runs from the rom dump. 
+
+However the instruction wsr.memctl does not work but can be patched like this in qemu.
 
 ```
 static bool gen_check_sr(DisasContext *dc, uint32_t sr, unsigned access)
@@ -177,9 +178,10 @@ static bool gen_check_sr(DisasContext *dc, uint32_t sr, unsigned access)
 ```
 
 
-Output after running, flash read err, 1000
-(we need to emulate flash) or boot our loaded elf differently.
-Or emulate serial device differently. Now serial output goes to stderr.
+We get the following utput after running, flash read err, 1000
+
+I guess better flash emulation is necessary.
+The serial device should also be emulated differently. Now serial output goes to stderr.
 ```
 xtensa-softmmu/qemu-system-xtensa -d guest_errors,int,mmu,page,unimp  -cpu esp32 -M esp32 -m 4M  -kernel  ~/esp/qemu_esp32/build/app-template.elf    2> result.txt 
 ets Jun  8 2016 00:22:57
@@ -208,7 +210,8 @@ Terminal 2
 //(gdb) b *0x40009200
 
 xtensa-softmmu/qemu-system-xtensa -d guest_errors,int,mmu,page,unimp  -cpu esp32 -M esp32 -m 4M  -kernel  ~/esp/qemu_esp32/build/app-template.elf   -S -s 
-Elf entry 400807B8
+Elf entry 400807BC
+serial: event 2
 tlb_fill(40000400, 2, 0) -> 40000400, ret = 0
 tlb_fill(400004b3, 2, 0) -> 400004b3, ret = 0
 tlb_fill(400004e3, 2, 0) -> 400004e3, ret = 0
@@ -224,24 +227,23 @@ tlb_fill(4000c2c8, 2, 0) -> 4000c2c8, ret = 0
 tlb_fill(3ff9918c, 0, 0) -> 3ff9918c, ret = 0
 tlb_fill(3ffe3eb0, 1, 0) -> 3ffe3eb0, ret = 0
 tlb_fill(3ff00044, 0, 0) -> 3ff00044, ret = 0
-io read 00000044  RTC_CNTL_INT_ST_REG 3ff00044=1
-io write 00000044 00000007 
+io read 00000044  DPORT  3ff00044=8E6
 tlb_fill(400081d4, 2, 0) -> 400081d4, ret = 0
 tlb_fill(3ff48034, 0, 0) -> 3ff48034, ret = 0
-io read 00048034 RTC_CNTL_RESET_STATE_REG 3ff48034=1
+io write 00000044 000008E6 io read 00048034 RTC_CNTL_RESET_STATE_REG 3ff48034=3390
 io read 00048088 RTC_CNTL_DIG_ISO_REG 3ff48088=00000000
 io write 00048088 00000000 RTC_CNTL_DIG_ISO_REG 3ff48088
 io read 00048088 RTC_CNTL_DIG_ISO_REG 3ff48088=00000000
 io write 00048088 00000400 RTC_CNTL_DIG_ISO_REG 3ff48088
 tlb_fill(40009000, 2, 0) -> 40009000, ret = 0
 tlb_fill(3ff40010, 1, 0) -> 3ff40010, ret = 0
-io write 00040010 00000001 
+serial: write addr=0x4 val=0x1
 tlb_fill(3ff50010, 1, 0) -> 3ff50010, ret = 0
-io write 00050010 00000001 
 tlb_fill(400067fc, 2, 0) -> 400067fc, ret = 0
 tlb_fill(4000bfac, 2, 0) -> 4000bfac, ret = 0
 tlb_fill(3ff9c2b9, 0, 0) -> 3ff9c2b9, ret = 0
 tlb_fill(3ff5f06c, 0, 0) -> 3ff5f06c, ret = 0
+io write 00050010 00000001 
 io read 0005f06c TIMG_RTCCALICFG1_REG 3ff5f06c=25
 tlb_fill(3ff5a010, 0, 0) -> 3ff5a010, ret = 0
 io read 0005a010 TIMG_T0ALARMLO_REG 3ff5a010=01
@@ -249,9 +251,10 @@ tlb_fill(40005cdc, 0, 0) -> 40005cdc, ret = 0
 io read 000480b4 RTC_CNTL_STORE5_REG 3ff480b4=00000000
 io read 000480b4 RTC_CNTL_STORE5_REG 3ff480b4=00000000
 io write 000480b4 18CB18CB RTC_CNTL_STORE5_REG 3ff480b4
+
 ----------- break Uart_Init, 0x40009120
 (gdb) finish
-// Beforere add    serial_mm_init(system_io, 0x40020 , 2, xtensa_get_extint(env, 0),
+// Beforere add    serial_mm_init(system_io, 0x40000 , 2, xtensa_get_extint(env, 0),
 //            115200, serial_hds[0], DEVICE_LITTLE_ENDIAN);
 
 tlb_fill(4000a484, 2, 0) -> 4000a484, ret = 0
@@ -282,51 +285,47 @@ io write 0004000c 00000033 UART OUTPUT 3
 tlb_fill(3ff0018c, 1, 0) -> 3ff0018c, ret = 0
 io write 0000018c 00000005 
 -----------------------------------------
-// After letting serial0 initialize 
-// We get 1 char on serial output...
-// Needs further investigation. However writes and reads to 00040020 is handled by serial0
+// After letting serial0 be handled by qemu.
+// Also set #define DEBUG_SERIAL  in hw/char/serial.c
+// 
 tlb_fill(4000a484, 2, 0) -> 4000a484, ret = 0
 io read 00048474 
-io write 00048474 00000032 
+io write 00048474 00000000 
 io read 00048474 
-io write 00048474 00000031 
+io write 00048474 00000000 
 tlb_fill(3ff49088, 0, 0) -> 3ff49088, ret = 0
 io read 00049088 
-io write 00049088 00000033 
+io write 00049088 00000000 
 io read 00049088 
-io write 00049088 00000033 
-io write 00040014 00B000E1 UART OUTPUT
+io write 00049088 00000000 
+serial: write addr=0x5 val=0xb000e1
+io read 00040020 UART??=0
+io write 00040020 00060000 UART OUTPUT
+io read 00040020 UART??=0
+io write 00040020 00000000 UART OUTPUT
 tlb_fill(400040ac, 0, 0) -> 400040ac, ret = 0
-io write 00040010 0000FFFF UART OUTPUT
-io read 0004000c UART READ
-io write 0004000c 00000033 UART OUTPUT
+io write 00040020 0800001C UART OUTPUT
+io read 00040020 UART??=0
+io write 00040020 04060000 UART OUTPUT
+io read 00040020 UART??=0
+io write 00040020 00000000 UART OUTPUT
+io write 00040024 00000001 UART OUTPUT
+serial: write addr=0x4 val=0xffff
+serial: read addr=0x3 val=0x00
+serial: write addr=0x3 val=0x1
+serial: speed=9600 parity=N data=6 stop=1
 tlb_fill(3ff0018c, 1, 0) -> 3ff0018c, ret = 0
 io write 0000018c 00000005 
 -------------- after finish --------------
 //ets_printf, 0x40007d54
 (gdb) b *0x40007d54
------------------------------
-io read 00044038 
-io read 000480b0 
-io read 00044038 
-io read 00044038 
-io read 00044038 
-io read 00044038 
-io read 00044038 
-io read 00044038 
-io read 00044038 
-io read 00044038 
-io read 00044038 
-io read 00044038 
-io read 00044038 
-io read 00044038 
-io read 00044038 
-// GPIO_STRAP_REG  
+
+
+
 -------------------------------
 
-/ Finally we end up in this loop
-// Probably waiting for download...
-
+// When running we end up in this loop
+// Probably waiting for input of the fallbask interpreter
 (gdb) where
 #0  0x4009110c in ?? ()
 #1  0x4009118c in ?? ()
@@ -353,53 +352,124 @@ io read 00044038
     0x400911aa      retw.n                                
 
 
-
-// The fun before i dumped rom1.bin stopped here
-gpio_pad_unhold
-0x4000a484      entry  a1, 32                                                   0x4000a487      extui  a2, a2, 0, 8
-0x4000a48a      movi.n a8, 39
-0x4000a48c      bgeu   a8, a2, 0x4000a492
-0x4000a48f      j      0x4000a72c
-0x4000a492      l32r   a8, 0x4000a460     //
-0x4000a495      addx4  a8, a2, a8         //  a8 is 0x3ff9c180 
-0x4000a498      l32i.n a8, a8, 0          // 0x4000a4e5  
-0x4000a49a      jx     a8                 // 
-
 ```
+An effort to debug the flash read error,
+
+Try setting breakpoints here
+spi_flash_attach, 0x40062a6c
+(gdb) b  *0x40062a6c
+
+    0x40062a6c      entry  a1, 32                                               
+    0x40062a6f      or     a10, a2, a2                                          
+    0x40062a72      call8  0x40061f84                   // SelectSpiFunction                                  
+    0x40062a75      l32r   a8, 0x400626bc               // 0a8 contains 0x3ff43034                        
+    0x40062a78      movi.n a9, -2                                               
+    0x40062a7a      memw                                                        
+    0x40062a7d      l32i.n a10, a8, 0                   //    io read 00043034  , SPI_PIN_REG                  
+    0x40062a7f      movi.n a11, 4                                               
+    0x40062a81      and    a9, a10, a9                                          
+    0x40062a84      memw                                                        
+    0x40062a87      s32i.n a9, a8, 0                                            
+    0x40062a89      memw                                                        
+    0x40062a8c      l32i.n a10, a8, 0    
+    0x40062a8e      movi.n a9, 2                                                
+    0x40062a90      or     a9, a10, a9                                          
+    0x40062a93      memw                                                        
+    0x40062a96      s32i.n a9, a8, 0                                            
+    0x40062a98      movi   a10, 0                                               
+    0x40062a9b      call8  0x40061d90                  //  spi_dummy_len_fix                                         
+    0x40062a9e      movi.n a10, 1                                               
+    0x40062aa0      movi.n a11, 4                                               
+    0x40062aa2      call8  0x40061d90                 //  spi_dummy_len_fix                          
+    0x40062aa5      l32r   a8, 0x40062a44             //  a8=3043                        
+    0x40062aa8      l32r   a9, 0x40062a40             //  a9=0x3ff42018
+..
+
+    io write 00042018 00003043     // SPI_CLOCK_REG 
+    io write 00043018 00003043 
+
+..
+    0x40062b00      l32r   a9, 0x400626dc                                       
+    0x40062b03      memw                                                        
+    0x40062b06      l32i.n a10, a8, 0                                           
+    0x40062b08      and    a9, a10, a9                                          
+    0x40062b0b      l32r   a10, 0x40061b64                                      
+    0x40062b0e      or     a9, a9, a10                                          
+    0x40062b11      memw                                                        
+    0x40062b14      s32i.n a9, a8, 0                                            
+    0x40062b16      movi   a10, 0                                               
+    0x40062b19      call8  0x40061b88             // 
+    0x40062b1c      l32r   a8, 0x40062a5c                                       
+    0x40062b1f      movi.n a9, 3                                                
+    0x40062b21      memw               
+
+ .. 
+
+    0x40062b3b      l32r   a8, 0x400621ac                                       
+    0x40062b3e      memw                                                        
+    0x40062b41      s32i   a10, a8, 0                                           
+    0x40062b44      l32r   a10, 0x40062a68                                      
+    0x40062b47      memw                                                        
+    0x40062b4a      s32i   a9, a10, 0                                           
+    0x40062b4d      memw                                                        
+    0x40062b50      l32i.n a9, a8, 0                                            
+    0x40062b52      bnez   a9, 0x40062b4d                                       
+    0x40062b55      mov.n  a11, a3                                              
+    0x40062b57      movi.n a10, 5                                               
+    0x40062b59      call8  0x40062944                   // SPIReadModeCnfig                                    
+    0x40062b5c      retw.n              
+
+...
+
+SPIReadModeCnfig...
+Both SPI0 & SPI1 registers are writte/read in parallell.
+
+io read 000420f8 SPI_EXT2_REG 3ff420f8=0
+io read 000430f8 ????? 3ff430f8=0
+io read 00042008 
+io write 00042008 00000000 
+io read 00043008 
+io write 00043008 00000000 
+io read 00042008 
+io write 00042008 00000000 
+io read 00043008 
+io write 00043008 00000000 
+io read 0004301c 
+io write 0004301c 00000000 
+io read 0004301c 
+io write 0004301c 00000000 
+io read 0004301c 
+io write 0004301c 50000000 
+io read 00043020 
+io write 00043020 5C000000 
+io read 00043024 
+io write 00043024 00000003 
 
 
+After return from spi_flash_attach..
 
+    0x400079c4      l32r   a4, 0x40006878           //        0x3ffe0400                     
+    0x400079c7      s32i.n a2, a4, 0                                            
+    0x400079c9      j      0x40007a8d                                           
+    0x400079cc      or     a12, a0, a0                                          
+    0x400079cf      lsi    f0, a2, 160                                          
+    0x400079d2      lsi    f0, a12, 0x3e0                                       
+    0x400079d5      extui  a9, a9, 0, 5                                         
+    0x400079d8      bne    a9, a8, 0x400079ed                                   
+    0x400079db      mov.n  a11, a2                                              
+    0x400079dd      or     a10, a4, a4                                          
+    0x400079e0      call8  0x40009034                                           
+    0x400079e3      extui  a11, a10, 0, 16                                      
+    0x400079e6      mov.n  a10, a4   
 
-To set a breakpoint before exception try,
-```
+// Also we can break at mmu_init, 0x400095a4
+b *0x400095a4
+// or
+cache_flash_mmu_set, 0x400095e0
 
-// rom_main..
-(gdb) b	*0x400076c4
-
-(gdb) b	*0x400076c4
-
-(gdb) b *0x400004ef
-0x2222211f	572662047
-after break, set $pc=0x400004fb
-
-b	*0x400076c4
-
-
-
-
-
-
-or patch qemu....
-static bool gen_check_sr(DisasContext *dc, uint32_t sr, unsigned access)
-{
-    if (!xtensa_option_bits_enabled(dc->config, sregnames[sr].opt_bits)) {
-        if (sregnames[sr].name) {
-            qemu_log_mask(LOG_GUEST_ERROR, "SR %s is not configured\n", sregnames[sr].name);
-        } else {
-            qemu_log_mask(LOG_UNIMP, "SR %d %s is not implemented\n", sr);
-        }
-        //gen_exception_cause(dc, ILLEGAL_INSTRUCTION_CAUSE);
-
+//When we get here 
+0x40007ba4      call8  0x4005a980   
+start_tb_console, 0x4005a980
 
 
 

@@ -12,6 +12,7 @@
 #include "esp_system.h"
 #include "nvs_flash.h"
 #include "driver/gpio.h"
+#include "soc/rtc_cntl_reg.h"
 
 /* For testing of how code is generated  */
 #if 0
@@ -74,6 +75,20 @@ void dump_task(void *pvParameter)
 
     int *GPIO_STRAP_TEST=(int *)0x3ff44038;
     printf( "GPIO STRAP REG=%08X\n", *GPIO_STRAP_TEST);
+
+    int *test=(int *)RTC_CNTL_RESET_STATE_REG;
+    printf( "RTC_CNTL_RESET_STATE_REG,%08X=%08X\n",RTC_CNTL_RESET_STATE_REG, *test);
+
+    //RTC_CNTL_RESET_STATE_REG  3ff48034
+
+    test=(int *)RTC_CNTL_INT_ST_REG;
+    printf( "RTC_CNTL_INT_ST_REG;,%08X=%08X\n",RTC_CNTL_INT_ST_REG, *test);
+
+    test=(int *)0x3FF00044;
+    printf( "DPORT 44 REG;,%08X=%08X\n",0x3FF00044, *test);
+
+    test=(int *)0x3FF00040;
+    printf( "DPORT 40 REG;,%08X=%08X\n",0x3FF00040, *test);
 
     printf("ROM DUMP\n");
     printf("\n");
