@@ -353,8 +353,10 @@ io write 0000018c 00000005
 
 
 ```
+
 An effort to debug the flash read error,
 
+```
 Try setting breakpoints here
 spi_flash_attach, 0x40062a6c
 (gdb) b  *0x40062a6c
@@ -480,7 +482,6 @@ static HeapRegionTagged_t regions[]={
 	{ (uint8_t *)0x3FFAE000, 0x2000, 0, 0}, //pool 16 <- used for rom code
 	{ (uint8_t *)0x3FFB0000, 0x8000, 0, 0}, //pool 15 <- can be used for BT
 	{ (uint8_t *)0x3FFB8000, 0x8000, 0, 0}, //pool 14 <- can be used for BT
-
 
 
 
