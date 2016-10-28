@@ -199,9 +199,14 @@ target-xtensa/op_helper.c
 Look at pic_cpu.c 
 in void xtensa_irq_init(CPUXtensaState *env) you can remove the 
 //#if 0
-
 Patching the result of ets_unpack_flash_code and entering 
 the elf load value into 3ffe0400  user_code_start gets this bootloop output,
+
+(gdb) b *0x40007c29
+(gdb) c
+// Look at Elf entry.. and set pc.
+(gdb) set $pc=0x400807BC       
+(gdb) c
 
 Rebooting...
 io write 00048000 80000000 
@@ -225,7 +230,7 @@ A14     :  7ffe7fe8  A15     :  00000000  SAR     :  00000004  EXCCAUSE:  000000
 EXCVADDR:  bffcffe0  LBEG    :  4000c46c  LEND    :  4000c477  LCOUNT  :  00000000  
 ```
 
-set $pc=0x40081606
+set $pc=0x40080814
 
 esp/esp-idf/components/freertos/./heap_regions.c
 
@@ -235,7 +240,52 @@ esp/esp-idf/components/freertos/./heap_regions.c
     557                     pxEnd->xTag = -1;                   
 
 Most likely the memory mapping is not correct in esp32.c.
-Fixing this is saved for a rainy day.
+Fixing this is saved for a rainy day. Today is rainy.
+make menuconfig and add FreeRTOS head debugging...
+
+
+(gdb) b *0x40007c29
+(gdb) c
+(gdb) set $pc=0x40080814
+(gdb) b start_cpu0_default
+(gdb) b  xPortStartScheduler
+
+SR 97 is not implemented
+SR 97 is not implemented
+ets Jun  8 2016 00:22:57
+rst:0x10 (RTCWDT_RTC_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+I (1) heap_alloc_caps: Initializing heap allocator:
+I (1) heap_alloc_caps: Region 19: 3FFB3D10 len 0002C2F0 tag 0
+I (1) heap_alloc_caps: Region 25: 3FFE8000 len 00018000 tag 1
+xtensa_cpu_do_interrupt(2) pc = 40081aa8, a0 = 00000000, ps = 00060d33, ccount = 0000ad84
+xtensa_cpu_do_interrupt(4) pc = 40007d0c, a0 = 40000740, ps = 00060f30, ccount = 0000adf3
+xtensa_cpu_do_interrupt(4) pc = 40009203, a0 = 80007c29, ps = 00060130, ccount = 0000ae03
+check b=0x3ffb3d1c size=180948 ok
+check b=0x3ffdfff0 size=0 ok
+check b=0x3ffe800c size=98276 ok
+xtensa_cpu_do_interrupt(5) pc = 400d05d6, a0 = 3ff40000, ps = 00060530, ccount = 0000cc89
+I (2) cpu_start: Pro cpu up.
+I (2) cpu_start: Single core mode
+I (2) cpu_start: Pro cpu start user code
+------------ start_cpu0_default ---------------
+xtensa_cpu_do_interrupt(4) pc = 40009203, a0 = 80007c29, ps = 00060130, ccount = 0000e8fd
+rtc v112 Sep 26 2016 22:32:10
+XTAL 0M
+xtensa_cpu_do_interrupt(4) pc = 40082927, a0 = 800808eb, ps = 00060330, ccount = 00015448
+xtensa_cpu_do_interrupt(4) pc = 40081aa5, a0 = 800807dc, ps = 00060533, ccount = 00015460
+xtensa_cpu_do_interrupt(5) pc = 4000beb4, a0 = 80081b58, ps = 00060930, ccount = 0001557f
+xtensa_cpu_do_interrupt(5) pc = 400d084d, a0 = 00000000, ps = 00060730, ccount = 0001558f
+xtensa_cpu_do_interrupt(4) pc = 40081aa5, a0 = 800808eb, ps = 00060333, ccount = 00015604
+xtensa_cpu_do_interrupt(4) pc = 40081aa5, a0 = 800807e2, ps = 00060533, ccount = 00015cfe
+TBD(pc = 40083be6): /home/olas/qemu/target-xtensa/translate.c:1354
+                case 6: /*RER*/ Not implemented in qemu simulation
+
+xtensa_cpu_do_interrupt(5) pc = 40082baa, a0 = 80081b58, ps = 00060930, ccount = 00016866
+xtensa_cpu_do_interrupt(5) pc = 400d06d7, a0 = 00000000, ps = 00060730, ccount = 00016874
+I (3) cpu_start: Starting scheduler on PRO CPU.
+-----------------  xPortStartScheduler---------------------
+
+
 
 ```
 xtensa-softmmu/qemu-system-xtensa -d guest_errors,int,page,unimp  -cpu esp32 -M esp32 -m 4M  -kernel  ~/esp/qemu_esp32/build/app-template.elf    > io.txt 

@@ -201,6 +201,11 @@ static uint64_t esp_io_read(void *opaque, hwaddr addr,
            return 0x01;
            break;
 
+      case 0x3F0:
+           printf(" DPORT_PRO_DCACHE_DBUG0_REG  3ff003F0=0x01\n");
+           return 0x01;
+           break;
+
 
         case 0x42000:
            printf("SPI_CMD_REG 3ff42000=0\n");
