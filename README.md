@@ -241,8 +241,9 @@ esp/esp-idf/components/freertos/./heap_regions.c
 
 Most likely the memory mapping is not correct in esp32.c.
 Fixing this is saved for a rainy day. Today is rainy.
-make menuconfig and add FreeRTOS head debugging...
 
+```
+make menuconfig and add FreeRTOS head debugging...
 
 (gdb) b *0x40007c29
 (gdb) c
@@ -284,6 +285,24 @@ xtensa_cpu_do_interrupt(5) pc = 40082baa, a0 = 80081b58, ps = 00060930, ccount =
 xtensa_cpu_do_interrupt(5) pc = 400d06d7, a0 = 00000000, ps = 00060730, ccount = 00016874
 I (3) cpu_start: Starting scheduler on PRO CPU.
 -----------------  xPortStartScheduler---------------------
+(gdb) where
+
+#0  0x4000bfdf in ?? ()
+#1  0x40081af0 in vPortCPUAcquireMutex (mux=0x3ffb3420 <xTaskQueueMutex>)
+    at /home/olas/esp/esp-idf/components/freertos/./port.c:339
+#2  0x40082736 in vTaskSwitchContext () at /home/olas/esp/esp-idf/components/freertos/./tasks.c:2300
+#3  0x4008394b in _frxt_dispatch () at /home/olas/esp/esp-idf/components/freertos/./portasm.S:410
+
+
+WUR 234 not implemented, TBD(pc = 400912c3): /home/olas/qemu/target-xtensa/translate.c:1887
+WUR 235 not implemented, TBD(pc = 400912c8): /home/olas/qemu/target-xtensa/translate.c:1887
+WUR 236 not implemented, TBD(pc = 400912cd): /home/olas/qemu/target-xtensa/translate.c:1887
+
+We get some kind of exception and en
+
+io read 000003f0  DPORT_PRO_DCACHE_DBUG0_REG  3ff003F0=0x01
+```
+
 
 
 
