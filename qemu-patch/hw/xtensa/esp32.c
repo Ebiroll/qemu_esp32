@@ -44,6 +44,8 @@
 #include "sysemu/device_tree.h"
 #include "qemu/error-report.h"
 #include "bootparam.h"
+#include "qemu/timer.h"
+
 
 typedef struct ESP32BoardDesc {
     hwaddr flash_base;
@@ -159,6 +161,23 @@ static uint64_t translate_phys_addr(void *opaque, uint64_t addr)
     return cpu_get_phys_page_debug(CPU(cpu), addr);
 }
 
+static void esp_xtensa_ccompare_cb(void *opaque)
+{
+    XtensaCPU *cpu = opaque;
+    CPUXtensaState *env = &cpu->env;
+    CPUState *cs = CPU(cpu);
+
+    if (cs->halted) {
+        env->halt_clock = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
+        xtensa_advance_ccount(env, env->wake_ccount - env->sregs[CCOUNT]);
+        if (!cpu_has_work(cs)) {
+            env->sregs[CCOUNT] = env->wake_ccount + 1;
+            xtensa_rearm_ccompare_timer(env);
+        }
+    }
+}
+
+
 static void lx60_reset(void *opaque)
 {
     XtensaCPU *cpu = opaque;
@@ -167,6 +186,11 @@ static void lx60_reset(void *opaque)
 
 
     CPUXtensaState *env = &cpu->env;
+
+    env->ccompare_timer =
+        timer_new_ns(QEMU_CLOCK_VIRTUAL, &esp_xtensa_ccompare_cb, cpu);
+
+
 
     env->sregs[146] = 0xABAB;
 
@@ -455,8 +479,8 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
     //serial_mm_init(system_io, 0x40000 , 2, xtensa_get_extint(env, 0),
     //        9600, serial_hds[0], DEVICE_LITTLE_ENDIAN);
 
-    //serial_mm_init(system_io, 0x40000 , 2, xtensa_get_extint(env, 0),
-    //        115200, serial_hds[0], DEVICE_LITTLE_ENDIAN);
+    serial_mm_init(system_io, 0x40000 , 2, xtensa_get_extint(env, 0),
+            115200, serial_hds[0], DEVICE_LITTLE_ENDIAN);
 
 
     dinfo = drive_get(IF_PFLASH, 0, 0);

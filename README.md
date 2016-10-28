@@ -191,14 +191,6 @@ finish
 layout asm
 set $a10=0
 If we continue we pass through ets_run 0x400066bc
-Then we get an exception in qemu, most probably as timers are not configured properly
-target-xtensa/op_helper.c
-    if (xtensa_option_enabled(env->config, XTENSA_OPTION_TIMER_INTERRUPT)) {
-        xtensa_rearm_ccompare_timer(env);
-    }
-Look at pic_cpu.c 
-in void xtensa_irq_init(CPUXtensaState *env) you can remove the 
-//#if 0
 Patching the result of ets_unpack_flash_code and entering 
 the elf load value into 3ffe0400  user_code_start gets this bootloop output,
 
@@ -245,7 +237,18 @@ nvs_flash_init()
 
 
 Most likely the memory mapping is not correct in esp32.c.
-Fixing this is saved for a rainy day. Today is rainy.
+Fixing this is saved for a rainy day. Today is rainy. Now serial output also works from qemu,
+
+
+By commenting out,
+    //nvs_flash_init(); & /system_init();
+I was able to run the romdump.. in qemu
+void app_main()
+{
+    //nvs_flash_init();
+    //system_init();
+
+TODO, fix so that nvs_flash_init() & system_init(); is possible to run in qemu.
 
 ```
 
