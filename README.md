@@ -95,7 +95,7 @@ To disassemble a specific function you can set pc from gdb,
   (gdb) ni  (skips calls)
   (gdb) finish (run until ret)
 ```
-Setting progra mcounter to a function,
+Setting programcounter (pc) to a function,
 
 ```
   (gdb) set $pc=&call_start_cpu0
@@ -163,7 +163,7 @@ Disassembly of section .text.jump:
 I got my ESP32-dev board from Adafruit. I have made two dumps and mapped the dumps into the files rom.bin & rom1.bin
 It actually runs from the rom dump. 
 
-However the instruction wsr.memctl does not work but can be patched like this in qemu.
+However the instruction wsr.memctl does not work in QEMU but can be patched like this (in qemu tree).
 
 ```
 static bool gen_check_sr(DisasContext *dc, uint32_t sr, unsigned access)
@@ -224,6 +224,8 @@ A10     :  3ffb3084  A11     :  3ffe8000  A12     :  00000019  A13     :  000000
 A14     :  7ffe7fe8  A15     :  00000000  SAR     :  00000004  EXCCAUSE:  0000001d  
 EXCVADDR:  bffcffe0  LBEG    :  4000c46c  LEND    :  4000c477  LCOUNT  :  00000000  
 ```
+
+set $pc=0x40081606
 
 esp/esp-idf/components/freertos/./heap_regions.c
 

@@ -585,7 +585,7 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
             };
 
             // Return from double interrupt
-            cpu_physical_memory_write(0x400003c0, rfde, sizeof(rfde));
+            //cpu_physical_memory_write(0x400003c0, rfde, sizeof(rfde));
 
 
             //	003000        	rfe
@@ -595,7 +595,7 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
             };
 
 
-            cpu_physical_memory_write(0x40000300, rfe, sizeof(rfe));
+            //cpu_physical_memory_write(0x40000300, rfe, sizeof(rfe));
 
             // Add rom from file
             FILE *f_rom=fopen("rom.bin", "r");
@@ -611,12 +611,28 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
             FILE *f_rom1=fopen("rom1.bin", "r");
             
             if (f_rom == NULL) {
-               printf("   Can't open 'rom.bin' for reading.\n");
+               printf("   Can't open 'rom1.bin' for reading.\n");
 	        } else {
                 unsigned int *rom1_data=(unsigned int *)malloc(0x10000*sizeof(unsigned int));
                 fread(rom1_data,0x10000*sizeof(unsigned int),1,f_rom1);
                 cpu_physical_memory_write(0x3FF90000, rom1_data, 0xFFFF*sizeof(unsigned int));
             }
+
+            // Patching rom function. ets_unpack_flash_code
+            //      movi.n	a2, 0
+            //      retw.n
+            static const uint8_t retw_n[] = {
+                0xc, 0x2,0x1d, 0xf0
+            };
+
+            // Patch rom, ets_unpack_flash_code
+            cpu_physical_memory_write(0x40007018+3, retw_n, sizeof(retw_n));
+
+            // Set user_code_start to elf entry_point.. 
+            // However this is ram and it will be overwritten later... 
+            cpu_physical_memory_write(0x3ffe0400, &entry_point, 1*sizeof(unsigned int));
+
+            // TODO.. Add entry point in flash patch instead.
 
 
             // Skip bootloader initialisation, jump to the fresh elf
