@@ -180,10 +180,63 @@ static bool gen_check_sr(DisasContext *dc, uint32_t sr, unsigned access)
 
 We get the following utput after running, flash read err, 1000
 
-I guess better flash emulation is necessary.
+I guess better flash emulation is necessary or we could patch the 
+rom function -- ets_unpack_flash_code  located at 0x40007018
 The serial device should also be emulated differently. Now serial output goes to stderr.
+
 ```
-xtensa-softmmu/qemu-system-xtensa -d guest_errors,int,mmu,page,unimp  -cpu esp32 -M esp32 -m 4M  -kernel  ~/esp/qemu_esp32/build/app-template.elf    2> result.txt 
+If setting breakpoint here,
+b *0x40007018
+finish
+layout asm
+set $a10=0
+If we continue we pass through ets_run 0x400066bc
+Then we get an exception in qemu, most probably as timers are not configured properly
+target-xtensa/op_helper.c
+    if (xtensa_option_enabled(env->config, XTENSA_OPTION_TIMER_INTERRUPT)) {
+        xtensa_rearm_ccompare_timer(env);
+    }
+Look at pic_cpu.c 
+in void xtensa_irq_init(CPUXtensaState *env) you can remove the 
+//#if 0
+
+Patching the result of ets_unpack_flash_code and entering 
+the elf load value into 3ffe0400  user_code_start gets this bootloop output,
+
+Rebooting...
+io write 00048000 80000000 
+IRQ! 0x00000000
+xtensa_cpu_do_interrupt(10) pc = 40081606, a0 = 800d05fe, ps = 00060030, ccount = 4788c52b
+io read 00048000 
+io write 00048000 00000000 
+io read 00048000 
+io write 00048000 02100000 
+io read 000480ac 
+io write 000480ac 00000000 
+io read 000480ac 
+io write 000480ac 00000002 
+Guru Meditation Error of type StoreProhibited occurred on core   0. Exception was unhandled.
+Register dump:
+PC      :  40081606  PS      :  00060030  A0      :  800d05fe  A1      :  3ffe3e20  
+A2      :  3ffb2ef4  A3      :  0002c4a4  A4      :  3ffb0134  A5      :  fffffffc  
+A6      :  3ffb0134  A7      :  ffffffff  A8      :  3ffe8000  A9      :  bffcffdc  
+A10     :  3ffb3084  A11     :  3ffe8000  A12     :  00000019  A13     :  00000001  
+A14     :  7ffe7fe8  A15     :  00000000  SAR     :  00000004  EXCCAUSE:  0000001d  
+EXCVADDR:  bffcffe0  LBEG    :  4000c46c  LEND    :  4000c477  LCOUNT  :  00000000  
+```
+
+esp/esp-idf/components/freertos/./heap_regions.c
+
+    554                     pxEnd = ( BlockLink_t * ) (ulAddress + BLOCK_HEAD_L 
+    555                     pxEnd->xBlockSize = 0;                              
+    556                     pxEnd->pxNextFreeBlock = NULL;                      
+    557                     pxEnd->xTag = -1;                   
+
+Most likely the memory mapping is not correct in esp32.c.
+Fixing this is saved for a rainy day.
+
+```
+xtensa-softmmu/qemu-system-xtensa -d guest_errors,int,page,unimp  -cpu esp32 -M esp32 -m 4M  -kernel  ~/esp/qemu_esp32/build/app-template.elf    > io.txt 
 ets Jun  8 2016 00:22:57
 
 rst:0x10 (RTCWDT_RTC_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
@@ -191,9 +244,7 @@ flash read err, 1000
 Falling back to built-in command interpreter.
 ```
 
-When running with debugger.
-Some register name mapping is probably wrong. :-P
-The values returned are more than likely wrong.
+Some i/o register name mapping is probably wrong.  The values returned are more than likely wrong.
 tlb_fill() is probably a cached read of instructions or data.
 ```
 Terminal 1
@@ -424,8 +475,8 @@ spi_flash_attach, 0x40062a6c
 ...
 
 SPIReadModeCnfig...
-Both SPI0 & SPI1 registers are writte/read in parallell.
-
+Both SPI0 & SPI1 registers are written/read in parallell.
+This is th I/O activity of SPIReadModeCnfig
 io read 000420f8 SPI_EXT2_REG 3ff420f8=0
 io read 000430f8 ????? 3ff430f8=0
 io read 00042008 
@@ -465,15 +516,161 @@ After return from spi_flash_attach..
     0x400079e6      mov.n  a10, a4   
 
 // Also we can break at mmu_init, 0x400095a4
-b *0x400095a4
-// or
-cache_flash_mmu_set, 0x400095e0
+(gdb) b *0x400095a4
+(gdb) finish
+I heavliy use the reset function of the qemu console.
+
+Sowhere around here, the rom code decides that we have 
+  flash read err, 1000
+
+    0x40007b45      l32r   a2, 0x400068ac                                       
+    0x40007b48      movi.n a10, 0                                               
+    0x40007b4a      mov.n  a12, a2                                              
+    0x40007b4c      mov.n  a13, a10                                             
+    0x40007b4e      movi.n a14, 64                                              
+    0x40007b50      mov.n  a11, a10                                             
+    0x40007b52      movi.n a15, 1                                               
+    0x40007b54      call8  0x400095e0             // cache_flash_mmu_set
+// cache_flash_mmu_set results in this activity..
+io read 00000044  DPORT  3ff00044=8E6
+io read 0000005c 
+io read 0000005c 
+io write 0000005c 0000003F 
+io read 00000044  DPORT  3ff00044=8E6
+io write 00000044 000008FF 
+io write 00010000 00000000 
+io write 00000044 000008E6 
+io write 0000005c 00000000 
+io read 00000044  DPORT  3ff00044=8E6
+io write 00000044 000008E6 
+
+    0x40007b57      l32r   a3, 0x40007000                                      
+    0x40007b5a      movi.n a4, -17                                              
+    0x40007b5c      memw                                                        
+    0x40007b5f      l32i.n a5, a3, 0                                            
+    0x40007b61      movi.n a10, 0            
+    0x40007b63      and    a4, a5, a4                                           
+    0x40007b66      memw                                                        
+    0x40007b69      s32i   a4, a3, 0                                            
+    0x40007b6c      call8  0x40009950     //  Cache_Read_Init   
+// Cache read init results in this activity
+io read 00000040  DPORT  3ff00040=28
+io write 00000040 00000020 
+io read 00043050 
+io write 00043050 00000000 
+io read 00000040  DPORT  3ff00040=28
+io write 00000040 00000028 
+io read 00000040  DPORT  3ff00040=28
+io write 00000040 00000038 
+io read 00000040  DPORT  3ff00040=28
+io read 00000040  DPORT  3ff00040=28
+io write 00000040 00000028 
+io read 00043050 
+io write 00043050 00000001 
+io read 00000040  DPORT  3ff00040=28
+io write 00000040 00000028 
+
+    0x40007b6f      mov.n  a11, a2                                              
+    0x40007b71      movi   a10, 0                                               
+    0x40007b74      call8  0x4005cbcc          // ets_secure_boot_check_start 
+io read 0005a018, gpio...
+    
+    0x40007b77      extui  a13, a10, 0, 8                                       
+    0x40007b7a      l32r   a11, 0x40006878                                      
+    0x40007b7d      l32r   a10, 0x4000062c                                      
+    0x40007b80      movi.n a12, 0                                               
+    0x40007b82      movi.n a14, 1                                               
+    0x40007b84      call8  0x40007018         // ets_unpack_flash_code                                  
+    0x40007b87      beqz   a10, 0x40007bf5                                      
+    0x40007b8a      l32r   a2, 0x400076b8                                       
+    0x40007b8d      memw                                                        
+    0x40007b90      l32i.n a2, a2, 0                                            
+    0x40007b92      bbci   a2, 2, 0x40007ba4                                    
+    0x40007b95      l32r   a10, 0x40007684            
+
+
+
+Detailed analysis of Cache_Read_Init
+Cache_Read_Init
+    0x40009950      entry  a1, 32                                               
+    0x40009953      movi.n a9, -9                                               
+    0x40009955      l32r   a8, 0x40009944        // 0x3ff00040                               
+    0x40009958      beqz.n a2, 0x4000995d        // a2=0 (xp /x 0x4000995d in qemu)  a80020c0                             
+    0x4000995a      l32r   a8, 0x40009948        // 0x3ff00058                               
+    0x4000995d      memw                                                        
+    0x40009960      l32i.n a10, a8, 0                                           
+    0x40009962      and    a9, a10, a9                                          
+    0x40009965      memw                                                        
+    0x40009968      s32i.n a9, a8, 0            // a9=                                 
+    0x4000996a      l32r   a8, 0x4000994c       // 0x3ff43050                                
+    0x4000996d      movi.n a9, -2                                               
+    0x4000996f      memw
+    0x40009972      l32i.n a10, a8, 0                                           
+    0x40009974      and    a9, a10, a9                                          
+    0x40009977      memw                                                        
+    0x4000997a      s32i.n a9, a8, 0                                            
+    0x4000997c      movi.n a9, -17                                              
+    0x4000997e      bnez.n a2, 0x400099ac                                       
+    0x40009980      l32r   a8, 0x40009944       //  0x3ff00040
+    0x40009983      memw                                                        
+    0x40009986      l32i.n a10, a8, 0           // io read 00000040  DPORT  3ff00040=28
+    0x40009988      and    a9, a10, a9                                          
+    0x4000998b      memw                               
+    0x4000998e      s32i.n a9, a8, 0           // io write (PRO_CACHE_CTRL_REG) 00000040 00000028                                  
+    0x40009990      memw                                                        
+    0x40009993      l32i.n a10, a8, 0          // io read 00000040 00000028                                   
+    0x40009995      movi.n a9, 16                                               
+    0x40009997      or     a9, a10, a9         // 0x38                                 
+    0x4000999a      memw                                                        
+    0x4000999d      s32i.n a9, a8, 0           // io write 00000040 00000038                                 
+    0x4000999f      movi.n a9, 32                                               
+    0x400099a1      memw                                                        
+    0x400099a4      l32i.n a10, a8, 0               //  io read 00000040                           
+    0x400099a6      bnone  a10, a9, 0x400099a1     //   0x80020c0                   
+    0x400099a9      j      0x400099d5                                           
+    0x400099ac      l32r   a8, 0x40009948                                       
+    0x400099af      memw                                                        
+    0x400099b2      l32i.n a10, a8, 0                                           
+    0x400099b4      and    a9, a10, a9                                          
+    0x400099b7      memw                                                        
+    0x400099ba      s32i.n a9, a8, 0                                            
+    0x400099bc      memw                                                        
+    0x400099bf      l32i.n a10, a8, 0                                           
+    0x400099c1      movi.n a9, 16                                               
+    0x400099c3      or     a9, a10, a9                
+
+
+
+    0x400099d5      memw                                                        
+    0x400099d8      l32i.n a10, a8, 0                                           
+    0x400099da      movi.n a9, -17                                              
+    0x400099dc      and    a9, a10, a9                                          
+    0x400099df      memw                                                        
+    0x400099e2      s32i.n a9, a8, 0                                            
+    0x400099e4      l32r   a8, 0x4000994c                                       
+    0x400099e7      movi.n a9, 1                                                
+    0x400099e9      memw                                                        
+    0x400099ec      l32i.n a10, a8, 0                                           
+    0x400099ee      or     a9, a10, a9                                          
+    0x400099f1      memw                                                        
+    0x400099f4      s32i.n a9, a8, 0          
+
+
+
+//  cache_flash_mmu_set, 0x400095e0
+
+#0  0x400095e0 in ?? ()    cache_flash_mmu_set
+#1  0x400070b7 in ?? ()    in ets_unpack_flash_code
+#2  0x40007b87 in ?? ()    
+#3  0x40000740 in ?? ()
+
+
+
+
 
 //When we get here 
 0x40007ba4      call8  0x4005a980   
 start_tb_console, 0x4005a980
-
-
 
 
 Probably missing ram.. 
@@ -687,8 +884,6 @@ is necessary to allow an Xtensa processor to atomically access a DataRAM locatio
     0x4000770d      mov.n  a3, a10                
 ...
 
-// io read 00000044
-// What is on io 3ff00044
 
 // io read 00048034
 // rtc reset reason
@@ -707,7 +902,7 @@ is necessary to allow an Xtensa processor to atomically access a DataRAM locatio
 
 // Here we get an io read register 0x38...
 
- <0x400076d4      rsr.prid       a3                                                                                                                 <
+   <0x400076d4      rsr.prid       a3                                                                                                                 <
    <0x400076d7      bne    a3, a2, 0x400076e9                                                                                                         <
    <0x400076da      l32r   a3, 0x40006898                                                                                                             <
    <0x400076dd      memw                                                                                                                              <
@@ -719,8 +914,9 @@ is necessary to allow an Xtensa processor to atomically access a DataRAM locatio
 
 
 // Lots of calls to... xtos_set_exception_handler
+// We also have already called user code done..
 
-0x40007bf0      l32r   a3, 0x40006878                                                                                                             <
+   0x40007bf0      l32r   a3, 0x40006878                                                                                                             <
    <0x40007bf3      s32i.n a2, a3, 0                                                                                                                  <
    <0x40007bf5      l32r   a2, 0x400076bc                                                                                                             <
    <0x40007bf8      movi.n a10, 9                                                                                                                     <
@@ -743,6 +939,67 @@ is necessary to allow an Xtensa processor to atomically access a DataRAM locatio
    <0x40007c1f      call8  0x4000074c                                                                                                                 <
    <0x40007c22      mov.n  a11, a2                                                                                                                    <
    <0x40007c24      movi.n a10, 8                  
+    0x40007c26      call8  0x4000074c                                           
+    0x40007c29      l32r   a2, 0x40006878             // 3ffe0400  user_code_start !!                         
+    0x40007c2c      l32i.n a2, a2, 0                  //                          
+    0x40007c2e      beqz   a2, 0x40007c34                                       
+    0x40007c31      callx8 a2                         // CALL user_code_start
+// I guess this is where we enter user_code, that would be the 
+// bootloader. The bootloader reads the partition table and 
+// Sets up stacks bss and such for the application
+// To start the loaded elf file I guess we could mimic
+// unpack_load_app from the bootloader
+    0x40007c34      l32r   a10, 0x400076c0                                      
+    0x40007c37      call8  0x40007d54            // prints user code done 
+    0x40007c3a      l32r   a2, 0x40006888                                       
+    0x40007c3d      l32i.n a2, a2, 0                                            
+    0x40007c3f      beqz   a2, 0x40007c48                                       
+    0x40007c42      callx8 a2                                                   
+    0x40007c45      j      0x40007c4b                                           
+    0x40007c48      call8  0x400066bc      // ets_run  
+    0x40007c4b      movi.n a2, 0           
+    0x40007c4d      retw.n    
+
+When entering ets_run we already have the printout... user code done
+
+ets_run
+
+    0x400066bc      entry  a1, 32                                               
+    0x400066bf      l32r   a3, 0x400066b8                                       
+    0x400066c2      call8  0x400067b0          //  ets_intr_lock                                  
+    0x400066c5      l32i   a8, a3, 0                                            
+    0x400066c8      movi   a4, 32                                               
+    0x400066cb      nsau   a2, a8                                               
+    0x400066ce      sub    a2, a4, a2                                           
+    0x400066d1      extui  a2, a2, 0, 8                                         
+    0x400066d4      beqz   a2, 0x40006725      //                                 
+    0x400066d7      l32r   a4, 0x40006684                                       
+    0x400066da      addi   a2, a2, -1                                           
+    0x400066dd      slli   a2, a2, 4                                            
+    0x400066e0      add.n  a2, a2, a4       
+    0x400066e2      l8ui   a9, a2, 10                                           
+    0x400066e5      l32i.n a4, a2, 4                                            
+    0x400066e7      l8ui   a10, a2, 8                                           
+    0x400066ea      addx8  a4, a9, a4                                           
+    0x400066ed      addi.n a9, a9, 1                                            
+    0x400066ef      extui  a9, a9, 0, 8                                         
+    0x400066f2      s8i    a9, a2, 10                                           
+    0x400066f5      bne    a10, a9, 0x400066fd          
+    0x400066f8      movi.n a9, 0                                                
+    0x400066fa      s8i    a9, a2, 10                                           
+    0x400066fd      l8ui   a9, a2, 11                                           
+    0x40006700      addi.n a9, a9, -1                                           
+    0x40006702      extui  a9, a9, 0, 8                                         
+    0x40006705      s8i    a9, a2, 11                                           
+    0x40006708      bnez.n a9, 0x40006718                                       
+    0x4000670a      l32i   a9, a2, 12                                           
+    0x4000670d      movi   a10, -1                                              
+    0x40006710      xor    a9, a10, a9                                          
+    0x40006713      and    a8, a9, a8                                           
+    0x40006716      s32i.n a8, a3, 0                         
+
+
+
 
 
     // check translate.c for simcall..
@@ -920,9 +1177,11 @@ Now go to File->Preferences->Keyboard Shortcuts and add the following key bindin
 ```
 
 
-##Possible solution
+##Applied patch
 It mentions that gdb can only access unprivilidge registers.
-This might be part of the problem... This could be the fixup we need. 
+This patch was applied to make all registers unpriveledged.
+When running gdb from within qemu, this was not necessary.
+
 https://github.com/jcmvbkbc/xtensa-toolchain-build/blob/master/fixup-gdb.sh
 ```
 #! /bin/bash -ex
@@ -935,7 +1194,7 @@ https://github.com/jcmvbkbc/xtensa-toolchain-build/blob/master/fixup-gdb.sh
 sed -i $GDB/gdb/xtensa-config.c -e 's/\(XTREG([^,]\+,[^,]\+,[^,]\+,[^,]\+,[^,]\+,[^,]\+,[^,]\+\)/\1 \& ~1/'
 ```
 
-##Another Possible solution
+##Another discared patch
 We could probably write an RFDE instruction in the DoubleException isr routine.
 
 PC is saved in the DEPC register.
@@ -1140,7 +1399,7 @@ When starting up the ESP32 it reads instructions from embedded memory, located a
 ```
 
 
-Eventually aftern initialisation the first stage bootloader will call call_start_cpu0()
+Eventually after initialisation the first stage bootloader will call call_start_cpu0()
 
 The main tasks of this is:
 

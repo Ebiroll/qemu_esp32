@@ -177,21 +177,30 @@ static unsigned int sim_RTC_CNTL_DIG_ISO_REG;
 
 static unsigned int sim_RTC_CNTL_STORE5_REG=0;
 
+static unsigned int sim_DPORT_PRO_CACHE_CTRL_REG=0x28;
+
+
 static uint64_t esp_io_read(void *opaque, hwaddr addr,
         unsigned size)
 {
-    //if (addr!=0x04001c) printf("io read %08x ",addr);
+    if (addr!=0x04001c) printf("io read %08x ",addr);
 
     switch (addr) {
        case 0x40:
-           printf(" DPORT  3ff00040=28\n");
+           printf("DPORT_PRO_CACHE_CTRL_REG  3ff00040=%08X\n",sim_DPORT_PRO_CACHE_CTRL_REG);
            return 0x28;
            break;
 
        case 0x44:
-           printf(" DPORT  3ff00044=8E6\n");
+           printf(" DPORT DPORT_PRO_CACHE_CTRL1_REG  3ff00044=8E6\n");
            return 0x8E6;
            break;
+
+       case 0x58:
+           printf(" DPORT_APP_CACHE_CTRL_REG  3ff00058=0x01\n");
+           return 0x01;
+           break;
+
 
         case 0x42000:
            printf("SPI_CMD_REG 3ff42000=0\n");
@@ -199,17 +208,23 @@ static uint64_t esp_io_read(void *opaque, hwaddr addr,
            break;
 
         case 0x420f8:
-           printf("SPI_EXT2_REG 3ff420f8=0\n");
+           // The status of spi state machine
+           printf("SPI_EXT2_REG 3ff420f8=\n");
            return 0x0;
            break;
 
         case 0x430f8:
-           printf("????? 3ff430f8=0\n");
+           // The status of spi state machine
+           printf("SPI_EXT2_REG 3ff430f8=\n");
            return 0x0;
            break;
 
+           
+
         case 0x44038:
            printf("GPIO_STRAP_REG 3ff44038=0x13\n");
+           // boot_sel_chip[5:0]: MTDI, GPIO0, GPIO2, GPIO4, MTDO, GPIO5
+           //                             1                    1     1
            return 0x13;
            break;
         
@@ -233,9 +248,16 @@ static uint64_t esp_io_read(void *opaque, hwaddr addr,
            return silly;
            break;
        case 0x5a010:
-           printf("TIMG_T0ALARMLO_REG 3ff5a010=01\n");
+           printf("EFUSE_BLK0_RDATA4_REG 3ff5a010=01\n");
            return 0x01;
            break;
+
+       case 0x5a5a018:
+           printf("EFUSE_BLK0_RDATA6_REG 3ff5a018=01\n");
+           return 0x01;
+           break;
+
+
        case 0x5f06c:
            printf("TIMG_RTCCALICFG1_REG 3ff5f06c=25\n");
            return 0x25;
@@ -255,7 +277,7 @@ static uint64_t esp_io_read(void *opaque, hwaddr addr,
                 if (addr!=0x04001c) printf("UART READ");
             }
           }
-          //if (addr!=0x04001c) printf("\n");
+          if (addr!=0x04001c) printf("\n");
     }
 
     return 0x0;
@@ -268,9 +290,14 @@ static void esp_io_write(void *opaque, hwaddr addr,
     if (addr>0x10000 && addr<0x11ffc) {
         // Cache MMU table
     } else {
-       //if (addr!=0x40000) printf("io write %08x %08X ",addr,val);
+       if (addr!=0x40000) printf("io write %08x %08X ",addr,val);
     }
     switch (addr) {
+
+        case 0x40:
+            printf("DPORT_PRO_CACHE_CTRL_REG 3ff00040\n");
+            sim_DPORT_PRO_CACHE_CTRL_REG=val;
+           break;        
         case 0x48088:
            printf("RTC_CNTL_DIG_ISO_REG 3ff48088\n");
            sim_RTC_CNTL_DIG_ISO_REG=val;
@@ -281,6 +308,7 @@ static void esp_io_write(void *opaque, hwaddr addr,
            break;
 
        case 0x40000:
+            // Outupt uart data to stderr.
             fprintf(stderr,"%c",val);
             break;
        default:
@@ -288,7 +316,7 @@ static void esp_io_write(void *opaque, hwaddr addr,
           {
               printf("UART OUTPUT");
           }
-         // printf("\n");
+          printf("\n");
     }
 
 }
@@ -407,7 +435,7 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
         printf("New serial device\n");
         serial_hds[0] = qemu_chr_new("serial0", "null", NULL);
     }
-    //printf("No call to serial__mm_init\n");
+    printf("No call to serial__mm_init\n");
 
                             //0x0d050020
     //serial_mm_init(system_io, 0x3FF40020 , 2, xtensa_get_extint(env, 0),
@@ -420,7 +448,11 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
 */
     // What interrupt for this???
     //serial_mm_init(system_io, 0x40000 , 2, xtensa_get_extint(env, 0),
+    //        9600, serial_hds[0], DEVICE_LITTLE_ENDIAN);
+
+    //serial_mm_init(system_io, 0x40000 , 2, xtensa_get_extint(env, 0),
     //        115200, serial_hds[0], DEVICE_LITTLE_ENDIAN);
+
 
     dinfo = drive_get(IF_PFLASH, 0, 0);
     if (dinfo) {
@@ -590,17 +622,13 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
             // Skip bootloader initialisation, jump to the fresh elf
             //cpu_physical_memory_write(env->pc, jx_a0, sizeof(jx_a0));
 
-            cpu_physical_memory_write(0x400003c0, rfde, sizeof(rfde));
+            //cpu_physical_memory_write(0x400003c0, rfde, sizeof(rfde));
 
 
 
-            /* rfde
-            003200          rfde
-            0000a0        	jx	a0
-            */
         }
     } else {
-        // No elf, try flash...
+        // No elf, try booting from flash...
         if (flash) {
             MemoryRegion *flash_mr = pflash_cfi01_get_memory(flash);
             MemoryRegion *flash_io = g_malloc(sizeof(*flash_io));
