@@ -202,42 +202,47 @@ in void xtensa_irq_init(CPUXtensaState *env) you can remove the
 Patching the result of ets_unpack_flash_code and entering 
 the elf load value into 3ffe0400  user_code_start gets this bootloop output,
 
+xtensa-softmmu/qemu-system-xtensa -d guest_errors,page,unimp  -cpu esp32 -M esp32 -m 4M  -kernel  ~/esp/qemu_esp32/build/app-template.elf  -S -s > io.txt
+
 (gdb) b *0x40007c29
 (gdb) c
 // Look at Elf entry.. and set pc.
-(gdb) set $pc=0x400807BC       
+(gdb) set $pc=0x40080814       
+(gdb) b start_cpu0_default
+(gdb) b app_main
 (gdb) c
 
-Rebooting...
-io write 00048000 80000000 
-IRQ! 0x00000000
-xtensa_cpu_do_interrupt(10) pc = 40081606, a0 = 800d05fe, ps = 00060030, ccount = 4788c52b
-io read 00048000 
-io write 00048000 00000000 
-io read 00048000 
-io write 00048000 02100000 
-io read 000480ac 
-io write 000480ac 00000000 
-io read 000480ac 
-io write 000480ac 00000002 
-Guru Meditation Error of type StoreProhibited occurred on core   0. Exception was unhandled.
-Register dump:
-PC      :  40081606  PS      :  00060030  A0      :  800d05fe  A1      :  3ffe3e20  
-A2      :  3ffb2ef4  A3      :  0002c4a4  A4      :  3ffb0134  A5      :  fffffffc  
-A6      :  3ffb0134  A7      :  ffffffff  A8      :  3ffe8000  A9      :  bffcffdc  
-A10     :  3ffb3084  A11     :  3ffe8000  A12     :  00000019  A13     :  00000001  
-A14     :  7ffe7fe8  A15     :  00000000  SAR     :  00000004  EXCCAUSE:  0000001d  
-EXCVADDR:  bffcffe0  LBEG    :  4000c46c  LEND    :  4000c477  LCOUNT  :  00000000  
-```
+SR 97 is not implemented
+SR 97 is not implemented
+ets Jun  8 2016 00:22:57
 
-set $pc=0x40080814
+rst:0x10 (RTCWDT_RTC_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+I (1) heap_alloc_caps: Initializing heap allocator:
+I (1) heap_alloc_caps: Region 19: 3FFB3D10 len 0002C2F0 tag 0
+I (1) heap_alloc_caps: Region 25: 3FFE8000 len 00018000 tag 1
+check b=0x3ffb3d1c size=180948 ok
+check b=0x3ffdfff0 size=0 ok
+check b=0x3ffe800c size=98276 ok
+I (2) cpu_start: Pro cpu up.
+I (2) cpu_start: Single core mode
+I (2) cpu_start: Pro cpu start user code
+rtc v112 Sep 26 2016 22:32:10
+XTAL 0M
+TBD(pc = 40083be6): /home/olas/qemu/target-xtensa/translate.c:1354
+              case 6: /*RER*/ Not implemented in qemu simulation
 
-esp/esp-idf/components/freertos/./heap_regions.c
+I (3) cpu_start: Starting scheduler on PRO CPU.
+WUR 234 not implemented, TBD(pc = 400912c3): /home/olas/qemu/target-xtensa/translate.c:1887
+WUR 235 not implemented, TBD(pc = 400912c8): /home/olas/qemu/target-xtensa/translate.c:1887
+WUR 236 not implemented, TBD(pc = 400912cd): /home/olas/qemu/target-xtensa/translate.c:1887
+RUR 234 not implemented, TBD(pc = 40091301): /home/olas/qemu/target-xtensa/translate.c:1876
+RUR 235 not implemented, TBD(pc = 40091306): /home/olas/qemu/target-xtensa/translate.c:1876
+RUR 236 not implemented, TBD(pc = 4009130b): /home/olas/qemu/target-xtensa/translate.c:1876
 
-    554                     pxEnd = ( BlockLink_t * ) (ulAddress + BLOCK_HEAD_L 
-    555                     pxEnd->xBlockSize = 0;                              
-    556                     pxEnd->pxNextFreeBlock = NULL;                      
-    557                     pxEnd->xTag = -1;                   
+The WUR and RUR instructions are specific for the ESP32. I got to app_main but stopped in
+nvs_flash_init()
+
+
 
 Most likely the memory mapping is not correct in esp32.c.
 Fixing this is saved for a rainy day. Today is rainy.
