@@ -248,6 +248,11 @@ Most likely the memory mapping is not correct in esp32.c.
 Fixing this is saved for a rainy day. Today is rainy.
 
 ```
+
+
+
+```
+
 make menuconfig and add FreeRTOS head debugging...
 
 (gdb) b *0x40007c29
