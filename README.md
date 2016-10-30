@@ -10,6 +10,11 @@ It might not be possible but its a good way to learn about qemu and esp32.
 By following the instructions here, I added esp32 to qemu.
 http://wiki.linux-xtensa.org/index.php/Xtensa_on_QEMU
 
+prerequisites Debian/Ubuntu:
+```
+sudo apt-get install libpixman-1-0 libpixman-1-dev 
+```
+
 Clone qemu and apply the patch.
 ```
 git clone git://git.qemu.org/qemu.git
@@ -20,7 +25,7 @@ copy qemu-esp32.tar to the qemu source tree and unpack it (tar xvf)
 
 in qemu source tree, manually add to makefiles:
 ```
-hw/extensa/Makefile.objs
+hw/xtensa/Makefile.objs
   obj-y += esp32.o
 
 target-xtensa/Makefile.objs
@@ -54,7 +59,7 @@ screen /dev/ttyUSB0 115200
 Ctrl-A  then H   (save output)
 press  reset on ESP to get start.
 ```
-When finnished trim the capturefile (remove all before and after the dump data) and call it, test.log
+When finished trim the capturefile (remove all before and after the dump data) and call it, test.log
 Notice that there are two dumps search for ROM and ROM1
 Compile the dump to rom program.
 ```
