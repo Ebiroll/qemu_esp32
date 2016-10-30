@@ -462,7 +462,7 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
 
     if (!serial_hds[0]) {
         printf("New serial device\n");
-        serial_hds[0] = qemu_chr_new("serial0", "null", NULL);
+        serial_hds[0] = qemu_chr_new("serial0", "null");
     }
     printf("No call to serial__mm_init\n");
 
