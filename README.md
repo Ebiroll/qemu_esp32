@@ -45,13 +45,24 @@ mkdir ../qemu_esp32
 cd ../qemu_esp32
 Then run configure as,
 ../qemu/configure --disable-werror --prefix=`pwd`/root --target-list=xtensa-softmmu,xtensaeb-softmmu
-make install
 ```
 
 The goal is to run the app-template or bootloader and connect the debugger. Connecting the debugger works quite well
 but we fall back to the command line interpreter. 
 UART emulation is not so good as output is only on stderr. It would be much better if we could use the qemu driver with, serial_mm_init()
 
+
+#Dumping the ROM0 & ROM1 using esp-idf esptool.py
+```
+cd ..
+git clone --recursive https://github.com/espressif/esp-idf.git
+# dump_mem ROM0(776KB) to rom.bin
+esp-idf/components/esptool_py/esptool/esptool.py --chip esp32 -b 921600 -p /dev/ttyUSB0 dump_mem 0x40000000 0x000C2000 rom.bin
+
+# dump_mem ROM1(64KB) to rom1.bin
+esp-idf/components/esptool_py/esptool/esptool.py --chip esp32 -b 921600 -p /dev/ttyUSB0 dump_mem 0x3FF90000 0x00010000 rom1.bin
+
+```
 
 #Dumping the ROM
 set the environment properly. Build the romdump app and flash it.
