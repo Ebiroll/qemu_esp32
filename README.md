@@ -10,6 +10,11 @@ It might not be possible but its a good way to learn about qemu and esp32.
 By following the instructions here, I added esp32 to qemu.
 http://wiki.linux-xtensa.org/index.php/Xtensa_on_QEMU
 
+prerequisites Debian/Ubuntu:
+```
+sudo apt-get install libpixman-1-0 libpixman-1-dev 
+```
+
 Clone qemu and qemu-esp32 and apply the patch.
 ```
 git clone git://git.qemu.org/qemu.git
@@ -28,7 +33,7 @@ tar xvf qemu-esp32.tar
 
 in qemu source tree, manually add to makefiles:
 ```
-hw/extensa/Makefile.objs
+hw/xtensa/Makefile.objs
   obj-y += esp32.o
 
 target-xtensa/Makefile.objs
