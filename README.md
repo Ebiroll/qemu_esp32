@@ -10,12 +10,20 @@ It might not be possible but its a good way to learn about qemu and esp32.
 By following the instructions here, I added esp32 to qemu.
 http://wiki.linux-xtensa.org/index.php/Xtensa_on_QEMU
 
-Clone qemu and apply the patch.
+Clone qemu and qemu-esp32 and apply the patch.
 ```
 git clone git://git.qemu.org/qemu.git
-cd qemu_esp32/qemu-patch
+cd qemu
+git submodule update --init dtc
+cd ..
+
+git clone https://github.com/Ebiroll/qemu_esp32.git qemu_esp32_patch
+cd qemu_esp32_patch/qemu-patch
 ./maketar.sh
-copy qemu-esp32.tar to the qemu source tree and unpack it (tar xvf)
+cp qemu-esp32.tar ../../qemu
+
+cd ../../qemu
+tar xvf qemu-esp32.tar
 ```
 
 in qemu source tree, manually add to makefiles:
@@ -32,7 +40,7 @@ mkdir ../qemu_esp32
 cd ../qemu_esp32
 Then run configure as,
 ../qemu/configure --disable-werror --prefix=`pwd`/root --target-list=xtensa-softmmu,xtensaeb-softmmu
-I also did this in qemu: git submodule update --init dtc
+make install
 ```
 
 The goal is to run the app-template or bootloader and connect the debugger. Connecting the debugger works quite well
