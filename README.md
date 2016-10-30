@@ -10,17 +10,30 @@ It might not be possible but its a good way to learn about qemu and esp32.
 By following the instructions here, I added esp32 to qemu.
 http://wiki.linux-xtensa.org/index.php/Xtensa_on_QEMU
 
-Clone qemu and apply the patch.
+prerequisites Debian/Ubuntu:
+```
+sudo apt-get install libpixman-1-0 libpixman-1-dev 
+```
+
+Clone qemu and qemu-esp32 and apply the patch.
 ```
 git clone git://git.qemu.org/qemu.git
-cd qemu_esp32/qemu-patch
+cd qemu
+git submodule update --init dtc
+cd ..
+
+git clone https://github.com/Ebiroll/qemu_esp32.git qemu_esp32_patch
+cd qemu_esp32_patch/qemu-patch
 ./maketar.sh
-copy qemu-esp32.tar to the qemu source tree and unpack it (tar xvf)
+cp qemu-esp32.tar ../../qemu
+
+cd ../../qemu
+tar xvf qemu-esp32.tar
 ```
 
 in qemu source tree, manually add to makefiles:
 ```
-hw/extensa/Makefile.objs
+hw/xtensa/Makefile.objs
   obj-y += esp32.o
 
 target-xtensa/Makefile.objs
@@ -32,13 +45,24 @@ mkdir ../qemu_esp32
 cd ../qemu_esp32
 Then run configure as,
 ../qemu/configure --disable-werror --prefix=`pwd`/root --target-list=xtensa-softmmu,xtensaeb-softmmu
-I also did this in qemu: git submodule update --init dtc
 ```
 
 The goal is to run the app-template or bootloader and connect the debugger. Connecting the debugger works quite well
 but we fall back to the command line interpreter. 
 UART emulation is not so good as output is only on stderr. It would be much better if we could use the qemu driver with, serial_mm_init()
 
+
+#Dumping the ROM0 & ROM1 using esp-idf esptool.py
+```
+cd ..
+git clone --recursive https://github.com/espressif/esp-idf.git
+# dump_mem ROM0(776KB) to rom.bin
+esp-idf/components/esptool_py/esptool/esptool.py --chip esp32 -b 921600 -p /dev/ttyUSB0 dump_mem 0x40000000 0x000C2000 rom.bin
+
+# dump_mem ROM1(64KB) to rom1.bin
+esp-idf/components/esptool_py/esptool/esptool.py --chip esp32 -b 921600 -p /dev/ttyUSB0 dump_mem 0x3FF90000 0x00010000 rom1.bin
+
+```
 
 #Dumping the ROM
 set the environment properly. Build the romdump app and flash it.
