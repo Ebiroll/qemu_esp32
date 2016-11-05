@@ -349,19 +349,21 @@ io write 000480b4 18CB18CB RTC_CNTL_STORE5_REG 3ff480b4
 
 
 Interesting info. To be investigated. 
+```
 static HeapRegionTagged_t regions[]={
 	{ (uint8_t *)0x3F800000, 0x20000, 15, 0}, //SPI SRAM, if available
 	{ (uint8_t *)0x3FFAE000, 0x2000, 0, 0}, //pool 16 <- used for rom code
 	{ (uint8_t *)0x3FFB0000, 0x8000, 0, 0}, //pool 15 <- can be used for BT
 	{ (uint8_t *)0x3FFB8000, 0x8000, 0, 0}, //pool 14 <- can be used for BT
+```
 
 
 
 
 ```
-#Analysis of loclup in nvs_flash_init
-This lockup could probably be avoided by using slash emulation.
-```
+#Analysis of lockup in nvs_flash_init
+This lockup could probably be avoided by using flash emulation.
+
 #0  0x40062348 in ?? ()
 #1  0x400628dc in ?? ()
 #2  0x400812bd in spi_flash_unlock () at /home/olas/esp/esp-idf/components/spi_flash/./esp_spi_flash.c:207
@@ -396,18 +398,24 @@ io write 42010,0
 io write 42000,8000000 
 io read 42000  SPI_CMD_REG 3ff42000=0
 io read 42010  SPI_CMD_REG1 3ff42010=0
+
 ```
-
-
 Adding flash qemu emulation.
 head -c 16M /dev/zero > esp32.flash
 
 xtensa-softmmu/qemu-system-xtensa -d guest_errors,page,unimp  -cpu esp32 -M esp32 -m 4M -pflash esp32.flash -kernel  ~/esp/qemu_esp32/build/app-template.elf  -s -S  > io.txt
 
+This does not work at all.
+To add flash checkout line 502 in esp32.c
+dinfo = drive_get(IF_PFLASH, 0, 0);
+...
+Also checkout m25p80.c driver in qemu
+
 ```
 
 
-Running two cores, most likely will not work so well..
+Running two cores, most likely will not work so well. But shows up in 
+(gdb) info threads
 ```
 xtensa-softmmu/qemu-system-xtensa -d guest_errors,page,unimp  -cpu esp32 -M esp32 -m 4M -smp 2 -pflash esp32.flash -kernel  ~/esp/qemu_esp32/build/app-template.elf  -s -S  > io.txt
 
