@@ -196,6 +196,6 @@ void dump_task(void *pvParameter)
 void app_main()
 {
     //nvs_flash_init();
-    system_init();
+    //system_init();
     xTaskCreate(&dump_task, "dump_task", 2048, NULL, 5, NULL);
 }
