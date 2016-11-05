@@ -45,7 +45,7 @@
 #include "qemu/error-report.h"
 #include "bootparam.h"
 #include "qemu/timer.h"
-
+#include "inttypes.h"
 
 typedef struct ESP32BoardDesc {
     hwaddr flash_base;
@@ -126,7 +126,7 @@ static Lx60FpgaState *lx60_fpga_init(MemoryRegion *address_space,
     qemu_register_reset(lx60_fpga_reset, s);
     return s;
 }
-
+#if 0
 static void lx60_net_init(MemoryRegion *address_space,
         hwaddr base,
         hwaddr descriptors,
@@ -160,6 +160,7 @@ static uint64_t translate_phys_addr(void *opaque, uint64_t addr)
 
     return cpu_get_phys_page_debug(CPU(cpu), addr);
 }
+#endif
 
 static void esp_xtensa_ccompare_cb(void *opaque)
 {
@@ -207,11 +208,16 @@ static unsigned int sim_DPORT_PRO_CACHE_CTRL_REG=0x28;
 static uint64_t esp_io_read(void *opaque, hwaddr addr,
         unsigned size)
 {
-    if (addr!=0x04001c) printf("io read %08x ",addr);
+    if (addr!=0x04001c) printf("io read %" PRIx64 " ",addr);
 
     switch (addr) {
+       case 0x38:
+           printf(" DPORT_PRO_CACHE_CTRL_REG  3ff00038=%08X\n",0);
+           return 0x0;
+           break;
+
        case 0x40:
-           printf("DPORT_PRO_CACHE_CTRL_REG  3ff00040=%08X\n",sim_DPORT_PRO_CACHE_CTRL_REG);
+           printf(" DPORT_PRO_CACHE_CTRL_REG  3ff00040=%08X\n",sim_DPORT_PRO_CACHE_CTRL_REG);
            return 0x28;
            break;
 
@@ -226,25 +232,31 @@ static uint64_t esp_io_read(void *opaque, hwaddr addr,
            break;
 
       case 0x3F0:
-           printf(" DPORT_PRO_DCACHE_DBUG0_REG  3ff003F0=0x01\n");
-           return 0x01;
+           printf(" DPORT_PRO_DCACHE_DBUG0_REG  3ff003F0=0x80\n");
+           return 0x80;
            break;
 
 
         case 0x42000:
-           printf("SPI_CMD_REG 3ff42000=0\n");
+           printf(" SPI_CMD_REG 3ff42000=0\n");
            return 0x0;
            break;
 
+        case 0x42010:
+           printf(" SPI_CMD_REG1 3ff42010=0\n");
+           return 0x0;
+           break;
+
+
         case 0x420f8:
            // The status of spi state machine
-           printf("SPI_EXT2_REG 3ff420f8=\n");
+           printf(" SPI_EXT2_REG 3ff420f8=\n");
            return 0x0;
            break;
 
         case 0x430f8:
            // The status of spi state machine
-           printf("SPI_EXT2_REG 3ff430f8=\n");
+           printf(" SPI_EXT2_REG 3ff430f8=\n");
            return 0x0;
            break;
 
@@ -268,9 +280,16 @@ static uint64_t esp_io_read(void *opaque, hwaddr addr,
            break;
 
        case 0x480b4:
-           printf("RTC_CNTL_STORE5_REG 3ff480b4=%08X\n",sim_RTC_CNTL_STORE5_REG=0);
-           return sim_RTC_CNTL_STORE5_REG=0;
+           printf("RTC_CNTL_STORE5_REG 3ff480b4=%08X\n",sim_RTC_CNTL_STORE5_REG);
+           return sim_RTC_CNTL_STORE5_REG;
            break;
+
+       case 0x4800c:
+           printf("RTC_CNTL_TIME_UPDATE_REG 3ff4800c=%08X\n",0x40000000);
+           return 0x40000000;
+           break;
+
+
         case 0x58040:
            printf("SDIO or WAKEUP??\n"); 
            static int silly=0;
@@ -296,7 +315,7 @@ static uint64_t esp_io_read(void *opaque, hwaddr addr,
             return sim_RTC_CNTL_DIG_ISO_REG;
             break;
             case 0x40020:
-                printf("UART??=0\n");
+                printf("UART data=0\n");
                 return 0x0;
              break;
        default:
@@ -319,7 +338,7 @@ static void esp_io_write(void *opaque, hwaddr addr,
     if (addr>0x10000 && addr<0x11ffc) {
         // Cache MMU table
     } else {
-       if (addr!=0x40000) printf("io write %08x %08X ",addr,val);
+       if (addr!=0x40000) printf("io write %" PRIx64 ",%" PRIx64 " ",addr,val);
     }
     switch (addr) {
 
@@ -332,13 +351,13 @@ static void esp_io_write(void *opaque, hwaddr addr,
            sim_RTC_CNTL_DIG_ISO_REG=val;
            break;
        case 0x480b4:
-           printf("RTC_CNTL_STORE5_REG 3ff480b4\n",sim_RTC_CNTL_STORE5_REG);
+           printf("RTC_CNTL_STORE5_REG 3ff480b4 %08X \n" ,sim_RTC_CNTL_STORE5_REG);
            sim_RTC_CNTL_STORE5_REG=val;
            break;
 
        case 0x40000:
             // Outupt uart data to stderr.
-            fprintf(stderr,"%c",val);
+            fprintf(stderr,"%c",(char)val);
             break;
        default:
           if (addr>0x40000 && addr<0x40400) 
@@ -372,7 +391,7 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
     XtensaCPU *cpu = NULL;
     CPUXtensaState *env = NULL;
     MemoryRegion *ram,*ram1,*rambb, *rom, *system_io;
-    DriveInfo *dinfo;
+    //DriveInfo *dinfo;
     pflash_t *flash = NULL;
     QemuOpts *machine_opts = qemu_get_machine_opts();
     const char *cpu_model = machine->cpu_model;
@@ -436,9 +455,6 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
     memory_region_add_subregion(system_memory,0x60000000, rambb);
 
 
-#if 0
-    //0x6001f048
-#endif
     // iram0  -- 0x4008_0000, len = 0x20000
 
 
@@ -464,27 +480,29 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
         printf("New serial device\n");
         serial_hds[0] = qemu_chr_new("serial0", "null");
     }
+
     printf("No call to serial__mm_init\n");
 
                             //0x0d050020
     //serial_mm_init(system_io, 0x3FF40020 , 2, xtensa_get_extint(env, 0),
     //        115200, serial_hds[0], DEVICE_NATIVE_ENDIAN);
 
-/*SerialState *serial_mm_init(MemoryRegion *address_space,
+   /*SerialState *serial_mm_init(MemoryRegion *address_space,
                             hwaddr base, int it_shift,
                             qemu_irq irq, int baudbase,
                             CharDriverState *chr, enum device_endian end)
-*/
+   */
     // What interrupt for this???
     //serial_mm_init(system_io, 0x40000 , 2, xtensa_get_extint(env, 0),
     //        9600, serial_hds[0], DEVICE_LITTLE_ENDIAN);
 
-    serial_mm_init(system_io, 0x40000 , 2, xtensa_get_extint(env, 0),
-            115200, serial_hds[0], DEVICE_LITTLE_ENDIAN);
+    //serial_mm_init(system_io, 0x40000 , 2, xtensa_get_extint(env, 0),
+    //        115200, serial_hds[0], DEVICE_LITTLE_ENDIAN);
 
-
+#if 0
     dinfo = drive_get(IF_PFLASH, 0, 0);
     if (dinfo) {
+        printf("FLASH EMULATION!!!!\n");
         flash = pflash_cfi01_register(board->flash_base,
                 NULL, "esp32.io.flash", board->flash_size,
                 blk_by_legacy_dinfo(dinfo),
@@ -496,21 +514,22 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
             exit(EXIT_FAILURE);
         }
     }
+#endif
 
-    /* Use presence of kernel file name as 'boot from SRAM' switch. */
+    /* Use kernel file name as current elf to load and run */
     if (kernel_filename) {
         uint32_t entry_point = env->pc;
         size_t bp_size = 3 * get_tag_size(0); /* first/last and memory tags */
-        uint32_t tagptr = 0xfe000000 + board->sram_size;
-        uint32_t cur_tagptr;
-        BpMemInfo memory_location = {
-            .type = tswap32(MEMORY_TYPE_CONVENTIONAL),
-            .start = tswap32(0),
-            .end = tswap32(machine->ram_size),
-        };
-        uint32_t lowmem_end = machine->ram_size < 0x08000000 ?
-            machine->ram_size : 0x08000000;
-        uint32_t cur_lowmem = QEMU_ALIGN_UP(lowmem_end / 2, 4096);
+        //uint32_t tagptr = 0xfe000000 + board->sram_size;
+        //uint32_t cur_tagptr;
+        //BpMemInfo memory_location = {
+        //    .type = tswap32(MEMORY_TYPE_CONVENTIONAL),
+        //    .start = tswap32(0),
+        //    .end = tswap32(machine->ram_size),
+        //};
+        //uint32_t lowmem_end = machine->ram_size < 0x08000000 ?
+        //    machine->ram_size : 0x08000000;
+        //uint32_t cur_lowmem = QEMU_ALIGN_UP(lowmem_end / 2, 4096);
 
         rom = g_malloc(sizeof(*rom));
         memory_region_init_ram(rom, NULL, "lx60.sram", 0x20000,
@@ -539,7 +558,6 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
             cur_tagptr = put_tag(cur_tagptr, BP_TAG_COMMAND_LINE,
                                  strlen(kernel_cmdline) + 1, kernel_cmdline);
         }
-        #endif
 
         if (dtb_filename) {
             int fdt_size;
@@ -556,6 +574,7 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
                                  sizeof(dtb_addr), &dtb_addr);
             cur_lowmem = QEMU_ALIGN_UP(cur_lowmem + fdt_size, 4096);
         }
+ 
         if (initrd_filename) {
             BpMemInfo initrd_location = { 0 };
             int initrd_size = load_ramdisk(initrd_filename, cur_lowmem,
@@ -576,9 +595,10 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
                                  sizeof(initrd_location), &initrd_location);
             cur_lowmem = QEMU_ALIGN_UP(cur_lowmem + initrd_size, 4096);
         }
-        // a2. Stack??
+
         cur_tagptr = put_tag(cur_tagptr, BP_TAG_LAST, 0, NULL);
         env->regs[2] = tagptr;
+#endif
 
         uint64_t elf_entry;
         uint64_t elf_lowaddr;
@@ -609,6 +629,7 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
 
             cpu_physical_memory_write(env->pc, jx_a0, sizeof(jx_a0));
 
+#if 0
             static const uint8_t rfde[] = {
                 0x0, 0x32, 0,
             };
@@ -617,12 +638,11 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
             //cpu_physical_memory_write(0x400003c0, rfde, sizeof(rfde));
 
 
-            //	003000        	rfe
             // Return interrupt
             static const uint8_t rfe[] = {
                 0x0, 0x30, 0,
             };
-
+#endif
 
             //cpu_physical_memory_write(0x40000300, rfe, sizeof(rfe));
 
@@ -633,7 +653,9 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
                printf("   Can't open 'rom.bin' for reading.\n");
 	        } else {
                 unsigned int *rom_data=(unsigned int *)malloc(0xC2000*sizeof(unsigned int));
-                fread(rom_data,0xC1FFF*sizeof(unsigned int),1,f_rom);
+                if (fread(rom_data,0xC1FFF*sizeof(unsigned char),1,f_rom)<1) {
+                   printf(" File 'rom.bin' is truncated or corrupt.\n");                
+                }
                 cpu_physical_memory_write(0x40000000, rom_data, 0xC1FFF*sizeof(unsigned int));
             }
 
@@ -643,38 +665,61 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
                printf("   Can't open 'rom1.bin' for reading.\n");
 	        } else {
                 unsigned int *rom1_data=(unsigned int *)malloc(0x10000*sizeof(unsigned int));
-                fread(rom1_data,0x10000*sizeof(unsigned int),1,f_rom1);
+                if (fread(rom1_data,0x10000*sizeof(unsigned char),1,f_rom1)<1) {
+                   printf(" File 'rom1.bin' is truncated or corrupt.\n");                
+                }
                 cpu_physical_memory_write(0x3FF90000, rom1_data, 0xFFFF*sizeof(unsigned int));
             }
 
             // Patching rom function. ets_unpack_flash_code
+            //      j forward 0x13 
+            //      nop.n * 8
+            //  	l32r     a9,?       a9 with ram adress user_code_start 0x3ffe0400
+	        //      l32r     a8,?       a8 with entry_point (from load_elf())
+            //      s32i.n   a9,a8,0
             //      movi.n	a2, 0
             //      retw.n
             static const uint8_t retw_n[] = {
-                0xc, 0x2,0x1d, 0xf0
+                 0x06,0x05,0x00,  // Jump
+                 0x3d,0xf0,   // NOP
+                 0x3d,0xf0,   // NOP
+                 0x3d,0xf0,   // NOP
+                 0x3d,0xf0,   // NOP
+                 0x3d,0xf0,   // NOP
+                 0x3d,0xf0,   // NOP 
+                 0x3d,0xf0,   // NOP 
+                 0x3d,0xf0,   // NOP 
+                 0x3d,0xf0,   // NOP 
+                 0x3d,0xf0,   // NOP 
+                 0xff,        // To get next instruction correctly
+                 0x91, 0xfc, 0xff, 0x81 , 0xfc , 0xff , 0x99, 0x08 , 0xc, 0x2, 0x1d, 0xf0
             };
 
             // Patch rom, ets_unpack_flash_code
             cpu_physical_memory_write(0x40007018+3, retw_n, sizeof(retw_n));
 
-            // Set user_code_start to elf entry_point.. 
-            // However this is ram and it will be overwritten later... 
-            cpu_physical_memory_write(0x3ffe0400, &entry_point, 1*sizeof(unsigned int));
+            // Add entry point in rom patch 
+            cpu_physical_memory_write(0x40007024, &entry_point, 1*sizeof(unsigned int));
 
-            // TODO.. Add entry point in flash patch instead.
+            // Add user_code_start to rom
+            unsigned int location=0x3ffe0400;
+            cpu_physical_memory_write(0x40007028, &location , 1*sizeof(unsigned int));
+
+
+            // This would have been nicer, however ram will be cleared by rom-functions later... 
+            //cpu_physical_memory_write(0x3ffe0400, &entry_point, 1*sizeof(unsigned int));
 
 
             // Skip bootloader initialisation, jump to the fresh elf
             //cpu_physical_memory_write(env->pc, jx_a0, sizeof(jx_a0));
 
+            // Overwrite rom interrupt function
             //cpu_physical_memory_write(0x400003c0, rfde, sizeof(rfde));
-
-
-
         }
     } else {
         // No elf, try booting from flash...
         if (flash) {
+#if 0
             MemoryRegion *flash_mr = pflash_cfi01_get_memory(flash);
             MemoryRegion *flash_io = g_malloc(sizeof(*flash_io));
 
@@ -684,6 +729,7 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
                     board->flash_size - board->flash_boot_base : 0x02000000);
             memory_region_add_subregion(system_memory, 0xfe000000,
                     flash_io);
+#endif                    
         }
     }
 }
@@ -691,8 +737,9 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
 static void xtensa_esp32_init(MachineState *machine)
 {
     static const ESP32BoardDesc esp32_board = {
-        .flash_base = 0xf0000000,
-        .flash_size = 0x08000000,
+        //.flash_base = 0xf0000000,
+        .flash_base = 0x3ff42000,
+        .flash_size = 0x01000000,
         .flash_boot_base = 0x06000000,
         .flash_sector_size = 0x20000,
         .sram_size = 0x2000000,
