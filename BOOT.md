@@ -11,7 +11,7 @@ If booting from the romdump we start here, _ResetVector, 0x40000400
     0x40000453      wsr.intenable  a0                // Turn of interrupts
     0x40000456      rsr.prid       a2                // Check processor ID. 0xABAB on app-cpu and 0xCDCD on pro-cpu 
     0x40000459      l32r   a3, 0x40000404            // a3 contains ABAB                                                             
-    0x4000045c      bne    a2, a3, 0x40000471        // a2 should contain CDCD=52685 fot PRO cpu                                                                
+    0x4000045c      bne    a2, a3, 0x40000471        // a2 should contain CDCD=52685 for PRO cpu                                                                
     0x4000045f      l32r   a3, 0x40000408            |                                                               
     0x40000462      l32i   a3, a3, 0                 |                                                               
     0x40000465      bbci   a3, 31, 0x40000471        |                                                               
@@ -165,66 +165,233 @@ is necessary to allow an Xtensa processor to atomically access a DataRAM locatio
 
 ## rom_main
 ```
-   0x400076c4      entry  a1, 112                                                                                                                    <
-   0x400076c7      l32r   a11, 0x40007674        // a11=0x3ff9918c                                                                                                   <
-   0x400076ca      mov.n  a10, a1                // a10=0x3ffe3eb0                                                                                                  <
-   0x400076cc      movi.n a12, 68                // a12=0x44                                                                                                    <
-   0x400076ce      call8  0x4000c2c8             // call memcpy                                                                                                     <
-   0x400076d1      l32r   a2, 0x40000570         // a2=abab                                                                                                    <
-   0x400076d4      rsr.prid       a3                                                                                                                 <
-   0x400076d7      bne    a3, a2, 0x400076e9                                                                                                         <
-   0x400076da      l32r   a3, 0x40006898                                                                                                             <
-   0x400076dd      memw                                                                                                                              <
-   0x400076e0      l32i.n a2, a3, 0                                                                                                                  <
-   0x400076e2      beqz   a2, 0x400076dd                                                                                                             <
-   0x400076e5      j      0x40007bf0                                                                                                                 <
-
+   0x400076c4      entry  a1, 112                                                                                                                  
+   0x400076c7      l32r   a11, 0x40007674        // a11=0x3ff9918c 
+   0x400076ca      mov.n  a10, a1                // a10=0x3ffe3eb0                            
+   0x400076cc      movi.n a12, 68                // a12=0x44                                                                                                    
+   0x400076ce      call8  0x4000c2c8             // call memcpy   
+   0x400076d1      l32r   a2, 0x40000570         // a2=abab       
+   0x400076d4      rsr.prid       a3                              
+   0x400076d7      bne    a3, a2, 0x400076e9     // pro cpu has cdcd             
+   0x400076da      l32r   a3, 0x40006898                          
+   0x400076dd      memw                                           
+   0x400076e0      l32i.n a2, a3, 0                               
+   0x400076e2      beqz   a2, 0x400076dd                          
+   0x400076e5      j      0x40007bf0                              
 ...
 
 ...
-    0x400076e9      l32r   a2, 0x40007000         // a2=  0x3ff00044                                               
-    0x400076ec      movi.n a3, 6                                                                   
+    0x400076e9      l32r   a2, 0x40007000         // a2=0x3ff00044                                               
+    0x400076ec      movi.n a3, 6                  // a3=6                                                
     0x400076ee      memw                                                                           
-    0x400076f1      l32i.n a4, a2, 0                                                               
-    0x400076f3      movi   a10, 0                                                                  
+    0x400076f1      l32i.n a4, a2, 0              // io read 44  DPORT DPORT_PRO_CACHE_CTRL1_REG  3ff00044=8E6
+// qemu reset_mmu in helper.c is called here! Why???
+
+    0x400076f3      movi   a10, 0                                                                    
     0x400076f6      or     a3, a4, a3                                                              
     0x400076f9      memw                                                                           
-    0x400076fc      s32i   a3, a2, 0                                                               
-    0x400076ff      call8  0x400081d4   // rtc_get_reset_reason .. a2=0x3ff00044 , a3=0x26 a4=0x22                                                           
-    0x40007702      l32r   a2, 0x40007678                                                          
-    0x40007705      l32r   a4, 0x4000767c                                                          
+    0x400076fc      s32i   a3, a2, 0             // io write 44,8e6                                                 
+    0x400076ff      call8  0x400081d4            // rtc_get_reset_reason .. a2=0x3ff00044 , a3=0x8e6 a4=0x8e6
+    0x40007702      l32r   a2, 0x40007678        // a2        0x3ff48088                                            
+    0x40007705      l32r   a4, 0x4000767c        // a4        0xffff7fff                                                   
     0x40007708      memw                                                                           
-    0x4000770b      l32i.n a5, a2, 0                                                               
-    0x4000770d      mov.n  a3, a10                
+    0x4000770b      l32i.n a5, a2, 0            // io read 48088 RTC_CNTL_DIG_ISO_REG 3ff48088=00000400                                                   
+    0x4000770d      mov.n  a3, a10    
+    0x4000770f      and    a4, a5, a4                                                                                     
+    0x40007712      memw                                                                                                  
+    0x40007715      s32i.n a4, a2, 0            // io write 48088,400 RTC_CNTL_DIG_ISO_REG 3ff48088                                                                          
+    0x40007717      memw                                                                                                  
+    0x4000771a      l32i.n a5, a2, 0           // io read 48088 RTC_CNTL_DIG_ISO_REG 3ff48088=00000400                                                                           
+    0x4000771c      movi   a4, 0x400                                                                                      
+    0x4000771f      or     a4, a5, a4                                                                                     
+    0x40007722      memw                                                                                                  
+    0x40007725      s32i.n a4, a2, 0          // io write 48088,400 RTC_CNTL_DIG_ISO_REG 3ff48088                                                                              
+    0x40007727      call8  0x40008fd0        //   uartAttach                                                                          
+    0x4000772a      call8  0x40008588        //   ets_get_detected_xtal_freq  (io read 480b4 RTC_CNTL_STORE5_REG)                                                                   
+    0x4000772d      mov.n  a11, a10                                                                                       
+    0x4000772f      movi   a10, 0                                                                                         
+    0x40007732      call8  0x40009120       //   Uart_Init                                                                        
+    0x40007735      l32r   a2, 0x40006924                
+    0x40007738      memw                                                                                                  
+    0x4000773b      l32i.n a4, a2, 0                                                                                      
+    0x4000773d      bbsi   a4, 4, 0x40007761                                                                              
+    0x40007740      memw                                                                                                  
+    0x40007743      l32i.n a5, a2, 0                                                                                      
+    0x40007745      movi.n a4, 28                                                                                         
+    0x40007747      and    a4, a5, a4                                                                                     
+    0x4000774a      beqi   a4, 8, 0x40007761                                                                              
+    0x4000774d      memw                           
+
+
+
+
+
+
+
+
+
+
 ...
+
+
+
+## Uart_Init
+...
+    0x40009120      entry  a1, 32                  // a2 is  0x3ff48088   unless flash enabled then 0x0000
+    0x40009123      extui  a2, a2, 0, 8                                                          
+    0x40009126      beqz   a2, 0x40009141                                                               
+    0x40009129      movi.n a10, 9                                                                                         
+    0x4000912b      call8  0x4000a484              //  gpio_pad_unhold  
+    0x4000912e      movi.n a10, 10                                                                                        
+    0x40009130      call8  0x4000a484                                                                                     
+    0x40009133      movi.n a11, 17                                                                                        
+    0x40009135      movi.n a12, 0                                                                                         
+    0x40009137      movi.n a10, 9                                                                                       
+    0x40009139      call8  0x40009edc                                                                                     
+    0x4000913c      j      0x40009170                  
+
+    0x40009141      movi   a10, 3                                                                                         
+    0x40009144      call8  0x4000a484             //  gpio_pad_unhold                                                    
+    0x40009147      movi   a10, 1                                                                                         
+    0x4000914a      call8  0x4000a484             //  gpio_pad_unhold                                                     
+    0x4000914d      l32r   a4, 0x40009114                                                                                 
+    0x40009150      movi   a8, 0xfffffeff                                                                                 
+    0x40009153      memw                                                                                                  
+    0x40009156      l32i.n a9, a4, 0                                                                                      
+    0x40009158      and    a8, a9, a8                                                                                     
+    0x4000915b      memw                                                                                                  
+    0x4000915e      s32i.n a8, a4, 0                                                                                      
+    0x40009160      memw                                                                                                  
+    0x40009163      l32i.n a9, a4, 0                                                                                      
+    0x40009165      l32r   a8, 0x400076b4                                                                                 
+    0x40009168      and    a8, a9, a8                                                                                     
+    0x4000916b      memw                                                                                                  
+    0x4000916e      s32i.n a8, a4, 0                                   
+
+
+
+// gpio_pad_unhold
+    0x4000a484      entry  a1, 32                                                                                         
+    0x4000a487      extui  a2, a2, 0, 8                                                                                   
+    0x4000a48a      movi.n a8, 39                                                                                         
+    0x4000a48c      bgeu   a8, a2, 0x4000a492                                                                             
+    0x4000a48f      j      0x4000a72c                                                                                     
+    0x4000a492      l32r   a8, 0x4000a460               // a8=0x3ff9c174                                                                 
+    0x4000a495      addx4  a8, a2, a8                                                                                     
+    0x4000a498      l32i.n a8, a8, 0                                                                                      
+    0x4000a49a      jx     a8                          // a8=0x800080                                                              
+    0x4000a49d      l32r   a2, 0x4000a0e8                                                                                 
+    0x4000a4a0      l32r   a8, 0x40000610                                                                                 
+    0x4000a4a3      memw                                                                                                  
+    0x4000a4a6      l32i.n a9, a2, 0                                                                                      
+    0x4000a4a8      and    a8, a9, a8                                                                                     
+    0x4000a4ab      memw                                                                                                  
+    0x4000a4ae      s32i.n a8, a2, 0                                                                                      
+    0x4000a4b0      l32r   a2, 0x4000a464                           
+    ..
+    0x4000a4be      l32r   a2, 0x4000a468                                                                                 
+    0x4000a4c1      j      0x4000a69a                                                                                     
+    0x4000a4c4      l32r   a2, 0x4000a0f4                                                                                 
+    0x4000a4c7      l32r   a8, 0x40000610                                                                                 
+    0x4000a4ca      memw                                                                                                  
+    0x4000a4cd      l32i.n a9, a2, 0                                                                                      
+    0x4000a4cf      and    a8, a9, a8                                                                                     
+    0x4000a4d2      memw                                                                                                  
+    0x4000a4d5      s32i.n a8, a2, 0                                                                                      
+    0x4000a4d7      l32r   a2, 0x4000a464                                                                                 
+    0x4000a4da      movi   a8, 0xfffffbff                                                                                 
+    0x4000a4dd      memw                                                                                                  
+    0x4000a4e0      l32i.n a9, a2, 0                                                                                      
+    0x4000a4e2      j      0x4000a724                        
+    ..
+    0x4000a69a      memw                                                                                                  
+    0x4000a69d      l32i.n a9, a2, 0                                                                                      
+    0x4000a69f      movi.n a8, -3                                                                                         
+    0x4000a6a1      j      0x4000a724                          
+    ..
+    0x4000a724      and    a8, a9, a8                                                                                     
+    0x4000a727      memw                                                                                                  
+    0x4000a72a      s32i.n a8, a2, 0                                                                                      
+    0x4000a72c      retw.n                                                                                                
+
+
+
+// UART init without flash emulation
+
+io read 48474 
+io write 48474,0 
+io read 48474 
+io write 48474,0 
+io read 49088 
+io write 49088,0 
+io read 49088 
+io write 49088,0 
+io write 40014,6002b6 UART OUTPUT
+io read 40020 UART data=0
+io write 40020,60000 UART OUTPUT
+io read 40020 UART data=0
+io write 40020,0 UART OUTPUT
+io write 40020,800001c UART OUTPUT
+io read 40020 UART data=0
+io write 40020,4060000 UART OUTPUT
+io read 40020 UART data=0
+io write 40020,0 UART OUTPUT
+io write 40024,1 UART OUTPUT
+io write 40010,ffff UART OUTPUT
+io read 4000c UART READ
+io write 4000c,1 UART OUTPUT
+io write 18c,5 
+
+
+// UART init with flash emulation
+
+
+
+
+...
+
 
 
 // io read 00048034
 // rtc reset reason
 ## rtc_get_reset_reason
 ...
-    0x400081d4      entry  a1, 32                                                                  
-    0x400081d7      l32r   a8, 0x400081d0            // a8=0x3ff48034                                              
-    0x400081da      bnez.n a2, 0x400081e8                                                          
+    0x400081d4      entry  a1, 32                                                                
+    0x400081d7      l32r   a8, 0x400081d0           // a8=0x3ff48034                                              
+    0x400081da      bnez.n a2, 0x400081e8           // 0x400081e8 contains 0x280020c0                                  
     0x400081dc      memw                                                                           
-    0x400081df      l32i.n a2, a8, 0                                                               
-    0x400081e1      extui  a2, a2, 0, 6                                                            
-    0x400081e4      retw.n      
+    0x400081df      l32i.n a2, a8, 0                // io read 48034 RTC_CNTL_RESET_STATE_REG 3ff48034=3390                                              
+    0x400081e1      extui  a2, a2, 0, 6             // a2 contains 3390                                               
+    0x400081e4      retw.n                          // a2 contains 0x10
 ...
 
 
+// mmu_init
+mmu_init, 0x400095a4
+b *0x400095a4
+Breakpoint 1, 0x400095a4 in ?? ()
+(gdb) where
+#0  0x400095a4 in ?? ()
+#1  0x40007b45 in ?? ()    
+#2  0x40000740 in ?? ()    // after rom_main
+
+uart_baudrate_detect, 0x40009034
+b *0x40009034
+
+ets_install_uart_printf, 0x40007d28
+b *0x40007d28
 
 // Here we get an io read register 0x38...
 
-   <0x400076d4      rsr.prid       a3                                                                                                                 <
-   <0x400076d7      bne    a3, a2, 0x400076e9                                                                                                         <
-   <0x400076da      l32r   a3, 0x40006898                                                                                                             <
-   <0x400076dd      memw                                                                                                                              <
-   <0x400076e0      l32i.n a2, a3, 0                                                                                                                  <
-   <0x400076e2      beqz   a2, 0x400076dd  
-   <0x400076e5      j      0x40007bf0                                                                                                                 <
-   <0x400076e8      extui  a2, a0, 17, 5                                                                                                              <
-   <0x400076eb      .byte 0xfe            
+   0x400076d4      rsr.prid       a3                                                                                                                 <
+   0x400076d7      bne    a3, a2, 0x400076e9                                                                                                         <
+   0x400076da      l32r   a3, 0x40006898                                                                                                             <
+   0x400076dd      memw                                                                                                                              <
+   0x400076e0      l32i.n a2, a3, 0                                                                                                                  <
+   0x400076e2      beqz   a2, 0x400076dd  
+   0x400076e5      j      0x40007bf0                                                                                                                 <
+   0x400076e8      extui  a2, a0, 17, 5                                                                                                              <
+   0x400076eb      .byte 0xfe            
 
 
 // Lots of calls to... xtos_set_exception_handler
