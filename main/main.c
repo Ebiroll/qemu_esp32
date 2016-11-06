@@ -27,16 +27,16 @@
 
 #endif
 
-	 // Load a9 with adress to user_entr  (+20)
-	 // Load a8 with adress to elf_entry  (+40)
+	 // Load a9 with adress to user_entr  
+	 // Load a8 with adress to elf_entry  
 void patch() {
     asm volatile (\
-        "j      0x40007023\n"\
+    "j      0x40007023\n"\
 	"nop.n\n"\
 	"nop\n"\
 	"l32r     a9,0x3ffe040\n"\
 	"l32r     a8,0x40\n"\
-        "s32i.n   a9,a8,0\n"\
+    "s32i.n   a9,a8,0\n"\
 	"movi.n	a2, 0\n");
 }
 
@@ -62,34 +62,15 @@ void simpleHex(int toOutout)
 {
 
     printf( "%08X", toOutout);
-
-
 }
 
-
-unsigned char test_data[]={0xFF,0x01,0x02,0x03,0x04,0x05,0x06,0x07,
-                 0x08,0x09,0x0A,0x0B,0x0C,0x0D,0x0E,0x0F,
-                 0xFF,0x01,0x02,0x03,0x04,0x05,0x06,0x07,
-                 0x08,0x09,0x0A,0x0B,0x0C,0x0D,0x0E,0x0F,
-                 0xFF,0x01,0x02,0x03,0x04,0x05,0x06,0x07,
-                 0x08,0x09,0x0A,0x0B,0x0C,0x0D,0x0E,0x0F,
-                 0xFF,0x01,0x02,0x03,0x04,0x05,0x06,0x07,
-                 0x08,0x09,0x0A,0x0B,0x0C,0x0D,0x0E,0x0F,
-                 0xFF,0x01,0x02,0x03,0x04,0x05,0x06,0x07,
-                 0x08,0x09,0x0A,0x0B,0x0C,0x0D,0x0E,0x0F,
-                 0xFF,0x01,0x02,0x03,0x04,0x05,0x06,0x07,
-                 0x08,0x09,0x0A,0x0B,0x0C,0x0D,0x0E,0x0F,
-                 0xFF,0x01,0x02,0x03,0x04,0x05,0x06,0x07,
-                 0x08,0x09,0x0A,0x0B,0x0C,0x0D,0x0E,0x0F};
 
 
 void dump_task(void *pvParameter)
 {
     unsigned char*mem_location=(unsigned char*)0x40000000;
-    //unsigned char*mem_location=test_data;
     unsigned int*simple_mem_location=(unsigned int*)mem_location;
     unsigned int* end=(unsigned int*)0x400C1FFF;
-
 
     printf("\n");
 
@@ -115,13 +96,11 @@ void dump_task(void *pvParameter)
     printf( "DPORT DPORT_PRO_DCACHE_DBUG0_REG REG; %08X=%08X\n",0x3FF003f0, *test);
 
 
-
     test=(int *)0x3FF00038;
     printf( "DPORT 38 REG; %08X=%08X\n",0x3FF00038, *test);
 
     test=(int *)0x3FF4800c;
     printf( "DPORT RTC_CNTL_TIME_UPDATE_REG REG; %08X=%08X\n",0x3FF4800c, *test);
-
 
 
 
@@ -183,15 +162,25 @@ void dump_task(void *pvParameter)
     printf("Done\n");
     printf("\n");
 
+
+    int times=0;
+    while (true) {
+	    printf("Done %d\n",times++);
+        vTaskDelay(300 / portTICK_PERIOD_MS);
+    }
+
+#if 0
+
     gpio_set_direction(GPIO_NUM_4, GPIO_MODE_OUTPUT);
     int level = 0;
     while (true) {
         gpio_set_level(GPIO_NUM_4, level);
         level = !level;
-	printf("blink\n");
+	    printf("blink\n");
         printf( "DPORT RTC_CNTL_TIME_UPDATE_REG REG; %08X=%08X\n",0x3FF00038, *test);
         vTaskDelay(300 / portTICK_PERIOD_MS);
     }
+#endif
     //system_restart();
 }
 

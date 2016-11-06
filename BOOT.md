@@ -222,21 +222,24 @@ is necessary to allow an Xtensa processor to atomically access a DataRAM locatio
     0x4000774a      beqi   a4, 8, 0x40007761                                                                              
     0x4000774d      memw                           
 
+```
+
+
+## UartAttach
+```
 
 
 
+```
 
 
 
-
-
-
-...
 
 
 
 ## Uart_Init
-...
+```
+
     0x40009120      entry  a1, 32                  // a2 is  0x3ff48088   unless flash enabled then 0x0000
     0x40009123      extui  a2, a2, 0, 8                                                          
     0x40009126      beqz   a2, 0x40009141                                                               
@@ -1903,3 +1906,54 @@ Disassembly of the .data section:
 000fc4 0200 6000            // *mem(0x40000fc4) = 0x60000200
 000fc8
 ```
+
+```
+#Analysis of lockup in nvs_flash_init
+This lockup does not happen anymore as 
+could probably be avoided by using proper flash emulation.
+
+#0  0x40062348 in ?? ()
+#1  0x400628dc in ?? ()     
+#2  0x400812bd in spi_flash_unlock () at /home/olas/esp/esp-idf/components/spi_flash/./esp_spi_flash.c:207
+#3  0x400812e0 in spi_flash_erase_sector (sec=6) at /home/olas/esp/esp-idf/components/spi_flash/./esp_spi_flash.c:221
+#4  0x400d58fc in nvs::Page::erase (this=0x3ffb4284) at /home/olas/esp/esp-idf/components/nvs_flash/src/nvs_page.cpp:734
+#5  0x400d5aed in nvs::PageManager::activatePage (this=0x3ffb06e8 <s_nvs_storage+4>)
+    at /home/olas/esp/esp-idf/components/nvs_flash/src/nvs_pagemanager.cpp:179
+#6  0x400d5d64 in nvs::PageManager::load (this=0x3ffb06e8 <s_nvs_storage+4>, baseSector=6, sectorCount=3)
+    at /home/olas/esp/esp-idf/components/nvs_flash/src/nvs_pagemanager.cpp:49
+#7  0x400d4c00 in nvs::Storage::init (this=0x3ffb06e4 <s_nvs_storage>, baseSector=6, sectorCount=3)
+    at /home/olas/esp/esp-idf/components/nvs_flash/src/nvs_storage.cpp:41
+#8  0x400d4b25 in nvs_flash_init_custom (baseSector=6, sectorCount=3)
+    at /home/olas/esp/esp-idf/components/nvs_flash/src/nvs_api.cpp:75
+#9  0x400d4b58 in nvs_flash_init () at /home/olas/esp/esp-idf/components/nvs_flash/src/nvs_api.cpp:66
+#10 0x400d3d02 in app_main () at /home/olas/esp/qemu_esp32/main/./main.c:189
+#11 0x400d039a in main_task (args=0x0) at /home/olas/esp/esp-idf/components/esp32/./cpu_start.c:169
+
+However we patch SPIEraseSector 
+    0x40062ccc      entry  a1, 32                                                                                              
+    0x40062ccf      l32r   a3, 0x40062190                                                                                      
+    0x40062cd2      l32r   a4, 0x40061b7c                                                                                      
+    0x40062cd5      memw                                                                                                       
+    0x40062cd8      l32i.n a8, a3, 0                                                                                           
+
+
+
+io write 42010,0 
+io write 42000,8000000 
+io read 42000  SPI_CMD_REG 3ff42000=0
+io read 42010  SPI_CMD_REG1 3ff42010=0
+io write 42010,0 
+io write 42000,8000000 
+io read 42000  SPI_CMD_REG 3ff42000=0
+io read 42010  SPI_CMD_REG1 3ff42010=0
+io write 42010,0 
+io write 42000,8000000 
+io read 42000  SPI_CMD_REG 3ff42000=0
+io read 42010  SPI_CMD_REG1 3ff42010=0
+io write 42010,0 
+io write 42000,8000000 
+io read 42000  SPI_CMD_REG 3ff42000=0
+io read 42010  SPI_CMD_REG1 3ff42010=0
+
+```
+

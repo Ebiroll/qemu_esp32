@@ -77,7 +77,7 @@ screen /dev/ttyUSB0 115200
 Ctrl-A  then H   (save output)
 press  reset on ESP to get start.
 ```
-When finnished trim the capturefile (remove all before and after the dump data) and call it, test.log
+When finished trim the capturefile (remove all before and after the dump data) and call it, test.log
 Notice that there are two dumps search for ROM and ROM1
 Compile the dump to rom program.
 ```
@@ -121,8 +121,7 @@ To disassemble a specific function you can set pc from gdb,
 Setting programcounter (pc) to a function,
 
 ```
-  (gdb) set $pc=&call_start_cpu0
-  (gdb) set $pc=&uart_tx_one_char 
+  (gdb) set $pc=call_start_cpu0
 ```
 
 
@@ -187,6 +186,8 @@ I got my ESP32-dev board from Adafruit. I have made two dumps and mapped the dum
 The code in esp32.c also patches the function ets_unpack_flash_code.
 Instead of loading the code it sete the user_code_start (0x3ffe0400) This will later be used
 by the rom to start the loaded elf file.
+The functions SPIEraseSector & SPIWrite was also patched to return 0.
+
 
 
 The instruction wsr.memctl does not work in QEMU but can be patched like this (in qemu tree).
@@ -206,13 +207,15 @@ static bool gen_check_sr(DisasContext *dc, uint32_t sr, unsigned access)
 Before the patch of ets_unpack_flash_code we got the following error:
  flash read err, 1000
 
-I guess better flash emulation would be better.
-
-rom function -- ets_unpack_flash_code  located at 0x40007018
+I Better flash emulation would be better. The rom function -- ets_unpack_flash_code  located at 0x40007018
 The serial device should also be emulated differently. Now serial output goes to stderr.
 
-```
+To get proper serial emulation you can remove the comment around this in the file esp32.c,
+//  serial_mm_init(system_io, 0x40000 , 2, xtensa_get_extint(env, 0),
+//            115200, serial_hds[0], DEVICE_LITTLE_ENDIAN);
 
+
+```
 xtensa-softmmu/qemu-system-xtensa -d guest_errors,page,unimp  -cpu esp32 -M esp32 -m 4M  -kernel  ~/esp/qemu_esp32/build/app-template.elf  -S -s > io.txt
 
 (gdb) b start_cpu0_default
@@ -254,12 +257,12 @@ When configuring, choose
     FreeRTOS  --->
       [*] Run FreeRTOS only on first core 
 
-In ROM the functions SPIEraseSector & SPIWrite was patched to return 0.
 
 ```
 
 
-
+##Before the rom patches
+Before the rom patches we got this
 ```
 xtensa-softmmu/qemu-system-xtensa -d guest_errors,int,page,unimp  -cpu esp32 -M esp32 -m 4M  -kernel  ~/esp/qemu_esp32/build/app-template.elf    > io.txt 
 ets Jun  8 2016 00:22:57
@@ -268,7 +271,7 @@ rst:0x10 (RTCWDT_RTC_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
 flash read err, 1000
 Falling back to built-in command interpreter.
 ```
-
+##Whats the problem with this
 Some i/o register name mapping is probably wrong.  The values returned are more than likely wrong.
 tlb_fill() is probably a cached read of instructions or data.
 ```
@@ -347,63 +350,12 @@ static HeapRegionTagged_t regions[]={
 	{ (uint8_t *)0x3FFB8000, 0x8000, 0, 0}, //pool 14 <- can be used for BT
 ```
 
-
-
-
-```
-#Analysis of lockup in nvs_flash_init
-This lockup could probably be avoided by using proper flash emulation.
-
-#0  0x40062348 in ?? ()
-#1  0x400628dc in ?? ()     
-#2  0x400812bd in spi_flash_unlock () at /home/olas/esp/esp-idf/components/spi_flash/./esp_spi_flash.c:207
-#3  0x400812e0 in spi_flash_erase_sector (sec=6) at /home/olas/esp/esp-idf/components/spi_flash/./esp_spi_flash.c:221
-#4  0x400d58fc in nvs::Page::erase (this=0x3ffb4284) at /home/olas/esp/esp-idf/components/nvs_flash/src/nvs_page.cpp:734
-#5  0x400d5aed in nvs::PageManager::activatePage (this=0x3ffb06e8 <s_nvs_storage+4>)
-    at /home/olas/esp/esp-idf/components/nvs_flash/src/nvs_pagemanager.cpp:179
-#6  0x400d5d64 in nvs::PageManager::load (this=0x3ffb06e8 <s_nvs_storage+4>, baseSector=6, sectorCount=3)
-    at /home/olas/esp/esp-idf/components/nvs_flash/src/nvs_pagemanager.cpp:49
-#7  0x400d4c00 in nvs::Storage::init (this=0x3ffb06e4 <s_nvs_storage>, baseSector=6, sectorCount=3)
-    at /home/olas/esp/esp-idf/components/nvs_flash/src/nvs_storage.cpp:41
-#8  0x400d4b25 in nvs_flash_init_custom (baseSector=6, sectorCount=3)
-    at /home/olas/esp/esp-idf/components/nvs_flash/src/nvs_api.cpp:75
-#9  0x400d4b58 in nvs_flash_init () at /home/olas/esp/esp-idf/components/nvs_flash/src/nvs_api.cpp:66
-#10 0x400d3d02 in app_main () at /home/olas/esp/qemu_esp32/main/./main.c:189
-#11 0x400d039a in main_task (args=0x0) at /home/olas/esp/esp-idf/components/esp32/./cpu_start.c:169
-
-However we patch SPIEraseSector 
-    0x40062ccc      entry  a1, 32                                                                                              
-    0x40062ccf      l32r   a3, 0x40062190                                                                                      
-    0x40062cd2      l32r   a4, 0x40061b7c                                                                                      
-    0x40062cd5      memw                                                                                                       
-    0x40062cd8      l32i.n a8, a3, 0                                                                                           
-
-
-
-io write 42010,0 
-io write 42000,8000000 
-io read 42000  SPI_CMD_REG 3ff42000=0
-io read 42010  SPI_CMD_REG1 3ff42010=0
-io write 42010,0 
-io write 42000,8000000 
-io read 42000  SPI_CMD_REG 3ff42000=0
-io read 42010  SPI_CMD_REG1 3ff42010=0
-io write 42010,0 
-io write 42000,8000000 
-io read 42000  SPI_CMD_REG 3ff42000=0
-io read 42010  SPI_CMD_REG1 3ff42010=0
-io write 42010,0 
-io write 42000,8000000 
-io read 42000  SPI_CMD_REG 3ff42000=0
-io read 42010  SPI_CMD_REG1 3ff42010=0
-
-```
 Adding flash qemu emulation.
 head -c 16M /dev/zero > esp32.flash
 
 xtensa-softmmu/qemu-system-xtensa -d guest_errors,page,unimp  -cpu esp32 -M esp32 -m 4M -pflash esp32.flash -kernel  ~/esp/qemu_esp32/build/app-template.elf  -s -S  > io.txt
 
-This does not work at all.
+This does not work at all. I dont understand qemu enough to get this working.
 To add flash checkout line 502 in esp32.c
 dinfo = drive_get(IF_PFLASH, 0, 0);
 ...
@@ -412,16 +364,17 @@ Also checkout m25p80.c driver in qemu
 Dump with od,
 od -t x4  partitions_singleapp.bin
 
-With serial on correct cpu..
 xtensa-softmmu/qemu-system-xtensa -d guest_errors,page,unimp  -cpu esp32 -M esp32 -m 4M   -kernel  ~/esp/qemu_esp32/build/app-template.elf    > io.txt
 
 ```
 
 
-Running two cores, most likely will not work so well. But shows up in 
-(gdb) info threads
+Running two cores, most likely will not work so so well. But shows up in  (gdb) info threads
 ```
 xtensa-softmmu/qemu-system-xtensa -d guest_errors,page,unimp  -cpu esp32 -M esp32 -m 4M -smp 2 -pflash esp32.flash -kernel  ~/esp/qemu_esp32/build/app-template.elf  -s -S  > io.txt
-
+I think that the app CPU quickly gets stuck in a loop. Also the WUR 234-236 & RUR 234-236 has something to do with processor syncronisation.
+This will create problems when running 2 cores.
 ```
 
+
+[More about the boot of the romdumps!](BOOT.md)
