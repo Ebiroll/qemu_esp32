@@ -249,24 +249,14 @@ RUR 236 not implemented, TBD(pc = 4009130b): /home/olas/qemu/target-xtensa/trans
 The WUR and RUR instructions are specific for the ESP32.
 
 
+When configuring, choose
+  Component config  --->   
+    FreeRTOS  --->
+      [*] Run FreeRTOS only on first core 
 
-By commenting out,
-    //nvs_flash_init(); & /system_init();
-I was able to run the romdump.. in qemu
-void app_main()
-{
-    //nvs_flash_init();
-    //system_init();
-}
-
-nvs_flash_init()
-
-
-
-
+In ROM the functions SPIEraseSector & SPIWrite was patched to return 0.
 
 ```
-
 
 
 
@@ -362,10 +352,10 @@ static HeapRegionTagged_t regions[]={
 
 ```
 #Analysis of lockup in nvs_flash_init
-This lockup could probably be avoided by using flash emulation.
+This lockup could probably be avoided by using proper flash emulation.
 
 #0  0x40062348 in ?? ()
-#1  0x400628dc in ?? ()
+#1  0x400628dc in ?? ()     
 #2  0x400812bd in spi_flash_unlock () at /home/olas/esp/esp-idf/components/spi_flash/./esp_spi_flash.c:207
 #3  0x400812e0 in spi_flash_erase_sector (sec=6) at /home/olas/esp/esp-idf/components/spi_flash/./esp_spi_flash.c:221
 #4  0x400d58fc in nvs::Page::erase (this=0x3ffb4284) at /home/olas/esp/esp-idf/components/nvs_flash/src/nvs_page.cpp:734
@@ -380,6 +370,14 @@ This lockup could probably be avoided by using flash emulation.
 #9  0x400d4b58 in nvs_flash_init () at /home/olas/esp/esp-idf/components/nvs_flash/src/nvs_api.cpp:66
 #10 0x400d3d02 in app_main () at /home/olas/esp/qemu_esp32/main/./main.c:189
 #11 0x400d039a in main_task (args=0x0) at /home/olas/esp/esp-idf/components/esp32/./cpu_start.c:169
+
+However we patch SPIEraseSector 
+    0x40062ccc      entry  a1, 32                                                                                              
+    0x40062ccf      l32r   a3, 0x40062190                                                                                      
+    0x40062cd2      l32r   a4, 0x40061b7c                                                                                      
+    0x40062cd5      memw                                                                                                       
+    0x40062cd8      l32i.n a8, a3, 0                                                                                           
+
 
 
 io write 42010,0 
@@ -410,6 +408,12 @@ To add flash checkout line 502 in esp32.c
 dinfo = drive_get(IF_PFLASH, 0, 0);
 ...
 Also checkout m25p80.c driver in qemu
+
+Dump with od,
+od -t x4  partitions_singleapp.bin
+
+With serial on correct cpu..
+xtensa-softmmu/qemu-system-xtensa -d guest_errors,page,unimp  -cpu esp32 -M esp32 -m 4M   -kernel  ~/esp/qemu_esp32/build/app-template.elf    > io.txt
 
 ```
 

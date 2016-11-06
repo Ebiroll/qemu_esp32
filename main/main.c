@@ -12,7 +12,9 @@
 #include "esp_system.h"
 #include "nvs_flash.h"
 #include "driver/gpio.h"
-#include "soc/rtc_cntl_reg.h"
+#include "soc/rtc_cntl_reg.h" 
+#define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
+#include "esp_log.h"
 
 /* For testing of how code is generated  */
 #if 0
@@ -195,7 +197,9 @@ void dump_task(void *pvParameter)
 
 void app_main()
 {
-    //nvs_flash_init();
-    //system_init();
+
+    esp_log_level_set("*", ESP_LOG_INFO);
+    nvs_flash_init();
+    system_init();
     xTaskCreate(&dump_task, "dump_task", 2048, NULL, 5, NULL);
 }
