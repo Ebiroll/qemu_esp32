@@ -27,7 +27,6 @@ If booting from the romdump we start here, _ResetVector, 0x40000400
     0x40000480      l32r   a2, 0x40000414            // a2 contains   0x40000000                                                            
     0x40000483      wsr.vecbase    a2                // Write special register vecbase        
     0x40000486      movi.n a3, 21                    // load register a3 with 21=0x15
-    0x40000486      movi.n a3, 21                    // Twice??      RCW
 
     RCW Transaction — Execute the S32C1I instruction by sending an RCW transaction on the PIF bus. 
     External logic must then implement the atomic read-compare-write on the memory location. 
@@ -227,13 +226,80 @@ is necessary to allow an Xtensa processor to atomically access a DataRAM locatio
 
 ## UartAttach
 ```
-
-
-
+    0x40008fd0      entry  a1, 32                                                                                           
+    0x40008fd3      l32r   a8, 0x40008720              // a8   0x3ffe019c
+    0x40008fd6      l32r   a9, 0x40008fb8              // a9   0x1c200       
+    0x40008fd9      l32r   a11, 0x40008fbc             // a11  0x3ffe009c
+    0x40008fdc      s32i   a9, a8, 0                                                                                        
+    0x40008fdf      movi   a9, 3                                                                                            
+    0x40008fe2      movi.n a10, 1                                                                                           
+    0x40008fe4      s32i.n a9, a8, 4                                                                                        
+    0x40008fe6      movi.n a9, 0                                                                                            
+    0x40008fe8      s32i.n a9, a8, 20                                                                                       
+    0x40008fea      s32i.n a9, a8, 8                                                                                        
+    0x40008fec      s32i.n a9, a8, 12                                                                                       
+    0x40008fee      s32i.n a10, a8, 16                              
+    0x40008ff0      s32i.n a11, a8, 28                                                                                      
+    0x40008ff2      s32i.n a9, a8, 44                                                                                       
+    0x40008ff4      s32i.n a11, a8, 32                                                                                      
+    0x40008ff6      s32i.n a11, a8, 36                                                                                      
+    0x40008ff8      s8i    a10, a8, 40                                                                                      
+    0x40008ffb      s32i.n a9, a8, 48                                                                                       
+    0x40008ffd      s32i.n a9, a8, 52                                                                                       
+    0x40008fff      s8i    a9, a8, 24                                                                                       
+    0x40009002      s8i    a9, a8, 25                                                                                       
+    0x40009005      l32r   a8, 0x40008fc0                                                                                   
+    0x40009008      memw      
+    0x4000900b      s32i.n a10, a8, 0                 //  io write 40010,1
+    0x4000900d      l32r   a8, 0x40008fc4             // a8      0x3ff50010                                            
+    0x40009010      memw                                                                                                    
+    0x40009013      s32i   a10, a8, 0                 // io write 50010,1                                                                      
+    0x40009016      movi.n a10, 32                    // a10    0x20                                                                 
+    0x40009018      call8  0x400067fc                 //   ets_isr_mask                                                                 
+    0x4000901b      l32r   a11, 0x40008fc8            // a11     0x40008f4c , uart_rx_intr_handler            
+    0x4000901e      l32r   a12, 0x40008fcc            // a12     0x3ffe01b8                                                                    
+    0x40009021      movi.n a10, 5                                                                                           
+    0x40009023      call8  0x400067ec                 //   call ets_isr_attach                                                               
+    0x40009026      retw.n                
 ```
 
+ets_isr_attach
+```
+    0x400067ec      entry  a1, 32                                                                                           
+    0x400067ef      mov.n  a10, a2                  //  0x5                                                                        
+    0x400067f1      mov.n  a11, a3                  //  0x40008f4c,   uart_rx_intr_handler                                                                       
+    0x400067f3      mov.n  a12, a4                  //  0x3ffe01b8                                                                     
+    0x400067f5      call8  0x4000bf34               // call     _xtos_set_interrupt_handler_arg                                                                             
+    0x400067f8      retw.n     
+```
 
-
+_xtos_set_interrupt_handler_arg
+```
+    0x4000bf34      entry  a1, 32                                                                                           
+    0x4000bf37      movi.n a8, 31                                                                                           
+    0x4000bf39      bltu   a8, a2, 0x4000bf71                                                                               
+    0x4000bf3c      l32r   a9, 0x400006fc          //      0x3ff9c2b4                                                                     
+    0x4000bf3f      add.n  a9, a9, a2                                                                     
+    0x4000bf41      l8ui   a9, a9, 0                                                                                        
+    0x4000bf44      bgeui  a9, 7, 0x4000bf71                                                                                
+    0x4000bf47      l32r   a9, 0x400005a0                                                                                  
+    0x4000bf4a      sub    a8, a8, a2                                                                                       
+    0x4000bf4d      addx8  a8, a8, a9                                                                                       
+    0x4000bf50      l32i.n a9, a8, 0                                                                                        
+    0x4000bf52      beqz.n a3, 0x4000bf60                                                                                   
+    0x4000bf54      s32i.n a3, a8, 0      
+    0x4000bf56      s32i.n a4, a8, 4               //       0x4000c01c ,    _xtos_unhandled_interrupt                                                         
+    0x4000bf58      l32r   a3, 0x40000700                                                                                   
+    0x4000bf5b      j      0x4000bf67                                                                                       
+    0x4000bf5e      srai   a0, a0, 16                                                                                       
+    0x4000bf61      l32i.n a14, a1, 52                                                                                      
+    0x4000bf63      s32i.n a2, a8, 4                                                                                        
+    0x4000bf65      s32i.n a3, a8, 0                                                                                        
+    0x4000bf67      sub    a3, a9, a3                                                                                       
+    0x4000bf6a      movi.n a2, 0                                                                                            
+    0x4000bf6c      movnez a2, a9, a3                                                                                       
+    0x4000bf6f      retw.n                        
+```
 
 
 
