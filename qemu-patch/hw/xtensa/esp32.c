@@ -212,8 +212,8 @@ static uint64_t esp_io_read(void *opaque, hwaddr addr,
 
     switch (addr) {
        case 0x38:
-           printf(" DPORT_PRO_CACHE_CTRL_REG  3ff00038=%08X\n",0);
-           return 0x0;
+           printf(" DPORT_PRO_CACHE_CTRL_REG  3ff00038=%08X\n",28);
+           return 0x28;
            break;
 
        case 0x40:
@@ -351,7 +351,7 @@ static void esp_io_write(void *opaque, hwaddr addr,
            sim_RTC_CNTL_DIG_ISO_REG=val;
            break;
        case 0x480b4:
-           printf("RTC_CNTL_STORE5_REG 3ff480b4 %08X \n" ,sim_RTC_CNTL_STORE5_REG);
+           printf("RTC_CNTL_STORE5_REG 3ff480b4 %" PRIx64 "\n" ,val);
            sim_RTC_CNTL_STORE5_REG=val;
            break;
 
@@ -391,8 +391,10 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
     XtensaCPU *cpu = NULL;
     CPUXtensaState *env = NULL;
     MemoryRegion *ram,*ram1,*rambb, *rom, *system_io;
-    //DriveInfo *dinfo;
+    DriveInfo *dinfo;
     pflash_t *flash = NULL;
+    //pflash_t *flash2 = NULL;
+
     QemuOpts *machine_opts = qemu_get_machine_opts();
     const char *cpu_model = machine->cpu_model;
     const char *kernel_filename = qemu_opt_get(machine_opts, "kernel");
@@ -499,11 +501,10 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
     //serial_mm_init(system_io, 0x40000 , 2, xtensa_get_extint(env, 0),
     //        115200, serial_hds[0], DEVICE_LITTLE_ENDIAN);
 
-#if 0
     dinfo = drive_get(IF_PFLASH, 0, 0);
     if (dinfo) {
         printf("FLASH EMULATION!!!!\n");
-        flash = pflash_cfi01_register(board->flash_base,
+        flash = pflash_cfi01_register(0x3ff42000 /*board->flash_base*/,
                 NULL, "esp32.io.flash", board->flash_size,
                 blk_by_legacy_dinfo(dinfo),
                 board->flash_sector_size,
@@ -513,8 +514,23 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
             error_report("unable to mount pflash");
             exit(EXIT_FAILURE);
         }
+
+       // OLAS, SPI flash 
+       /*
+        MemoryRegion *flash_mr = pflash_cfi01_get_memory(flash);
+        MemoryRegion *flash_io = g_malloc(sizeof(*flash_io));
+
+        memory_region_init_alias(flash_io, NULL, "esp32.io.flash",
+                flash_mr, board->flash_boot_base,
+                board->flash_size - board->flash_boot_base < 0x02000000 ?
+                board->flash_size - board->flash_boot_base : 0x02000000);
+        memory_region_add_subregion(system_memory, 0xfe000000,
+                flash_io);
+
+       */
+
+
     }
-#endif
 
     /* Use kernel file name as current elf to load and run */
     if (kernel_filename) {
@@ -671,6 +687,8 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
                 cpu_physical_memory_write(0x3FF90000, rom1_data, 0xFFFF*sizeof(unsigned int));
             }
 
+
+#if 1
             // Patching rom function. ets_unpack_flash_code
             //      j forward 0x13 
             //      nop.n * 8
@@ -679,7 +697,7 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
             //      s32i.n   a9,a8,0
             //      movi.n	a2, 0
             //      retw.n
-            static const uint8_t retw_n[] = {
+            static const uint8_t patch_ret[] = {
                  0x06,0x05,0x00,  // Jump
                  0x3d,0xf0,   // NOP
                  0x3d,0xf0,   // NOP
@@ -696,7 +714,7 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
             };
 
             // Patch rom, ets_unpack_flash_code
-            cpu_physical_memory_write(0x40007018+3, retw_n, sizeof(retw_n));
+            cpu_physical_memory_write(0x40007018+3, patch_ret, sizeof(patch_ret));
 
             // Add entry point in rom patch 
             cpu_physical_memory_write(0x40007024, &entry_point, 1*sizeof(unsigned int));
@@ -704,6 +722,22 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
             // Add user_code_start to rom
             unsigned int location=0x3ffe0400;
             cpu_physical_memory_write(0x40007028, &location , 1*sizeof(unsigned int));
+
+
+           //Patch SPIEraseSector b *0x40062ccc
+           static const uint8_t retw_n[] = {
+               0xc, 0x2,0x1d, 0xf0
+           };
+
+            // Patch rom, SPIEraseSector 0x40062ccc
+            cpu_physical_memory_write(0x40062ccc+3, retw_n, sizeof(retw_n));
+
+            // Patch rom,  SPIWrite 0x40062d50
+            cpu_physical_memory_write(0x40062d50+3, retw_n, sizeof(retw_n));
+
+            // Not working so well..
+            // Patch rom,  ram_txdc_cal_v70 0x4008753b 
+            //cpu_physical_memory_write(0x4008753b+3, retw_n, sizeof(retw_n));
 
 
             // This would have been nicer, however ram will be cleared by rom-functions later... 
@@ -715,6 +749,7 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
 
             // Overwrite rom interrupt function
             //cpu_physical_memory_write(0x400003c0, rfde, sizeof(rfde));
+#endif
         }
     } else {
         // No elf, try booting from flash...
