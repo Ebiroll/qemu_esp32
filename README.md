@@ -184,11 +184,9 @@ Disassembly of section .text.jump:
 #Results
 I got my ESP32-dev board from Adafruit. I have made two dumps and mapped the dumps into the files rom.bin & rom1.bin
 The code in esp32.c also patches the function ets_unpack_flash_code.
-Instead of loading the code it sete the user_code_start (0x3ffe0400) This will later be used
-by the rom to start the loaded elf file.
-The functions SPIEraseSector & SPIWrite was also patched to return 0.
-
-
+Instead of loading the code it sets the user_code_start variable (0x3ffe0400) This will later be used
+by the rom to start the loaded elf file. The functions SPIEraseSector & SPIWrite are also patched to return 0.
+The rom function -- ets_unpack_flash_code is located at 0x40007018.
 
 The instruction wsr.memctl does not work in QEMU but can be patched like this (in qemu tree).
 File translate.c
@@ -204,16 +202,15 @@ static bool gen_check_sr(DisasContext *dc, uint32_t sr, unsigned access)
         //gen_exception_cause(dc, ILLEGAL_INSTRUCTION_CAUSE);
 ```
 
-Before the patch of ets_unpack_flash_code we got the following error:
- flash read err, 1000
 
-I Better flash emulation would be better. The rom function -- ets_unpack_flash_code  located at 0x40007018
-The serial device should also be emulated differently. Now serial output goes to stderr.
+Better flash emulation would be better. The serial device should also be emulated differently. Now serial output goes to stderr.
 
 To get proper serial emulation you can remove the comment around this in the file esp32.c,
+```
 //  serial_mm_init(system_io, 0x40000 , 2, xtensa_get_extint(env, 0),
 //            115200, serial_hds[0], DEVICE_LITTLE_ENDIAN);
-
+```
+However it does not always work. You can use qemu to generate reset and it might work sometimes.
 
 ```
 xtensa-softmmu/qemu-system-xtensa -d guest_errors,page,unimp  -cpu esp32 -M esp32 -m 4M  -kernel  ~/esp/qemu_esp32/build/app-template.elf  -S -s > io.txt
@@ -271,9 +268,9 @@ rst:0x10 (RTCWDT_RTC_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
 flash read err, 1000
 Falling back to built-in command interpreter.
 ```
-##Whats the problem with this
-Some i/o register name mapping is probably wrong.  The values returned are more than likely wrong.
-tlb_fill() is probably a cached read of instructions or data.
+##What is the problem with this code
+Some i/o register name mapping in esp32.cis probably wrong.  The values returned are also many times wrong.
+I did this mapping very quickly with grep to get a better understanding of what the rom was doing.
 ```
 Terminal 1
 >xtensa-softmmu/qemu-system-xtensa -d guest_errors,int,mmu,page,unimp  -cpu esp32 -M esp32 -m 4M  -kernel  ~/esp/qemu_esp32/build/app-template.elf   -S -s
@@ -285,8 +282,6 @@ Terminal 2
 //Uart_Init, 0x40009120
 (gdb) b *0x40009120
 (gdb) layout asm
-//uart_tx_one_char, 0x40009200
-//(gdb) b *0x40009200
 
 xtensa-softmmu/qemu-system-xtensa -d guest_errors,int,mmu,page,unimp  -cpu esp32 -M esp32 -m 4M  -kernel  ~/esp/qemu_esp32/build/app-template.elf   -S -s 
 Elf entry 400807BC
@@ -350,7 +345,8 @@ static HeapRegionTagged_t regions[]={
 	{ (uint8_t *)0x3FFB8000, 0x8000, 0, 0}, //pool 14 <- can be used for BT
 ```
 
-Adding flash qemu emulation.
+#Adding flash qemu emulation.
+```
 head -c 16M /dev/zero > esp32.flash
 
 xtensa-softmmu/qemu-system-xtensa -d guest_errors,page,unimp  -cpu esp32 -M esp32 -m 4M -pflash esp32.flash -kernel  ~/esp/qemu_esp32/build/app-template.elf  -s -S  > io.txt
@@ -376,5 +372,5 @@ I think that the app CPU quickly gets stuck in a loop. Also the WUR 234-236 & RU
 This will create problems when running 2 cores.
 ```
 
-
-[More about the boot of the romdumps!](BOOT.md)
+## Detailed boot analaysis
+[More about the boot of the romdumps](./BOOT.md)
