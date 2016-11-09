@@ -308,6 +308,82 @@ esp-idf/components/freertos/xtensa_vectors.S
    0x400800db <_WindowUnderflow8+27>       rfwu   
 ```
 
+##gdb debug xtensa
+I also found this to aid furher xtensa debugging
+```
+(gdb) set debug xtensa 10
+(gdb) b nvs_flash_init
+(trace) xtensa_breakpoint_from_pc (pc = 0x400d99d0)
+Breakpoint 1 at 0x400d99d0: file /home/olas/esp/esp-idf/components/nvs_flash/src/nvs_api.cpp, line 65.
+(gdb) c
+Continuing.
+(trace) xtensa_breakpoint_from_pc (pc = 0x400d99d0)
+(trace) xtensa_unwind_pc (next_frame = 0x11fe9e0)
+(info ) [xtensa_unwind_pc] pc = 0x400d99d0
+(trace) xtensa_alloc_frame_cache ()
+(trace) xtensa_pseudo_register_read (... regnum = 165 (a8) ...)
+(trace) xtensa_pseudo_register_read (... regnum = 158 (a1) ...)
+
+Breakpoint 1, nvs_flash_init () at /home/olas/esp/esp-idf/components/nvs_flash/src/nvs_api.cpp:65
+65	{
+(gdb) n
+(trace) xtensa_unwind_pc (next_frame = 0x11fe9e0)
+(info ) [xtensa_unwind_pc] pc = 0x400d99d3
+(trace) xtensa_alloc_frame_cache ()
+(trace) xtensa_pseudo_register_read (... regnum = 157 (a0) ...)
+(trace) xtensa_pseudo_register_read (... regnum = 158 (a1) ...)
+66	    return nvs_flash_init_custom(6, 3);
+(gdb) n
+(trace) xtensa_breakpoint_from_pc (pc = 0x400d99d0)
+(trace) xtensa_unwind_pc (next_frame = 0x11fe9e0)
+(info ) [xtensa_unwind_pc] pc = 0x400d99d6
+(trace) xtensa_alloc_frame_cache ()
+(trace) xtensa_pseudo_register_read (... regnum = 157 (a0) ...)
+(trace) xtensa_pseudo_register_read (... regnum = 158 (a1) ...)
+(trace) xtensa_unwind_pc (next_frame = 0x11fe9e0)
+(info ) [xtensa_unwind_pc] pc = 0x400d99d9
+(trace) xtensa_alloc_frame_cache ()
+(trace) xtensa_pseudo_register_read (... regnum = 157 (a0) ...)
+(trace) xtensa_pseudo_register_read (... regnum = 158 (a1) ...)
+(trace) xtensa_unwind_pc (next_frame = 0x11fe9e0)
+(info ) [xtensa_unwind_pc] pc = 0x400d9930
+(trace) xtensa_alloc_frame_cache ()
+(trace) xtensa_pseudo_register_read (... regnum = 165 (a8) ...)
+(trace) xtensa_pseudo_register_read (... regnum = 158 (a1) ...)
+(trace) xtensa_unwind_pc (next_frame = 0x11feab0)
+(info ) [xtensa_unwind_pc] pc = 0x400d99dc
+(trace) xtensa_alloc_frame_cache ()
+(trace) xtensa_breakpoint_from_pc (pc = 0x400d99dc)
+(trace) xtensa_breakpoint_from_pc (pc = 0x400d99dc)
+(trace) xtensa_unwind_pc (next_frame = 0x11fe9e0)
+(info ) [xtensa_unwind_pc] pc = 0x400d99dc
+(trace) xtensa_alloc_frame_cache ()
+(trace) xtensa_pseudo_register_read (... regnum = 157 (a0) ...)
+(trace) xtensa_pseudo_register_read (... regnum = 158 (a1) ...)
+(trace) xtensa_pseudo_register_read (... regnum = 158 (a1) ...)
+(trace) xtensa_pseudo_register_read (... regnum = 158 (a1) ...)
+
+(trace) xtensa_break_WindowUnderflow8 = 0x400d99dc)                                                            1937		800c0d99d0
+(trace) xtensa_unwind_pc (next_frame = 0x14279e0)
+(info ) [xtensa_unwind_pc] pc = 0x400800c0
+(trace) xtensa_alloc_frame_cache ()
+(trace) call0_classify_opcode (..., opc = 67)um = 157 (a0) ...)
+(trace) call0_classify_opcode (..., opc = 67)
+(trace) call0_classify_opcode (..., opc = 67)
+(trace) call0_classify_opcode (..., opc = 67)
+(gdb) n call0_classify_opcode (..., opc = 67)
+(trace) call0_classify_opcode (..., opc = 67)
+(trace) call0_classify_opcode (..., opc = 67)
+(info ) call0_classify_opcode (..., opc = 67)
+(trace) call0_classify_opcode (..., opc = 67)
+(trace) call0_classify_opcode (..., opc = 66)um = 157 (a0) ...)
+(trace) xtensa_unwind_pc (next_frame = 0x1427ab0)
+(info ) [xtensa_unwind_pc] pc = 0x400800c0
+(trace) xtensa_alloc_frame_cache ()
+_WindowUnderflow8 () at /home/olas/esp/esp-idf/components/freertos/./xtensa_vectors.S:1937
+
+```
+
 
 ##Patched gdb
 To stop the assert the following patches has been applied to gdb
@@ -333,7 +409,7 @@ process_g_packet (struct regcache *regcache)
         } 
     }  
 
-
+xtensa-tdep.c
 /* Handle Window Overflow / Underflow exception frames.  */
 
 static void
