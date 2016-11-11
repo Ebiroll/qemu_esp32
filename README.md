@@ -6,6 +6,9 @@ This documents how to add an esp32 cpu and a simple esp32 board to qemu in order
 It is a good way to learn about qemu ,esp32 and the esp32 rom.
 
 
+
+
+
 By following the instructions here, I added esp32 to qemu.
 http://wiki.linux-xtensa.org/index.php/Xtensa_on_QEMU
 
@@ -13,6 +16,9 @@ prerequisites Debian/Ubuntu:
 ```
 sudo apt-get install libpixman-1-0 libpixman-1-dev 
 ```
+
+
+## Original qemu-esp32
 
 Clone qemu and qemu-esp32 and apply the patch.
 ```
@@ -374,3 +380,24 @@ This will create problems when running 2 cores.
 
 ## Detailed boot analaysis
 [More about the boot of the romdumps](./BOOT.md)
+
+
+##Patched gdb,
+In the bin directory there is an improved gdb version. The following patch was applied,
+https://github.com/jcmvbkbc/xtensa-toolchain-build/blob/master/fixup-gdb.sh
+To use it properly you must increase the num_regs = 104 to i.e. 211 in core-esp32.c
+
+
+
+## Another version of qemu for xtensa
+As I am not alwas sure of what I am doing, I would recomend this version of the software. Currently it is not yet finnished (11//11) but will most certainly be better if Max finds the time to work on it.
+
+#A better version of qemu with esp32 exists here,
+  git clone https://github.com/OSLL/qemu-xtensa
+  cd qemu-xtensa
+  git checkout  xtensa-esp32
+  git submodule update --init dtc
+  cd ..
+  mkdir build-qemu-xtensa
+  ../qemu-xtensa/configure --disable-werror --prefix=`pwd`/root --target-list=xtensa-softmmu
+
