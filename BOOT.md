@@ -2023,3 +2023,11 @@ io read 42010  SPI_CMD_REG1 3ff42010=0
 
 ```
 
+#Precise timer ccount, depends of frequency..
+```
+Rom function
+
+xthal_get_ccount = 0x4000c050
+
+
+```

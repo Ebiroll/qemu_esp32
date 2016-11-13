@@ -15,6 +15,20 @@
 #include "soc/rtc_cntl_reg.h" 
 #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
 #include "esp_log.h"
+// Wifi/net related
+#include "esp_wifi.h"
+#include "esp_system.h"
+#include "esp_event.h"
+#include "esp_event_loop.h"
+#include <string.h>
+#include "lwip/err.h"
+#include "lwip/sockets.h"
+#include "lwip/sys.h"
+#include "lwip/netif.h"
+#include "netif/etharp.h"
+// #include "ne2kif.h"
+extern err_t ne2k_init(struct netif *netif);
+
 
 /* For testing of how code is generated  */
 #if 0
@@ -77,19 +91,26 @@ void dump_task(void *pvParameter)
     int *GPIO_STRAP_TEST=(int *)0x3ff44038;
     printf( "GPIO STRAP REG=%08X\n", *GPIO_STRAP_TEST);
 
+    //RTC_CNTL_RESET_STATE_REG  3ff48034
+
     int *test=(int *)RTC_CNTL_RESET_STATE_REG;
     printf( "RTC_CNTL_RESET_STATE_REG,%08X=%08X\n",RTC_CNTL_RESET_STATE_REG, *test);
 
-    //RTC_CNTL_RESET_STATE_REG  3ff48034
 
     test=(int *)RTC_CNTL_INT_ST_REG;
     printf( "RTC_CNTL_INT_ST_REG; %08X=%08X\n",RTC_CNTL_INT_ST_REG, *test);
 
+    // RTCIO_RTC_GPIO_PIN3_REG 
+
+    //test=(int *)RTCIO_RTC_GPIO_PIN3_REG;
+    //printf( "RTCIO_RTC_GPIO_PIN3_REG; %08X=%08X\n",RTCIO_RTC_GPIO_PIN3_REG, *test);
+
+
     test=(int *)0x3FF00044;
-    printf( "DPORT 44 REG; %08X=%08X\n",0x3FF00044, *test);
+    printf( "GPIO_STATUS_REG ; %08X=%08X\n",0x3FF00044, *test);
 
     test=(int *)0x3FF00040;
-    printf( "DPORT 40 REG; %08X=%08X\n",0x3FF00040, *test);
+    printf( "GPIO_IN1_REG 32-39; %08X=%08X\n",0x3FF00040, *test);
 
 
     test=(int *)0x3FF003f0;
@@ -101,9 +122,6 @@ void dump_task(void *pvParameter)
 
     test=(int *)0x3FF4800c;
     printf( "DPORT RTC_CNTL_TIME_UPDATE_REG REG; %08X=%08X\n",0x3FF4800c, *test);
-
-
-
 
     printf("ROM DUMP\n");
     printf("\n");
@@ -184,11 +202,163 @@ void dump_task(void *pvParameter)
     //system_restart();
 }
 
+/*
+typedef struct {
+    system_event_id_t     event_id;     
+    system_event_info_t   event_info;   
+    } system_event_t;
+*/
+
+esp_err_t event_handler(void *ctx, system_event_t *event)
+{
+    switch (event->event_id) {
+        case SYSTEM_EVENT_STA_GOT_IP:
+        {
+            struct netif *netif;
+            // List all available interfaces
+            for (netif = netif_list; netif != NULL; netif = netif->next) {
+                printf("%c%c%d\n",netif->name[0],netif->name[1],netif->num);
+                fflush(stdout);
+            }
+        }
+        default:
+          break;
+    }
+    return ESP_OK;
+}
+
+
+void wifi_task(void *pvParameter) {
+    tcpip_adapter_init();
+    ESP_ERROR_CHECK( esp_event_loop_init(event_handler, NULL) );
+    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+
+    ESP_ERROR_CHECK( esp_wifi_init(&cfg) );
+    ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
+    ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_STA) );
+    wifi_config_t sta_config = {
+        .sta = {
+	     .ssid = "ssid",
+	     .password = "password",
+	     .bssid_set = false
+        }
+    };
+    ESP_ERROR_CHECK( esp_wifi_set_config(WIFI_IF_STA, &sta_config) );
+    ESP_ERROR_CHECK( esp_wifi_start() );
+    ESP_ERROR_CHECK( esp_wifi_connect() );
+    printf("Connected\n");
+
+    //gpio_set_direction(GPIO_NUM_4, GPIO_MODE_OUTPUT);
+    int level = 0;
+    // Send arp request
+
+    struct netif *netif;
+
+    for (netif = netif_list; netif != NULL; netif = netif->next) {
+        printf("%c%c%d\n",netif->name[0],netif->name[1],netif->num);
+        fflush(stdout);
+    }
+
+
+    ip4_addr_t scanaddr;
+
+    netif=netif_find("en0");
+    if (!netif) {
+        printf("No en0");
+    }
+
+    unsigned char hostnum=1;
+    char tmpBuff[20];
+    // Arpscan network
+    while (true) {
+
+        sprintf(tmpBuff,"192.168.1.%d",hostnum);
+        IP4_ADDR(&scanaddr, 192, 168 , 1, hostnum);
+
+
+        //gpio_set_level(GPIO_NUM_4, level);
+        if (netif)
+        {
+            printf("ARP request %s\n",tmpBuff);
+            err_t ret=etharp_request(netif, &scanaddr);
+            if (ret<0) {
+                printf("Failed request %s\n",tmpBuff);
+            }
+        }
+
+        level = !level;
+	    //printf(".");
+        vTaskDelay(300 / portTICK_PERIOD_MS);
+        hostnum++;
+    }
+
+}
+
+extern void Task_lwip_init(void * pParam);
+
+void emulated_net(void *pvParameter) {
+
+    tcpip_adapter_init();
+    ESP_ERROR_CHECK( esp_event_loop_init(event_handler, NULL) );
+
+    Task_lwip_init(NULL);
+
+    //gpio_set_direction(GPIO_NUM_4, GPIO_MODE_OUTPUT);
+    int level = 0;
+    // Send arp request
+
+    struct netif *netif;
+
+    for (netif = netif_list; netif != NULL; netif = netif->next) {
+        printf("%c%c%d\n",netif->name[0],netif->name[1],netif->num);
+        fflush(stdout);
+    }
+
+
+    ip4_addr_t scanaddr;
+
+    netif=netif_find("en0");
+    if (!netif) {
+        printf("No en0");
+    }
+
+    unsigned char hostnum=1;
+    char tmpBuff[20];
+    // Arpscan network
+    while (true) {
+
+        sprintf(tmpBuff,"192.168.1.%d",hostnum);
+        IP4_ADDR(&scanaddr, 192, 168 , 1, hostnum);
+
+
+        //gpio_set_level(GPIO_NUM_4, level);
+        if (netif)
+        {
+            printf("ARP request %s\n",tmpBuff);
+            err_t ret=etharp_request(netif, &scanaddr);
+            if (ret<0) {
+                printf("Failed request %s\n",tmpBuff);
+            }
+        }
+
+        level = !level;
+	    //printf(".");
+        vTaskDelay(300 / portTICK_PERIOD_MS);
+        hostnum++;
+    }
+}
+
+
 void app_main()
 {
 
     esp_log_level_set("*", ESP_LOG_INFO);
     nvs_flash_init();
-    system_init();
-    xTaskCreate(&dump_task, "dump_task", 2048, NULL, 5, NULL);
+    // deprecated init
+    //system_init();
+    xTaskCreate(&wifi_task,"wifi_task",2048, NULL, 5, NULL);
+    //xTaskCreate(&emulated_net, "emulated_net", 2048, NULL, 5, NULL);
+
+    // Dumping rom is best done with the esptool.py
+    //xTaskCreate(&dump_task, "dump_task", 2048, NULL, 5, NULL);
 }

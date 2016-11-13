@@ -274,6 +274,9 @@ rst:0x10 (RTCWDT_RTC_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
 flash read err, 1000
 Falling back to built-in command interpreter.
 ```
+The command interpreter is Basic, Here you can read about it 
+http://hackaday.com/2016/10/27/basic-interpreter-hidden-in-esp32-silicon/
+
 ##What is the problem with this code
 Some i/o register name mapping in esp32.cis probably wrong.  The values returned are also many times wrong.
 I did this mapping very quickly with grep to get a better understanding of what the rom was doing.
@@ -393,11 +396,15 @@ To use it properly you must increase the num_regs = 104 to i.e. 211 in core-esp3
 As I am not alwas sure of what I am doing, I would recomend this version of the software. Currently it is not yet finnished (11//11) but will most certainly be better if Max finds the time to work on it.
 
 #A better version of qemu with esp32 exists here,
-  git clone https://github.com/OSLL/qemu-xtensa
-  cd qemu-xtensa
-  git checkout  xtensa-esp32
-  git submodule update --init dtc
-  cd ..
-  mkdir build-qemu-xtensa
-  ../qemu-xtensa/configure --disable-werror --prefix=`pwd`/root --target-list=xtensa-softmmu
+    git clone https://github.com/OSLL/qemu-xtensa
+    cd qemu-xtensa
+    git checkout  xtensa-esp32
+    git submodule update --init dtc
+       Add /hw/xtensa/esp32.c as described eariler in this doc
+       Edit this row
+       serial_hds[0] = qemu_chr_new("serial0", "null",NULL);
+    cd ..
+    mkdir build-qemu-xtensa
+    cd build-qemu-xtensa
+   ../qemu-xtensa/configure --disable-werror --prefix=`pwd`/root --target-list=xtensa-softmmu
 
