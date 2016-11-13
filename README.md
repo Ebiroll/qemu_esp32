@@ -408,3 +408,7 @@ As I am not alwas sure of what I am doing, I would recomend this version of the 
     cd build-qemu-xtensa
    ../qemu-xtensa/configure --disable-werror --prefix=`pwd`/root --target-list=xtensa-softmmu
 
+
+## Remote debugging with gdbstub.c
+    xtensa-esp32-elf-gdb   build/app-template.elf   -b 115200 -ex 'target remote /dev/ttyUSB0'
+   

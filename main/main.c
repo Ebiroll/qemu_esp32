@@ -287,7 +287,7 @@ void wifi_task(void *pvParameter) {
         }
 
         level = !level;
-	    //printf(".");
+	//printf(".");
         vTaskDelay(300 / portTICK_PERIOD_MS);
         hostnum++;
     }
@@ -356,8 +356,9 @@ void app_main()
     nvs_flash_init();
     // deprecated init
     //system_init();
-    xTaskCreate(&wifi_task,"wifi_task",2048, NULL, 5, NULL);
+    //xTaskCreate(&wifi_task,"wifi_task",2048, NULL, 5, NULL);
     //xTaskCreate(&emulated_net, "emulated_net", 2048, NULL, 5, NULL);
+    wifi_task(NULL);
 
     // Dumping rom is best done with the esptool.py
     //xTaskCreate(&dump_task, "dump_task", 2048, NULL, 5, NULL);
