@@ -238,6 +238,7 @@ void wifi_task(void *pvParameter) {
     ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_STA) );
     wifi_config_t sta_config = {
         .sta = {
+	//#include "secret.h"
 	     .ssid = "ssid",
 	     .password = "password",
 	     .bssid_set = false
@@ -358,7 +359,8 @@ void app_main()
     //system_init();
     //xTaskCreate(&wifi_task,"wifi_task",2048, NULL, 5, NULL);
     //xTaskCreate(&emulated_net, "emulated_net", 2048, NULL, 5, NULL);
-    wifi_task(NULL);
+    //wifi_task(NULL);
+    dump_task(NULL);
 
     // Dumping rom is best done with the esptool.py
     //xTaskCreate(&dump_task, "dump_task", 2048, NULL, 5, NULL);

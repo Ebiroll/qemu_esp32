@@ -23,7 +23,11 @@
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ */ 
+// wifi ... 0x6000e0c4=0xffffffff
+// 0x6000e04c
+// 0x6000607c
+// set *((int *) 0x6000e0c4)=-1
 
 #include "qemu/osdep.h"
 #include "qapi/error.h"
@@ -46,6 +50,7 @@
 #include "bootparam.h"
 #include "qemu/timer.h"
 #include "inttypes.h"
+#include "hw/isa/isa.h"
 
 typedef struct ESP32BoardDesc {
     hwaddr flash_base;
@@ -55,15 +60,15 @@ typedef struct ESP32BoardDesc {
     size_t sram_size;
 } ESP32BoardDesc;
 
-typedef struct Lx60FpgaState {
+typedef struct Esp32FpgaState {
     MemoryRegion iomem;
     uint32_t leds;
     uint32_t switches;
-} Lx60FpgaState;
+} Esp32FpgaState;
 
 static void lx60_fpga_reset(void *opaque)
 {
-    Lx60FpgaState *s = opaque;
+    Esp32FpgaState *s = opaque;
 
     s->leds = 0;
     s->switches = 0;
@@ -72,7 +77,7 @@ static void lx60_fpga_reset(void *opaque)
 static uint64_t lx60_fpga_read(void *opaque, hwaddr addr,
         unsigned size)
 {
-    Lx60FpgaState *s = opaque;
+    Esp32FpgaState *s = opaque;
 
     switch (addr) {
     case 0x0: /*build date code*/
@@ -93,7 +98,7 @@ static uint64_t lx60_fpga_read(void *opaque, hwaddr addr,
 static void lx60_fpga_write(void *opaque, hwaddr addr,
         uint64_t val, unsigned size)
 {
-    Lx60FpgaState *s = opaque;
+    Esp32FpgaState *s = opaque;
 
     switch (addr) {
     case 0x8: /*LEDs (off = 0, on = 1)*/
@@ -114,20 +119,20 @@ static const MemoryRegionOps lx60_fpga_ops = {
     .endianness = DEVICE_NATIVE_ENDIAN,
 };
 
-static Lx60FpgaState *lx60_fpga_init(MemoryRegion *address_space,
+static Esp32FpgaState *esp32_fpga_init(MemoryRegion *address_space,
         hwaddr base)
 {
-    Lx60FpgaState *s = g_malloc(sizeof(Lx60FpgaState));
+    Esp32FpgaState *s = g_malloc(sizeof(Esp32FpgaState));
 
-    memory_region_init_io(&s->iomem, NULL, &lx60_fpga_ops, s,
-            "lx60.fpga", 0x10000);
-    memory_region_add_subregion(address_space, base, &s->iomem);
+    //memory_region_init_io(&s->iomem, NULL, &lx60_fpga_ops, s,
+    //        "lx60.fpga", 0x10000);
+    //memory_region_add_subregion(address_space, base, &s->iomem);
     lx60_fpga_reset(s);
     qemu_register_reset(lx60_fpga_reset, s);
     return s;
 }
-#if 0
-static void lx60_net_init(MemoryRegion *address_space,
+
+static void open_net_init(MemoryRegion *address_space,
         hwaddr base,
         hwaddr descriptors,
         hwaddr buffers,
@@ -149,11 +154,13 @@ static void lx60_net_init(MemoryRegion *address_space,
             sysbus_mmio_get_region(s, 1));
 
     ram = g_malloc(sizeof(*ram));
-    memory_region_init_ram(ram, OBJECT(s), "open_eth.ram", 16384, &error_abort);
+    memory_region_init_ram(ram, OBJECT(s), "open_eth.ram", 16384,
+                           &error_fatal);
     vmstate_register_ram_global(ram);
     memory_region_add_subregion(address_space, buffers, ram);
 }
 
+#if 0
 static uint64_t translate_phys_addr(void *opaque, uint64_t addr)
 {
     XtensaCPU *cpu = opaque;
@@ -331,6 +338,24 @@ static uint64_t esp_io_read(void *opaque, hwaddr addr,
     return 0x0;
 }
 
+
+static uint64_t esp_wifi_read(void *opaque, hwaddr addr,
+        unsigned size)
+{
+    printf("wifi read %" PRIx64 " \n",addr);
+
+    return 0x0;
+}
+
+
+static void esp_wifi_write(void *opaque, hwaddr addr,
+        uint64_t val, unsigned size)
+{
+    printf("wifi write %" PRIx64 ",%" PRIx64 " \n",addr,val);
+
+}
+
+
 static void esp_io_write(void *opaque, hwaddr addr,
         uint64_t val, unsigned size)
 {
@@ -376,6 +401,14 @@ static const MemoryRegionOps esp_io_ops = {
 };
 
 
+static const MemoryRegionOps esp_wifi_ops = {
+    .read = esp_wifi_read,
+    .write = esp_wifi_write,
+    .endianness = DEVICE_NATIVE_ENDIAN,
+};
+
+
+
 // MMU not setup? Or maybe cpu_get_phys_page_debug returns wrong adress.
 // We try this mapping instead to get us started
 static uint64_t translate_esp32_address(void *opaque, uint64_t addr)
@@ -390,7 +423,9 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
     MemoryRegion *system_memory = get_system_memory();
     XtensaCPU *cpu = NULL;
     CPUXtensaState *env = NULL;
-    MemoryRegion *ram,*ram1,*rambb, *rom, *system_io;
+    MemoryRegion *ram,*ram1, *rom, *system_io;  // *rambb,
+    static MemoryRegion *wifi_io;
+
     DriveInfo *dinfo;
     pflash_t *flash = NULL;
     //pflash_t *flash2 = NULL;
@@ -449,12 +484,12 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
 
 
     // Cant really see this in documentation, maybe leftover from ESP31
-    rambb = g_malloc(sizeof(*rambb));
-    memory_region_init_ram(rambb, NULL, "rambb",  0xBFFFFF,  
-                           &error_abort);
+    //rambb = g_malloc(sizeof(*rambb));
+    //memory_region_init_ram(rambb, NULL, "rambb",  0xBFFFFF,  
+    //                       &error_abort);
 
-    vmstate_register_ram_global(rambb);
-    memory_region_add_subregion(system_memory,0x60000000, rambb);
+    //vmstate_register_ram_global(rambb);
+    //memory_region_add_subregion(system_memory,0x60000000, rambb);
 
 
     // iram0  -- 0x4008_0000, len = 0x20000
@@ -475,13 +510,29 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
                           0x80000);
 
     memory_region_add_subregion(system_memory, 0x3ff00000, system_io);
-    lx60_fpga_init(system_io, 0x0d020000);
 
 
-    if (!serial_hds[0]) {
-        printf("New serial device\n");
-        serial_hds[0] = qemu_chr_new("serial0", "null");
+
+    wifi_io = g_malloc(sizeof(*wifi_io));
+    memory_region_init_io(wifi_io, NULL, &esp_wifi_ops, NULL, "esp32.wifi",
+                          0x80000);
+
+    memory_region_add_subregion(system_memory, 0x60000000, wifi_io);
+
+
+    esp32_fpga_init(system_io, 0x0d020000);
+
+
+
+    if (nd_table[0].used) {
+        open_net_init(system_io,0xad030000, 0xad030400, 0xad800000,
+                xtensa_get_extint(env, 6), nd_table);
     }
+
+    //if (!serial_hds[0]) {
+    //    printf("New serial device\n");
+    //    serial_hds[0] = qemu_chr_new("serial0", "null",NULL);
+    //}
 
     printf("No call to serial__mm_init\n");
 
@@ -734,6 +785,9 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
 
             // Patch rom,  SPIWrite 0x40062d50
             cpu_physical_memory_write(0x40062d50+3, retw_n, sizeof(retw_n));
+
+            //rom_txdc_cal_init, 0x40004e10)
+            cpu_physical_memory_write(0x40004e10+3, retw_n, sizeof(retw_n));
 
             // Not working so well..
             // Patch rom,  ram_txdc_cal_v70 0x4008753b 
