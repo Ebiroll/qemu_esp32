@@ -241,10 +241,10 @@ void wifi_task(void *pvParameter) {
     ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_STA) );
     wifi_config_t sta_config = {
         .sta = {
-	//#include "secret.h"
-	     .ssid = "ssid",
-	     .password = "password",
-	     .bssid_set = false
+	 #include "secret.h"
+	     //.ssid = "ssid",
+	     //.password = "password",
+	     //.bssid_set = false
         }
     };
     ESP_ERROR_CHECK( esp_wifi_set_config(WIFI_IF_STA, &sta_config) );
@@ -286,11 +286,11 @@ void wifi_task(void *pvParameter) {
         //gpio_set_level(GPIO_NUM_4, level);
         if (netif)
         {
-            printf("ARP request %s\n",tmpBuff);
-            err_t ret=etharp_request(netif, &scanaddr);
-            if (ret<0) {
-                printf("Failed request %s\n",tmpBuff);
-            }
+            //printf("ARP request %s\n",tmpBuff);
+            //err_t ret=etharp_request(netif, &scanaddr);
+            //if (ret<0) {
+            //    printf("Failed request %s\n",tmpBuff);
+            //}
         }
 
         level = !level;
@@ -324,9 +324,9 @@ void emulated_net(void *pvParameter) {
 
     ip4_addr_t scanaddr;
 
-    netif=netif_find("en0");
+    netif=netif_find("et0");
     if (!netif) {
-        printf("No en0");
+        printf("No et0");
     }
 
     xTaskCreate(&echo_application_thread, "echo_thread", 2048, NULL, 5, NULL);
@@ -367,6 +367,7 @@ void app_main()
     //system_init();
     //xTaskCreate(&wifi_task,"wifi_task",2048, NULL, 5, NULL);
     //xTaskCreate(&emulated_net, "emulated_net", 2048, NULL, 5, NULL);
+    //emulated_net(NULL);
     //wifi_task(NULL);
     dump_task(NULL);
 

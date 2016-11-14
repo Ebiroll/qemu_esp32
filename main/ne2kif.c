@@ -103,7 +103,13 @@ static void low_level_init(struct netif * netif)
 	// ---------- start -------------
 	//*(u32_t *)EMIF_CE2 = 0x11D4C714; // Set CE2 to 16bits mode,
 									 // AX88796 required no less than 160ns period
+
+    //int test= * ((char *) (OC_BASE + MIISTATUS));
+	//printf("%08X\n",test);
+    //test=EN0_MIISTATUS;
+
 	
+#if 0
 	i = EN_RESET; //this instruction let NE2K chip soft reset
 
     for (i=0;i<DELAY_MS;i++); //wait
@@ -134,7 +140,7 @@ static void low_level_init(struct netif * netif)
     EN_CMD = (u8_t) (EN_PAGE1 + EN_NODMA + EN_STOP);
     EN1_CURR = (u8_t) 0x47; 							/* keep curr=boundary+1 means no new packet */
            
-    EN1_PAR0 = (u8_t)0x12;// MAC_addr.addr[0];	//�Զ�����mac��ַ
+    EN1_PAR0 = (u8_t)0x12;// MAC_addr.addr[0];	// mac
     EN1_PAR1 = (u8_t)0x34;// MAC_addr.addr[1];
     EN1_PAR2 = (u8_t)0x56;// MAC_addr.addr[2];
     EN1_PAR3 = (u8_t)0x78;// MAC_addr.addr[3];
@@ -171,7 +177,7 @@ static void low_level_init(struct netif * netif)
     EN_CMD = (u8_t) (EN_PAGE0 + EN_NODMA + EN_START);
     
     EN0_ISR = (u8_t) 0xff; // clear the all flag bits in EN0_ISR
-  
+  #endif
  	ne2k_if_netif = netif;
 }
 
@@ -198,16 +204,18 @@ static err_t low_level_output(struct netif * netif, struct pbuf *p)
     
 	if ((packetLength) < 64) packetLength = 64; //add pad by the AX88796 automatically
 
+	printf("low_level_output\n");
+
 	// turn off RX int	
-	EN0_IMR = (u8_t) (ENISR_OVER);
+	//EN0_IMR = (u8_t) (ENISR_OVER);
 
 	/* We should already be in page 0, but to be safe... */
-	EN_CMD = (u8_t) (EN_PAGE0 + EN_START + EN_NODMA);
+	//EN_CMD = (u8_t) (EN_PAGE0 + EN_START + EN_NODMA);
 	
 	// clear the RDC bit	
-	EN0_ISR = (u8_t) ENISR_RDC;
+	//EN0_ISR = (u8_t) ENISR_RDC;
 	
-	remote_Addr = (u16_t)(TX_START_PG<<8); 
+	//remote_Addr = (u16_t)(TX_START_PG<<8); 
 	
 	/*
 	 * Write packet to ring buffers.
@@ -222,21 +230,21 @@ static err_t low_level_output(struct netif * netif, struct pbuf *p)
 		if (q == p){
            	buf += ETH_PAD_SIZE;
 		    Count -= ETH_PAD_SIZE;//Pad in Eth_hdr struct 
-           	  }
+        }
 		
 		// Write data to AX88796
-		remote_Addr = write_AX88796(buf, remote_Addr, Count);	
+		//remote_Addr = write_AX88796(buf, remote_Addr, Count);	
 	} //for
 
 	/* Just send it, and does not check */
-	while (EN_CMD & EN_TRANS);
+	//while (EN_CMD & EN_TRANS);
 
-	EN0_TPSR   = (u8_t)  TX_START_PG;
-	EN0_TCNTLO = (u8_t) (packetLength & 0xff);
-	EN0_TCNTHI = (u8_t) (packetLength >> 8);
-	EN_CMD = (u8_t) (EN_PAGE0 + EN_NODMA + EN_TRANS + EN_START);
+	//EN0_TPSR   = (u8_t)  TX_START_PG;
+	//EN0_TCNTLO = (u8_t) (packetLength & 0xff);
+	//EN0_TCNTHI = (u8_t) (packetLength >> 8);
+	//EN_CMD = (u8_t) (EN_PAGE0 + EN_NODMA + EN_TRANS + EN_START);
 	
-	EN0_IMR = (u8_t) (ENISR_OVER + ENISR_RX + ENISR_RX_ERR);
+	//EN0_IMR = (u8_t) (ENISR_OVER + ENISR_RX + ENISR_RX_ERR);
 	
 	#if LINK_STATS
 		lwip_stats.link.xmit++;
@@ -250,6 +258,7 @@ static err_t low_level_output(struct netif * netif, struct pbuf *p)
  */
 u16_t write_AX88796(u8_t * buf, u16_t remote_Addr, u16_t Count)
 {
+#if 0
 	#ifndef QDMA_Enabled
 	u16_t loop;
 	#endif
@@ -282,7 +291,7 @@ u16_t write_AX88796(u8_t * buf, u16_t remote_Addr, u16_t Count)
 	while ((EN0_ISR & ENISR_RDC) == 0);
 
 	EN0_ISR = (u8_t) ENISR_RDC;
-	
+#endif	
 	return remote_Addr;
 }
 
@@ -352,6 +361,7 @@ ne2k_input(struct netif *netif)
 static struct pbuf * 
 low_level_input(struct netif *netif)
 {
+#if 0
 	u16_t packetLength, Count, remote_Addr;
 	u8_t  *buf, PDHeader[4];
 	u8_t  curr, this_frame, next_frame;
@@ -459,6 +469,8 @@ low_level_input(struct netif *netif)
 	EN0_BOUNDARY = (u8_t) (next_frame-1);
 	
 	return p;
+#endif
+  return NULL;
 }
 
 /**
@@ -466,6 +478,7 @@ low_level_input(struct netif *netif)
  */
 u16_t read_AX88796(u8_t * buf, u16_t remote_Addr, u16_t Count)
 {
+#if 0
 	u8_t  flagOdd=0;
 #ifndef QDMA_Enabled
 	u16_t loop;
@@ -519,6 +532,7 @@ u16_t read_AX88796(u8_t * buf, u16_t remote_Addr, u16_t Count)
 		EN0_ISR = (u8_t) ENISR_RDC;		
 	}
 	
+#endif
 	return remote_Addr;
 }
 
@@ -531,11 +545,13 @@ u16_t read_AX88796(u8_t * buf, u16_t remote_Addr, u16_t Count)
  */
 void ne2k_rx_err(void)
 {
+#if 0
 		u8_t  curr;
 		EN_CMD = (u8_t) (EN_PAGE1 + EN_NODMA + EN_STOP);
 		curr = (u8_t) EN1_CURR;
 		EN_CMD = (u8_t) (EN_PAGE0 + EN_NODMA + EN_STOP);
 		EN0_BOUNDARY = (u8_t) curr-1;
+#endif
 }
 
 /**
@@ -543,6 +559,7 @@ void ne2k_rx_err(void)
  */
 void ne2k_rx(void)
 {
+#if 0
 	u8_t  curr,bnry,loopCnt = 0;
 		
 	while(loopCnt < 10) {
@@ -561,6 +578,7 @@ void ne2k_rx(void)
 		
 		loopCnt++;
 		}
+#endif
 }
 
 /*---*---*---*---*---*---*---*

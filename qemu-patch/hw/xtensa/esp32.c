@@ -343,6 +343,30 @@ static uint64_t esp_wifi_read(void *opaque, hwaddr addr,
         unsigned size)
 {
     printf("wifi read %" PRIx64 " \n",addr);
+    switch(addr) {
+    case 0xe04c:
+        return 0xffffffff;
+        break;
+    case 0xe0c4:
+        return 0xffffffff;
+        break;
+    case 0x607c:
+        return 0xffffffff;
+        break;
+    case 0x1c018:
+        //return 0;
+        return 0x980020b6;
+        // Some difference should land between these values
+              // 0x980020c0;
+              // 0x980020b0;
+        //return   0x800000;
+    case 0x33c00:
+        return 0x980020b6+0x980020b0;
+        //return 0;
+        //return 
+    default:
+        break;
+    }
 
     return 0x0;
 }
@@ -513,21 +537,21 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
 
 
 
-    wifi_io = g_malloc(sizeof(*wifi_io));
-    memory_region_init_io(wifi_io, NULL, &esp_wifi_ops, NULL, "esp32.wifi",
-                          0x80000);
+   wifi_io = g_malloc(sizeof(*wifi_io));
+   memory_region_init_io(wifi_io, NULL, &esp_wifi_ops, NULL, "esp32.wifi",
+                              0x80000);
 
-    memory_region_add_subregion(system_memory, 0x60000000, wifi_io);
-
+   memory_region_add_subregion(system_memory, 0x60000000, wifi_io);
+   
 
     esp32_fpga_init(system_io, 0x0d020000);
 
-
-
     if (nd_table[0].used) {
-        open_net_init(system_io,0xad030000, 0xad030400, 0xad800000,
+        printf("Open net\n");
+        open_net_init(system_memory,0x3FF76000, 0x3FF76400, 0x3FF76800,
                 xtensa_get_extint(env, 6), nd_table);
-    }
+    } 
+
 
     //if (!serial_hds[0]) {
     //    printf("New serial device\n");

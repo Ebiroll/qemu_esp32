@@ -1,3 +1,12 @@
+#Trace 
+
+http://git.qemu-project.org/?p=qemu.git;a=blob_plain;f=docs/tracing.txt;hb=HEAD
+
+../qemu-xtensa/configure --enable-trace-backends=simple  --prefix=`pwd`/root --target-list=xtensa-softmmu,xtensaeb-softmmu
+
+echo trace_open_eth_reg_read > /tmp/events
+
+
 # Wifi analysis
 Stuck here
 ```
@@ -114,7 +123,50 @@ wifi read e010
 wifi write e010,1400566 
 wifi read e010 
 ```
-#At init
+#In wifi_init() 
+
+
+  esp-idf/components/nvs_flash/src/nvs_api.cpp
+    304         size_t dataSize;           
+    305         err = s_nvs_storage.getItemDataSize(entry.mNsIndex, type, key, dataSize);  
+    306         if (err != ESP_OK) {                   
+  > 307             return err;                          
+    308         }                                                     
+
+0  nvs_get_str_or_blob (handle=1, type=nvs::ItemType::BLOB, key=0x3f4053b0 "log", out_value=0x3ffc5cb4, length=0x3ffc2a60)
+    at /home/olas/esp/esp-idf/components/nvs_flash/src/nvs_api.cpp:307
+#1  0x400f5fa0 in nvs_get_blob (handle=1, key=0x3f4053b0 "log", out_value=0x3ffc5cb4, length=0x3ffc2a60)
+    at /home/olas/esp/esp-idf/components/nvs_flash/src/nvs_api.cpp:330
+#2  0x400fbca8 in nvs_log_init ()
+#3  0x400fbd8f in misc_nvs_load ()
+#4  0x400fbda4 in misc_nvs_init ()
+#5  0x400d7a62 in wifi_init ()
+
+
+0x4008ab5c <set_chan_freq_sw_start+200> memw                     
+0x4008ab5f <set_chan_freq_sw_start+203> l32i.n a8, a6, 0                
+0x4008ab61 <set_chan_freq_sw_start+205> bgez   a8, 0x4008ab5c <set_chan_freq_sw_start+200>
+
+0x880020c0
+
+0x6000e0c4 
+
+
+0x40084fc5 <ram_check_noise_floor+89>   memw   
+0x40084fc8 <ram_check_noise_floor+92>   l32i.n a9, a11, 0         // wifi read 33c00 ..  0x980020b5
+0x40084fca <ram_check_noise_floor+94>   movi.n a8, 1
+0x40084fcc <ram_check_noise_floor+96>   sub    a9, a9, a12       // a12=0x980020b5
+0x40084fcf <ram_check_noise_floor+99>   bltu   a13, a9, 0x40084fd4 <ram_check_noise_floor+104>
+0x40084fd2 <ram_check_noise_floor+102>  movi.n a8, 0    
+0x40084fd4 <ram_check_noise_floor+104>  memw         
+0x40084fd7 <ram_check_noise_floor+107>  l32i.n a9, a10, 0                       
+0x40084fd9 <ram_check_noise_floor+109>  extui  a8, a8, 0, 8
+ 0x40084fdc <ram_check_noise_floor+112>  bbsi   a9, 24, 0x40084fec <ram_check_noise_floor+128>
+ 0x40084fdf <ram_check_noise_floor+115>  beqz   a8, 0x40084fc5 <ram_check_noise_floor+89>   // 0x980020c0
+0x40084fe2 <ram_check_noise_floor+118>  j      0x40084fea <ram_check_noise_floor+126>
+0x40084fe5 <ram_check_noise_floor+121>  movi.n a8, 0 
+0x40084fe7 <ram_check_noise_floor+123>  j      0x40084fec <ram_check_noise_floor+128>                 
+
 
 misc_nvs_init ()
 Here we enter gdbstub()

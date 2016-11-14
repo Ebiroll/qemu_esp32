@@ -165,14 +165,14 @@ void jump() {
 
 ```
 00000000 <retint>:
-   0:	004136        	entry	a1, 32
-   3:	003200        	rfde
-   6:	f01d      	    retw.n
+   0:	004136          entry	a1, 32
+   3:	003200          rfde
+   6:	f01d            retw.n
 
 Disassembly of section .text.test:
 
 00000000 <test>:
-   0:	004136        	entry	a1, 32
+   0:	004136      entry	a1, 32
    3:	221b      	addi.n	a2, a2, 1
    5:	f01d      	retw.n
 
@@ -182,8 +182,8 @@ Disassembly of section .text.jump:
    0:	004136        	entry	a1, 32
    3:	0000a0        	jx	a0
    6:	000081        	l32r	a8, fffc0008 <jump+0xfffc0008>
-   9:	0008e0        	callx8	a8
-   c:	f01d      	    retw.n
+   9:	0008e0          callx8	a8
+   c:	f01d            retw.n
 ```
 
 
@@ -275,9 +275,11 @@ flash read err, 1000
 Falling back to built-in command interpreter.
 ```
 The command interpreter is Basic, Here you can read about it 
-http://hackaday.com/2016/10/27/basic-interpreter-hidden-in-esp32-silicon/
+    http://hackaday.com/2016/10/27/basic-interpreter-hidden-in-esp32-silicon/
 
-##What is the problem with this code
+
+
+#What is the problem with this code
 Some i/o register name mapping in esp32.cis probably wrong.  The values returned are also many times wrong.
 I did this mapping very quickly with grep to get a better understanding of what the rom was doing.
 ```
@@ -396,6 +398,7 @@ To use it properly you must increase the num_regs = 104 to i.e. 211 in core-esp3
 As I am not alwas sure of what I am doing, I would recomend this version of the software. Currently it is not yet finnished (11//11) but will most certainly be better if Max finds the time to work on it.
 
 #A better version of qemu with esp32 exists here,
+   
     git clone https://github.com/OSLL/qemu-xtensa
     cd qemu-xtensa
     git checkout  xtensa-esp32
@@ -406,22 +409,23 @@ As I am not alwas sure of what I am doing, I would recomend this version of the 
     cd ..
     mkdir build-qemu-xtensa
     cd build-qemu-xtensa
-   ../qemu-xtensa/configure --disable-werror --prefix=`pwd`/root --target-list=xtensa-softmmu
+    ../qemu-xtensa/configure --disable-werror --prefix=`pwd`/root --target-list=xtensa-softmmu
 
 
 ## Remote debugging with gdbstub.c
 It is a good idea to save the original   xtensa-esp32-elf-gdb as the one in the bin directory works best tit qemu
+    
     xtensa-esp32-elf-gdb   build/app-template.elf   -b 115200 -ex 'target remote /dev/ttyUSB0'
    
 
 ## Rom symbols from rom.elf
 To make debugging the rom functions there is a file rom.elf that contains debug information for the rom file. 
 It was created with the help from this project, https://github.com/jcmvbkbc/esp-elf-rom
-         xtensa-softmmu/qemu-system-xtensa -d guest_errors,unimp  -cpu esp32 -M esp32 -m 4M  -kernel  ~/esp/qemu_esp32/build/app-template.elf  -s -S > io.txt
-
+      
+        xtensa-softmmu/qemu-system-xtensa -d guest_errors,unimp  -cpu esp32 -M esp32 -m 4M  -kernel  ~/esp/qemu_esp32/build/app-template.elf  -s -S > io.txt
         xtensa-esp32-elf-gdb   build/app-template.elf  -ex 'target remote:1234'
-        (gdb) add-symbol-file rom.elf 0x40000000'
-	(gdb) b start_cpu0_default
-	(gdb) c
-	(gdb) b app_main
+       (gdb) add-symbol-file rom.elf 0x40000000
+       (gdb) b start_cpu0_default
+       (gdb) c
+       (gdb) b app_main
 	

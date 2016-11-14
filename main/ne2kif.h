@@ -39,25 +39,158 @@ static struct pbuf * low_level_input(struct netif *netif);
 u16_t read_AX88796(u8_t * buf, u16_t remote_Addr, u16_t Count);
 
 
+// Open core registers
+#define	OC_BASE    0x3FF76000
 
-/*----------------------------------------
-* Register header of C6x DSP
-*----------------------------------------*/
-#define EMIF_CE2		0x01800010
+/* register offsets */
+#define	MODER		0x00
+#define	INT_SOURCE	0x04
+#define	INT_MASK	0x08
+#define	IPGT		0x0c
+#define	IPGR1		0x10
+#define	IPGR2		0x14
+#define	PACKETLEN	0x18
+#define	COLLCONF	0x1c
+#define	TX_BD_NUM	0x20
+#define	CTRLMODER	0x24
+#define	MIIMODER	0x28
+#define	MIICOMMAND	0x2c
+#define	MIIADDRESS	0x30
+#define	MIITX_DATA	0x34
+#define	MIIRX_DATA	0x38
+#define	MIISTATUS	0x3c
+#define	MAC_ADDR0	0x40
+#define	MAC_ADDR1	0x44
+#define	ETH_HASH0	0x48
+#define	ETH_HASH1	0x4c
+#define	ETH_TXCTRL	0x50
+#define	ETH_END		0x54
 
-/* Define QDMA Memory Mapped Registers */
-#define QDMA_OPT		0x02000000	/* Address of QDMA options register     */
-#define QDMA_SRC		0x02000004	/* Address of QDMA SRC address register */
-#define QDMA_CNT		0x02000008	/* Address of QDMA counts register      */
-#define QDMA_DST		0x0200000C	/* Address of QDMA DST address register */
-#define QDMA_IDX		0x02000010	/* Address of QDMA index register       */
 
-/* Define QDMA Pseudo Registers */
-#define QDMA_S_OPT		0x02000020	/* Address of QDMA options register     */
-#define QDMA_S_SRC		0x02000024	/* Address of QDMA SRC address register */
-#define QDMA_S_CNT		0x02000028	/* Address of QDMA counts register      */
-#define QDMA_S_DST		0x0200002C	/* Address of QDMA DST address register */
-#define QDMA_S_IDX		0x02000030	/* Address of QDMA index register       */
+#define     EN0_MIISTATUS     *(unsigned char *)(OC_BASE+0x3c)	/*  WR Starting page of ring buffer      */
+
+
+
+/* mode register */
+#define	MODER_RXEN	(1 <<  0) /* receive enable */
+#define	MODER_TXEN	(1 <<  1) /* transmit enable */
+#define	MODER_NOPRE	(1 <<  2) /* no preamble */
+#define	MODER_BRO	(1 <<  3) /* broadcast address */
+#define	MODER_IAM	(1 <<  4) /* individual address mode */
+#define	MODER_PRO	(1 <<  5) /* promiscuous mode */
+#define	MODER_IFG	(1 <<  6) /* interframe gap for incoming frames */
+#define	MODER_LOOP	(1 <<  7) /* loopback */
+#define	MODER_NBO	(1 <<  8) /* no back-off */
+#define	MODER_EDE	(1 <<  9) /* excess defer enable */
+#define	MODER_FULLD	(1 << 10) /* full duplex */
+#define	MODER_RESET	(1 << 11) /* FIXME: reset (undocumented) */
+#define	MODER_DCRC	(1 << 12) /* delayed CRC enable */
+#define	MODER_CRC	(1 << 13) /* CRC enable */
+#define	MODER_HUGE	(1 << 14) /* huge packets enable */
+#define	MODER_PAD	(1 << 15) /* padding enabled */
+#define	MODER_RSM	(1 << 16) /* receive small packets */
+
+/* interrupt source and mask registers */
+#define	INT_MASK_TXF	(1 << 0) /* transmit frame */
+#define	INT_MASK_TXE	(1 << 1) /* transmit error */
+#define	INT_MASK_RXF	(1 << 2) /* receive frame */
+#define	INT_MASK_RXE	(1 << 3) /* receive error */
+#define	INT_MASK_BUSY	(1 << 4)
+#define	INT_MASK_TXC	(1 << 5) /* transmit control frame */
+#define	INT_MASK_RXC	(1 << 6) /* receive control frame */
+
+#define	INT_MASK_TX	(INT_MASK_TXF | INT_MASK_TXE)
+#define	INT_MASK_RX	(INT_MASK_RXF | INT_MASK_RXE)
+
+#define	INT_MASK_ALL ( \
+		INT_MASK_TXF | INT_MASK_TXE | \
+		INT_MASK_RXF | INT_MASK_RXE | \
+		INT_MASK_TXC | INT_MASK_RXC | \
+		INT_MASK_BUSY \
+	)
+
+/* packet length register */
+#define	PACKETLEN_MIN(min)		(((min) & 0xffff) << 16)
+#define	PACKETLEN_MAX(max)		(((max) & 0xffff) <<  0)
+#define	PACKETLEN_MIN_MAX(min, max)	(PACKETLEN_MIN(min) | \
+					PACKETLEN_MAX(max))
+
+/* transmit buffer number register */
+#define	TX_BD_NUM_VAL(x)	(((x) <= 0x80) ? (x) : 0x80)
+
+/* control module mode register */
+#define	CTRLMODER_PASSALL	(1 << 0) /* pass all receive frames */
+#define	CTRLMODER_RXFLOW	(1 << 1) /* receive control flow */
+#define	CTRLMODER_TXFLOW	(1 << 2) /* transmit control flow */
+
+/* MII mode register */
+#define	MIIMODER_CLKDIV(x)	((x) & 0xfe) /* needs to be an even number */
+#define	MIIMODER_NOPRE		(1 << 8) /* no preamble */
+
+/* MII command register */
+#define	MIICOMMAND_SCAN		(1 << 0) /* scan status */
+#define	MIICOMMAND_READ		(1 << 1) /* read status */
+#define	MIICOMMAND_WRITE	(1 << 2) /* write control data */
+
+/* MII address register */
+#define	MIIADDRESS_FIAD(x)		(((x) & 0x1f) << 0)
+#define	MIIADDRESS_RGAD(x)		(((x) & 0x1f) << 8)
+#define	MIIADDRESS_ADDR(phy, reg)	(MIIADDRESS_FIAD(phy) | \
+					MIIADDRESS_RGAD(reg))
+
+/* MII transmit data register */
+#define	MIITX_DATA_VAL(x)	((x) & 0xffff)
+
+/* MII receive data register */
+#define	MIIRX_DATA_VAL(x)	((x) & 0xffff)
+
+/* MII status register */
+#define	MIISTATUS_LINKFAIL	(1 << 0)
+#define	MIISTATUS_BUSY		(1 << 1)
+#define	MIISTATUS_INVALID	(1 << 2)
+
+/* TX buffer descriptor */
+#define	TX_BD_CS		(1 <<  0) /* carrier sense lost */
+#define	TX_BD_DF		(1 <<  1) /* defer indication */
+#define	TX_BD_LC		(1 <<  2) /* late collision */
+#define	TX_BD_RL		(1 <<  3) /* retransmission limit */
+#define	TX_BD_RETRY_MASK	(0x00f0)
+#define	TX_BD_RETRY(x)		(((x) & 0x00f0) >>  4)
+#define	TX_BD_UR		(1 <<  8) /* transmitter underrun */
+#define	TX_BD_CRC		(1 << 11) /* TX CRC enable */
+#define	TX_BD_PAD		(1 << 12) /* pad enable for short packets */
+#define	TX_BD_WRAP		(1 << 13)
+#define	TX_BD_IRQ		(1 << 14) /* interrupt request enable */
+#define	TX_BD_READY		(1 << 15) /* TX buffer ready */
+#define	TX_BD_LEN(x)		(((x) & 0xffff) << 16)
+#define	TX_BD_LEN_MASK		(0xffff << 16)
+
+#define	TX_BD_STATS		(TX_BD_CS | TX_BD_DF | TX_BD_LC | \
+				TX_BD_RL | TX_BD_RETRY_MASK | TX_BD_UR)
+
+/* RX buffer descriptor */
+#define	RX_BD_LC	(1 <<  0) /* late collision */
+#define	RX_BD_CRC	(1 <<  1) /* RX CRC error */
+#define	RX_BD_SF	(1 <<  2) /* short frame */
+#define	RX_BD_TL	(1 <<  3) /* too long */
+#define	RX_BD_DN	(1 <<  4) /* dribble nibble */
+#define	RX_BD_IS	(1 <<  5) /* invalid symbol */
+#define	RX_BD_OR	(1 <<  6) /* receiver overrun */
+#define	RX_BD_MISS	(1 <<  7)
+#define	RX_BD_CF	(1 <<  8) /* control frame */
+#define	RX_BD_WRAP	(1 << 13)
+#define	RX_BD_IRQ	(1 << 14) /* interrupt request enable */
+#define	RX_BD_EMPTY	(1 << 15)
+#define	RX_BD_LEN(x)	(((x) & 0xffff) << 16)
+
+#define	RX_BD_STATS	(RX_BD_LC | RX_BD_CRC | RX_BD_SF | RX_BD_TL | \
+			RX_BD_DN | RX_BD_IS | RX_BD_OR | RX_BD_MISS)
+
+#define	ETHOC_BUFSIZ		1536
+#define	ETHOC_ZLEN		64
+#define	ETHOC_BD_BASE		0x400
+#define	ETHOC_TIMEOUT		(HZ / 2)
+#define	ETHOC_MII_TIMEOUT	(1 + (HZ / 5))
 
 
 
@@ -145,19 +278,19 @@ u16_t read_AX88796(u8_t * buf, u16_t remote_Addr, u16_t Count);
 #define     ENISR_RX   		0x01	/*  Receiver, no error                   */
 #define     ENISR_TX	    0x02	/*  Transceiver, no error                */
 #define     ENISR_RX_ERR	0x04	/*  Receiver, with error 				 */
-									//½ÓÊÕÊý¾Ý°ü³ö´í¡£×öÖØÐÂÉèÖÃBNRY£½CURR´¦Àí¡£ 
+									//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½BNRYï¿½ï¿½CURRï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ 
 #define     ENISR_TX_ERR	0x08	/*  Transmitter, with error              */
-									//ÓÉÓÚ³åÍ»´ÎÊý¹ý¶à£¬·¢ËÍ³ö´í¡£×öÖØ·¢´¦Àí
+									//ï¿½ï¿½ï¿½Ú³ï¿½Í»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½à£¬ï¿½ï¿½ï¿½Í³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø·ï¿½ï¿½ï¿½ï¿½ï¿½
 #define     ENISR_OVER	    0x10	/*  Receiver overwrote the ring          */
                        				/*  Gap area of receiver ring buffer was disappeared  */ 
-                       				//Íø¿¨ÄÚ´æÒç³ö¡£×öÈí¼þÖØÆôÍø¿¨´¦Àí¡£¼ûÊÖ²á¡£
+                       				//ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö²á¡£
 #define     ENISR_COUNTERS	0x20	/*  Counters need emptying               */
                                     /*  MSB of network tally counter became 1 */
-                                    //³ö´í¼ÆÊýÆ÷ÖÐ¶Ï£¬ÆÁ±Îµô£¨ÆÁ±ÎÓÃIMR¼Ä´æÆ÷£©¡£
+                                    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶Ï£ï¿½ï¿½ï¿½ï¿½Îµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½IMRï¿½Ä´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 #define     ENISR_RDC	    0x40	/*  remote dma complete                  */
-									//ÆÁ±Îµô¡£ÂÖÑ¯µÈ´ýDMA½áÊø¡£
+									//ï¿½ï¿½ï¿½Îµï¿½ï¿½ï¿½ï¿½ï¿½Ñ¯ï¿½È´ï¿½DMAï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 #define     ENISR_RESET     0x80	/*  Reset completed                      */
-									//Íø¿¨Reset£¬ÆÁ±Îµô¡£
+									//ï¿½ï¿½ï¿½ï¿½Resetï¿½ï¿½ï¿½ï¿½ï¿½Îµï¿½ï¿½ï¿½
 #define     ENISR_ALL	    0x3f	/*  3f  Interrupts we will enable        */
                                 	/*  RST RDC CNT OVW TXE RXE PTX PRX		 */
 
