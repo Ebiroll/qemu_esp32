@@ -29,6 +29,9 @@
 // #include "ne2kif.h"
 extern err_t ne2k_init(struct netif *netif);
 
+// Extern echo function
+extern void echo_application_thread(void *pvParameters);
+
 
 /* For testing of how code is generated  */
 #if 0
@@ -249,6 +252,9 @@ void wifi_task(void *pvParameter) {
     ESP_ERROR_CHECK( esp_wifi_connect() );
     printf("Connected\n");
 
+    xTaskCreate(&echo_application_thread, "echo_thread", 2048, NULL, 5, NULL);
+
+
     //gpio_set_direction(GPIO_NUM_4, GPIO_MODE_OUTPUT);
     int level = 0;
     // Send arp request
@@ -322,6 +328,8 @@ void emulated_net(void *pvParameter) {
     if (!netif) {
         printf("No en0");
     }
+
+    xTaskCreate(&echo_application_thread, "echo_thread", 2048, NULL, 5, NULL);
 
     unsigned char hostnum=1;
     char tmpBuff[20];
