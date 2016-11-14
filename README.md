@@ -18,7 +18,7 @@ sudo apt-get install libpixman-1-0 libpixman-1-dev
 ```
 
 
-## Original qemu-esp32
+## qemu-esp32
 
 Clone qemu and qemu-esp32 and apply the patch.
 ```
@@ -410,5 +410,18 @@ As I am not alwas sure of what I am doing, I would recomend this version of the 
 
 
 ## Remote debugging with gdbstub.c
+It is a good idea to save the original   xtensa-esp32-elf-gdb as the one in the bin directory works best tit qemu
     xtensa-esp32-elf-gdb   build/app-template.elf   -b 115200 -ex 'target remote /dev/ttyUSB0'
    
+
+## Rom symbols from rom.elf
+To make debugging the rom functions there is a file rom.elf that contains debug information for the rom file. 
+It was created with the help from this project, https://github.com/jcmvbkbc/esp-elf-rom
+         xtensa-softmmu/qemu-system-xtensa -d guest_errors,unimp  -cpu esp32 -M esp32 -m 4M  -kernel  ~/esp/qemu_esp32/build/app-template.elf  -s -S > io.txt
+
+        xtensa-esp32-elf-gdb   build/app-template.elf  -ex 'target remote:1234'
+        (gdb) add-symbol-file rom.elf 0x40000000'
+	(gdb) b start_cpu0_default
+	(gdb) c
+	(gdb) b app_main
+	
