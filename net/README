@@ -1,0 +1,9 @@
+Here I put various information to get an emulated network,
+
+Add -net nic,vlan=0 -net user,vlan=0 to get emulation,
+
+The emulated modules uses fake io adresses.
+
+registers at, 0x3FF76000
+
+// Data 0x3FF6_9000 0x3FF6_AFFF 8 KB   EMAC

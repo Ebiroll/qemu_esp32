@@ -37,6 +37,88 @@ struct netif *ne2k_if_netif;
 /*----------------------------------------------------------------------------------------
   ****************************************************************************************
   ----------------------------------------------------------------------------------------*/
+#define u32 uint32_t
+#define loff_t uint32_t
+
+/**
+ * struct ethoc - driver-private device structure
+ * @iobase:	pointer to I/O memory region
+ * @membase:	pointer to buffer memory region
+ * @dma_alloc:	dma allocated buffer size
+ * @io_region_size:	I/O memory region size
+ * @num_bd:	number of buffer descriptors
+ * @num_tx:	number of send buffers
+ * @cur_tx:	last send buffer written
+ * @dty_tx:	last buffer actually sent
+ * @num_rx:	number of receive buffers
+ * @cur_rx:	current receive buffer
+ * @vma:        pointer to array of virtual memory addresses for buffers
+ * @netdev:	pointer to network device structure
+ * @napi:	NAPI structure
+ * @msg_enable:	device state flags
+ * @lock:	device lock
+ * @mdio:	MDIO bus for PHY access
+ * @phy_id:	address of attached PHY
+ */
+struct ethoc {
+	void  *iobase;
+	void  *membase;
+	int dma_alloc;
+	//resource_size_t io_region_size;
+	//bool big_endian;
+
+	unsigned int num_bd;
+	unsigned int num_tx;
+	unsigned int cur_tx;
+	unsigned int dty_tx;
+
+	unsigned int num_rx;
+	unsigned int cur_rx;
+
+	void **vma;
+
+	struct net_device *netdev;
+	u32 msg_enable;
+	//spinlock_t lock;
+
+	struct mii_bus *mdio;
+	struct clk *clk;
+	signed char  phy_id;
+};
+
+/**
+ * struct ethoc_bd - buffer descriptor
+ * @stat:	buffer statistics
+ * @addr:	physical memory address
+ */
+struct ethoc_bd {
+	uint32_t stat;
+	uint32_t addr;
+};
+
+static inline u32 ioread32(const volatile void  *addr)
+{
+         return *(const volatile u32  *)addr;
+}
+
+static inline void iowrite32(u32 value, volatile void  *addr)
+{
+          *(volatile u32  *)addr = value;
+}
+
+
+static inline uint32_t ethoc_read(struct ethoc *dev, loff_t offset)
+{
+		return ioread32(dev->iobase + offset);
+}
+
+static inline void ethoc_write(struct ethoc *dev, loff_t offset, uint32_t data)
+{
+		iowrite32(data, dev->iobase + offset);
+}
+
+
+
 
 /*
  * ethernetif_init():
@@ -104,8 +186,8 @@ static void low_level_init(struct netif * netif)
 	//*(u32_t *)EMIF_CE2 = 0x11D4C714; // Set CE2 to 16bits mode,
 									 // AX88796 required no less than 160ns period
 
-    //int test= * ((char *) (OC_BASE + MIISTATUS));
-	//printf("%08X\n",test);
+    int test= * ((char *) (OC_BASE + MIISTATUS));
+	printf("%08X\n",test);
     //test=EN0_MIISTATUS;
 
 	// intr_matrix_set(xPortGetCoreID(), ETS_TIMER1_INTR_SOURCE, ETS_FRC1_INUM);

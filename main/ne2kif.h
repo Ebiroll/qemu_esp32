@@ -41,6 +41,8 @@ u16_t read_AX88796(u8_t * buf, u16_t remote_Addr, u16_t Count);
 
 // Open core registers
 #define	OC_BASE    0x3FF76000
+// End of peripherals 0x3FF7_FFFF
+// Data 0x3FF6_9000 0x3FF6_AFFF 8 KB   EMAC
 
 /* register offsets */
 #define	MODER		0x00
