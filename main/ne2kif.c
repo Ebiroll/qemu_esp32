@@ -1154,6 +1154,7 @@ static void low_level_init(struct netif * netif)
 	printf("%08X\n",test);
     //test=EN0_MIISTATUS;
 
+    //static void IRAM_ATTR frc_timer_isr()
 	// intr_matrix_set(xPortGetCoreID(), ETS_TIMER1_INTR_SOURCE, ETS_FRC1_INUM);
     // xt_set_interrupt_handler(ETS_FRC1_INUM, &frc_timer_isr, NULL);                                                           
     // xt_ints_on(1 << ETS_FRC1_INUM);                                   
