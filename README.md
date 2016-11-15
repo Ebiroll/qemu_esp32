@@ -415,6 +415,12 @@ As I am not alwas sure of what I am doing, I would recomend this version of the 
 ## Remote debugging with gdbstub.c
 It is a good idea to save the original   xtensa-esp32-elf-gdb as the one in the bin directory works best tit qemu
     
+  Component config  --->
+       ESP32-specific config  --->  
+             Panic handler behaviour (Invoke GDBStub)  --->   
+
+    The plan is to emulate serial input/output over a socket to allow gdb to connect.
+    This is also nice to have when running on target.
     xtensa-esp32-elf-gdb   build/app-template.elf   -b 115200 -ex 'target remote /dev/ttyUSB0'
    
 
