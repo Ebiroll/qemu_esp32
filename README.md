@@ -415,6 +415,8 @@ As I am not alwas sure of what I am doing, I would recomend this version of the 
      I am working on networking support of an emulated opencore network device,
      main/ne2kif.c will later be renamed to  main/ethoc.c
      All files in the net direcory si just for reference, they are currently not used.
+     http://espressif.com/sites/default/files/documentation/esp32_chip_pin_list_en_0.pdf
+     
 ```  
      Dont try running   emulated_net(); on actual hardware. 
      Probably not harmful but I put the emulated hardware here, out of the blue.

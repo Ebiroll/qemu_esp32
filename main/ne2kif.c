@@ -458,6 +458,8 @@ static void ethoc_interrupt()
 	pending = ethoc_read(priv, INT_SOURCE);
 	pending &= mask;
 
+    printf("IRQ\n");
+
 	// No interrupt to handle....
 	if (unlikely(pending == 0))
 	{
@@ -616,9 +618,13 @@ static int ethoc_open(struct netif *dev)
     // xt_set_interrupt_handler(ETS_FRC1_INUM, &frc_timer_isr, NULL);                                                           
     // xt_ints_on(1 << ETS_FRC1_INUM);                                   
 
-    intr_matrix_set(xPortGetCoreID(), ETS_ETH_MAC_INTR_SOURCE, 23);
-    xt_set_interrupt_handler(23, &ethoc_interrupt, NULL);                                                           
-    xt_ints_on(1 << 23);                                   
+    //SET_PERI_REG_MASK(FRC_TIMER_CTRL_REG(0),                                                                                                                                     <
+    //                FRC_TIMER_ENABLE | \                                                                                                                                                 <
+    //                FRC_TIMER_INT_ENABLE);  
+
+    intr_matrix_set(xPortGetCoreID(), ETS_RWBLE_NMI_SOURCE /*ETS_ETH_MAC_INTR_SOURCE*/, 9);
+    xt_set_interrupt_handler(9, &ethoc_interrupt, NULL);                                                           
+    xt_ints_on(1 << 9);                                   
 
 	//ret = request_irq(dev->irq, ethoc_interrupt, IRQF_SHARED,
 	//		dev->name, dev);
@@ -725,6 +731,18 @@ static int ethoc_set_ringparam(struct netif *dev)
 }
 
 
+static void ethoc_do_set_mac_address(struct netif *dev)
+{
+	struct ethoc *priv = &priv_ethoc;
+	unsigned char *mac =   (unsigned char *) &(dev->hwaddr[0]);
+
+
+	ethoc_write(priv, MAC_ADDR0, (mac[2] << 24) | (mac[3] << 16) |
+				     (mac[4] <<  8) | (mac[5] <<  0));
+	ethoc_write(priv, MAC_ADDR1, (mac[0] <<  8) | (mac[1] <<  0));
+}
+
+
 #if 0
 
 static int ethoc_stop(struct netif *dev)
@@ -743,15 +761,6 @@ static int ethoc_stop(struct netif *dev)
 		netif_stop_queue(dev);
 
 	return 0;
-}
-static void ethoc_do_set_mac_address(struct netif *dev)
-{
-	struct ethoc *priv = netdev_priv(dev);
-	unsigned char *mac = dev->dev_addr;
-
-	ethoc_write(priv, MAC_ADDR0, (mac[2] << 24) | (mac[3] << 16) |
-				     (mac[4] <<  8) | (mac[5] <<  0));
-	ethoc_write(priv, MAC_ADDR1, (mac[0] <<  8) | (mac[1] <<  0));
 }
 
 static int ethoc_set_mac_address(struct netif *dev, void *p)
@@ -1167,9 +1176,18 @@ static void low_level_init(struct netif * netif)
 	netif->mtu = 1500;	
   	netif->flags = NETIF_FLAG_BROADCAST;
   		
+    netif->hwaddr[0]=0x12;
+    netif->hwaddr[1]=0x34;
+    netif->hwaddr[2]=0x56;
+    netif->hwaddr[3]=0x78;
+    netif->hwaddr[4]=0x9a;
+    netif->hwaddr[5]=0xe0;
+
+
 	// ---------- start -------------
 	ethoc_set_ringparam(netif);
 	ethoc_open(netif);              
+	ethoc_do_set_mac_address(netif);
 
 	// TODO , set MAC
 

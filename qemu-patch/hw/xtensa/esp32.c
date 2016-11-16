@@ -1020,7 +1020,7 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
     if (nd_table[0].used) {
         printf("Open net\n");
         open_net_init(system_memory,0x3FF76000, 0x3FF76400, 0x3FF76800,
-                xtensa_get_extint(env, 23), nd_table);
+                xtensa_get_extint(env, 9), nd_table);
     } 
 
 
