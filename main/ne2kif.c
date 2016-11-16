@@ -89,7 +89,7 @@ typedef struct ethoc {
 	unsigned int num_rx;
 	unsigned int cur_rx;
 
-	void **vma;
+	void *vma[16];
 
 	struct netif *netdev;
 	u32 msg_enable;
@@ -703,6 +703,27 @@ out:
 	return 0;
 }
 
+//
+static int ethoc_set_ringparam(struct netif *dev)
+{
+	struct ethoc *priv = &priv_ethoc;
+	int num_bd=4;
+
+	priv->num_tx = 4;
+	priv->num_rx = 4;
+
+	priv->num_bd = num_bd;
+	/* num_tx must be a power of two */
+	//priv->num_tx = rounddown_pow_of_two(num_bd >> 1);
+	//priv->num_rx = num_bd - priv->num_tx;
+
+	printf("ethoc: num_tx: %d num_rx: %d\n",priv->num_tx, priv->num_rx);
+
+	//priv->vma = devm_kzalloc(&pdev->dev, num_bd*sizeof(void *), GFP_KERNEL);
+
+	return 0;
+}
+
 
 #if 0
 
@@ -834,35 +855,6 @@ static void ethoc_get_ringparam(struct netif *dev,
 	ring->tx_pending = priv->num_tx;
 }
 
-static int ethoc_set_ringparam(struct netif *dev,
-			       struct ethtool_ringparam *ring)
-{
-	struct ethoc *priv = netdev_priv(dev);
-
-	if (ring->tx_pending < 1 || ring->rx_pending < 1 ||
-	    ring->tx_pending + ring->rx_pending > priv->num_bd)
-		return -EINVAL;
-	if (ring->rx_mini_pending || ring->rx_jumbo_pending)
-		return -EINVAL;
-
-	if (netif_running(dev)) {
-		netif_tx_disable(dev);
-		ethoc_disable_rx_and_tx(priv);
-		ethoc_disable_irq(priv, INT_MASK_TX | INT_MASK_RX);
-		synchronize_irq(dev->irq);
-	}
-
-	priv->num_tx = rounddown_pow_of_two(ring->tx_pending);
-	priv->num_rx = ring->rx_pending;
-	ethoc_init_ring(priv, dev->mem_start);
-
-	if (netif_running(dev)) {
-		ethoc_enable_irq(priv, INT_MASK_TX | INT_MASK_RX);
-		ethoc_enable_rx_and_tx(priv);
-		netif_wake_queue(dev);
-	}
-	return 0;
-}
 
 /**
  * ethoc_probe - initialize OpenCores ethernet MAC
@@ -1176,6 +1168,7 @@ static void low_level_init(struct netif * netif)
   	netif->flags = NETIF_FLAG_BROADCAST;
   		
 	// ---------- start -------------
+	ethoc_set_ringparam(netif);
 	ethoc_open(netif);              
 
 	// TODO , set MAC

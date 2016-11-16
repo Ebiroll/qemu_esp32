@@ -411,27 +411,67 @@ As I am not alwas sure of what I am doing, I would recomend this version of the 
     cd build-qemu-xtensa
     ../qemu-xtensa/configure --disable-werror --prefix=`pwd`/root --target-list=xtensa-softmmu
 
+#Networking support
+     I am working on networking support of an emulated opencore network device,
+     main/ne2kif.c will later be renamed to  main/ethoc.c
+     All files in the net direcory si just for reference, they are currently not used.
+```  
+     Dont try running   emulated_net(); on actual hardware. 
+     Probably not harmful but I put the emulated hardware here, out of the blue.
+
+                      0x3FF76000
+     OC_DESC_START    0x3FF76400
+     OC_BUF_START     0x3FF76800
+
+     See components/esp32/include/soc/soc.h
+     // A better choice could have been to use
+     DR_REG_EMAC_BASE                        0x3ff69000
+
+     Trying to enable emulated interrupts, but not yet sucessful.
+
+     To start with opencode network emulated device, try
+     xtensa-softmmu/qemu-system-xtensa -net nic,vlan=0 -net user,vlan=0  -net dump,file=/tmp/vm0.pcap -d int,guest_errors,unimp  -cpu esp32 -M esp32 -m 16M  -kernel  ~/esp/qemu_esp32/build/app-template.elf -s   > io.txt
+     wireshark /tmp/vm0.pcap
+```    
+
+http://blog.vmsplice.net/2011/04/how-to-capture-vm-network-traffic-using.html
 
 ## Remote debugging with gdbstub.c
-It is a good idea to save the original   xtensa-esp32-elf-gdb as the one in the bin directory works best tit qemu
-    
+It is a good idea to save the original  xtensa-esp32-elf-gdb as the one in the bin directory works best tit qemu
+
+```    
   Component config  --->
        ESP32-specific config  --->  
              Panic handler behaviour (Invoke GDBStub)  --->   
+```
 
-    The plan is to emulate serial input/output over a socket to allow gdb to connect.
-    This is also nice to have when running on target.
+    esp32.c creates a thread with socket on port 8888 tto allow connect to the serial port over a socket.
+    This allows connecting to panic handler gdbstub. 
+    To enable this feature you must call,
+        esp32_serial_init(system_io, 0x40000, "esp32.uart0",
+                        xtensa_get_extint(env, 5), serial_hds[0]);
+    I think the application switches the interrupt for this and thats why it is not working.
+
+``` 
+    xtensa-esp32-elf-gdb.sav  build/app-template.elf  -ex 'target remote:8888'
+    Another solution if you are running qemu-gdb is to set a breakpoint in the stub.
+    (gdb)b esp_gdb_stub_panic_handler 
+```
+    This gdbstub panic handler is also nice to have when running on target.
     xtensa-esp32-elf-gdb   build/app-template.elf   -b 115200 -ex 'target remote /dev/ttyUSB0'
    
 
 ## Rom symbols from rom.elf
 To make debugging the rom functions there is a file rom.elf that contains debug information for the rom file. 
 It was created with the help from this project, https://github.com/jcmvbkbc/esp-elf-rom
-      
+This rom.elf also works with the original gdb with panic handler gdbstub.
+
+```      
         xtensa-softmmu/qemu-system-xtensa -d guest_errors,unimp  -cpu esp32 -M esp32 -m 4M  -kernel  ~/esp/qemu_esp32/build/app-template.elf  -s -S > io.txt
         xtensa-esp32-elf-gdb   build/app-template.elf  -ex 'target remote:1234'
        (gdb) add-symbol-file rom.elf 0x40000000
        (gdb) b start_cpu0_default
        (gdb) c
        (gdb) b app_main
-	
+```
+

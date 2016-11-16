@@ -51,6 +51,14 @@
 #include "qemu/timer.h"
 #include "inttypes.h"
 #include "hw/isa/isa.h"
+#include <poll.h>
+
+bool gdb_serial_connected=false;
+#define MAX_GDB_BUFF  4096
+char gdb_serial_buff[MAX_GDB_BUFF];
+int  gdb_serial_buff_rd=0;
+int  gdb_serial_buff_tx=0;
+
 
 #define DEBUG_LOG(...) fprintf(stderr, __VA_ARGS__)
 
@@ -232,6 +240,10 @@ static void esp32_serial_tx(Esp32SerialState *s, hwaddr addr,
         uint8_t buf[1] = { val };
         qemu_chr_fe_write(s->chr, buf, 1);
         fprintf(stderr,"%c",(char)val);
+        if (gdb_serial_connected) {
+            gdb_serial_buff[gdb_serial_buff_tx++%MAX_GDB_BUFF]=(char)val;
+        }
+
         s->reg[ESP32_UART_INT_RAW] |= ESP32_UART_INT_TXFIFO_EMPTY;
         esp32_serial_irq_update(s);
     }
@@ -314,6 +326,8 @@ static const MemoryRegionOps esp32_serial_ops = {
     .endianness = DEVICE_NATIVE_ENDIAN,
 };
 
+Esp32SerialState *gdb_serial=NULL;
+
 static Esp32SerialState *esp32_serial_init(MemoryRegion *address_space,
                                                hwaddr base, const char *name,
                                                qemu_irq irq,
@@ -329,9 +343,175 @@ static Esp32SerialState *esp32_serial_init(MemoryRegion *address_space,
                           name, 0x100);
     memory_region_add_subregion(address_space, base, &s->iomem);
     qemu_register_reset(esp32_serial_reset, s);
+    gdb_serial=s;
     return s;
 }
 
+/*
+ * This will handle connection for each client
+ * */
+void *connection_handler(void *socket_desc)
+{
+    //Get the socket descriptor
+    int sock = *(int*)socket_desc;
+    int read_size;
+    char *message , client_message[2000];
+
+    gdb_serial_connected=true;
+     
+    printf("Started gdb socket\n");
+
+    //struct timeval tv;
+    //tv.tv_sec = 0;  /* 30 Secs Timeout */
+    //tv.tv_usec = 100000;  // Not init'ing this can cause strange errors
+    //setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv,sizeof(struct timeval));
+
+    //message = "$T08\n";
+    //write(sock , message , strlen(message));
+
+
+    //Receive a message from client
+    do 
+    {
+        struct pollfd fd;
+        int ret;
+        read_size=0;
+
+        fd.fd = sock; // your socket handler 
+        fd.events = POLLIN;
+        ret = poll(&fd, 1, 20); // 1 second for timeout
+        switch (ret) {
+            case -1:
+                // Error
+                break;
+            case 0:
+                // Timeout 
+                break;
+            default:
+                read_size = recv(sock , client_message , 1 , 0);
+                break;
+        }
+
+        if (gdb_serial) {
+            if (read_size>0)  {
+                esp32_serial_receive(gdb_serial,client_message,read_size);
+                printf("%s",client_message);
+            }
+        }
+
+        int to_send=gdb_serial_buff_tx-gdb_serial_buff_rd;
+        if (gdb_serial_buff_rd<gdb_serial_buff_tx) {
+                //printf("%s",&gdb_serial_buff[gdb_serial_buff_rd]);
+                int pos=gdb_serial_buff_rd;
+                while(pos<gdb_serial_buff_tx) {
+                    printf("%c",gdb_serial_buff[pos%MAX_GDB_BUFF]);
+                    if (gdb_serial_buff[pos%MAX_GDB_BUFF]=='+')
+                    {
+                        printf("\n");
+                    }
+                    pos++;
+                }
+                if (gdb_serial_buff_rd + to_send<MAX_GDB_BUFF)
+                {
+                       write(sock , &gdb_serial_buff[gdb_serial_buff_rd] , to_send);
+                       gdb_serial_buff_rd+=to_send;
+                }
+                else 
+                {
+                    while(gdb_serial_buff_rd<gdb_serial_buff_tx) {
+                       write(sock , &gdb_serial_buff[(gdb_serial_buff_rd++)%MAX_GDB_BUFF] , 1);
+                    }
+                }
+        }
+
+    } while (true);
+     
+    if(read_size == 0)
+    {
+        puts("Client disconnected");
+        fflush(stdout);
+    }
+    else if(read_size == -1)
+    {
+        perror("recv failed");
+    }
+         
+    //Free the socket pointer
+    free(socket_desc);
+     
+    return 0;
+}
+
+void *gdb_socket_thread(void *dummy)
+{
+    int socket_desc , client_sock , c , *new_sock;
+    struct sockaddr_in server , client;
+     
+    //Create socket
+    socket_desc = socket(AF_INET , SOCK_STREAM , 0);
+    if (socket_desc == -1)
+    {
+        printf("Could not create socket");
+    } else {
+        int enable = 1;
+        if (setsockopt(socket_desc, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
+            error("setsockopt(SO_REUSEADDR) failed");
+    }
+    puts("Socket created");
+     
+    //Prepare the sockaddr_in structure
+    server.sin_family = AF_INET;
+    server.sin_addr.s_addr = INADDR_ANY;
+    server.sin_port = htons( 8888 );
+     
+    //Bind
+    if( bind(socket_desc,(struct sockaddr *)&server , sizeof(server)) < 0)
+    {
+        //print the error message
+        perror("bind failed. Error");
+        return 1;
+    }
+    puts("bind done");
+     
+    //Listen
+    listen(socket_desc , 3);
+     
+    //Accept and incoming connection
+    puts("Waiting for incoming connections...");
+    c = sizeof(struct sockaddr_in);
+     
+     
+    //Accept and incoming connection
+    puts("Waiting for incoming connections...");
+    c = sizeof(struct sockaddr_in);
+    while( (client_sock = accept(socket_desc, (struct sockaddr *)&client, (socklen_t*)&c)) )
+    {
+        puts("Connection accepted");
+         
+        pthread_t sniffer_thread;
+        new_sock = malloc(1);
+        *new_sock = client_sock;
+         
+        if( pthread_create( &sniffer_thread , NULL ,  connection_handler , (void*) new_sock) < 0)
+        {
+            perror("could not create thread");
+            return 1;
+        }
+         
+        //Now join the thread , so that we dont terminate before the thread
+        //pthread_join( sniffer_thread , NULL);
+        puts("Handler assigned");
+    }
+     
+    if (client_sock < 0)
+    {
+        perror("accept failed");
+        return 1;
+    }
+     
+    return 0;
+
+}
 
 
 typedef struct ESP32BoardDesc {
@@ -744,6 +924,15 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
     const char *initrd_filename = qemu_opt_get(machine_opts, "initrd");
     int n;
 
+    pthread_t pgdb_socket_thread;
+        
+    printf("esp32_init\n");
+    if( pthread_create( &pgdb_socket_thread , NULL ,  gdb_socket_thread , (void*) NULL) < 0)
+    {
+        printf("Failed to create gdb connection thread\n");
+    }
+
+
     if (!cpu_model) {
         cpu_model = XTENSA_DEFAULT_CPU_MODEL;
     }
@@ -840,8 +1029,8 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
         serial_hds[0] = qemu_chr_new("serial0", "null",NULL);
     }
 
-    esp32_serial_init(system_io, 0x40000, "esp32.uart0",
-                        xtensa_get_extint(env, 5), serial_hds[0]);
+    //esp32_serial_init(system_io, 0x40000, "esp32.uart0",
+    //                    xtensa_get_extint(env, 5), serial_hds[0]);
 
     printf("No call to serial__mm_init\n");
 
