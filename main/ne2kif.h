@@ -32,15 +32,16 @@ static void low_level_init(struct netif * netif);
 static void arp_timer(void *arg);
 
 static err_t low_level_output(struct netif * netif,struct pbuf *p);
-u16_t write_AX88796(u8_t * buf, u16_t remote_Addr, u16_t Count);
 
 static void ne2k_input(struct netif *netif);
 static struct pbuf * low_level_input(struct netif *netif);
-u16_t read_AX88796(u8_t * buf, u16_t remote_Addr, u16_t Count);
 
 
 // Open core registers
-#define	OC_BASE    0x3FF76000
+#define	OC_BASE          0x3FF76000
+#define	OC_DESC_START    0x3FF76400
+#define	OC_BUF_START     0x3FF76800
+
 // End of peripherals 0x3FF7_FFFF
 // Data 0x3FF6_9000 0x3FF6_AFFF 8 KB   EMAC
 

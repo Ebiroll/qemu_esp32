@@ -52,6 +52,288 @@
 #include "inttypes.h"
 #include "hw/isa/isa.h"
 
+#define DEBUG_LOG(...) fprintf(stderr, __VA_ARGS__)
+
+#define DEFINE_BITS(prefix, reg, field, shift, len) \
+    prefix##_##reg##_##field##_SHIFT = shift, \
+    prefix##_##reg##_##field##_LEN = len, \
+    prefix##_##reg##_##field = ((~0U >> (32 - (len))) << (shift))
+
+/* Serial */
+
+enum {
+    ESP32_UART_FIFO,
+    ESP32_UART_INT_RAW,
+    ESP32_UART_INT_ST,
+    ESP32_UART_INT_ENA,
+    ESP32_UART_INT_CLR,
+    ESP32_UART_CLKDIV,
+    ESP32_UART_AUTOBAUD,
+    ESP32_UART_STATUS,
+    ESP32_UART_CONF0,
+    ESP32_UART_CONF1,
+    ESP32_UART_LOWPULSE,
+    ESP32_UART_HIGHPULSE,
+    ESP32_UART_RXD_CNT,
+    ESP32_UART_DATE = 0x78 / 4,
+    ESP32_UART_ID,
+    ESP32_UART_MAX,
+};
+
+#define ESP32_UART_BITS(reg, field, shift, len) \
+    DEFINE_BITS(ESP32_UART, reg, field, shift, len)
+
+enum {
+    ESP32_UART_BITS(INT, RXFIFO_FULL, 0, 1),
+    ESP32_UART_BITS(INT, TXFIFO_EMPTY, 1, 1),
+    ESP32_UART_BITS(INT, RXFIFO_OVF, 4, 1),
+};
+
+enum {
+    ESP32_UART_BITS(CONF0, LOOPBACK, 14, 1),
+    ESP32_UART_BITS(CONF0, RXFIFO_RST, 17, 1),
+};
+
+enum {
+    ESP32_UART_BITS(CONF1, RXFIFO_FULL, 0, 7),
+};
+
+#define ESP32_UART_GET(s, _reg, _field) \
+    extract32(s->reg[ESP32_UART_##_reg], \
+              ESP32_UART_##_reg##_##_field##_SHIFT, \
+              ESP32_UART_##_reg##_##_field##_LEN)
+
+#define ESP32_UART_FIFO_SIZE 0x80
+#define ESP32_UART_FIFO_MASK 0x7f
+
+typedef struct Esp32SerialState {
+    MemoryRegion iomem;
+    CharDriverState *chr;
+    qemu_irq irq;
+
+    unsigned rx_first;
+    unsigned rx_last;
+    uint8_t rx[ESP32_UART_FIFO_SIZE];
+    uint32_t reg[ESP32_UART_MAX];
+} Esp32SerialState;
+
+static unsigned esp32_serial_rx_fifo_size(Esp32SerialState *s)
+{
+    return (s->rx_last - s->rx_first) & ESP32_UART_FIFO_MASK;
+}
+
+static int esp32_serial_can_receive(void *opaque)
+{
+    Esp32SerialState *s = opaque;
+
+    return esp32_serial_rx_fifo_size(s) != ESP32_UART_FIFO_SIZE - 1;
+}
+
+static void esp32_serial_irq_update(Esp32SerialState *s)
+{
+    s->reg[ESP32_UART_INT_ST] |= s->reg[ESP32_UART_INT_RAW];
+    if (s->reg[ESP32_UART_INT_ST] & s->reg[ESP32_UART_INT_ENA]) {
+        qemu_irq_raise(s->irq);
+    } else {
+        qemu_irq_lower(s->irq);
+    }
+}
+
+static void esp32_serial_rx_irq_update(Esp32SerialState *s)
+{
+    if (esp32_serial_rx_fifo_size(s) >= ESP32_UART_GET(s, CONF1, RXFIFO_FULL)) {
+        s->reg[ESP32_UART_INT_RAW] |= ESP32_UART_INT_RXFIFO_FULL;
+    } else {
+        s->reg[ESP32_UART_INT_RAW] &= ~ESP32_UART_INT_RXFIFO_FULL;
+    }
+
+    if (!esp32_serial_can_receive(s)) {
+        s->reg[ESP32_UART_INT_RAW] |= ESP32_UART_INT_RXFIFO_OVF;
+    } else {
+        s->reg[ESP32_UART_INT_RAW] &= ~ESP32_UART_INT_RXFIFO_OVF;
+    }
+    esp32_serial_irq_update(s);
+}
+
+static uint64_t esp32_serial_read(void *opaque, hwaddr addr,
+                                    unsigned size)
+{
+    Esp32SerialState *s = opaque;
+
+    if ((addr & 3) || size != 4) {
+        return 0;
+    }
+
+    switch (addr / 4) {
+    case ESP32_UART_STATUS:
+        return esp32_serial_rx_fifo_size(s);
+
+    case ESP32_UART_FIFO:
+        if (esp32_serial_rx_fifo_size(s)) {
+            uint8_t r = s->rx[s->rx_first++];
+
+            s->rx_first &= ESP32_UART_FIFO_MASK;
+            esp32_serial_rx_irq_update(s);
+            return r;
+        } else {
+            return 0;
+        }
+    case ESP32_UART_INT_RAW:
+    case ESP32_UART_INT_ST:
+    case ESP32_UART_INT_ENA:
+    case ESP32_UART_INT_CLR:
+    case ESP32_UART_CLKDIV:
+    case ESP32_UART_AUTOBAUD:
+    case ESP32_UART_CONF0:
+    case ESP32_UART_CONF1:
+    case ESP32_UART_LOWPULSE:
+    case ESP32_UART_HIGHPULSE:
+    case ESP32_UART_RXD_CNT:
+    case ESP32_UART_DATE:
+    case ESP32_UART_ID:
+        return s->reg[addr / 4];
+
+    default:
+        qemu_log("%s: unexpected read @0x%"HWADDR_PRIx"\n", __func__, addr);
+        break;
+    }
+    return 0;
+}
+
+static void esp32_serial_receive(void *opaque, const uint8_t *buf, int size)
+{
+    Esp32SerialState *s = opaque;
+    unsigned i;
+
+    for (i = 0; i < size && esp32_serial_can_receive(s); ++i) {
+        s->rx[s->rx_last++] = buf[i];
+        s->rx_last &= ESP32_UART_FIFO_MASK;
+    }
+
+    esp32_serial_rx_irq_update(s);
+}
+
+static void esp32_serial_ro(Esp32SerialState *s, hwaddr addr,
+                              uint64_t val, unsigned size)
+{
+}
+
+static void esp32_serial_tx(Esp32SerialState *s, hwaddr addr,
+                              uint64_t val, unsigned size)
+{
+    if (ESP32_UART_GET(s, CONF0, LOOPBACK)) {
+        if (esp32_serial_can_receive(s)) {
+            uint8_t buf[] = { (uint8_t)val };
+
+            esp32_serial_receive(s, buf, 1);
+        }
+
+    } else if (s->chr) {
+        uint8_t buf[1] = { val };
+        qemu_chr_fe_write(s->chr, buf, 1);
+        fprintf(stderr,"%c",(char)val);
+        s->reg[ESP32_UART_INT_RAW] |= ESP32_UART_INT_TXFIFO_EMPTY;
+        esp32_serial_irq_update(s);
+    }
+}
+
+static void esp32_serial_int_ena(Esp32SerialState *s, hwaddr addr,
+                                   uint64_t val, unsigned size)
+{
+    s->reg[ESP32_UART_INT_ENA] = val & 0x1ff;
+    esp32_serial_irq_update(s);
+}
+
+static void esp32_serial_int_clr(Esp32SerialState *s, hwaddr addr,
+                                   uint64_t val, unsigned size)
+{
+    s->reg[ESP32_UART_INT_ST] &= ~val & 0x1ff;
+    esp32_serial_irq_update(s);
+}
+
+static void esp32_serial_set_conf0(Esp32SerialState *s, hwaddr addr,
+                                     uint64_t val, unsigned size)
+{
+    s->reg[ESP32_UART_CONF0] = val & 0xffffff;
+    if (ESP32_UART_GET(s, CONF0, RXFIFO_RST)) {
+        s->rx_first = s->rx_last = 0;
+        esp32_serial_rx_irq_update(s);
+    }
+}
+
+static void esp32_serial_write(void *opaque, hwaddr addr,
+                                 uint64_t val, unsigned size)
+{
+    Esp32SerialState *s = opaque;
+    static void (* const handler[])(Esp32SerialState *s, hwaddr addr,
+                                    uint64_t val, unsigned size) = {
+        [ESP32_UART_FIFO] = esp32_serial_tx,
+        [ESP32_UART_INT_RAW] = esp32_serial_ro,
+        [ESP32_UART_INT_ST] = esp32_serial_ro,
+        [ESP32_UART_INT_ENA] = esp32_serial_int_ena,
+        [ESP32_UART_INT_CLR] = esp32_serial_int_clr,
+        [ESP32_UART_STATUS] = esp32_serial_ro,
+        [ESP32_UART_CONF0] = esp32_serial_set_conf0,
+        [ESP32_UART_LOWPULSE] = esp32_serial_ro,
+        [ESP32_UART_HIGHPULSE] = esp32_serial_ro,
+        [ESP32_UART_RXD_CNT] = esp32_serial_ro,
+    };
+
+    if ((addr & 3) || size != 4 || addr / 4 >= ESP32_UART_MAX) {
+        return;
+    }
+
+    if (addr / 4 < ARRAY_SIZE(handler) && handler[addr / 4]) {
+        handler[addr / 4](s, addr, val, size);
+    } else {
+        s->reg[addr / 4] = val;
+    }
+}
+
+static void esp32_serial_reset(void *opaque)
+{
+    Esp32SerialState *s = opaque;
+
+    memset(s->reg, 0, sizeof(s->reg));
+
+    s->reg[ESP32_UART_CLKDIV] = 0x2b6;
+    s->reg[ESP32_UART_AUTOBAUD] = 0x1000;
+    s->reg[ESP32_UART_CONF0] = 0x1c;
+    s->reg[ESP32_UART_CONF1] = 0x6060;
+    s->reg[ESP32_UART_LOWPULSE] = 0xfffff;
+    s->reg[ESP32_UART_HIGHPULSE] = 0xfffff;
+    s->reg[ESP32_UART_DATE] = 0x62000;
+    s->reg[ESP32_UART_ID] = 0x500;
+
+    esp32_serial_irq_update(s);
+}
+
+static const MemoryRegionOps esp32_serial_ops = {
+    .read = esp32_serial_read,
+    .write = esp32_serial_write,
+    .endianness = DEVICE_NATIVE_ENDIAN,
+};
+
+static Esp32SerialState *esp32_serial_init(MemoryRegion *address_space,
+                                               hwaddr base, const char *name,
+                                               qemu_irq irq,
+                                               CharDriverState *chr)
+{
+    Esp32SerialState *s = g_malloc(sizeof(Esp32SerialState));
+
+    s->chr = chr;
+    s->irq = irq;
+    qemu_chr_add_handlers(s->chr, esp32_serial_can_receive,
+                          esp32_serial_receive, NULL, s);
+    memory_region_init_io(&s->iomem, NULL, &esp32_serial_ops, s,
+                          name, 0x100);
+    memory_region_add_subregion(address_space, base, &s->iomem);
+    qemu_register_reset(esp32_serial_reset, s);
+    return s;
+}
+
+
+
 typedef struct ESP32BoardDesc {
     hwaddr flash_base;
     size_t flash_size;
@@ -549,14 +831,17 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
     if (nd_table[0].used) {
         printf("Open net\n");
         open_net_init(system_memory,0x3FF76000, 0x3FF76400, 0x3FF76800,
-                xtensa_get_extint(env, 6), nd_table);
+                xtensa_get_extint(env, 23), nd_table);
     } 
 
 
-    //if (!serial_hds[0]) {
-    //    printf("New serial device\n");
-    //    serial_hds[0] = qemu_chr_new("serial0", "null",NULL);
-    //}
+    if (!serial_hds[0]) {
+        printf("New serial device\n");
+        serial_hds[0] = qemu_chr_new("serial0", "null",NULL);
+    }
+
+    esp32_serial_init(system_io, 0x40000, "esp32.uart0",
+                        xtensa_get_extint(env, 5), serial_hds[0]);
 
     printf("No call to serial__mm_init\n");
 

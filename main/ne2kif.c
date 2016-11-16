@@ -18,6 +18,10 @@
 #include <lwip/stats.h>
 #include "netif/etharp.h"
 #include <string.h>
+#include "rom/ets_sys.h"
+#include "esp_intr.h"
+#include "freertos/xtensa_api.h"
+
 
 #include "ne2kif.h"
 
@@ -44,6 +48,9 @@ struct netif *ne2k_if_netif;
 #define loff_t uint32_t
 
 #define memcpy_fromio memcpy
+//	memcpy_toio(dest, skb->data, skb->len);
+#define memcpy_toio memcpy
+
 #define likely(x) (x)
 #define unlikely(x) (x)
 
@@ -84,7 +91,7 @@ typedef struct ethoc {
 
 	void **vma;
 
-	struct net_device *netdev;
+	struct netif *netdev;
 	u32 msg_enable;
 	//spinlock_t lock;
 
@@ -250,7 +257,7 @@ static int ethoc_reset(struct ethoc *dev)
 static unsigned int ethoc_update_rx_stats(struct ethoc *dev,
 		struct ethoc_bd *bd)
 {
-	//struct net_device *netdev = dev->netdev;
+	//struct netif *netdev = dev->netdev;
 	unsigned int ret = 0;
 
 	if (bd->stat & RX_BD_TL) {
@@ -294,7 +301,7 @@ static unsigned int ethoc_update_rx_stats(struct ethoc *dev,
 	return ret;
 }
 
-static int ethoc_rx(struct net_device *dev, int limit)
+static int ethoc_rx(struct netif *dev, int limit)
 {
 	struct ethoc *priv = &priv_ethoc;
 	int count;
@@ -364,7 +371,7 @@ static int ethoc_rx(struct net_device *dev, int limit)
 
 static void ethoc_update_tx_stats(struct ethoc *dev, struct ethoc_bd *bd)
 {
-	//struct net_device *netdev = dev->netdev;
+	//struct netif *netdev = dev->netdev;
 
 	if (bd->stat & TX_BD_LC) {
 		printf("TX: late collision\n");
@@ -433,9 +440,8 @@ static int ethoc_tx(int limit)
 	return count;
 }
 
-static void ethoc_interrupt(int irq, void *dev_id)
+static void ethoc_interrupt()
 {
-	struct net_device *dev = dev_id;
 	struct ethoc *priv = &priv_ethoc;
 	u32 pending;
 	u32 mask;
@@ -476,7 +482,7 @@ static void ethoc_interrupt(int irq, void *dev_id)
 	return;
 }
 
-static int ethoc_get_mac_address(struct net_device *dev, void *addr)
+static int ethoc_get_mac_address(struct netif *dev, void *addr)
 {
 	struct ethoc *priv =  &priv_ethoc;
 	u8 *mac = (u8 *)addr;
@@ -559,11 +565,11 @@ static int ethoc_mdio_write( int phy, int reg, u16 val)
 	return -EBUSY;
 }
 
-static void ethoc_mdio_poll(struct net_device *dev)
+static void ethoc_mdio_poll(struct netif *dev)
 {
 }
 
-static int ethoc_mdio_probe(struct net_device *dev)
+static int ethoc_mdio_probe(struct netif *dev)
 {
 	struct ethoc *priv = &priv_ethoc;
 	struct phy_device *phy;
@@ -595,40 +601,112 @@ static int ethoc_mdio_probe(struct net_device *dev)
 
 	return 0;
 }
-#if 0
-static int ethoc_open(struct net_device *dev)
-{
-	struct ethoc *priv = netdev_priv(dev);
-	int ret;
 
-	ret = request_irq(dev->irq, ethoc_interrupt, IRQF_SHARED,
-			dev->name, dev);
+
+static int ethoc_open(struct netif *dev)
+{
+	struct ethoc *priv = &priv_ethoc;
+	int ret=0;
+
+	priv->iobase=(void  *)OC_BASE;
+	priv->membase=(void  *)OC_BUF_START;
+
+    //static void IRAM_ATTR frc_timer_isr()
+	// intr_matrix_set(xPortGetCoreID(), ETS_TIMER1_INTR_SOURCE, ETS_FRC1_INUM);
+    // xt_set_interrupt_handler(ETS_FRC1_INUM, &frc_timer_isr, NULL);                                                           
+    // xt_ints_on(1 << ETS_FRC1_INUM);                                   
+
+    intr_matrix_set(xPortGetCoreID(), ETS_ETH_MAC_INTR_SOURCE, 23);
+    xt_set_interrupt_handler(23, &ethoc_interrupt, NULL);                                                           
+    xt_ints_on(1 << 23);                                   
+
+	//ret = request_irq(dev->irq, ethoc_interrupt, IRQF_SHARED,
+	//		dev->name, dev);
+
 	if (ret)
 		return ret;
 
-	ethoc_init_ring(priv, dev->mem_start);
+	ethoc_init_ring(priv, OC_BUF_START);
 	ethoc_reset(priv);
 
-	if (netif_queue_stopped(dev)) {
-		dev_dbg(&dev->dev, " resuming queue\n");
-		netif_wake_queue(dev);
-	} else {
-		dev_dbg(&dev->dev, " starting queue\n");
-		netif_start_queue(dev);
-	}
+	//if (netif_queue_stopped(dev)) {
+	//	dev_dbg(&dev->dev, " resuming queue\n");
+	//	netif_wake_queue(dev);
+	//} else {
+	//	dev_dbg(&dev->dev, " starting queue\n");
+	//	netif_start_queue(dev);
+	//}
 
-	phy_start(dev->phydev);
-	napi_enable(&priv->napi);
+	//phy_start(dev->phydev);
+	//napi_enable(&priv->napi);
 
-	if (netif_msg_ifup(priv)) {
-		dev_info(&dev->dev, "I/O: %08lx Memory: %08lx-%08lx\n",
-				dev->base_addr, dev->mem_start, dev->mem_end);
-	}
+	//if (netif_msg_ifup(priv)) {
+	//	dev_info(&dev->dev, "I/O: %08lx Memory: %08lx-%08lx\n",
+	//			dev->base_addr, dev->mem_start, dev->mem_end);
+	//}
 
 	return 0;
 }
 
-static int ethoc_stop(struct net_device *dev)
+
+static int ethoc_start_xmit( struct pbuf *skb, struct netif *dev)
+{
+	struct ethoc *priv = &priv_ethoc;
+	struct ethoc_bd bd;
+	unsigned int entry;
+	void *dest;
+
+	printf("pbuf len %d TODO, pad to 64\n",skb->len);
+	// pad to length 64
+	//if (skb_put_padto(skb, ETHOC_ZLEN)) {
+	//	dev->stats.tx_errors++;
+	//	goto out_no_free;
+	//}
+
+	if (unlikely(skb->len > ETHOC_BUFSIZ)) {
+		//dev->stats.tx_errors++;
+		goto out;
+	}
+
+	entry = priv->cur_tx % priv->num_tx;
+	//spin_lock_irq(&priv->lock);
+	priv->cur_tx++;
+
+	ethoc_read_bd(priv, entry, &bd);
+	if (unlikely(skb->len < ETHOC_ZLEN))
+		bd.stat |=  TX_BD_PAD;
+	else
+		bd.stat &= ~TX_BD_PAD;
+
+	dest = priv->vma[entry];
+	memcpy_toio(dest, skb->payload, skb->len);
+
+	bd.stat &= ~(TX_BD_STATS | TX_BD_LEN_MASK);
+	bd.stat |= TX_BD_LEN(skb->len);
+	ethoc_write_bd(priv, entry, &bd);
+
+	bd.stat |= TX_BD_READY;
+	ethoc_write_bd(priv, entry, &bd);
+
+	if (priv->cur_tx == (priv->dty_tx + priv->num_tx)) {
+		printf("stopping queue\n");
+		//netif_stop_queue(dev);
+	}
+
+	//spin_unlock_irq(&priv->lock);
+	//skb_tx_timestamp(skb);
+out:
+	//dev_kfree_skb(skb);
+	pbuf_free(skb);
+	printf("pbuf_free");
+//out_no_free:
+	return 0;
+}
+
+
+#if 0
+
+static int ethoc_stop(struct netif *dev)
 {
 	struct ethoc *priv = netdev_priv(dev);
 
@@ -645,7 +723,7 @@ static int ethoc_stop(struct net_device *dev)
 
 	return 0;
 }
-static void ethoc_do_set_mac_address(struct net_device *dev)
+static void ethoc_do_set_mac_address(struct netif *dev)
 {
 	struct ethoc *priv = netdev_priv(dev);
 	unsigned char *mac = dev->dev_addr;
@@ -655,7 +733,7 @@ static void ethoc_do_set_mac_address(struct net_device *dev)
 	ethoc_write(priv, MAC_ADDR1, (mac[0] <<  8) | (mac[1] <<  0));
 }
 
-static int ethoc_set_mac_address(struct net_device *dev, void *p)
+static int ethoc_set_mac_address(struct netif *dev, void *p)
 {
 	const struct sockaddr *addr = p;
 
@@ -666,7 +744,7 @@ static int ethoc_set_mac_address(struct net_device *dev, void *p)
 	return 0;
 }
 
-static void ethoc_set_multicast_list(struct net_device *dev)
+static void ethoc_set_multicast_list(struct netif *dev)
 {
 	struct ethoc *priv = netdev_priv(dev);
 	u32 mode = ethoc_read(priv, MODER);
@@ -709,12 +787,12 @@ static void ethoc_set_multicast_list(struct net_device *dev)
 	ethoc_write(priv, ETH_HASH1, hash[1]);
 }
 
-static int ethoc_change_mtu(struct net_device *dev, int new_mtu)
+static int ethoc_change_mtu(struct netif *dev, int new_mtu)
 {
 	return -ENOSYS;
 }
 
-static void ethoc_tx_timeout(struct net_device *dev)
+static void ethoc_tx_timeout(struct netif *dev)
 {
 	struct ethoc *priv = netdev_priv(dev);
 	u32 pending = ethoc_read(priv, INT_SOURCE);
@@ -722,62 +800,13 @@ static void ethoc_tx_timeout(struct net_device *dev)
 		ethoc_interrupt(dev->irq, dev);
 }
 
-static netdev_tx_t ethoc_start_xmit(struct sk_buff *skb, struct net_device *dev)
-{
-	struct ethoc *priv = netdev_priv(dev);
-	struct ethoc_bd bd;
-	unsigned int entry;
-	void *dest;
 
-	if (skb_put_padto(skb, ETHOC_ZLEN)) {
-		dev->stats.tx_errors++;
-		goto out_no_free;
-	}
-
-	if (unlikely(skb->len > ETHOC_BUFSIZ)) {
-		dev->stats.tx_errors++;
-		goto out;
-	}
-
-	entry = priv->cur_tx % priv->num_tx;
-	spin_lock_irq(&priv->lock);
-	priv->cur_tx++;
-
-	ethoc_read_bd(priv, entry, &bd);
-	if (unlikely(skb->len < ETHOC_ZLEN))
-		bd.stat |=  TX_BD_PAD;
-	else
-		bd.stat &= ~TX_BD_PAD;
-
-	dest = priv->vma[entry];
-	memcpy_toio(dest, skb->data, skb->len);
-
-	bd.stat &= ~(TX_BD_STATS | TX_BD_LEN_MASK);
-	bd.stat |= TX_BD_LEN(skb->len);
-	ethoc_write_bd(priv, entry, &bd);
-
-	bd.stat |= TX_BD_READY;
-	ethoc_write_bd(priv, entry, &bd);
-
-	if (priv->cur_tx == (priv->dty_tx + priv->num_tx)) {
-		dev_dbg(&dev->dev, "stopping queue\n");
-		netif_stop_queue(dev);
-	}
-
-	spin_unlock_irq(&priv->lock);
-	skb_tx_timestamp(skb);
-out:
-	dev_kfree_skb(skb);
-out_no_free:
-	return NETDEV_TX_OK;
-}
-
-static int ethoc_get_regs_len(struct net_device *netdev)
+static int ethoc_get_regs_len(struct netif *netdev)
 {
 	return ETH_END;
 }
 
-static void ethoc_get_regs(struct net_device *dev, struct ethtool_regs *regs,
+static void ethoc_get_regs(struct netif *dev, struct ethtool_regs *regs,
 			   void *p)
 {
 	struct ethoc *priv = netdev_priv(dev);
@@ -789,7 +818,7 @@ static void ethoc_get_regs(struct net_device *dev, struct ethtool_regs *regs,
 		regs_buff[i] = ethoc_read(priv, i * sizeof(u32));
 }
 
-static void ethoc_get_ringparam(struct net_device *dev,
+static void ethoc_get_ringparam(struct netif *dev,
 				struct ethtool_ringparam *ring)
 {
 	struct ethoc *priv = netdev_priv(dev);
@@ -805,7 +834,7 @@ static void ethoc_get_ringparam(struct net_device *dev,
 	ring->tx_pending = priv->num_tx;
 }
 
-static int ethoc_set_ringparam(struct net_device *dev,
+static int ethoc_set_ringparam(struct netif *dev,
 			       struct ethtool_ringparam *ring)
 {
 	struct ethoc *priv = netdev_priv(dev);
@@ -841,7 +870,7 @@ static int ethoc_set_ringparam(struct net_device *dev,
  */
 static int ethoc_probe(struct platform_device *pdev)
 {
-	struct net_device *netdev = NULL;
+	struct netif *netdev = NULL;
 	struct resource *res = NULL;
 	struct resource *mmio = NULL;
 	struct resource *mem = NULL;
@@ -1048,7 +1077,7 @@ static int ethoc_probe(struct platform_device *pdev)
 		goto error;
 	}
 
-	/* setup the net_device structure */
+	/* setup the netif structure */
 	netdev->netdev_ops = &ethoc_netdev_ops;
 	netdev->watchdog_timeo = ETHOC_TIMEOUT;
 	netdev->features |= 0;
@@ -1147,87 +1176,15 @@ static void low_level_init(struct netif * netif)
   	netif->flags = NETIF_FLAG_BROADCAST;
   		
 	// ---------- start -------------
-	//*(u32_t *)EMIF_CE2 = 0x11D4C714; // Set CE2 to 16bits mode,
-									 // AX88796 required no less than 160ns period
+	ethoc_open(netif);              
 
-    int test= * ((char *) (OC_BASE + MIISTATUS));
-	printf("%08X\n",test);
-    //test=EN0_MIISTATUS;
+	// TODO , set MAC
 
     //static void IRAM_ATTR frc_timer_isr()
 	// intr_matrix_set(xPortGetCoreID(), ETS_TIMER1_INTR_SOURCE, ETS_FRC1_INUM);
     // xt_set_interrupt_handler(ETS_FRC1_INUM, &frc_timer_isr, NULL);                                                           
-    // xt_ints_on(1 << ETS_FRC1_INUM);                                   
+    // xt_ints_on(1 << ETS_FRC1_INUM);                     
 	
-#if 0
-	i = EN_RESET; //this instruction let NE2K chip soft reset
-
-    for (i=0;i<DELAY_MS;i++); //wait
-
-    EN_CMD = (u8_t) (EN_PAGE0 + EN_NODMA + EN_STOP); 
-    
-    EN0_DCFG = (u8_t) 0x01;
-
-    /* Clear the remote	byte count registers. */
-    EN0_RCNTHI = (u8_t) 0x00; 								/* MSB remote byte count reg */
-    EN0_RCNTLO = (u8_t) 0x00; 								/* LSB remote byte count reg */
-
-	/* RX configuration reg    Monitor mode (no packet receive) */
-	EN0_RXCR = (u8_t) ENRXCR_MON;
-	/* TX configuration reg   set internal loopback mode  */
-	EN0_TXCR = (u8_t) ENTXCR_LOOP;
-
-    EN0_TPSR = (u8_t) 0x40;					//
-    										//Ϊ0x40-0x46 
-    
-    EN0_STARTPG = (u8_t) 0x46 ;					    /* ���ջ��� 47��Starting page of ring buffer. First page of Rx ring buffer 46h*/
-    EN0_BOUNDARY = (u8_t) 0x46 ;						/* Boundary page of ring buffer 0x46*/
-    EN0_STOPPG = (u8_t) 0x80 ;    					/* Ending page of ring buffer ,0x80*/
-
-    EN0_ISR = (u8_t) 0xff; 								/* clear the all flag bits in EN0_ISR */
-    EN0_IMR = (u8_t) 0x00; 								/* Disable all Interrupt */
-
-    EN_CMD = (u8_t) (EN_PAGE1 + EN_NODMA + EN_STOP);
-    EN1_CURR = (u8_t) 0x47; 							/* keep curr=boundary+1 means no new packet */
-           
-    EN1_PAR0 = (u8_t)0x12;// MAC_addr.addr[0];	// mac
-    EN1_PAR1 = (u8_t)0x34;// MAC_addr.addr[1];
-    EN1_PAR2 = (u8_t)0x56;// MAC_addr.addr[2];
-    EN1_PAR3 = (u8_t)0x78;// MAC_addr.addr[3];
-    EN1_PAR4 = (u8_t)0x9a;// MAC_addr.addr[4];
-    EN1_PAR5 = (u8_t)0xe0;// MAC_addr.addr[5];
-    
-  	/* make up an address. */
-  	ne2k_if->ethaddr->addr[0] = (u8_t) 0x12;//MAC_addr.addr[0];
-  	ne2k_if->ethaddr->addr[1] = (u8_t) 0x34;//MAC_addr.addr[1];
-  	ne2k_if->ethaddr->addr[2] = (u8_t) 0x56;//MAC_addr.addr[2];
-  	ne2k_if->ethaddr->addr[3] = (u8_t) 0x78;//MAC_addr.addr[3];
-  	ne2k_if->ethaddr->addr[4] = (u8_t) 0x9a;//MAC_addr.addr[4];
-  	ne2k_if->ethaddr->addr[5] = (u8_t) 0xe0;//MAC_addr.addr[5];
-    
-    /* Initialize the multicast list to reject-all.  
-       If we enable multicast the higher levels can do the filtering. 
-       <multicast filter mask array (8 bytes)> */
-    EN1_MAR0 = (u8_t) 0x00;  
-    EN1_MAR1 = (u8_t) 0x00;
-    EN1_MAR2 = (u8_t) 0x00;
-    EN1_MAR3 = (u8_t) 0x00;
-    EN1_MAR4 = (u8_t) 0x00;
-    EN1_MAR5 = (u8_t) 0x00;
-    EN1_MAR6 = (u8_t) 0x00;
-    EN1_MAR7 = (u8_t) 0x00;
-    
-    EN_CMD = (u8_t) (EN_PAGE0 + EN_NODMA + EN_STOP);
- 
-    EN0_IMR = (u8_t) (ENISR_OVER + ENISR_RX + ENISR_RX_ERR);
-
-    EN0_TXCR = (u8_t) 0x00; //E0			//TCR 				
-	EN0_RXCR = (u8_t) 0x44;	//CC			//RCR
-	    
-    EN_CMD = (u8_t) (EN_PAGE0 + EN_NODMA + EN_START);
-    
-    EN0_ISR = (u8_t) 0xff; // clear the all flag bits in EN0_ISR
-  #endif
  	ne2k_if_netif = netif;
 }
 
@@ -1282,7 +1239,8 @@ static err_t low_level_output(struct netif * netif, struct pbuf *p)
 		    Count -= ETH_PAD_SIZE;//Pad in Eth_hdr struct 
         }
 		
-		// Write data to AX88796
+		// Write data
+		ethoc_start_xmit(q,netif);
 		//remote_Addr = write_AX88796(buf, remote_Addr, Count);	
 	} //for
 
