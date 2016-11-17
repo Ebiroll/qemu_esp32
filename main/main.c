@@ -26,8 +26,8 @@
 #include "lwip/sys.h"
 #include "lwip/netif.h"
 #include "netif/etharp.h"
-// #include "ne2kif.h"
-extern err_t ne2k_init(struct netif *netif);
+
+extern err_t ethoc_init(struct netif *netif);
 
 // Extern echo function
 extern void echo_application_thread(void *pvParameters);
@@ -298,7 +298,7 @@ void wifi_task(void *pvParameter) {
             for (int j=0;j<ARP_TABLE_SIZE;j++) {
                         if (1==etharp_get_entry(j, &cacheaddr, &chacheif, &cachemac))
                         {
-                            printf("%d %X\n",j,(unsigned int)*(unsigned int *)cacheaddr);
+                            printf("%d  %d.%d.%d.%d\n",j,IP2STR(cacheaddr));
                         }
             }
 
@@ -337,6 +337,9 @@ void emulated_net(void *pvParameter) {
 
 
     ip4_addr_t scanaddr;
+    ip4_addr_t *cacheaddr;
+    struct eth_addr *cachemac;
+
 
     netif=netif_find("et0");
     if (!netif) {
@@ -368,6 +371,14 @@ void emulated_net(void *pvParameter) {
 	    //printf(".");
         vTaskDelay(300 / portTICK_PERIOD_MS);
         hostnum++;
+        struct netif *chacheif=netif;
+        for (int j=0;j<ARP_TABLE_SIZE;j++) {
+                    if (1==etharp_get_entry(j, &cacheaddr, &chacheif, &cachemac))
+                    {
+                        printf("%d  %d.%d.%d.%d\n",j,IP2STR(cacheaddr));
+                    }
+        }
+
     }
 }
 
