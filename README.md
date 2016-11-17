@@ -416,24 +416,77 @@ As I am not alwas sure of what I am doing, I would recomend this version of the 
      main/ne2kif.c will later be renamed to  main/ethoc.c
      All files in the net direcory si just for reference, they are currently not used.
      http://espressif.com/sites/default/files/documentation/esp32_chip_pin_list_en_0.pdf
-     
+
 ```  
      Dont try running   emulated_net(); on actual hardware. 
-     Probably not harmful but I put the emulated hardware here, out of the blue.
+     Probably not harmful but I put the emulated hardware here, i uesd the DR_REG_EMAC_BASE
 
-                      0x3FF76000
-     OC_DESC_START    0x3FF76400
-     OC_BUF_START     0x3FF76800
+  #define	OC_BASE          0x3ff69000
+  #define	OC_DESC_START    0x3ff64000
+  #define	OC_BUF_START     0x3FF69800
 
      See components/esp32/include/soc/soc.h
      // A better choice could have been to use
      DR_REG_EMAC_BASE                        0x3ff69000
 
-     Trying to enable emulated interrupts, but not yet sucessful.
+     Trying to enable emulated interrupts, but not yet sucessful. 
+     Probably I need to mirror the memory as on the real hardware.
+     depending on stat of DPORT_APP_CACHE_CTRL1_REG & DPORT_PRO_CACHE_CTRL1_REG
+
+
+    Backend Network options:
+    -netdev user,id=str[,ipv4[=on|off]][,net=addr[/mask]][,host=addr]
+         [,ipv6[=on|off]][,ipv6-net=addr[/int]][,ipv6-host=addr]
+         [,restrict=on|off][,hostname=host][,dhcpstart=addr]
+         [,dns=addr][,ipv6-dns=addr][,dnssearch=domain][,tftp=dir]
+         [,bootfile=f][,hostfwd=rule][,guestfwd=rule][,smb=dir[,smbserver=addr]]
+                configure a user mode network backend with ID 'str',
+                its DHCP server and optional services
+    -netdev tap,id=str[,fd=h][,fds=x:y:...:z][,ifname=name][,script=file][,downscript=dfile]
+         [,helper=helper][,sndbuf=nbytes][,vnet_hdr=on|off][,vhost=on|off]
+         [,vhostfd=h][,vhostfds=x:y:...:z][,vhostforce=on|off][,queues=n]
+         [,poll-us=n]
+                configure a host TAP network backend with ID 'str'
+                use network scripts 'file' (default=/etc/qemu-ifup)
+                to configure it and 'dfile' (default=/etc/qemu-ifdown)
+                to deconfigure it
+                use '[down]script=no' to disable script execution
+                use network helper 'helper' (default=/home/olas/qemu_esp32/root/libexec/qemu-bridge-helper) to
+                configure it
+                use 'fd=h' to connect to an already opened TAP interface
+                use 'fds=x:y:...:z' to connect to already opened multiqueue capable TAP interfaces
+                use 'sndbuf=nbytes' to limit the size of the send buffer (the
+                default is disabled 'sndbuf=0' to enable flow control set 'sndbuf=1048576')
+                use vnet_hdr=off to avoid enabling the IFF_VNET_HDR tap flag
+                use vnet_hdr=on to make the lack of IFF_VNET_HDR support an error condition
+                use vhost=on to enable experimental in kernel accelerator
+                    (only has effect for virtio guests which use MSIX)
+                use vhostforce=on to force vhost on for non-MSIX virtio guests
+                use 'vhostfd=h' to connect to an already opened vhost net device
+                use 'vhostfds=x:y:...:z to connect to multiple already opened vhost net devices
+                use 'queues=n' to specify the number of queues to be created for multiqueue TAP
+                use 'poll-us=n' to speciy the maximum number of microseconds that could be
+                spent on busy polling for vhost net 
+                
+    -netdev bridge,id=str[,br=bridge][,helper=helper]
+                configure a host TAP network backend with ID 'str' that is
+                connected to a bridge (default=br0)
+                using the program 'helper (default=/home/olas/qemu_esp32/root/libexec/qemu-bridge-helper)
+
 
      To start with opencode network emulated device, try
      xtensa-softmmu/qemu-system-xtensa -net nic,vlan=0 -net user,vlan=0  -net dump,file=/tmp/vm0.pcap -d int,guest_errors,unimp  -cpu esp32 -M esp32 -m 16M  -kernel  ~/esp/qemu_esp32/build/app-template.elf -s   > io.txt
      wireshark /tmp/vm0.pcap
+
+     This one allows to do connect to the echoserver, if the driver gets completed
+     in order to test the echo server that is running on port 7
+
+     xtensa-softmmu/qemu-system-xtensa -net nic,model=vlan0 -net user,id=simnet,ipver4=on,net=192.168.1.0/24,host=192.168.1.100,hostfwd=tcp::10077-192.168.1.100:7  -net dump,file=/tmp/vm0.pcap  -d guest_errors,unimp  -cpu esp32 -M esp32 -m 16M  -kernel  ~/esp/qemu_esp32/build/app-template.elf -s    > io.txt
+
+     xtensa-softmmu/qemu-system-xtensa -net nic,model=vlan0 -net user,id=simnet,ipver4=on,net=192.168.1.0/24,host=192.168.1.100,hostfwd=tcp::10077-192.168.1.100:7  -net dump,file=/tmp/vm0.pcap  -d guest_errors,unimp  -cpu esp32 -M esp32 -m 16M  -kernel  ~/esp/qemu_esp32/build/app-template.elf -s  > io.txt
+     nc 127.0.0.1 10077 
+
+
 ```    
 
 http://blog.vmsplice.net/2011/04/how-to-capture-vm-network-traffic-using.html
@@ -457,7 +510,7 @@ It is a good idea to save the original  xtensa-esp32-elf-gdb as the one in the b
 ``` 
     xtensa-esp32-elf-gdb.sav  build/app-template.elf  -ex 'target remote:8888'
     Another solution if you are running qemu-gdb is to set a breakpoint in the stub.
-    (gdb)b esp_gdb_stub_panic_handler 
+    (gdb)b esp_gdbstub_panic_handler 
 ```
     This gdbstub panic handler is also nice to have when running on target.
     xtensa-esp32-elf-gdb   build/app-template.elf   -b 115200 -ex 'target remote /dev/ttyUSB0'

@@ -19,28 +19,16 @@
 #define     MAX_PACKET_SIZE 1514		/* largest legal size packet, no fcs     */
 
 
-#define		DELAY							0x590b2  //0.5s test by ming
-#define		DELAY_2S						0xbf000  //2s test 
-#define     DELAY_MS						0x38F4   //20ms test 
+//#define		DELAY							0x590b2  //0.5s test by ming
+//#define		DELAY_2S						0xbf000  //2s test 
+//#define     DELAY_MS						0x38F4   //20ms test 
 
-
-/**
- *  Driver functions.
- */
-err_t ne2k_init(struct netif *netif);
-static void low_level_init(struct netif * netif);
-static void arp_timer(void *arg);
-
-static err_t low_level_output(struct netif * netif,struct pbuf *p);
-
-static void ne2k_input(struct netif *netif);
-static struct pbuf * low_level_input(struct netif *netif);
 
 
 // Open core registers
-#define	OC_BASE          0x3FF76000
-#define	OC_DESC_START    0x3FF76400
-#define	OC_BUF_START     0x3FF76800
+#define	OC_BASE          0x3ff69000
+#define	OC_DESC_START    0x3ff64000
+#define	OC_BUF_START     0x3FF69800
 
 // End of peripherals 0x3FF7_FFFF
 // Data 0x3FF6_9000 0x3FF6_AFFF 8 KB   EMAC

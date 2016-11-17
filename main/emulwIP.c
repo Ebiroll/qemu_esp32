@@ -26,11 +26,11 @@
 #include "port/arch/sys_arch.h"
 // -- Generic network interface --
 
-extern err_t ne2k_init(struct netif *netif);
+extern err_t ethoc_init(struct netif *netif);
 
 
 
-struct netif ne2kif_if;
+struct netif ethoc_if;
 //struct netif loop_if;
 
 void ethernet_hardreset(void);	//These reset codes are built for C6711 DSP
@@ -42,7 +42,7 @@ void Task_lwip_init(void * pParam)
   ip4_addr_t ipaddr, netmask, gw;
   //sys_sem_t sem;
   
-  ethernet_hardreset();//hard reset of EthernetDaughterCard
+  //ethernet_hardreset();//hard reset of EthernetDaughterCard
   
   #if LWIP_STATS
   stats_init();
@@ -75,9 +75,9 @@ void Task_lwip_init(void * pParam)
   IP4_ADDR(&ipaddr, 192,168,1,100);
   IP4_ADDR(&netmask, 255,255,255,0);
 
-  netif_add(&ne2kif_if, &ipaddr, &netmask, &gw, NULL, ne2k_init, tcpip_input);
-  netif_set_default(&ne2kif_if);
-  netif_set_up(&ne2kif_if); // new step from lwip 1.0.0
+  netif_add(&ethoc_if, &ipaddr, &netmask, &gw, NULL, ethoc_init, tcpip_input);
+  netif_set_default(&ethoc_if);
+  netif_set_up(&ethoc_if); // new step from lwip 1.0.0
   
   printf("Applications started.\n");
   

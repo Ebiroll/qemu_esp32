@@ -1,14 +1,28 @@
 /*
 *********************************************************************************************************
 *                                              lwIP TCP/IP Stack
-*                                    	 port for uC/OS-II RTOS on TIC6711 DSK
+*                                    	 port for RTOS on tesscilica open code
+* Based on linux/drivers/net/ethernet/ethoc.c 
 *
-* File : tcp_ip.c
+* Copyright (C) 2007-2008 Avionic Design Development GmbH
+* Copyright (C) 2008-2009 Avionic Design GmbH
+*
+* This program is free software; you can redistribute it and/or modify
+* it under the terms of the GNU General Public License version 2 as
+* published by the Free Software Foundation.
+*
+* Written by Thierry Reding <thierry.reding@avionic-design.de>
+*
 * By   : ZengMing @ DEP,Tsinghua University,Beijing,China
 * Reference: YangYe's source code for SkyEye project
 *********************************************************************************************************
 */
+// SKB
 // http://amsekharkernel.blogspot.se/2014/08/what-is-skb-in-linux-kernel-what-are.html
+// LWIP
+// http://www.atmel.com/Images/Atmel-42233-Using-the-lwIP-Network-Stack_AP-Note_AT04055.pdf
+// http://lwip.wikia.com/wiki/LwIP_Wiki
+
 #include "lwip/opt.h"
 #include "lwip/def.h"
 #include "lwip/mem.h"
@@ -21,9 +35,10 @@
 #include "rom/ets_sys.h"
 #include "esp_intr.h"
 #include "freertos/xtensa_api.h"
+#include "freertos/portmacro.h"
+#include "netif/etharp.h"
 
-
-#include "ne2kif.h"
+#include "lwip_ethoc.h"
 
 /* define this to use QDMA, which is much faster! */
 //#define QDMA_Enabled
@@ -32,16 +47,26 @@
 #define IFNAME0 'e'
 #define IFNAME1 't'
 
-struct ne2k_if {
+struct ethoc_if {
   struct eth_addr *ethaddr; //MAC Address 
 };
 
-struct netif *ne2k_if_netif;   
+struct netif *ethoc_if_netif;   
 
+/**
+ *  Driver functions.
+ */
+static void low_level_init(struct netif * netif);
+static void arp_timer(void *arg);
+
+static err_t low_level_output(struct netif * netif,struct pbuf *p);
+static struct pbuf * low_level_input(struct netif *netif);
 
 /*----------------------------------------------------------------------------------------
   ****************************************************************************************
   ----------------------------------------------------------------------------------------*/
+
+// Linux macros
 #define u32 uint32_t
 #define u16 unsigned short
 #define u8 unsigned char
@@ -305,6 +330,9 @@ static int ethoc_rx(struct netif *dev, int limit)
 {
 	struct ethoc *priv = &priv_ethoc;
 	int count;
+	struct eth_hdr *ethhdr;
+	printf(".\n");
+
 
 	for (count = 0; count < limit; ++count) {
 		unsigned int entry;
@@ -327,6 +355,7 @@ static int ethoc_rx(struct netif *dev, int limit)
 		}
 
 		if (ethoc_update_rx_stats(priv, &bd) == 0) {
+			printf("ethoc_rx\n");
 			int size = bd.stat >> 16;
 			//struct sk_buff *skb;
 			struct pbuf *skb;
@@ -341,6 +370,30 @@ static int ethoc_rx(struct netif *dev, int limit)
 				memcpy_fromio(skb->payload,src,size);
 				skb->len=size;
 				//skb->protocol = eth_type_trans(skb, dev);
+                ethhdr = skb->payload;
+
+				switch(htons(ethhdr->type)) {
+				/* IP packet? */
+				case ETHTYPE_IP:
+						/* update ARP table */
+						// was etharp_ip_input(netif, p);
+						//dev->input(skb,dev);
+						/* skip Ethernet header */
+						//pbuf_header(skb, -(14+ETH_PAD_SIZE));
+						/* pass to network layer */
+						dev->input(skb, dev);
+						break;
+				case ETHTYPE_ARP:
+						/* pass p to ARP module */
+						etharp_arp_input(dev,  (struct eth_addr *) &dev->hwaddr[0], skb);
+						break;
+				default:
+						pbuf_free(skb);
+						skb = NULL;
+						break;
+				}
+
+
 				//dev->stats.rx_packets++;
 				//dev->stats.rx_bytes += size;
 				// TODO HERE!!!!
@@ -484,6 +537,7 @@ static void ethoc_interrupt()
 	return;
 }
 
+#ifdef NOT_USED
 static int ethoc_get_mac_address(struct netif *dev, void *addr)
 {
 	struct ethoc *priv =  &priv_ethoc;
@@ -502,6 +556,7 @@ static int ethoc_get_mac_address(struct netif *dev, void *addr)
 
 	return 0;
 }
+#endif
 
 static int ethoc_poll(int budget)
 {
@@ -510,7 +565,8 @@ static int ethoc_poll(int budget)
 	int tx_work_done = 0;
 
 	rx_work_done = ethoc_rx(priv->netdev, budget);
-	tx_work_done = ethoc_tx( budget);
+	// TODO, Dont understand the driver... This transmits agsin?!
+	//tx_work_done = ethoc_tx( budget);
 
 	if (rx_work_done < budget && tx_work_done < budget) {
 		//napi_complete(napi);
@@ -520,6 +576,7 @@ static int ethoc_poll(int budget)
 	return rx_work_done;
 }
 
+#ifdef NOT_UESD
 static int ethoc_mdio_read(int phy, int reg)
 {
 	struct ethoc *priv = &priv_ethoc;
@@ -542,7 +599,6 @@ static int ethoc_mdio_read(int phy, int reg)
 
 	return -EBUSY;
 }
-
 
 static int ethoc_mdio_write( int phy, int reg, u16 val)
 {
@@ -573,7 +629,7 @@ static void ethoc_mdio_poll(struct netif *dev)
 
 static int ethoc_mdio_probe(struct netif *dev)
 {
-	struct ethoc *priv = &priv_ethoc;
+	//struct ethoc *priv = &priv_ethoc;
 	struct phy_device *phy;
 	int err;
 
@@ -603,9 +659,18 @@ static int ethoc_mdio_probe(struct netif *dev)
 
 	return 0;
 }
+#endif
+
+// Cant get interrupts to work so we have to poll for packets
+void poll_task(void *pvParameter) {
+	for(;;) {
+ 	   ethoc_poll(4);
+       vTaskDelay(10);
+	}
+}
 
 
-static int ethoc_open(struct netif *dev)
+int ethoc_open(struct netif *dev)
 {
 	struct ethoc *priv = &priv_ethoc;
 	int ret=0;
@@ -635,6 +700,10 @@ static int ethoc_open(struct netif *dev)
 	ethoc_init_ring(priv, OC_BUF_START);
 	ethoc_reset(priv);
 
+	// Poll for input
+    xTaskCreate(&poll_task,"wifi_task",512, NULL, 5, NULL);
+
+
 	//if (netif_queue_stopped(dev)) {
 	//	dev_dbg(&dev->dev, " resuming queue\n");
 	//	netif_wake_queue(dev);
@@ -651,8 +720,14 @@ static int ethoc_open(struct netif *dev)
 	//			dev->base_addr, dev->mem_start, dev->mem_end);
 	//}
 
+
+// ethoc_poll
+
 	return 0;
 }
+
+
+static portMUX_TYPE lock_xmit_spinlock = portMUX_INITIALIZER_UNLOCKED;
 
 
 static int ethoc_start_xmit( struct pbuf *skb, struct netif *dev)
@@ -676,6 +751,7 @@ static int ethoc_start_xmit( struct pbuf *skb, struct netif *dev)
 
 	entry = priv->cur_tx % priv->num_tx;
 	//spin_lock_irq(&priv->lock);
+	portENTER_CRITICAL(&lock_xmit_spinlock);
 	priv->cur_tx++;
 
 	ethoc_read_bd(priv, entry, &bd);
@@ -700,6 +776,7 @@ static int ethoc_start_xmit( struct pbuf *skb, struct netif *dev)
 	}
 
 	//spin_unlock_irq(&priv->lock);
+	 portEXIT_CRITICAL(&lock_xmit_spinlock);
 	//skb_tx_timestamp(skb);
 out:
 	//dev_kfree_skb(skb);
@@ -1122,26 +1199,29 @@ out:
  * actual setup of the hardware.
  *
  */
-err_t ne2k_init(struct netif *netif)
+err_t ethoc_init(struct netif *netif)
 {
-  struct ne2k_if *ne2k_if;
+  struct ethoc_if *ethoc_if;
+  struct ethoc *priv = &priv_ethoc;
 
-  ne2k_if = mem_malloc(sizeof(struct ne2k_if));//MAC Address
+
+  ethoc_if = mem_malloc(sizeof(struct ethoc_if));//MAC Address
   
-  if (ne2k_if == NULL)
+  if (ethoc_if == NULL)
   {
-  		LWIP_DEBUGF(NETIF_DEBUG,("ne2k_init: out of memory!\n"));
+  		LWIP_DEBUGF(NETIF_DEBUG,("ethoc_init: out of memory!\n"));
   		return ERR_MEM;
   }
   
-  netif->state = ne2k_if;
+  netif->state = ethoc_if;
   netif->name[0] = IFNAME0;
   netif->name[1] = IFNAME1;
   netif->output = etharp_output;
   netif->linkoutput = low_level_output;
   
-  ne2k_if->ethaddr = (struct eth_addr *)&(netif->hwaddr[0]);
-  
+  ethoc_if->ethaddr = (struct eth_addr *)&(netif->hwaddr[0]);
+  // TODO, move this to a more logical place..
+  priv->netdev=netif;
   low_level_init(netif);
   
   etharp_init();
@@ -1161,16 +1241,13 @@ static void arp_timer(void *arg)
 }
 
 /**
- * Initialize the ne2k ethernet chip, resetting the interface and getting the ethernet
+ * Initialize the ethoc ethernet chip, resetting the interface and getting the ethernet
  * address.
  */
 static void low_level_init(struct netif * netif)
 {
-	u16_t i;
-	struct ne2k_if *ne2k_if;
-	
-	ne2k_if = netif->state;
-	// the meaning of "netif->state" can be defined in drivers, here for MAC address!
+	//struct ethoc_if *ethoc_if;	
+	//ethoc_if = netif->state;
 	
 	netif->hwaddr_len=6;
 	netif->mtu = 1500;	
@@ -1192,11 +1269,21 @@ static void low_level_init(struct netif * netif)
 	// TODO , set MAC
 
     //static void IRAM_ATTR frc_timer_isr()
-	// intr_matrix_set(xPortGetCoreID(), ETS_TIMER1_INTR_SOURCE, ETS_FRC1_INUM);
-    // xt_set_interrupt_handler(ETS_FRC1_INUM, &frc_timer_isr, NULL);                                                           
-    // xt_ints_on(1 << ETS_FRC1_INUM);                     
+	// Interrupt source not important for qemu
+
+	intr_matrix_set(xPortGetCoreID(), ETS_RWBT_INTR_SOURCE, 8);
+    xt_set_interrupt_handler(9, &ethoc_interrupt, NULL);                                                           
+    xt_ints_on(1 << 8);                     
 	
- 	ne2k_if_netif = netif;
+	// memcpy 0x3FFE_8000~0x3FFE_FFFF to 
+	// 0x4000_0000  0x4000_7FFF
+	// Normal  0x400B_0000~0x400B_7FFF
+    // New range 0x3FFE_8000~0x3FFE_FFFF
+ 	ethoc_if_netif = netif;
+	// qemu fake interrupt test.
+	//unsigned int*test=(unsigned int *) 0x3ff00092;  // (unsigned int *)0x3ff4ffff;
+	//*test=0xffff;
+	
 }
 
 
@@ -1215,25 +1302,13 @@ static void low_level_init(struct netif * netif)
 static err_t low_level_output(struct netif * netif, struct pbuf *p)
 {
 	struct pbuf *q;
-	u16_t packetLength,remote_Addr,Count;
+	u16_t Count;  // packetLength
 	u8_t *buf;
 	
-	packetLength = p->tot_len - ETH_PAD_SIZE; //05 01 millin
-    
-	if ((packetLength) < 64) packetLength = 64; //add pad by the AX88796 automatically
+	//packetLength = p->tot_len - ETH_PAD_SIZE; //05 01 millin    
+	//if ((packetLength) < 64) packetLength = 64; //add pad by the AX88796 automatically
 
-	printf("low_level_output\n");
-
-	// turn off RX int	
-	//EN0_IMR = (u8_t) (ENISR_OVER);
-
-	/* We should already be in page 0, but to be safe... */
-	//EN_CMD = (u8_t) (EN_PAGE0 + EN_START + EN_NODMA);
-	
-	// clear the RDC bit	
-	//EN0_ISR = (u8_t) ENISR_RDC;
-	
-	//remote_Addr = (u16_t)(TX_START_PG<<8); 
+	printf("low_level_output %d\n",p->tot_len);
 	
 	/*
 	 * Write packet to ring buffers.
@@ -1247,7 +1322,7 @@ static err_t low_level_output(struct netif * netif, struct pbuf *p)
 		
 		if (q == p){
            	buf += ETH_PAD_SIZE;
-		    Count -= ETH_PAD_SIZE;//Pad in Eth_hdr struct 
+		    Count -= ETH_PAD_SIZE; //Pad in Eth_hdr struct 
         }
 		
 		// Write data
@@ -1256,14 +1331,6 @@ static err_t low_level_output(struct netif * netif, struct pbuf *p)
 	} //for
 
 	/* Just send it, and does not check */
-	//while (EN_CMD & EN_TRANS);
-
-	//EN0_TPSR   = (u8_t)  TX_START_PG;
-	//EN0_TCNTLO = (u8_t) (packetLength & 0xff);
-	//EN0_TCNTHI = (u8_t) (packetLength >> 8);
-	//EN_CMD = (u8_t) (EN_PAGE0 + EN_NODMA + EN_TRANS + EN_START);
-	
-	//EN0_IMR = (u8_t) (ENISR_OVER + ENISR_RX + ENISR_RX_ERR);
 	
 	#if LINK_STATS
 		lwip_stats.link.xmit++;
@@ -1272,53 +1339,12 @@ static err_t low_level_output(struct netif * netif, struct pbuf *p)
 	return ERR_OK;
 }
 
-/**
- *  write_AX88796.
- */
-u16_t write_AX88796(u8_t * buf, u16_t remote_Addr, u16_t Count)
-{
-#if 0
-	#ifndef QDMA_Enabled
-	u16_t loop;
-	#endif
-
-	/* AX88796. */
-	EN0_RCNTLO = (u8_t) ( Count &  0xff);
-	EN0_RCNTHI = (u8_t) ( Count >> 8);
-	EN0_RSARLO = (u8_t) ( remote_Addr &  0xff);
-	EN0_RSARHI = (u8_t) ( remote_Addr >> 8);
-	EN_CMD     = (u8_t) (EN_RWRITE + EN_START + EN_PAGE0);
-
-	// Add for next loop...
-	remote_Addr += Count;
-
-	Count = (Count + 1) >> 1; // Turn to 16bits count. <Must add 1 first!>		
-
-	#ifdef QDMA_Enabled
-		*(u32_t *)QDMA_SRC   = (u32_t) buf;
-		*(u32_t *)QDMA_DST   = (u32_t) &EN_DATA;
-		*(u32_t *)QDMA_CNT   = (u32_t) Count;
-		*(u32_t *)QDMA_IDX   = 0x00000000;
-		*(u32_t *)QDMA_S_OPT = 0x29000001;
-	#else
-		for (loop=0;loop < Count ;loop++){
-			EN_DATA = *(u16_t *)buf;
-			buf += 2;
-    	}
-	#endif //QDMA_Enabled
-
-	while ((EN0_ISR & ENISR_RDC) == 0);
-
-	EN0_ISR = (u8_t) ENISR_RDC;
-#endif	
-	return remote_Addr;
-}
-
 
 /*----------------------------------------------------------------------------------------
   ****************************************************************************************
   ----------------------------------------------------------------------------------------*/
 
+#if 0
 /*
  * ethernetif_input():
  *
@@ -1329,13 +1355,13 @@ u16_t write_AX88796(u8_t * buf, u16_t remote_Addr, u16_t Count)
  *
  */
 static void 
-ne2k_input(struct netif *netif)
+ethoc_input(struct netif *netif)
 {
-  struct ne2k_if *ne2k_if;
+  struct ethoc_if *ethoc_if;
   struct eth_hdr *ethhdr;
   struct pbuf *p;
 
-  ne2k_if = netif->state;
+  ethoc_if = netif->state;
   
   /* move received packet into a new pbuf */
   p = low_level_input(netif);
@@ -1352,16 +1378,17 @@ ne2k_input(struct netif *netif)
   /* IP packet? */
 	case ETHTYPE_IP:
     	/* update ARP table */
-    	// OLAS etharp_ip_input(netif, p);
-		netif->input(p,netif);
+		// Declared static, no header
+    	//etharp_ip_input(netif,ethoc_if->ethaddr,p);
     	/* skip Ethernet header */
-    	pbuf_header(p, -(14+ETH_PAD_SIZE));
+		// This does not look right... 
+    	//pbuf_header(p, -(14+ETH_PAD_SIZE));
     	/* pass to network layer */
     	netif->input(p, netif);
     	break;
   case ETHTYPE_ARP:
 	    /* pass p to ARP module */
-   		etharp_arp_input(netif, ne2k_if->ethaddr, p);
+   		etharp_arp_input(netif, ethoc_if->ethaddr, p);
     	break;
   default:
 		pbuf_free(p);
@@ -1369,6 +1396,7 @@ ne2k_input(struct netif *netif)
 		break;
   }
 }
+#endif
 
 /*
  * low_level_input():
@@ -1492,185 +1520,8 @@ low_level_input(struct netif *netif)
   return NULL;
 }
 
-/**
- *  read_AX88796.
- */
-u16_t read_AX88796(u8_t * buf, u16_t remote_Addr, u16_t Count)
-{
-#if 0
-	u8_t  flagOdd=0;
-#ifndef QDMA_Enabled
-	u16_t loop;
-#endif
-	
-	flagOdd = (Count & 0x0001); // set Flag if Count is odd.
-			
-	Count -= flagOdd;
-			
-	EN0_RCNTLO = (u8_t) (Count & 0xff);
-	EN0_RCNTHI = (u8_t) (Count >> 8);
-	EN0_RSARLO = (u8_t) (remote_Addr & 0xff);
-	EN0_RSARHI = (u8_t) (remote_Addr >> 8);
-	EN_CMD = (u8_t) (EN_PAGE0 + EN_RREAD + EN_START);
-
-	remote_Addr += Count;
-
-	Count = Count>>1;
-
-	#ifdef QDMA_Enabled
-		*(u32_t *)QDMA_SRC   = (u32_t) &EN_DATA;
-		*(u32_t *)QDMA_DST   = (u32_t) buf;
-		*(u32_t *)QDMA_CNT   = (u32_t) Count;
-		*(u32_t *)QDMA_IDX   = 0x00000000;
-		*(u32_t *)QDMA_S_OPT = 0x28200001;
-		buf += Count*2;
-	#else
-		for (loop=0;loop < Count ;loop++){
-	   		*(u16_t *)buf = EN_DATA ;
-			buf += 2;
-	   		}
-	#endif //QDMA_Enabled
-				
-	while ((EN0_ISR & ENISR_RDC) == 0);
-	
-	EN0_ISR = (u8_t) ENISR_RDC;
-			
-	if (flagOdd) {
-		EN0_RCNTLO = 0x01;
-		EN0_RCNTHI = 0x00;
-		EN0_RSARLO = (u8_t) (remote_Addr & 0xff);
-		EN0_RSARHI = (u8_t) (remote_Addr >> 8);
-		EN_CMD = (u8_t) (EN_PAGE0 + EN_RREAD + EN_START);
-	
-		remote_Addr += 1;
-
-		*(u8_t *)buf = *(u8_t *)(Base_ADDR+0x10) ;
-		
-		while ((EN0_ISR & ENISR_RDC) == 0);
-		
-		EN0_ISR = (u8_t) ENISR_RDC;		
-	}
-	
-#endif
-	return remote_Addr;
-}
-
 /*----------------------------------------------------------------------------------------
   ****************************************************************************************
   ----------------------------------------------------------------------------------------*/
 
-/**
- *  ne2k_rx_err.
- */
-void ne2k_rx_err(void)
-{
-#if 0
-		u8_t  curr;
-		EN_CMD = (u8_t) (EN_PAGE1 + EN_NODMA + EN_STOP);
-		curr = (u8_t) EN1_CURR;
-		EN_CMD = (u8_t) (EN_PAGE0 + EN_NODMA + EN_STOP);
-		EN0_BOUNDARY = (u8_t) curr-1;
-#endif
-}
 
-/**
- *  ne2k_rx.
- */
-void ne2k_rx(void)
-{
-#if 0
-	u8_t  curr,bnry,loopCnt = 0;
-		
-	while(loopCnt < 10) {
-		
-		EN_CMD = (u8_t) (EN_PAGE1 + EN_NODMA + EN_STOP);
-		curr = (u8_t) EN1_CURR;
-		EN_CMD = (u8_t) (EN_PAGE0 + EN_NODMA + EN_STOP);
-		bnry = (u8_t) EN0_BOUNDARY + 1;
-		
-		if (bnry >= RX_STOP_PG)
-			bnry = RX_START_PG;
-		
-		if (curr == bnry) break;
-		
-		ne2k_input(ne2k_if_netif);
-		
-		loopCnt++;
-		}
-#endif
-}
-
-/*---*---*---*---*---*---*---*
- *     void ne2k_isr(void)
- *    can be int 4 5 6 or 7 
- *---*---*---*---*---*---*---*/
-void ne2k_isr(void)
-{
-#if 0	
-	DSP_C6x_Save();
-
-	OSIntEnter();
-	
-	if (OSIntNesting == 1)
-		{
-			OSTCBCur->OSTCBStkPtr = (OS_STK *) DSP_C6x_GetCurrentSP();
-		}
-			
-	/* You can enable Interrupt again here, 
-		if want to use nested interrupt..... */
-	//------------------------------------------------------------
-
-	EN_CMD = (u8_t) (EN_PAGE0 + EN_NODMA + EN_STOP);
-	//outb(CMD_PAGE0 | CMD_NODMA | CMD_STOP,NE_CR);
-	
-	EN0_IMR = (u8_t) 0x00;//close
-	
-	// ram overflow interrupt
-	if (EN0_ISR & ENISR_OVER) {
-		EN0_ISR = (u8_t) ENISR_OVER;		// clear interrupt
-	}
-	
-	// error transfer interrupt ,NIC abort tx due to excessive collisions	
-	if (EN0_ISR & ENISR_TX_ERR) {
-		EN0_ISR = (u8_t) ENISR_TX_ERR;		// clear interrupt
-	 	//temporarily do nothing
-	}
-
-	// Rx error , reset BNRY pointer to CURR (use SEND PACKET mode)
-	if (EN0_ISR & ENISR_RX_ERR) {
-		EN0_ISR = (u8_t) ENISR_RX_ERR;		// clear interrupt
-		ne2k_rx_err();
-	}
-
-	//got packet with no errors
-	if (EN0_ISR & ENISR_RX) {
-		EN0_ISR = (u8_t) ENISR_RX;
-		ne2k_rx();		
-	}
-		
-	//Transfer complelte, do nothing here
-	if (EN0_ISR & ENISR_TX){
-		EN0_ISR = (u8_t) ENISR_TX;		// clear interrupt
-	}
-	
-	EN_CMD = (u8_t) (EN_PAGE0 + EN_NODMA + EN_STOP);
-	
-	EN0_ISR = (u8_t) 0xff;			// clear ISR	
-	
-	EN0_IMR = (u8_t) (ENISR_OVER + ENISR_RX + ENISR_RX_ERR);
-	
-	//open nic for next packet
-	EN_CMD = (u8_t) (EN_PAGE0 + EN_NODMA + EN_START);
-
-	//if (led_stat & 0x04) {LED3_on;}
-	//else {LED3_off;}
-		
-	//--------------------------------------------------------
-		
-	OSIntExit();
-	
-	DSP_C6x_Resume();
-	
-	// this can avoid a stack error when compile with the optimization!
-#endif
-}
