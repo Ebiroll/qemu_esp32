@@ -241,7 +241,7 @@ void wifi_task(void *pvParameter) {
     ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_STA) );
     wifi_config_t sta_config = {
         .sta = {
-	 //#include "secret.h"
+	     //#include "secret.h"
 	     .ssid = "ssid",
 	     .password = "password",
 	     .bssid_set = false
@@ -255,7 +255,7 @@ void wifi_task(void *pvParameter) {
     xTaskCreate(&echo_application_thread, "echo_thread", 2048, NULL, 5, NULL);
 
 
-    //gpio_set_direction(GPIO_NUM_4, GPIO_MODE_OUTPUT);
+    //gpio_set_direction(GPIO_NUM_5, GPIO_MODE_OUTPUT);
     int level = 0;
     // Send arp request
 
@@ -268,6 +268,8 @@ void wifi_task(void *pvParameter) {
 
 
     ip4_addr_t scanaddr;
+    ip4_addr_t *cacheaddr;
+    struct eth_addr *cachemac;
 
     netif=netif_find("en0");
     if (!netif) {
@@ -283,18 +285,30 @@ void wifi_task(void *pvParameter) {
         IP4_ADDR(&scanaddr, 192, 168 , 1, hostnum);
 
 
-        //gpio_set_level(GPIO_NUM_4, level);
+        //gpio_set_level(GPIO_NUM_5, level);
         if (netif)
         {
-            //printf("ARP request %s\n",tmpBuff);
-            //err_t ret=etharp_request(netif, &scanaddr);
-            //if (ret<0) {
-            //    printf("Failed request %s\n",tmpBuff);
-            //}
+            printf("ARP request %s\n",tmpBuff);
+            err_t ret=etharp_request(netif, &scanaddr);
+            if (ret<0) {
+                printf("Failed request %s\n",tmpBuff);
+            }
+
+            struct netif *chacheif=netif;
+            for (int j=0;j<ARP_TABLE_SIZE;j++) {
+                        if (1==etharp_get_entry(j, &cacheaddr, &chacheif, &cachemac))
+                        {
+                            printf("%d %X\n",j,(unsigned int)*(unsigned int *)cacheaddr);
+                        }
+            }
+
+            // Periodically call etharp_cleanup_netif 	( 	struct netif *  	netif	) 	
+            // To clean cache
+
         }
 
         level = !level;
-	//printf(".");
+	    //printf(".");
         vTaskDelay(300 / portTICK_PERIOD_MS);
         hostnum++;
     }
@@ -363,6 +377,7 @@ void app_main()
 
     esp_log_level_set("*", ESP_LOG_INFO);
     nvs_flash_init();
+    //asm("break.n 1");
     // deprecated init
     //system_init();
     //xTaskCreate(&wifi_task,"wifi_task",2048, NULL, 5, NULL);

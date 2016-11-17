@@ -52,12 +52,16 @@
 #include "inttypes.h"
 #include "hw/isa/isa.h"
 #include <poll.h>
+#include <error.h>
 
 bool gdb_serial_connected=false;
-#define MAX_GDB_BUFF  4096
+#define MAX_GDB_BUFF  2*4096
 char gdb_serial_buff[MAX_GDB_BUFF];
 int  gdb_serial_buff_rd=0;
 int  gdb_serial_buff_tx=0;
+
+void *connection_handler(void *socket_desc);
+void *gdb_socket_thread(void *dummy);
 
 
 #define DEBUG_LOG(...) fprintf(stderr, __VA_ARGS__)
@@ -202,7 +206,8 @@ static uint64_t esp32_serial_read(void *opaque, hwaddr addr,
         return s->reg[addr / 4];
 
     default:
-        qemu_log("%s: unexpected read @0x%"HWADDR_PRIx"\n", __func__, addr);
+        printf("%s: unexpected read @0x%"HWADDR_PRIx"\n", __func__, addr);
+        //qemu_log("%s: unexpected read @0x%"HWADDR_PRIx"\n", __func__, addr);
         break;
     }
     return 0;
@@ -328,6 +333,7 @@ static const MemoryRegionOps esp32_serial_ops = {
 
 Esp32SerialState *gdb_serial=NULL;
 
+
 static Esp32SerialState *esp32_serial_init(MemoryRegion *address_space,
                                                hwaddr base, const char *name,
                                                qemu_irq irq,
@@ -355,7 +361,7 @@ void *connection_handler(void *socket_desc)
     //Get the socket descriptor
     int sock = *(int*)socket_desc;
     int read_size;
-    char *message , client_message[2000];
+    char client_message[2000];
 
     gdb_serial_connected=true;
      
@@ -394,7 +400,7 @@ void *connection_handler(void *socket_desc)
 
         if (gdb_serial) {
             if (read_size>0)  {
-                esp32_serial_receive(gdb_serial,client_message,read_size);
+                esp32_serial_receive(gdb_serial,(unsigned char *)client_message,read_size);
                 printf("%s",client_message);
             }
         }
@@ -413,13 +419,15 @@ void *connection_handler(void *socket_desc)
                 }
                 if (gdb_serial_buff_rd + to_send<MAX_GDB_BUFF)
                 {
-                       write(sock , &gdb_serial_buff[gdb_serial_buff_rd] , to_send);
+                       int test=write(sock , &gdb_serial_buff[gdb_serial_buff_rd] , to_send);
+                       if (test!=to_send) { printf("send failed\n"); };
                        gdb_serial_buff_rd+=to_send;
                 }
                 else 
                 {
                     while(gdb_serial_buff_rd<gdb_serial_buff_tx) {
-                       write(sock , &gdb_serial_buff[(gdb_serial_buff_rd++)%MAX_GDB_BUFF] , 1);
+                       int test=write(sock , &gdb_serial_buff[(gdb_serial_buff_rd++)%MAX_GDB_BUFF] , 1);
+                       if (test!=1) { printf("send failed\n"); };
                     }
                 }
         }
@@ -439,7 +447,7 @@ void *connection_handler(void *socket_desc)
     //Free the socket pointer
     free(socket_desc);
      
-    return 0;
+    return 0 ;
 }
 
 void *gdb_socket_thread(void *dummy)
@@ -455,7 +463,7 @@ void *gdb_socket_thread(void *dummy)
     } else {
         int enable = 1;
         if (setsockopt(socket_desc, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
-            error("setsockopt(SO_REUSEADDR) failed");
+            printf("setsockopt(SO_REUSEADDR) failed");
     }
     puts("Socket created");
      
@@ -469,7 +477,7 @@ void *gdb_socket_thread(void *dummy)
     {
         //print the error message
         perror("bind failed. Error");
-        return 1;
+        return((void *)0);
     }
     puts("bind done");
      
@@ -495,7 +503,7 @@ void *gdb_socket_thread(void *dummy)
         if( pthread_create( &sniffer_thread , NULL ,  connection_handler , (void*) new_sock) < 0)
         {
             perror("could not create thread");
-            return 1;
+            return 0;
         }
          
         //Now join the thread , so that we dont terminate before the thread
@@ -506,11 +514,10 @@ void *gdb_socket_thread(void *dummy)
     if (client_sock < 0)
     {
         perror("accept failed");
-        return 1;
+        return((void *) 1);
     }
      
-    return 0;
-
+    return((void *) 0);
 }
 
 
@@ -804,6 +811,7 @@ static uint64_t esp_io_read(void *opaque, hwaddr addr,
 static uint64_t esp_wifi_read(void *opaque, hwaddr addr,
         unsigned size)
 {
+
     printf("wifi read %" PRIx64 " \n",addr);
     switch(addr) {
     case 0xe04c:
@@ -1029,10 +1037,10 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
         serial_hds[0] = qemu_chr_new("serial0", "null",NULL);
     }
 
-    //esp32_serial_init(system_io, 0x40000, "esp32.uart0",
-    //                    xtensa_get_extint(env, 5), serial_hds[0]);
+    esp32_serial_init(system_io, 0x40000, "esp32.uart0",
+                        xtensa_get_extint(env, 5), serial_hds[0]);
 
-    printf("No call to serial__mm_init\n");
+    //printf("No call to serial__mm_init\n");
 
                             //0x0d050020
     //serial_mm_init(system_io, 0x3FF40020 , 2, xtensa_get_extint(env, 0),
@@ -1238,13 +1246,14 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
 
 
 #if 1
+
             // Patching rom function. ets_unpack_flash_code
             //      j forward 0x13 
             //      nop.n * 8
-            //  	l32r     a9,?       a9 with ram adress user_code_start 0x3ffe0400
-	        //      l32r     a8,?       a8 with entry_point (from load_elf())
+            //      l32r     a9,?       a9 with ram adress user_code_start 0x3ffe0400
+            //      l32r     a8,?       a8 with entry_point (from load_elf())
             //      s32i.n   a9,a8,0
-            //      movi.n	a2, 0
+            //      movi.n   a2, 0
             //      retw.n
             static const uint8_t patch_ret[] = {
                  0x06,0x05,0x00,  // Jump
