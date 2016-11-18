@@ -397,7 +397,9 @@ static int ethoc_rx(struct netif *dev, int limit)
 
 				if (likely(skb)) {
 					void *src = priv->vma[entry];
-					//memcpy_fromio(skb_put(skb, size), src, size);
+  				    //memcpy_fromio(skb_put(skb, size), src, size);
+					printf("trace_open_eth_receive_desc(%x,%x)\n",(unsigned int)src, size);
+
 					memcpy_fromio(skb->payload,src,size);
 					skb->len=size;
 					//skb->protocol = eth_type_trans(skb, dev);
