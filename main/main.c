@@ -26,6 +26,7 @@
 #include "lwip/sys.h"
 #include "lwip/netif.h"
 #include "netif/etharp.h"
+#include "freertos/heap_regions.h"
 
 extern err_t ethoc_init(struct netif *netif);
 
@@ -319,8 +320,31 @@ extern void Task_lwip_init(void * pParam);
 
 void emulated_net(void *pvParameter) {
 
-    tcpip_adapter_init();
-    ESP_ERROR_CHECK( esp_event_loop_init(event_handler, NULL) );
+    //int i;
+    // We cant use this for emulated network, need to setup tcpip manually
+    //tcpip_adapter_init();
+    //ESP_ERROR_CHECK( esp_event_loop_init(event_handler, NULL) );
+
+#if 0
+    for (i=0; regions[i].xSizeInBytes!=0; i++) {                                                                                                                                 <
+                //if (regions[i].xTag != -1) {                                                                                                                                             <
+                    printf("Region %02d: %08X len %08X tag %d", i,                                                                                                          <
+                            (int)regions[i].pucStartAddress, regions[i].xSizeInBytes, regions[i].xTag);                                                                                  <
+                //}                                                                                                                                                                        <
+    }                         
+                                                                                                                                                                                  <
+    for (i=1; regions[i].xSizeInBytes!=0; i++) {
+        /*                                                                                                                                 <
+        if (regions[i].pucStartAddress == (regions[i-1].pucStartAddress + regions[i-1].xSizeInBytes) &&                                                                          <
+                                    regions[i].xTag == regions[i-1].xTag ) {                                                                                                     <
+            regions[i-1].xTag=-1;                                                                                                                                                <
+            regions[i].pucStartAddress=regions[i-1].pucStartAddress;                                                                                                             <
+            regions[i].xSizeInBytes+=regions[i-1].xSizeInBytes;                                                                                                                  <
+        } 
+        */                                                                                                                                                                       <
+    }                         
+#endif
+
 
     Task_lwip_init(NULL);
 

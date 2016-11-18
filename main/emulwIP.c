@@ -40,10 +40,10 @@ void tcpip_init_done_ok(void * arg);
 void Task_lwip_init(void * pParam)
 {
   ip4_addr_t ipaddr, netmask, gw;
-  //sys_sem_t sem;
+  sys_sem_t sem;
   
   //ethernet_hardreset();//hard reset of EthernetDaughterCard
-  
+# if 0  
   #if LWIP_STATS
   stats_init();
   #endif
@@ -54,12 +54,16 @@ void Task_lwip_init(void * pParam)
   memp_init();
   pbuf_init();
   netif_init(); 
+#endif  // The initiation above is done in tcpip_init
 
   printf("TCP/IP initializing...\n");  
-  //sem = sys_sem_new(0);
-  // OLAS tcpip_init(tcpip_init_done_ok, &sem);
-  //sys_sem_wait(sem);
-  //sys_sem_free(sem);
+  if (sys_sem_new(&sem,0)!=ERR_OK) {
+    printf("Failed creating semaphore\n");
+  }
+  // OLAS 
+  tcpip_init(tcpip_init_done_ok, &sem);
+  sys_sem_wait(sem);
+  sys_sem_free(sem);
   printf("TCP/IP initialized.\n");
   
   //add loop interface //set local loop-interface 127.0.0.1
@@ -68,8 +72,8 @@ void Task_lwip_init(void * pParam)
   IP4_ADDR(&ipaddr, 127,0,0,1);
   IP4_ADDR(&netmask, 255,0,0,0);
   netif_add(&loop_if, &ipaddr, &netmask, &gw, NULL, loopif_init,
-	    tcpip_input);*/
-
+	    tcpip_input);
+  */
   //add ne2k interface
   IP4_ADDR(&gw, 192,168,1,1);
   IP4_ADDR(&ipaddr, 192,168,1,100);
@@ -77,7 +81,7 @@ void Task_lwip_init(void * pParam)
 
   netif_add(&ethoc_if, &ipaddr, &netmask, &gw, NULL, ethoc_init, tcpip_input);
   netif_set_default(&ethoc_if);
-  netif_set_up(&ethoc_if); // new step from lwip 1.0.0
+  netif_set_up(&ethoc_if); 
   
   printf("Applications started.\n");
   

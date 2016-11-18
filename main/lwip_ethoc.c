@@ -388,7 +388,8 @@ static int ethoc_rx(struct netif *dev, int limit)
 						etharp_arp_input(dev,  (struct eth_addr *) &dev->hwaddr[0], skb);
 						break;
 				default:
-						pbuf_free(skb);
+				    	printf("not needed rx pbuf_free? %p\n",skb);
+						//pbuf_free(skb);
 						skb = NULL;
 						break;
 				}
@@ -780,8 +781,8 @@ static int ethoc_start_xmit( struct pbuf *skb, struct netif *dev)
 	//skb_tx_timestamp(skb);
 out:
 	//dev_kfree_skb(skb);
-	pbuf_free(skb);
-	printf("pbuf_free");
+	//pbuf_free(skb);
+	printf("not needed pbuf_free? %p\n",skb);
 //out_no_free:
 	return 0;
 }
@@ -790,11 +791,10 @@ out:
 static int ethoc_set_ringparam(struct netif *dev)
 {
 	struct ethoc *priv = &priv_ethoc;
-	int num_bd=4;
+	int num_bd = 16;
 
-	priv->num_tx = 4;
-	priv->num_rx = 4;
-
+	priv->num_tx = 8;
+	priv->num_rx = 8;
 	priv->num_bd = num_bd;
 	/* num_tx must be a power of two */
 	//priv->num_tx = rounddown_pow_of_two(num_bd >> 1);
@@ -1226,7 +1226,8 @@ err_t ethoc_init(struct netif *netif)
   
   etharp_init();
   
-  sys_timeout(ARP_TMR_INTERVAL, arp_timer, NULL);
+  // Timeout added elsewhere??
+  //sys_timeout(ARP_TMR_INTERVAL, arp_timer, NULL);
   
   return ERR_OK;
 }
@@ -1251,7 +1252,8 @@ static void low_level_init(struct netif * netif)
 	
 	netif->hwaddr_len=6;
 	netif->mtu = 1500;	
-  	netif->flags = NETIF_FLAG_BROADCAST;
+  	//netif->flags = NETIF_FLAG_BROADCAST;
+    netif->flags = NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP | NETIF_FLAG_LINK_UP;
   		
     netif->hwaddr[0]=0x12;
     netif->hwaddr[1]=0x34;
@@ -1313,6 +1315,7 @@ static err_t low_level_output(struct netif * netif, struct pbuf *p)
 	/*
 	 * Write packet to ring buffers.
 	 */
+#if 0
    for(q = p; q != NULL; q = q->next) {
     /* Send the data from the pbuf to the interface, one pbuf at a
        time. The size of the data in each pbuf is kept in the ->len
@@ -1329,9 +1332,29 @@ static err_t low_level_output(struct netif * netif, struct pbuf *p)
 		ethoc_start_xmit(q,netif);
 		//remote_Addr = write_AX88796(buf, remote_Addr, Count);	
 	} //for
+#endif
+   // From wlanif.c , looks strange..
+   // Note that LWIP_NETIF_TX_SINGLE_PBUF is set to 1..
+   // @todo: TCP and IP-frag do not work with this, yet 
+    q = p;
+    u16_t pbuf_x_len = 0;
+    pbuf_x_len = q->len;
+    if(q->next !=NULL)
+    {
+		printf("Assembling packet, this should not happen if LWIP_NETIF_TX_SINGLE_PBUF is set");
+        //char cnt = 0;
+        struct pbuf *tmp = q->next;
+        while(tmp != NULL)
+        {
+            memcpy( (u8_t *)( (u8_t *)(q->payload) + pbuf_x_len), (u8_t *)tmp->payload , tmp->len );
+            pbuf_x_len += tmp->len;
+            //cnt++;
+            tmp = tmp->next;
+        }
+    }
 
-	/* Just send it, and does not check */
-	
+	ethoc_start_xmit(q,netif);
+
 	#if LINK_STATS
 		lwip_stats.link.xmit++;
 	#endif /* LINK_STATS */

@@ -27,7 +27,7 @@
 
 // Open core registers
 #define	OC_BASE          0x3ff69000
-#define	OC_DESC_START    0x3ff64000
+#define	OC_DESC_START    0x3ff69400
 #define	OC_BUF_START     0x3FF69800
 
 // End of peripherals 0x3FF7_FFFF

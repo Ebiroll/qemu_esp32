@@ -483,6 +483,28 @@ As I am not alwas sure of what I am doing, I would recomend this version of the 
 
      xtensa-softmmu/qemu-system-xtensa -net nic,model=vlan0 -net user,id=simnet,ipver4=on,net=192.168.1.0/24,host=192.168.1.100,hostfwd=tcp::10077-192.168.1.100:7  -net dump,file=/tmp/vm0.pcap  -d guest_errors,unimp  -cpu esp32 -M esp32 -m 16M  -kernel  ~/esp/qemu_esp32/build/app-template.elf -s    > io.txt
 
+     To debug lwip set #define LWIP_DEBUG 1 in cc.h
+     I think there is some problem with the heaps. When disabling debug of  heaps we get an error here
+     heap_alloc_caps_init()
+     vPortDefineHeapRegionsTagged. Maybe its beacause I used a dump of memory from the actual hardware that we get this problem.
+
+     I (32079) heap_alloc_caps: Initializing heap allocator:
+     I (32079) heap_alloc_caps: Region 19: 3FFB5640 len 0002A9C0 tag 0
+     I (32080) heap_alloc_caps: Region 25: 3FFE8000 len 00018000 tag 1
+
+
+     
+     http://www.freertos.org/thread-local-storage-pointers.html
+
+
+     // Threads when running lwip,
+     "tiT"   tcpip
+     "ech"
+     "mai"   main task?
+     "IDL"   idle task?
+
+
+
      xtensa-softmmu/qemu-system-xtensa -net nic,model=vlan0 -net user,id=simnet,ipver4=on,net=192.168.1.0/24,host=192.168.1.100,hostfwd=tcp::10077-192.168.1.100:7  -net dump,file=/tmp/vm0.pcap  -d guest_errors,unimp  -cpu esp32 -M esp32 -m 16M  -kernel  ~/esp/qemu_esp32/build/app-template.elf -s  > io.txt
      nc 127.0.0.1 10077 
 
