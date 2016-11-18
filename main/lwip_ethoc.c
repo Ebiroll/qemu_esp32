@@ -340,20 +340,28 @@ static int ethoc_rx(struct netif *dev, int limit)
 	int count;
 	struct eth_hdr *ethhdr;
 	struct ethoc_bd bd;
-	struct ethoc_bd bd_last;
+	struct ethoc_bd bd_last;  // Memory corruption?? Need this?
 
-	for (count = 7; count < 16; ++count) {
-		if (bd.stat & RX_BD_EMPTY) {
-		}
-		else{
-  		  printf("rx_data in %d\n",count);	
-		}
-	}
 
 	for (count = 0; count < limit; ++count) {
 		unsigned int entry;
+		entry = priv->num_tx + priv->cur_rx ;
 
-		entry = priv->num_tx + priv->cur_rx;
+
+		for (count = 8; count < 16; ++count) {
+			if (bd.stat & RX_BD_EMPTY) {
+			}
+			else {
+                printf("rx_data in %d entry %d\n",count,entry);	
+				//entry=count;
+				//bd.stat &= ~RX_BD_STATS;
+				//bd.stat |=  RX_BD_EMPTY;
+				//ethoc_write_bd(priv, entry, &bd);
+			}
+		}
+
+
+
 		//printf(". %d\n",entry);
 
 		ethoc_read_bd(priv, entry, &bd);
@@ -513,14 +521,16 @@ static void ethoc_interrupt()
 	pending = ethoc_read(priv, INT_SOURCE);
 	pending &= mask;
 
-    printf("IRQ\n");
 
 	// No interrupt to handle....
 	if (unlikely(pending == 0))
 	{
-		printf("No pendig irq, spurious.\n");
+		//printf("No pendig irq, spurious.\n");
+		return;
 	}
 		//return IRQ_NONE;
+    printf("IRQ\n");
+
 
 	ethoc_ack_irq(priv, pending);
 
@@ -532,7 +542,7 @@ static void ethoc_interrupt()
 
 	/* Handle receive/transmit event by switching to polling */
 	if (pending & (INT_MASK_TX | INT_MASK_RX)) {
-		ethoc_disable_irq(priv, INT_MASK_TX | INT_MASK_RX);
+		//ethoc_disable_irq(priv, INT_MASK_TX | INT_MASK_RX);
 		//napi_schedule(&priv->napi);
 	}
 
@@ -665,9 +675,28 @@ static int ethoc_mdio_probe(struct netif *dev)
 
 // Cant get interrupts to work so we have to poll for packets
 void poll_task(void *pvParameter) {
+    struct ethoc *priv = &priv_ethoc;
+	int count,entry=8;
+    struct ethoc_bd bd;
+
+   ethoc_reset(priv);
+
+	for (count = 8; count < 16; ++count) {
+		if (bd.stat & RX_BD_EMPTY) {
+		}
+		else {
+			printf("Initial rx_data in %d entry %d\n",count,entry);	
+			entry=count;
+			//bd.stat &= ~RX_BD_STATS;
+			//bd.stat |=  RX_BD_EMPTY;
+			//ethoc_write_bd(priv, entry, &bd);
+		}
+	}
+
 	for(;;) {
  	   ethoc_poll(8);
-       vTaskDelay(10);
+	   //ethoc_interrupt();
+       vTaskDelay(5);
 	}
 }
 
@@ -703,7 +732,7 @@ int ethoc_open(struct netif *dev)
 	ethoc_reset(priv);
 
 	// Poll for input
-    xTaskCreate(&poll_task,"wifi_task",2048, NULL, 5, NULL);
+    xTaskCreate(&poll_task,"wifi_task",2048, NULL, 3, NULL);
 
 
 	//if (netif_queue_stopped(dev)) {

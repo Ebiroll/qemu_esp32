@@ -496,7 +496,7 @@ As I am not alwas sure of what I am doing, I would recomend this version of the 
      http://www.freertos.org/thread-local-storage-pointers.html
 
      Add this to ethernet_input in ethernet.c.
-     
+
     printf("ethernet_input: dest:%"X8_F":%"X8_F":%"X8_F":%"X8_F":%"X8_F":%"X8_F", src:%"X8_F":%"X8_F":%"X8_F":%"X8_F":%"X8_F":%"X8_F", type:%"X16_F"\n",
      (unsigned)ethhdr->dest.addr[0], (unsigned)ethhdr->dest.addr[1], (unsigned)ethhdr->dest.addr[2],
      (unsigned)ethhdr->dest.addr[3], (unsigned)ethhdr->dest.addr[4], (unsigned)ethhdr->dest.addr[5],
@@ -519,6 +519,62 @@ As I am not alwas sure of what I am doing, I would recomend this version of the 
 
 
 ```    
+
+```    
+This log goes together with the  vm0.pcap file. 5 retransmission requests. 5 empty.
+ethoc_rx
+size 64
+stop
+ethernet_input: dest:12:34:56:78:9a:e0, src:52:55:c0:a8:01:28, type:800
+sending message to etharp_output
+low_level_output 42
+pbuf len 42 TODO, pad to 64
+ethoc_rx
+size 68
+stop
+ethernet_input: dest:12:34:56:78:9a:e0, src:52:55:c0:a8:01:28, type:806
+low_level_output 58
+pbuf len 58 TODO, pad to 64
+ethoc_rx
+size 64
+stop
+ethernet_input: dest:12:34:56:78:9a:e0, src:52:55:c0:a8:01:28, type:800
+accepted new echo connection
+ethoc_rx
+size 64
+stop
+ethernet_input: dest:00:00:00:00:00:00, src:00:00:00:00:00:00, type:0
+ethoc_rx
+size 64
+stop
+ethernet_input: dest:00:00:00:00:00:00, src:00:00:00:00:00:00, type:0
+ethoc_rx
+size 64
+stop
+ethernet_input: dest:00:00:00:00:00:00, src:00:00:00:00:00:00, type:0
+ethoc_rx
+size 64
+stop
+ethernet_input: dest:00:00:00:00:00:00, src:00:00:00:00:00:00, type:0
+ethoc_rx
+size 64
+stop
+ethernet_input: dest:00:00:00:00:00:00, src:00:00:00:00:00:00, type:0
+ethoc_rx
+size 64
+stop
+ethernet_input: dest:12:34:56:78:9a:e0, src:52:55:c0:a8:01:28, type:800
+read 6 bytessending message to etharp_output
+low_level_output 60
+pbuf len 60 TODO, pad to 64
+ethoc_rx
+size 64
+stop
+ethernet_input: dest:12:34:56:78:9a:e0, src:52:55:c0:a8:01:28, type:800
+```    
+
+
+
 
 http://blog.vmsplice.net/2011/04/how-to-capture-vm-network-traffic-using.html
 
