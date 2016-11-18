@@ -47,6 +47,9 @@
 #define IFNAME0 'e'
 #define IFNAME1 't'
 
+static char hostname[16];
+
+
 struct ethoc_if {
   struct eth_addr *ethaddr; //MAC Address 
 };
@@ -326,19 +329,33 @@ static unsigned int ethoc_update_rx_stats(struct ethoc *dev,
 	return ret;
 }
 
+void stop_here()
+{
+	printf("stop\n");
+}
+
 static int ethoc_rx(struct netif *dev, int limit)
 {
 	struct ethoc *priv = &priv_ethoc;
 	int count;
 	struct eth_hdr *ethhdr;
-	printf(".\n");
+	struct ethoc_bd bd;
+	struct ethoc_bd bd_last;
 
+	for (count = 7; count < 16; ++count) {
+		if (bd.stat & RX_BD_EMPTY) {
+		}
+		else{
+  		  printf("rx_data in %d\n",count);	
+		}
+	}
 
 	for (count = 0; count < limit; ++count) {
 		unsigned int entry;
-		struct ethoc_bd bd;
 
 		entry = priv->num_tx + priv->cur_rx;
+		//printf(". %d\n",entry);
+
 		ethoc_read_bd(priv, entry, &bd);
 		if (bd.stat & RX_BD_EMPTY) {
 			ethoc_ack_irq(priv, INT_MASK_RX);
@@ -360,55 +377,39 @@ static int ethoc_rx(struct netif *dev, int limit)
 			//struct sk_buff *skb;
 			struct pbuf *skb;
 
-			size -= 4; /* strip the CRC */
-			//skb = netdev_alloc_skb_ip_align(dev, size);
-		    skb = pbuf_alloc(PBUF_RAW, size, PBUF_POOL); /* length of buf */
+			if (size>0)
+			{
+				//if (size>4)
+				//  size -= 4; /* strip the CRC */
+				printf("size %d\n",size);
+				stop_here();
 
-			if (likely(skb)) {
-				void *src = priv->vma[entry];
-				//memcpy_fromio(skb_put(skb, size), src, size);
-				memcpy_fromio(skb->payload,src,size);
-				skb->len=size;
-				//skb->protocol = eth_type_trans(skb, dev);
-                ethhdr = skb->payload;
+				//skb = netdev_alloc_skb_ip_align(dev, size);
+				skb = pbuf_alloc(PBUF_RAW, size, PBUF_POOL); /* length of buf */ // PBUF_REF
 
-				switch(htons(ethhdr->type)) {
-				/* IP packet? */
-				case ETHTYPE_IP:
-						/* update ARP table */
-						// was etharp_ip_input(netif, p);
-						//dev->input(skb,dev);
-						/* skip Ethernet header */
-						//pbuf_header(skb, -(14+ETH_PAD_SIZE));
-						/* pass to network layer */
-						dev->input(skb, dev);
-						break;
-				case ETHTYPE_ARP:
-						/* pass p to ARP module */
-						etharp_arp_input(dev,  (struct eth_addr *) &dev->hwaddr[0], skb);
-						break;
-				default:
-				    	printf("not needed rx pbuf_free? %p\n",skb);
-						//pbuf_free(skb);
-						skb = NULL;
-						break;
+				if (likely(skb)) {
+					void *src = priv->vma[entry];
+					//memcpy_fromio(skb_put(skb, size), src, size);
+					memcpy_fromio(skb->payload,src,size);
+					skb->len=size;
+					//skb->protocol = eth_type_trans(skb, dev);
+					ethhdr = skb->payload;
+
+					dev->input(skb, dev);
+
+					//dev->stats.rx_packets++;
+					//dev->stats.rx_bytes += size;
+				} else {
+					printf("No available pbuffers!!\n");
+					/*
+					if (net_ratelimit())
+						dev_warn(&dev->dev,
+							"low on memory - packet dropped\n");
+
+					dev->stats.rx_dropped++;
+					*/
+					break;
 				}
-
-
-				//dev->stats.rx_packets++;
-				//dev->stats.rx_bytes += size;
-				// TODO HERE!!!!
-				//netif_receive_skb(skb);
-			} else {
-				printf("No available pbuffers!!\n");
-				/*
-				if (net_ratelimit())
-					dev_warn(&dev->dev,
-					    "low on memory - packet dropped\n");
-
-				dev->stats.rx_dropped++;
-				*/
-				break;
 			}
 		}
 
@@ -665,7 +666,7 @@ static int ethoc_mdio_probe(struct netif *dev)
 // Cant get interrupts to work so we have to poll for packets
 void poll_task(void *pvParameter) {
 	for(;;) {
- 	   ethoc_poll(4);
+ 	   ethoc_poll(8);
        vTaskDelay(10);
 	}
 }
@@ -702,7 +703,7 @@ int ethoc_open(struct netif *dev)
 	ethoc_reset(priv);
 
 	// Poll for input
-    xTaskCreate(&poll_task,"wifi_task",512, NULL, 5, NULL);
+    xTaskCreate(&poll_task,"wifi_task",2048, NULL, 5, NULL);
 
 
 	//if (netif_queue_stopped(dev)) {
@@ -781,8 +782,8 @@ static int ethoc_start_xmit( struct pbuf *skb, struct netif *dev)
 	//skb_tx_timestamp(skb);
 out:
 	//dev_kfree_skb(skb);
-	//pbuf_free(skb);
-	printf("not needed pbuf_free? %p\n",skb);
+	pbuf_free(skb);
+	//printf("not needed pbuf_free? %p\n",skb);
 //out_no_free:
 	return 0;
 }
@@ -1191,6 +1192,20 @@ out:
 
 #endif
 
+err_t ethoc_output(struct netif *netif, struct pbuf *q, const ip4_addr_t *ipaddr)
+{
+
+   printf("sending message to etharp_output\n");
+
+   //low_level_output(netif,q);
+
+   etharp_output(netif,q,ipaddr);
+
+return ERR_OK;
+}
+
+
+
 /*
  * ethernetif_init():
  *
@@ -1216,8 +1231,11 @@ err_t ethoc_init(struct netif *netif)
   netif->state = ethoc_if;
   netif->name[0] = IFNAME0;
   netif->name[1] = IFNAME1;
-  netif->output = etharp_output;
+  netif->output = ethoc_output;
   netif->linkoutput = low_level_output;
+
+  sprintf(hostname, "esp_qemu");
+  netif->hostname = hostname;
   
   ethoc_if->ethaddr = (struct eth_addr *)&(netif->hwaddr[0]);
   // TODO, move this to a more logical place..

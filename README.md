@@ -492,9 +492,19 @@ As I am not alwas sure of what I am doing, I would recomend this version of the 
      I (32079) heap_alloc_caps: Region 19: 3FFB5640 len 0002A9C0 tag 0
      I (32080) heap_alloc_caps: Region 25: 3FFE8000 len 00018000 tag 1
 
-
      
      http://www.freertos.org/thread-local-storage-pointers.html
+
+     Add this to ethernet_input in ethernet.c.
+     
+    printf("ethernet_input: dest:%"X8_F":%"X8_F":%"X8_F":%"X8_F":%"X8_F":%"X8_F", src:%"X8_F":%"X8_F":%"X8_F":%"X8_F":%"X8_F":%"X8_F", type:%"X16_F"\n",
+     (unsigned)ethhdr->dest.addr[0], (unsigned)ethhdr->dest.addr[1], (unsigned)ethhdr->dest.addr[2],
+     (unsigned)ethhdr->dest.addr[3], (unsigned)ethhdr->dest.addr[4], (unsigned)ethhdr->dest.addr[5],
+     (unsigned)ethhdr->src.addr[0], (unsigned)ethhdr->src.addr[1], (unsigned)ethhdr->src.addr[2],
+     (unsigned)ethhdr->src.addr[3], (unsigned)ethhdr->src.addr[4], (unsigned)ethhdr->src.addr[5],
+     (unsigned)htons(ethhdr->type));
+
+     I think we are using the wrong rx-buffer descriptor for second incomping package.. 
 
 
      // Threads when running lwip,
@@ -503,9 +513,8 @@ As I am not alwas sure of what I am doing, I would recomend this version of the 
      "mai"   main task?
      "IDL"   idle task?
 
-
-
-     xtensa-softmmu/qemu-system-xtensa -net nic,model=vlan0 -net user,id=simnet,ipver4=on,net=192.168.1.0/24,host=192.168.1.100,hostfwd=tcp::10077-192.168.1.100:7  -net dump,file=/tmp/vm0.pcap  -d guest_errors,unimp  -cpu esp32 -M esp32 -m 16M  -kernel  ~/esp/qemu_esp32/build/app-template.elf -s  > io.txt
+      Yes! Got it to almost work with this.
+      xtensa-softmmu/qemu-system-xtensa -net nic,model=vlan0 -net user,id=simnet,ipver4=on,net=192.168.1.0/24,host=192.168.1.40,hostfwd=tcp::10077-192.168.1.3:7  -net dump,file=/tmp/vm0.pcap  -d guest_errors,unimp  -cpu esp32 -M esp32 -m 16M  -kernel  ~/esp/qemu_esp32/build/app-template.elf -s -S   > io.txt
      nc 127.0.0.1 10077 
 
 

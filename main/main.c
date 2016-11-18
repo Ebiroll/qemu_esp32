@@ -376,7 +376,7 @@ void emulated_net(void *pvParameter) {
     char tmpBuff[20];
     // Arpscan network
     while (true) {
-
+#if 0
         sprintf(tmpBuff,"192.168.1.%d",hostnum);
         IP4_ADDR(&scanaddr, 192, 168 , 1, hostnum);
 
@@ -402,7 +402,7 @@ void emulated_net(void *pvParameter) {
                         printf("%d  %d.%d.%d.%d\n",j,IP2STR(cacheaddr));
                     }
         }
-
+#endif
     }
 }
 
