@@ -376,7 +376,7 @@ void emulated_net(void *pvParameter) {
     char tmpBuff[20];
     // Arpscan network
     while (true) {
-#if 0
+//#if 0
         sprintf(tmpBuff,"192.168.1.%d",hostnum);
         IP4_ADDR(&scanaddr, 192, 168 , 1, hostnum);
 
@@ -402,7 +402,7 @@ void emulated_net(void *pvParameter) {
                         printf("%d  %d.%d.%d.%d\n",j,IP2STR(cacheaddr));
                     }
         }
-#endif
+//#endif
     }
 }
 
@@ -416,7 +416,7 @@ void app_main()
     // deprecated init
     //system_init();
     //xTaskCreate(&wifi_task,"wifi_task",2048, NULL, 5, NULL);
-    //xTaskCreate(&emulated_net, "emulated_net", 2048, NULL, 5, NULL);
+    xTaskCreate(&emulated_net, "emulated_net", 2048, NULL, 5, NULL);
     //emulated_net(NULL);
     //wifi_task(NULL);
     dump_task(NULL);

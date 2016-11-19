@@ -333,8 +333,12 @@ static const MemoryRegionOps esp32_serial_ops = {
 
 Esp32SerialState *gdb_serial=NULL;
 
+Esp32SerialState *esp32_serial_init(MemoryRegion *address_space,
+                                               hwaddr base, const char *name,
+                                               qemu_irq irq,
+                                    CharDriverState *chr);
 
-static Esp32SerialState *esp32_serial_init(MemoryRegion *address_space,
+Esp32SerialState *esp32_serial_init(MemoryRegion *address_space,
                                                hwaddr base, const char *name,
                                                qemu_irq irq,
                                                CharDriverState *chr)
@@ -1027,7 +1031,7 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
 
     if (nd_table[0].used) {
         printf("Open net\n");
-        open_net_init(system_memory,0x3FF76000, 0x3FF76400, 0x3FF76800,
+        open_net_init(system_memory,0x3ff69000,0x3ff69400 , 0x3FFF0000,
                 xtensa_get_extint(env, 9), nd_table);
     } 
 
@@ -1037,8 +1041,8 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
         serial_hds[0] = qemu_chr_new("serial0", "null",NULL);
     }
 
-    esp32_serial_init(system_io, 0x40000, "esp32.uart0",
-                        xtensa_get_extint(env, 5), serial_hds[0]);
+    //esp32_serial_init(system_io, 0x40000, "esp32.uart0",
+    //                    xtensa_get_extint(env, 5), serial_hds[0]);
 
     //printf("No call to serial__mm_init\n");
 

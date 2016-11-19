@@ -390,7 +390,7 @@ This will create problems when running 2 cores.
 ##Patched gdb,
 In the bin directory there is an improved gdb version. The following patch was applied,
 https://github.com/jcmvbkbc/xtensa-toolchain-build/blob/master/fixup-gdb.sh
-To use it properly you must increase the num_regs = 104 to i.e. 211 in core-esp32.c
+To use it properly you must increase the num_regs = 104 to i.e. 172 in core-esp32.c
 
 
 
@@ -412,29 +412,30 @@ As I am not alwas sure of what I am doing, I would recomend this version of the 
     ../qemu-xtensa/configure --disable-werror --prefix=`pwd`/root --target-list=xtensa-softmmu
 
 #Networking support
-     I am working on networking support of an emulated opencore network device,
-     main/ne2kif.c will later be renamed to  main/ethoc.c
-     All files in the net direcory si just for reference, they are currently not used.
-     http://espressif.com/sites/default/files/documentation/esp32_chip_pin_list_en_0.pdf
+     There exists networking support of an emulated opencore network device,
+     main/lwip_ethoc.c is the driver, without interrupts. A task poll_task() is created. 
+     All files in the net direcory is just for reference, they are currently not used.
 
 ```  
      Dont try running   emulated_net(); on actual hardware. 
      Probably not harmful but I put the emulated hardware here, i uesd the DR_REG_EMAC_BASE
 
   #define	OC_BASE          0x3ff69000
-  #define	OC_DESC_START    0x3ff64000
-  #define	OC_BUF_START     0x3FF69800
+  #define	OC_DESC_START    0x3ff69400
+  #define	OC_BUF_START     0x3FFF8000          //pool 6 blk 1 <- can be used as trace memory
 
-     See components/esp32/include/soc/soc.h
-     // A better choice could have been to use
+  Note this one  components/esp32/include/soc/soc.h
      DR_REG_EMAC_BASE                        0x3ff69000
+     Here are the pins needed to get ethernet support.
+     http://espressif.com/sites/default/files/documentation/esp32_chip_pin_list_en_0.pdf
 
      Trying to enable emulated interrupts, but not yet sucessful. 
-     Probably I need to mirror the memory as on the real hardware.
+     Probably I also need to mirror the memory as on the real hardware.
      depending on stat of DPORT_APP_CACHE_CTRL1_REG & DPORT_PRO_CACHE_CTRL1_REG
+```  
 
-
-    Backend Network options:
+#Qemu backend network options:
+```  
     -netdev user,id=str[,ipv4[=on|off]][,net=addr[/mask]][,host=addr]
          [,ipv6[=on|off]][,ipv6-net=addr[/int]][,ipv6-host=addr]
          [,restrict=on|off][,hostname=host][,dhcpstart=addr]
@@ -474,28 +475,19 @@ As I am not alwas sure of what I am doing, I would recomend this version of the 
                 using the program 'helper (default=/home/olas/qemu_esp32/root/libexec/qemu-bridge-helper)
 
 
-     To start with opencode network emulated device, try
-     xtensa-softmmu/qemu-system-xtensa -net nic,vlan=0 -net user,vlan=0  -net dump,file=/tmp/vm0.pcap -d int,guest_errors,unimp  -cpu esp32 -M esp32 -m 16M  -kernel  ~/esp/qemu_esp32/build/app-template.elf -s   > io.txt
-     wireshark /tmp/vm0.pcap
-
-     This one allows to do connect to the echoserver, if the driver gets completed
-     in order to test the echo server that is running on port 7
-
-     xtensa-softmmu/qemu-system-xtensa -net nic,model=vlan0 -net user,id=simnet,ipver4=on,net=192.168.1.0/24,host=192.168.1.100,hostfwd=tcp::10077-192.168.1.100:7  -net dump,file=/tmp/vm0.pcap  -d guest_errors,unimp  -cpu esp32 -M esp32 -m 16M  -kernel  ~/esp/qemu_esp32/build/app-template.elf -s    > io.txt
 
      To debug lwip set #define LWIP_DEBUG 1 in cc.h
      I think there is some problem with the heaps. When disabling debug of  heaps we get an error here
      heap_alloc_caps_init()
-     vPortDefineHeapRegionsTagged. Maybe its beacause I used a dump of memory from the actual hardware that we get this problem.
+     vPortDefineHeapRegionsTagged.
 
      I (32079) heap_alloc_caps: Initializing heap allocator:
      I (32079) heap_alloc_caps: Region 19: 3FFB5640 len 0002A9C0 tag 0
      I (32080) heap_alloc_caps: Region 25: 3FFE8000 len 00018000 tag 1
 
-     
      http://www.freertos.org/thread-local-storage-pointers.html
 
-     Add this to ethernet_input in ethernet.c.
+     Add this for debugging in ethernet_input,ethernet.c.
 
     printf("ethernet_input: dest:%"X8_F":%"X8_F":%"X8_F":%"X8_F":%"X8_F":%"X8_F", src:%"X8_F":%"X8_F":%"X8_F":%"X8_F":%"X8_F":%"X8_F", type:%"X16_F"\n",
      (unsigned)ethhdr->dest.addr[0], (unsigned)ethhdr->dest.addr[1], (unsigned)ethhdr->dest.addr[2],
@@ -504,74 +496,23 @@ As I am not alwas sure of what I am doing, I would recomend this version of the 
      (unsigned)ethhdr->src.addr[3], (unsigned)ethhdr->src.addr[4], (unsigned)ethhdr->src.addr[5],
      (unsigned)htons(ethhdr->type));
 
-     I think we are using the wrong rx-buffer descriptor for second incomping package.. 
 
-
-     // Threads when running lwip,
+     // Some threads when running lwip,
      "tiT"   tcpip
      "ech"
      "mai"   main task?
      "IDL"   idle task?
 
-      Yes! Got it to almost work with this.
+      Yes! Got it to work with this.
       xtensa-softmmu/qemu-system-xtensa -net nic,model=vlan0 -net user,id=simnet,ipver4=on,net=192.168.1.0/24,host=192.168.1.40,hostfwd=tcp::10077-192.168.1.3:7  -net dump,file=/tmp/vm0.pcap  -d guest_errors,unimp  -cpu esp32 -M esp32 -m 16M  -kernel  ~/esp/qemu_esp32/build/app-template.elf -s -S   > io.txt
-     nc 127.0.0.1 10077 
+      nc 127.0.0.1 10077 
 
+      The options allows you to do connect to the echoserver
+      in order to test the echo server that is running on port 7
+      wireshark /tmp/vm0.pcap
 
 ```    
 
-```    
-This log goes together with the  vm0.pcap file. 5 retransmission requests. 5 empty.
-ethoc_rx
-size 64
-stop
-ethernet_input: dest:12:34:56:78:9a:e0, src:52:55:c0:a8:01:28, type:800
-sending message to etharp_output
-low_level_output 42
-pbuf len 42 TODO, pad to 64
-ethoc_rx
-size 68
-stop
-ethernet_input: dest:12:34:56:78:9a:e0, src:52:55:c0:a8:01:28, type:806
-low_level_output 58
-pbuf len 58 TODO, pad to 64
-ethoc_rx
-size 64
-stop
-ethernet_input: dest:12:34:56:78:9a:e0, src:52:55:c0:a8:01:28, type:800
-accepted new echo connection
-ethoc_rx
-size 64
-stop
-ethernet_input: dest:00:00:00:00:00:00, src:00:00:00:00:00:00, type:0
-ethoc_rx
-size 64
-stop
-ethernet_input: dest:00:00:00:00:00:00, src:00:00:00:00:00:00, type:0
-ethoc_rx
-size 64
-stop
-ethernet_input: dest:00:00:00:00:00:00, src:00:00:00:00:00:00, type:0
-ethoc_rx
-size 64
-stop
-ethernet_input: dest:00:00:00:00:00:00, src:00:00:00:00:00:00, type:0
-ethoc_rx
-size 64
-stop
-ethernet_input: dest:00:00:00:00:00:00, src:00:00:00:00:00:00, type:0
-ethoc_rx
-size 64
-stop
-ethernet_input: dest:12:34:56:78:9a:e0, src:52:55:c0:a8:01:28, type:800
-read 6 bytessending message to etharp_output
-low_level_output 60
-pbuf len 60 TODO, pad to 64
-ethoc_rx
-size 64
-stop
-ethernet_input: dest:12:34:56:78:9a:e0, src:52:55:c0:a8:01:28, type:800
-```    
 
 
 

@@ -24,11 +24,10 @@
 //#define     DELAY_MS						0x38F4   //20ms test 
 
 
-
 // Open core registers
 #define	OC_BASE          0x3ff69000
 #define	OC_DESC_START    0x3ff69400
-#define	OC_BUF_START     0x3FF69800
+#define	OC_BUF_START     0x3FFF8000
 
 // End of peripherals 0x3FF7_FFFF
 // Data 0x3FF6_9000 0x3FF6_AFFF 8 KB   EMAC

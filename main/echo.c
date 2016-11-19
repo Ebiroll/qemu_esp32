@@ -68,7 +68,7 @@ void process_echo_request(void *p)
     #endif
 #endif
 		}
-		printf("read %d bytes",n);
+		//printf("read %d echosocket bytes\n",n);
 
 		/* break if the recved message = "quit" */
 		if (!strncmp(recv_buf, "quit", 4))

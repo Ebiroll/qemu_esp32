@@ -38,6 +38,9 @@
 #include "freertos/portmacro.h"
 #include "netif/etharp.h"
 
+u16_t lwip_standard_chksum(const void *dataptr, int len);
+
+
 #include "lwip_ethoc.h"
 
 /* define this to use QDMA, which is much faster! */
@@ -64,6 +67,9 @@ static void arp_timer(void *arg);
 
 static err_t low_level_output(struct netif * netif,struct pbuf *p);
 static struct pbuf * low_level_input(struct netif *netif);
+
+static portMUX_TYPE lock_xmit_spinlock = portMUX_INITIALIZER_UNLOCKED;
+
 
 /*----------------------------------------------------------------------------------------
   ****************************************************************************************
@@ -117,7 +123,7 @@ typedef struct ethoc {
 	unsigned int num_rx;
 	unsigned int cur_rx;
 
-	void *vma[16];
+	void *vma[20];
 
 	struct netif *netdev;
 	u32 msg_enable;
@@ -329,10 +335,6 @@ static unsigned int ethoc_update_rx_stats(struct ethoc *dev,
 	return ret;
 }
 
-void stop_here()
-{
-	printf("stop\n");
-}
 
 static int ethoc_rx(struct netif *dev, int limit)
 {
@@ -345,7 +347,11 @@ static int ethoc_rx(struct netif *dev, int limit)
 
 	for (count = 0; count < limit; ++count) {
 		unsigned int entry;
+		portENTER_CRITICAL(&lock_xmit_spinlock);
+
 		entry = priv->num_tx + priv->cur_rx ;
+
+    	portEXIT_CRITICAL(&lock_xmit_spinlock);
 
 
 		for (count = 8; count < 16; ++count) {
@@ -380,7 +386,7 @@ static int ethoc_rx(struct netif *dev, int limit)
 		}
 
 		if (ethoc_update_rx_stats(priv, &bd) == 0) {
-			printf("ethoc_rx\n");
+			//printf("ethoc_rx\n");
 			int size = bd.stat >> 16;
 			//struct sk_buff *skb;
 			struct pbuf *skb;
@@ -389,16 +395,28 @@ static int ethoc_rx(struct netif *dev, int limit)
 			{
 				//if (size>4)
 				//  size -= 4; /* strip the CRC */
-				printf("size %d\n",size);
-				stop_here();
+				//printf("size %d\n",size);
 
 				//skb = netdev_alloc_skb_ip_align(dev, size);
 				skb = pbuf_alloc(PBUF_RAW, size, PBUF_POOL); /* length of buf */ // PBUF_REF
 
 				if (likely(skb)) {
+					struct eth_hdr* ethhdr;
+
 					void *src = priv->vma[entry];
   				    //memcpy_fromio(skb_put(skb, size), src, size);
-					printf("trace_open_eth_receive_desc(%x,%x)\n",(unsigned int)src, size);
+					//printf("trace_open_eth_receive_desc(%x,%x)\n",(unsigned int)src, size);
+
+					ethhdr = (struct eth_hdr *)src;
+    //printf("ethernet_driver: dest:%"X8_F":%"X8_F":%"X8_F":%"X8_F":%"X8_F":%"X8_F", src:%"X8_F":%"X8_F":%"X8_F":%"X8_F":%"X8_F":%"X8_F", type:%"X16_F"\n",
+    // (unsigned)ethhdr->dest.addr[0], (unsigned)ethhdr->dest.addr[1], (unsigned)ethhdr->dest.addr[2],
+    // (unsigned)ethhdr->dest.addr[3], (unsigned)ethhdr->dest.addr[4], (unsigned)ethhdr->dest.addr[5],
+    // (unsigned)ethhdr->src.addr[0], (unsigned)ethhdr->src.addr[1], (unsigned)ethhdr->src.addr[2],
+    // (unsigned)ethhdr->src.addr[3], (unsigned)ethhdr->src.addr[4], (unsigned)ethhdr->src.addr[5],
+    // (unsigned)htons(ethhdr->type));
+
+
+
 
 					memcpy_fromio(skb->payload,src,size);
 					skb->len=size;
@@ -427,8 +445,14 @@ static int ethoc_rx(struct netif *dev, int limit)
 		bd.stat &= ~RX_BD_STATS;
 		bd.stat |=  RX_BD_EMPTY;
 		ethoc_write_bd(priv, entry, &bd);
+
+		portENTER_CRITICAL(&lock_xmit_spinlock);
+
 		if (++priv->cur_rx == priv->num_rx)
 			priv->cur_rx = 0;
+
+		portEXIT_CRITICAL(&lock_xmit_spinlock);
+	
 	}
 
 	return count;
@@ -678,7 +702,7 @@ static int ethoc_mdio_probe(struct netif *dev)
 // Cant get interrupts to work so we have to poll for packets
 void poll_task(void *pvParameter) {
     struct ethoc *priv = &priv_ethoc;
-	int count,entry=8;
+	int count;
     struct ethoc_bd bd;
 
    ethoc_reset(priv);
@@ -687,8 +711,7 @@ void poll_task(void *pvParameter) {
 		if (bd.stat & RX_BD_EMPTY) {
 		}
 		else {
-			printf("Initial rx_data in %d entry %d\n",count,entry);	
-			entry=count;
+			printf("Initial rx_data in %d\n",count);	
 			//bd.stat &= ~RX_BD_STATS;
 			//bd.stat |=  RX_BD_EMPTY;
 			//ethoc_write_bd(priv, entry, &bd);
@@ -727,14 +750,14 @@ int ethoc_open(struct netif *dev)
 	//ret = request_irq(dev->irq, ethoc_interrupt, IRQF_SHARED,
 	//		dev->name, dev);
 
-	if (ret)
-		return ret;
+	//if (ret)
+	//	return ret;
 
 	ethoc_init_ring(priv, OC_BUF_START);
 	ethoc_reset(priv);
 
 	// Poll for input
-    xTaskCreate(&poll_task,"wifi_task",2048, NULL, 3, NULL);
+    xTaskCreate(&poll_task,"poll_task",2048, NULL, 3, NULL);
 
 
 	//if (netif_queue_stopped(dev)) {
@@ -760,8 +783,8 @@ int ethoc_open(struct netif *dev)
 }
 
 
-static portMUX_TYPE lock_xmit_spinlock = portMUX_INITIALIZER_UNLOCKED;
 
+unsigned char packet[ETHOC_ZLEN];
 
 static int ethoc_start_xmit( struct pbuf *skb, struct netif *dev)
 {
@@ -769,9 +792,21 @@ static int ethoc_start_xmit( struct pbuf *skb, struct netif *dev)
 	struct ethoc_bd bd;
 	unsigned int entry;
 	void *dest;
+	int len=skb->len;
 
-	printf("pbuf len %d TODO, pad to 64\n",skb->len);
+	//printf("pbuf len %d TODO?, pad to 64\n",skb->len);
 	// pad to length 64
+
+	memcpy(packet,skb->payload,skb->len);
+
+	if (skb->len<ETHOC_ZLEN) {
+		u16_t crc=lwip_standard_chksum(packet,skb->len);
+		//printf("<%x>",crc); , does not work.
+		packet[skb->len+1]= crc & 0xff;
+		packet[skb->len+2]= (crc & 0xff00) << 8 ;
+
+		len=ETHOC_ZLEN;
+	}
 	//if (skb_put_padto(skb, ETHOC_ZLEN)) {
 	//	dev->stats.tx_errors++;
 	//	goto out_no_free;
@@ -787,17 +822,18 @@ static int ethoc_start_xmit( struct pbuf *skb, struct netif *dev)
 	portENTER_CRITICAL(&lock_xmit_spinlock);
 	priv->cur_tx++;
 
+	// Our qemu emulated hw, does not handle TX_BD_PAD
 	ethoc_read_bd(priv, entry, &bd);
-	if (unlikely(skb->len < ETHOC_ZLEN))
+	if (unlikely(len < ETHOC_ZLEN))
 		bd.stat |=  TX_BD_PAD;
 	else
 		bd.stat &= ~TX_BD_PAD;
 
 	dest = priv->vma[entry];
-	memcpy_toio(dest, skb->payload, skb->len);
-
+	memcpy_toio(dest, packet,len);
 	bd.stat &= ~(TX_BD_STATS | TX_BD_LEN_MASK);
-	bd.stat |= TX_BD_LEN(skb->len);
+	bd.stat |= TX_BD_LEN(len);
+
 	ethoc_write_bd(priv, entry, &bd);
 
 	bd.stat |= TX_BD_READY;
@@ -815,7 +851,7 @@ out:
 	//dev_kfree_skb(skb);
 	pbuf_free(skb);
 	//printf("not needed pbuf_free? %p\n",skb);
-//out_no_free:
+   //out_no_free:
 	return 0;
 }
 
@@ -1226,9 +1262,7 @@ out:
 err_t ethoc_output(struct netif *netif, struct pbuf *q, const ip4_addr_t *ipaddr)
 {
 
-   printf("sending message to etharp_output\n");
-
-   //low_level_output(netif,q);
+   //printf("sending message to etharp_output\n");
 
    etharp_output(netif,q,ipaddr);
 
@@ -1359,30 +1393,12 @@ static err_t low_level_output(struct netif * netif, struct pbuf *p)
 	//packetLength = p->tot_len - ETH_PAD_SIZE; //05 01 millin    
 	//if ((packetLength) < 64) packetLength = 64; //add pad by the AX88796 automatically
 
-	printf("low_level_output %d\n",p->tot_len);
+	//printf("low_level_output %d\n",p->tot_len);
 	
 	/*
 	 * Write packet to ring buffers.
 	 */
-#if 0
-   for(q = p; q != NULL; q = q->next) {
-    /* Send the data from the pbuf to the interface, one pbuf at a
-       time. The size of the data in each pbuf is kept in the ->len
-       variable. */
-    	Count = q->len;
-		buf = q->payload;
-		
-		if (q == p){
-           	buf += ETH_PAD_SIZE;
-		    Count -= ETH_PAD_SIZE; //Pad in Eth_hdr struct 
-        }
-		
-		// Write data
-		ethoc_start_xmit(q,netif);
-		//remote_Addr = write_AX88796(buf, remote_Addr, Count);	
-	} //for
-#endif
-   // From wlanif.c , looks strange..
+   // From wlanif.c , looks strange, however
    // Note that LWIP_NETIF_TX_SINGLE_PBUF is set to 1..
    // @todo: TCP and IP-frag do not work with this, yet 
     q = p;
