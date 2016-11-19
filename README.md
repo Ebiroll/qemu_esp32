@@ -200,7 +200,7 @@ Disassembly of section .text.jump:
 
 
 #Results
-I got my ESP32-dev board from Adafruit. I have made two dumps and mapped the dumps into the files rom.bin & rom1.bin
+I got my ESP32-dev board from Adafruit. https://dl.espressif.com/dl/schematics/ESP32-Core-Board-V2_sch.pdf  I have made two dumps and mapped the dumps into the files rom.bin & rom1.bin
 The code in esp32.c also patches the function ets_unpack_flash_code.
 Instead of loading the code it sets the user_code_start variable (0x3ffe0400) This will later be used
 by the rom to start the loaded elf file. The functions SPIEraseSector & SPIWrite are also patched to return 0.
