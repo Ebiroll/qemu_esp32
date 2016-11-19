@@ -69,7 +69,7 @@ UART emulation is not so good as output is only on stderr. It would be much bett
 When running I advise that you patch gdb as described in this document or use the gdb provided in the /bin directory (linux 64 bit). This improves the debugging exerience quite a bit.
 
 When debugging in the rom you can use,
-(gdb) add-symbol-file rom.elf 0x40000000
+    (gdb) add-symbol-file rom.elf 0x40000000
 This also works for the original gdb and gives you all names of the functions in rom0.
 
 There are also emulated network support, to use it in your project  you will need,

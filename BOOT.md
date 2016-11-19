@@ -440,9 +440,11 @@ mmu_init, 0x400095a4
 b *0x400095a4
 Breakpoint 1, 0x400095a4 in ?? ()
 (gdb) where
-#0  0x400095a4 in ?? ()
-#1  0x40007b45 in ?? ()    
-#2  0x40000740 in ?? ()    // after rom_main
+
+#0  0x400095a7 in mmu_init ()
+#1  0x40007b45 in rom_main ()
+#2  0x40000740 in _start ()     // after call to rom_main
+
 
 uart_baudrate_detect, 0x40009034
 b *0x40009034
