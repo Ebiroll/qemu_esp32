@@ -416,7 +416,7 @@ void app_main()
     // deprecated init
     //system_init();
     //xTaskCreate(&wifi_task,"wifi_task",2048, NULL, 5, NULL);
-    xTaskCreate(&emulated_net, "emulated_net", 2048, NULL, 5, NULL);
+    //xTaskCreate(&emulated_net, "emulated_net", 2048, NULL, 5, NULL);
     //emulated_net(NULL);
     //wifi_task(NULL);
     dump_task(NULL);
