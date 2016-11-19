@@ -83,13 +83,14 @@ main/lwip_ethoc.h
 This allows you to test networking in an emulated environment.
 However currently if you enter a long string with the echo server.
 ethoc_t priv_ethoc; in main/lwip_ethoc.c will get overwritten.
-Probably becaause of bad choice of OC_BUF_START, We an unused memory region for the network data.
+Probably becaase of bad choice of OC_BUF_START, We need an unused memory region for the network data.
 
 
-To set up esp-idf do, git clone --recursive https://github.com/espressif/esp-idf.git
-To keep the esp-idf updated, do git pull & git submodule update --recursive
-
+To setup esp-idf do, 
 ```
+git clone --recursive https://github.com/espressif/esp-idf.git
+#To keep the esp-idf updated, do git pull & git submodule update --recursive
+
 export PATH=$PATH:$HOME/esp/xtensa-esp32-elf/bin
 export IDF_PATH=~/esp/esp-idf
 ```
@@ -107,34 +108,6 @@ esp-idf/components/esptool_py/esptool/esptool.py --chip esp32 -b 921600 -p /dev/
 Note that rom0 is smaller than the actual dump.
 ```
 
-#Dumping the ROM with the main/main.c program
-Please use other method, its easier and faster.
-Set the environment properly. Build the romdump app and flash it.
-Use i.e screen as serial terminal.
-
-```
-screen /dev/ttyUSB0 115200
-Ctrl-A  then H   (save output)
-Press and hold the boot button, then press reset. This puts the ESP to download mode.
-Ctrl-A  then \   (exit, detach)
-make flash
-screen /dev/ttyUSB0 115200
-Ctrl-A  then H   (save output)
-press  reset on ESP to get start.
-```
-When finished trim the capturefile (remove all before and after the dump data) and call it, test.log
-Notice that there are two dumps search for ROM and ROM1
-Compile the dump to rom program.
-```
-gcc torom.c -o torom
-torom
-If successfull you will have a binary rom dump, rom.bin
-Then also create the file rom1.bin
-If you start with second part and then do
-mv rom.bin rom1.bin
-Then you can do the first part
-Those two files will be loaded by qemu and must be in same directory as you start qemu.
-```
 
 
 ### Start qemu
@@ -380,6 +353,34 @@ io write 000480b4 18CB18CB RTC_CNTL_STORE5_REG 3ff480b4
 (gdb) finish
 ```
 
+#Dumping the ROM with the main/main.c program
+Please use other method, its easier and faster. This is saved for historical reasons and for the screen instructions.
+Set the environment properly. Build the romdump app and flash it.
+Use i.e screen as serial terminal.
+
+```
+screen /dev/ttyUSB0 115200
+Ctrl-A  then H   (save output)
+Press and hold the boot button, then press reset. This puts the ESP to download mode.
+Ctrl-A  then \   (exit, detach)
+make flash
+screen /dev/ttyUSB0 115200
+Ctrl-A  then H   (save output)
+press  reset on ESP to get start.
+```
+When finished trim the capturefile (remove all before and after the dump data) and call it, test.log
+Notice that there are two dumps search for ROM and ROM1
+Compile the dump to rom program.
+```
+gcc torom.c -o torom
+torom
+If successfull you will have a binary rom dump, rom.bin
+Then also create the file rom1.bin
+If you start with second part and then do
+mv rom.bin rom1.bin
+Then you can do the first part
+Those two files will be loaded by qemu and must be in same directory as you start qemu.
+```
 
 
 
