@@ -1036,10 +1036,10 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
     } 
 
 
-    if (!serial_hds[0]) {
-        printf("New serial device\n");
-        serial_hds[0] = qemu_chr_new("serial0", "null",NULL);
-    }
+    //if (!serial_hds[0]) {
+    //    printf("New serial device\n");
+    //    serial_hds[0] = qemu_chr_new("serial0", "null",NULL);
+    //}
 
     //esp32_serial_init(system_io, 0x40000, "esp32.uart0",
     //                    xtensa_get_extint(env, 5), serial_hds[0]);
