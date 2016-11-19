@@ -702,61 +702,49 @@ static int ethoc_mdio_probe(struct netif *dev)
 // Cant get interrupts to work so we have to poll for packets
 void poll_task(void *pvParameter) {
     struct ethoc *priv = &priv_ethoc;
-	int count;
-    struct ethoc_bd bd;
 
-   ethoc_reset(priv);
+    ethoc_reset(priv);
 
-	for (count = 8; count < 16; ++count) {
-		if (bd.stat & RX_BD_EMPTY) {
-		}
-		else {
-			printf("Initial rx_data in %d\n",count);	
-			//bd.stat &= ~RX_BD_STATS;
-			//bd.stat |=  RX_BD_EMPTY;
-			//ethoc_write_bd(priv, entry, &bd);
-		}
-	}
-
-	for(;;) {
- 	   ethoc_poll(8);
-	   //ethoc_interrupt();
-       vTaskDelay(5);
-	}
+    for(;;) {
+      ethoc_poll(8);
+      //ethoc_interrupt();
+      vTaskDelay(5);
+    }
 }
 
 
 int ethoc_open(struct netif *dev)
 {
-	struct ethoc *priv = &priv_ethoc;
-	int ret=0;
+    struct ethoc *priv = &priv_ethoc;
+    int ret=0;
 
-	priv->iobase=(void  *)OC_BASE;
-	priv->membase=(void  *)OC_BUF_START;
+    priv->iobase=(void  *)OC_BASE;
+    priv->membase=(void  *)OC_BUF_START;
 
     //static void IRAM_ATTR frc_timer_isr()
-	// intr_matrix_set(xPortGetCoreID(), ETS_TIMER1_INTR_SOURCE, ETS_FRC1_INUM);
-    // xt_set_interrupt_handler(ETS_FRC1_INUM, &frc_timer_isr, NULL);                                                           
+    // intr_matrix_set(xPortGetCoreID(), ETS_TIMER1_INTR_SOURCE, ETS_FRC1_INUM);
+    // xt_set_interrupt_handler(ETS_FRC1_INUM, &frc_timer_isr, NULL);
     // xt_ints_on(1 << ETS_FRC1_INUM);                                   
 
-    //SET_PERI_REG_MASK(FRC_TIMER_CTRL_REG(0),                                                                                                                                     <
-    //                FRC_TIMER_ENABLE | \                                                                                                                                                 <
+    //SET_PERI_REG_MASK(FRC_TIMER_CTRL_REG(0),
+    //                FRC_TIMER_ENABLE | \   
     //                FRC_TIMER_INT_ENABLE);  
 
+    // Cant get this to work with qemu
     intr_matrix_set(xPortGetCoreID(), ETS_RWBLE_NMI_SOURCE /*ETS_ETH_MAC_INTR_SOURCE*/, 9);
     xt_set_interrupt_handler(9, &ethoc_interrupt, NULL);                                                           
     xt_ints_on(1 << 9);                                   
 
-	//ret = request_irq(dev->irq, ethoc_interrupt, IRQF_SHARED,
-	//		dev->name, dev);
+   //ret = request_irq(dev->irq, ethoc_interrupt, IRQF_SHARED,
+   //		dev->name, dev);
 
-	//if (ret)
-	//	return ret;
+   //if (ret)
+   //	return ret;
 
-	ethoc_init_ring(priv, OC_BUF_START);
-	ethoc_reset(priv);
+   ethoc_init_ring(priv, OC_BUF_START);
+   ethoc_reset(priv);
 
-	// Poll for input
+    // Poll for input
     xTaskCreate(&poll_task,"poll_task",2048, NULL, 3, NULL);
 
 
@@ -776,8 +764,6 @@ int ethoc_open(struct netif *dev)
 	//			dev->base_addr, dev->mem_start, dev->mem_end);
 	//}
 
-
-// ethoc_poll
 
 	return 0;
 }
@@ -801,6 +787,7 @@ static int ethoc_start_xmit( struct pbuf *skb, struct netif *dev)
 
 	if (skb->len<ETHOC_ZLEN) {
 		u16_t crc=lwip_standard_chksum(packet,skb->len);
+		// TODO, qemu does not use the TX_BD_PAD bit..
 		//printf("<%x>",crc); , does not work.
 		packet[skb->len+1]= crc & 0xff;
 		packet[skb->len+2]= (crc & 0xff00) << 8 ;
@@ -848,10 +835,10 @@ static int ethoc_start_xmit( struct pbuf *skb, struct netif *dev)
 	 portEXIT_CRITICAL(&lock_xmit_spinlock);
 	//skb_tx_timestamp(skb);
 out:
-	//dev_kfree_skb(skb);
-	//pbuf_free(skb);
-	//printf("not needed pbuf_free? %p\n",skb);
-   //out_no_free:
+        //dev_kfree_skb(skb);
+        //pbuf_free(skb);
+        //printf("not needed pbuf_free? %p\n",skb);
+        //out_no_free:
 	return 0;
 }
 
@@ -859,11 +846,10 @@ out:
 static int ethoc_set_ringparam(struct netif *dev)
 {
 	struct ethoc *priv = &priv_ethoc;
-	int num_bd = 16;
 
 	priv->num_tx = 8;
 	priv->num_rx = 8;
-	priv->num_bd = num_bd;
+	priv->num_bd = 16;
 	/* num_tx must be a power of two */
 	//priv->num_tx = rounddown_pow_of_two(num_bd >> 1);
 	//priv->num_rx = num_bd - priv->num_tx;
@@ -1261,12 +1247,11 @@ out:
 
 err_t ethoc_output(struct netif *netif, struct pbuf *q, const ip4_addr_t *ipaddr)
 {
-
    //printf("sending message to etharp_output\n");
 
    etharp_output(netif,q,ipaddr);
 
-return ERR_OK;
+   return ERR_OK;
 }
 
 
@@ -1309,8 +1294,8 @@ err_t ethoc_init(struct netif *netif)
   
   etharp_init();
   
-  // Timeout added elsewhere??
-  //sys_timeout(ARP_TMR_INTERVAL, arp_timer, NULL);
+  // Timeout to arp alsoadded elsewhere??
+  sys_timeout(ARP_TMR_INTERVAL, arp_timer, NULL);
   
   return ERR_OK;
 }
