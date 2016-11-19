@@ -69,13 +69,17 @@ UART emulation is not so good as output is only on stderr. It would be much bett
 When running I advise that you patch gdb as described in this document or use the gdb provided in the /bin directory (linux 64 bit). This improves the debugging exerience quite a bit.
 
 When debugging in the rom you can use,
+```
     (gdb) add-symbol-file rom.elf 0x40000000
+```
 This also works for the original gdb and gives you all names of the functions in rom0.
 
 There are also emulated network support, to use it in your project  you will need,
+```
 main/emulwIP.c
 main/lwip_ethoc.c
 main/lwip_ethoc.h
+```
 This allows you to test networking in an emulated environment.
 However currently if you enter a long string with the echo server.
 ethoc_t priv_ethoc; in main/lwip_ethoc.c will get overwritten.
@@ -85,9 +89,10 @@ Probably becaause of bad choice of OC_BUF_START, We an unused memory region for 
 To set up esp-idf do, git clone --recursive https://github.com/espressif/esp-idf.git
 To keep the esp-idf updated, do git pull & git submodule update --recursive
 
+```
 export PATH=$PATH:$HOME/esp/xtensa-esp32-elf/bin
 export IDF_PATH=~/esp/esp-idf
-
+```
 
 #Dumping the ROM0 & ROM1 using esp-idf esptool.py
 ```
