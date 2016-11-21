@@ -1,0 +1,15 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug",
+            "gdbpath": "/home/olas/esp/xtensa-esp32-elf/bin/xtensa-esp32-elf-gdb",
+            "type": "gdb",
+            "request": "attach",
+            "executable" : "${workspaceRoot}/build/app-template.elf",
+            "target": ":1234",
+            "remote": true,
+            "cwd": "${workspaceRoot}"
+        }
+    ]
+}

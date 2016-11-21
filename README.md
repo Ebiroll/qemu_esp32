@@ -6,6 +6,9 @@ This documents how to add an esp32 cpu and a simple esp32 board to qemu in order
 It is a good way to learn about qemu ,esp32 and the esp32 rom.
 
 
+## Setting up visual studio code
+[Works pretty well in linux now](./VSCODE.md)
+
 
 By following the instructions here, I added esp32 to qemu.
 http://wiki.linux-xtensa.org/index.php/Xtensa_on_QEMU
