@@ -682,51 +682,6 @@ void HELPER(entry)(CPUXtensaState *env, uint32_t pc, uint32_t s, uint32_t imm)
 
 
 
-#Setting up visual studio code to compile
-```
-Visual studio code works fine for navigating both qemu and esp32 sources
-Press ctrl-shift-P 
-type tasks, select configure task runner, select other
-{
-    "version": "0.1.0",
-    "command": "make",
-    "isShellCommand": true,
-    "options": {
-        "cwd": "${workspaceRoot}/../qemu_esp32"
-    },
-    "tasks": [
-        {
-            "taskName": "Makefile",
-            // Make this the default build command.
-            "isBuildCommand": true,
-            // Show the output window only if unrecognized errors occur.
-            "showOutput": "always",
-            // No args
-            "args": ["all"],
-            // Use the standard less compilation problem matcher.
-            "problemMatcher": {
-                "owner": "cpp",
-                "fileLocation": ["relative", "${workspaceRoot}"],
-                "pattern": {
-                    "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
-                    "file": 1,
-                    "line": 2,
-                    "column": 3,
-                    "severity": 4,
-                    "message": 5
-                }
-            }
-        }
-    ]
-}
-
-Now go to File->Preferences->Keyboard Shortcuts and add the following key binding for the build task:
-
-// Place your key bindings in this file to overwrite the defaults
-[
-    { "key": "f8",          "command": "workbench.action.tasks.build" }
-]
-```
 
 
 ##Applied patch
