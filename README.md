@@ -580,6 +580,23 @@ It is a good idea to save the original  xtensa-esp32-elf-gdb as the one in the b
     This gdbstub panic handler is also nice to have when running on target.
     xtensa-esp32-elf-gdb   build/app-template.elf   -b 115200 -ex 'target remote /dev/ttyUSB0'
    
+## Memory access breakpoints.
+
+I noticed that memory got overwritten as priv_ethoc suddenly contained faulty iobase.
+Memory access breakpoints comes very handy for these tyoes of errors.
+```      
+To track memory writes
+(gdb) watch priv_ethoc.io_base
+To track memory reads
+(gdb) rwatch priv_ethoc.io_base
+To track memory reads and writes
+(gdb) awatch *0x3ffe0400
+Together with add-symbol-file rom.elf 0x40000000 this allows you to easy find where  a register is accessed.
+Here is an important register. DPORT_PRO_CACHE_CTRL_REG
+(gdb) awatch *0x3ff00040
+(gdb) info watchpoints
+Dont forget that you can reset qemu hardware and start again.
+
 
 ## Rom symbols from rom.elf
 To make debugging the rom functions there is a file rom.elf that contains debug information for the rom file. 

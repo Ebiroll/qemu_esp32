@@ -726,10 +726,11 @@ int ethoc_open(struct netif *dev)
     // xt_set_interrupt_handler(ETS_FRC1_INUM, &frc_timer_isr, NULL);
     // xt_ints_on(1 << ETS_FRC1_INUM);                                   
 
+    /*
     //SET_PERI_REG_MASK(FRC_TIMER_CTRL_REG(0),
     //                FRC_TIMER_ENABLE | \   
     //                FRC_TIMER_INT_ENABLE);  
-
+    */
     // Cant get this to work with qemu
     intr_matrix_set(xPortGetCoreID(), ETS_RWBLE_NMI_SOURCE /*ETS_ETH_MAC_INTR_SOURCE*/, 9);
     xt_set_interrupt_handler(9, &ethoc_interrupt, NULL);                                                           
@@ -770,7 +771,7 @@ int ethoc_open(struct netif *dev)
 
 
 
-unsigned char packet[ETHOC_ZLEN];
+unsigned char packet[ETHOC_BUFSIZ];
 
 static int ethoc_start_xmit( struct pbuf *skb, struct netif *dev)
 {
@@ -783,7 +784,13 @@ static int ethoc_start_xmit( struct pbuf *skb, struct netif *dev)
 	//printf("pbuf len %d TODO?, pad to 64\n",skb->len);
 	// pad to length 64
 
-	memcpy(packet,skb->payload,skb->len);
+	if (skb->len>ETHOC_BUFSIZ) {
+		printf("ETHERNET PACKET TOO BIG\n");
+	} 
+	else
+    {
+	   memcpy(packet,skb->payload,skb->len);
+	}
 
 	if (skb->len<ETHOC_ZLEN) {
 		u16_t crc=lwip_standard_chksum(packet,skb->len);
