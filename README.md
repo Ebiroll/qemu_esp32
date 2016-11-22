@@ -274,7 +274,8 @@ When configuring, choose
   Component config  --->   
     FreeRTOS  --->
       [*] Run FreeRTOS only on first core 
-
+    ESP32-specific config  --->
+      [ ] Initialize PHY in startup code  
 
 ```
 
