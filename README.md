@@ -84,9 +84,6 @@ main/lwip_ethoc.c
 main/lwip_ethoc.h
 ```
 This allows you to test networking in an emulated environment.
-However currently if you enter a long string with the echo server.
-ethoc_t priv_ethoc; in main/lwip_ethoc.c will get overwritten.
-Probably becaase of bad choice of OC_BUF_START, We need an unused memory region for the network data.
 
 
 To setup esp-idf do, 

@@ -29,6 +29,20 @@
 // 0x6000607c
 // set *((int *) 0x6000e0c4)=-1
 
+
+#if 0
+ULP memory
+0x50000000  8kb
+
+
+esp_err_t ulp_run(uint32_t entry_point)
+{
+    SET_PERI_REG_MASK(SARADC_SAR_START_FORCE_REG, SARADC_ULP_CP_FORCE_START_TOP_M);
+    SET_PERI_REG_BITS(SARADC_SAR_START_FORCE_REG, SARADC_PC_INIT_V, entry_point, SARADC_PC_INIT_S);
+    SET_PERI_REG_MASK(SARADC_SAR_START_FORCE_REG, SARADC_ULP_CP_START_TOP_M);
+    return ESP_OK;
+}
+#endif
 #include "qemu/osdep.h"
 #include "qapi/error.h"
 #include "qemu-common.h"
@@ -794,10 +808,15 @@ static uint64_t esp_io_read(void *opaque, hwaddr addr,
             printf("RTC_CNTL_DIG_ISO_REG 3ff48088=%08X\n",sim_RTC_CNTL_DIG_ISO_REG);
             return sim_RTC_CNTL_DIG_ISO_REG;
             break;
-            case 0x40020:
-                printf("UART data=0\n");
-                return 0x0;
-             break;
+        case 0x40020:
+            printf("UART data=0\n");
+            return 0x0;
+            break;
+        case 0x6a014:
+            printf("EMAC_GMACGMIIDATA_REG");
+            return 0x2000;
+           break;                       
+
        default:
           {
             if (addr>0x40000 && addr<0x40400) 
@@ -868,7 +887,11 @@ static void esp_io_write(void *opaque, hwaddr addr,
         case 0x40:
             printf("DPORT_PRO_CACHE_CTRL_REG 3ff00040\n");
             sim_DPORT_PRO_CACHE_CTRL_REG=val;
-           break;        
+           break; 
+        case 0xcc:
+           printf("EMAC_CLK_EN_REG %" PRIx64 "\n" ,val);
+           // REG_SET_BIT(EMAC_CLK_EN_REG, EMAC_CLK_EN); 
+           break;
         case 0x48088:
            printf("RTC_CNTL_DIG_ISO_REG 3ff48088\n");
            sim_RTC_CNTL_DIG_ISO_REG=val;
@@ -882,6 +905,41 @@ static void esp_io_write(void *opaque, hwaddr addr,
             // Outupt uart data to stderr.
             fprintf(stderr,"%c",(char)val);
             break;
+
+       case 0x69000: 
+           printf("EMAC_DMABUSMODE_REG %" PRIx64 "\n" ,val);
+           break;
+
+       case 0x69804:
+            printf("EMAC_EX_OSCCLK_CONF_REG %" PRIx64 "\n" ,val);
+            break;
+
+       case 0x69808:
+            printf("EMAC_EX_CLK_CTRL_REG %" PRIx64 "\n" ,val);
+            break;
+
+            // desc2 = 0x3ffb214c, desc3 = 0x3ffb9e6c
+            // desc2 = 0x3ffb408c, desc3 = 0x3ffb9f0c
+            // desc2 = 0x3ffb598c, desc3 = 0x3ffb9e4c
+
+       case  0x6980c:
+            printf("EMAC_EX_PHYINF_CONF_REG 3ff6980c %" PRIx64 "\n" ,val);
+            // Outupt uart data to stderr.
+            //fprintf(stderr,"%c",(char)val);
+              //emac_enable_clk(true);                                                                                                  
+              //REG_SET_FIELD(EMAC_EX_PHYINF_CONF_REG, EMAC_EX_PHY_INTF_SEL, EMAC_EX_PHY_INTF_RMII);      
+            break;
+       case 0x69018:
+           //REG_SET_BIT(EMAC_DMAOPERATION_MODE_REG, EMAC_FORWARD_UNDERSIZED_GOOD_FRAMES);
+           printf("EMAC_DMAOPERATION_MODE_REG %" PRIx64 "\n" ,val);
+           break;
+       case 0x6a010:
+            printf("EMAC_GMACGMIIADDR_REG %" PRIx64 "\n" ,val);
+           break;
+       case 0x6a014:
+            printf("EMAC_GMACGMIIDATA_REG %" PRIx64 "\n" ,val);
+           break;                       
+
        default:
           if (addr>0x40000 && addr<0x40400) 
           {
