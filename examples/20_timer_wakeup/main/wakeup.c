@@ -17,7 +17,7 @@
 #include "driver/gpio.h"
 #include "sdkconfig.h"
 
-#define BLINK_GPIO 27
+#define BLINK_GPIO 5
 
 void study_task(void *pvParameters)
 {
@@ -43,6 +43,7 @@ void app_main()
 {
 	printf("Welcome to Noduino Quantum\r\n");
 	printf("Try to investigate the ULP/RTC of ESP32 ... \r\n");
+
 	xTaskCreatePinnedToCore(&study_task, "study_task", 1024, NULL, 5,
 				NULL, 0);
 }

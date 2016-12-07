@@ -6,7 +6,7 @@ ets Jun  8 2016 00:22:57
 # start gdb
 xtensa-esp32-elf-gdb  build/onchip-sensor.elf -ex 'target remote:1234'
 
-
+```
 rst:0x10 (RTCWDT_RTC_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
 I (1) heap_alloc_caps: Initializing heap allocator:
 I (1) heap_alloc_caps: Region 19: 3FFB4908 len 0002B6F8 tag 0
@@ -82,3 +82,5 @@ io read 48854
 0x4008c0e4 <adc1_read_test+280> sub    a2, a8, a2
 0x4008c0e7 <adc1_read_test+283> extui  a2, a2, 0, 16
 0x4008c0ea <adc1_read_test+286> retw.n 
+
+```

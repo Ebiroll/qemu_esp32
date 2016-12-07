@@ -5,7 +5,7 @@ xtensa-softmmu/qemu-system-xtensa -d guest_errors,unimp  -cpu esp32 -M esp32 -m 
 # start gdb
 xtensa-esp32-elf-gdb  build/memsize.elf -ex 'target remote:1234'
 
-
+```
 ets Jun  8 2016 00:22:57
 
 rst:0x10 (RTCWDT_RTC_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
@@ -50,3 +50,4 @@ free idx 3
 free idx 2
 free idx 1
 free idx 0
+```
