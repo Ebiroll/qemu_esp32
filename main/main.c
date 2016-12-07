@@ -400,11 +400,11 @@ void emulated_net(void *pvParameter) {
         //gpio_set_level(GPIO_NUM_4, level);
         if (netif)
         {
-            printf("ARP request %s\n",tmpBuff);
-            err_t ret=etharp_request(netif, &scanaddr);
-            if (ret<0) {
-                printf("Failed request %s\n",tmpBuff);
-            }
+            //printf("ARP request %s\n",tmpBuff);
+            //err_t ret=etharp_request(netif, &scanaddr);
+            //if (ret<0) {
+            //    printf("Failed request %s\n",tmpBuff);
+            //}
         }
 
         level = !level;

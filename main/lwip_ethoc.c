@@ -529,6 +529,8 @@ static int ethoc_tx(int limit)
 	return count;
 }
 
+int ethoc_poll(int budget);
+
 static void ethoc_interrupt()
 {
 	struct ethoc *priv = &priv_ethoc;
@@ -551,12 +553,10 @@ static void ethoc_interrupt()
 	// No interrupt to handle....
 	if (unlikely(pending == 0))
 	{
-		//printf("No pendig irq, spurious.\n");
+		printf("No pendig irq, spurious.\n");
 		return;
 	}
-		//return IRQ_NONE;
-    printf("IRQ\n");
-
+    //printf("IRQ\n");
 
 	ethoc_ack_irq(priv, pending);
 
@@ -596,7 +596,7 @@ static int ethoc_get_mac_address(struct netif *dev, void *addr)
 }
 #endif
 
-static int ethoc_poll(int budget)
+int ethoc_poll(int budget)
 {
 	struct ethoc *priv = &priv_ethoc;
 	int rx_work_done = 0;
@@ -746,6 +746,7 @@ int ethoc_open(struct netif *dev)
    ethoc_reset(priv);
 
     // Poll for input
+	// Interrupts work now, Should not need to do polling 
     xTaskCreate(&poll_task,"poll_task",2048, NULL, 3, NULL);
 
 
