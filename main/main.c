@@ -258,9 +258,9 @@ void wifi_task(void *pvParameter) {
     ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_STA) );
     wifi_config_t sta_config = {
         .sta = {
-	     #include "secret.h"
-	//.ssid = "ssid",
-	//.password = "password",
+	     //#include "secret.h"
+	   .ssid = "ssid",
+	   .password = "password",
 	//.bssid_set = false
         }
     };
