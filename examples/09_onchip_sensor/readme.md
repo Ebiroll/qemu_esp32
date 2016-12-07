@@ -1,5 +1,5 @@
 # Start qemu
-xtensa-softmmu/qemu-system-xtensa -d guest_errors,unimp  -cpu esp32 -M esp32 -m 4M -net user,id=simnet,ipver4=on,net=192.168.1.0/24,host=192.168.1.40,hostfwd=tcp::10077-192.168.1.3:7  -net dump,file=/tmp/vm0.pcap  -kernel  ~/esp/qemu_esp32/examples/09_onchip_sensor/build/onchip-sensor.elf  -s -S > io.txt
+xtensa-softmmu/qemu-system-xtensa -d guest_errors,unimp  -cpu esp32 -M esp32 -m 4M -net nic,model=vlan0  -net user,id=simnet,ipver4=on,net=192.168.1.0/24,host=192.168.1.40,hostfwd=tcp::10077-192.168.1.3:7  -net dump,file=/tmp/vm0.pcap  -kernel  ~/esp/qemu_esp32/examples/09_onchip_sensor/build/onchip-sensor.elf  -s -S > io.txt
 Warning: vlan 0 with no nics
 ets Jun  8 2016 00:22:57
 

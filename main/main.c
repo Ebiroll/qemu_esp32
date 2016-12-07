@@ -258,10 +258,10 @@ void wifi_task(void *pvParameter) {
     ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_STA) );
     wifi_config_t sta_config = {
         .sta = {
-	     //#include "secret.h"
-	     .ssid = "ssid",
-	     .password = "password",
-	     .bssid_set = false
+	     #include "secret.h"
+	//.ssid = "ssid",
+	//.password = "password",
+	//.bssid_set = false
         }
     };
     ESP_ERROR_CHECK( esp_wifi_set_config(WIFI_IF_STA, &sta_config) );
@@ -386,7 +386,7 @@ void emulated_net(void *pvParameter) {
         printf("No et0");
     }
 
-    xTaskCreate(&echo_application_thread, "echo_thread", 2048, NULL, 5, NULL);
+    xTaskCreate(&echo_application_thread, "echo_thread", 2048, NULL, 12, NULL);
 
     unsigned char hostnum=1;
     char tmpBuff[20];
@@ -512,10 +512,10 @@ void app_main()
     //xTaskCreate(&wifi_task,"wifi_task",2048, NULL, 5, NULL);
     // Better run in main thread for faster processing
     //xTaskCreate(&emulated_net, "emulated_net", 4096, NULL, 5, NULL);
-    //emulated_net(NULL);
+    emulated_net(NULL);
     //wifi_task(NULL);
     //dump_task(NULL);
-    ethernet_main();
+    //ethernet_main();
 
 
     // Dumping rom is best done with the esptool.py

@@ -77,13 +77,14 @@ esp-idf/components/esptool_py/esptool/esptool.py --chip esp32 -b 921600 -p /dev/
 esp-idf/components/esptool_py/esptool/esptool.py --chip esp32 -b 921600 -p /dev/ttyUSB0 dump_mem 0x3FF90000 0x00010000 rom1.bin
 
 Note that rom0 is smaller than the actual dump.
+Those two files will be loaded by qemu and must be in same directory as you start qemu.
 ```
 
 
 
 ### Start qemu
 ```
-  > xtensa-softmmu/qemu-system-xtensa -d guest_errors,unimp  -cpu esp32 -M esp32 -m 4M -net user,id=simnet,ipver4=on,net=192.168.1.0/24,host=192.168.1.40,hostfwd=tcp::10077-192.168.1.3:7  -net dump,file=/tmp/vm0.pcap  -kernel  ~/esp/qemu_esp32/build/app-template.elf  -s -S > io.txt
+  > xtensa-softmmu/qemu-system-xtensa -d guest_errors,unimp  -cpu esp32 -M esp32 -m 4M -net nic,model=vlan0 -net user,id=simnet,ipver4=on,net=192.168.1.0/24,host=192.168.1.40,hostfwd=tcp::10077-192.168.1.3:7  -net dump,file=/tmp/vm0.pcap  -kernel  ~/esp/qemu_esp32/build/app-template.elf  -s -S > io.txt
 
 ```
 
@@ -171,7 +172,7 @@ Disassembly of section .text.jump:
 
 
 #Results
-If tou get something like this,
+If you get something like this,
 ```
 Illegal entry instruction(pc = 40080a4c), PS = 0000001f
 Illegal entry instruction(pc = 40080a4c), PS = 0000001f
@@ -258,7 +259,7 @@ The command interpreter is Basic, Here you can read about it
 
 #Debugging tips
 ```
-If you get an exception likt this
+If you get an exception like this
 Guru Meditation Error of type StoreProhibited occurred on core   0. Exception was unhandled.
 Register dump:
 PC      :  4008189e  PS      :  00060030  A0      :  800d05f6  A1      :  3ffe3e20  
@@ -273,14 +274,14 @@ And reset qemu.
 We break here ,   components/freertos/./heap_regions.c
 (gdb) Pressing Ctrl-X and the o will open the source code if it exists. 
 (gdb) where
-(gdb) update
+(gdb) up
 
 // This one we could also analyze more
 ets_get_detected_xtal_freq,  0x40008588
 ```
 
 
-#What is some of the problem with this code
+#What is some of the problems with this code
 Some i/o register name mapping in esp32.cis probably wrong.  The values returned are also many times wrong.
 I did this mapping very quickly with grep to get a better understanding of what the rom was doing.
 ```
@@ -343,7 +344,7 @@ io write 000480b4 18CB18CB RTC_CNTL_STORE5_REG 3ff480b4
 ```
 
 #Dumping the ROM with the main/main.c program
-Please use other method, its easier and faster. This is saved for historical reasons and for the screen instructions.
+Please use other method (esptool.py), its easier and faster. This is saved for historical reasons and for the screen instructions.
 Set the environment properly. Build the romdump app and flash it.
 Use i.e screen as serial terminal.
 
