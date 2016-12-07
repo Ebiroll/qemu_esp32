@@ -71,3 +71,5 @@ Then do reset in qemu
 ```
 A bit annoying but for hight level c functions it is nice to have a gdb gui.
 
+[[https://github.com/Ebiroll/qemu_esp32/blob/master/img/vscode.png]]
+

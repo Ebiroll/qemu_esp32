@@ -178,32 +178,12 @@ Illegal entry instruction(pc = 40080a4c), PS = 0000001f
 ```
 Then you have probably not downloaded rom files or put them in another directory than where you start qemu.
 
-Error in 
-vPortDefineHeapRegionsTagged
-
-// This one we could analyze 
-ets_get_detected_xtal_freq,  0x40008588
-
 
 I got my ESP32-dev board from Adafruit. https://dl.espressif.com/dl/schematics/ESP32-Core-Board-V2_sch.pdf  I have made two dumps and mapped the dumps into the files rom.bin & rom1.bin
 The code in esp32.c also patches the function ets_unpack_flash_code.
 Instead of loading the code it sets the user_code_start variable (0x3ffe0400) This will later be used
 by the rom to start the loaded elf file. The functions SPIEraseSector & SPIWrite are also patched to return 0.
 The rom function -- ets_unpack_flash_code is located at 0x40007018.
-
-The instruction wsr.memctl does not work in QEMU but can be patched like this (in qemu tree).
-File translate.c
-```
-static bool gen_check_sr(DisasContext *dc, uint32_t sr, unsigned access)
-{
-    if (!xtensa_option_bits_enabled(dc->config, sregnames[sr].opt_bits)) {
-        if (sregnames[sr].name) {
-            qemu_log_mask(LOG_GUEST_ERROR, "SR %s is not configured\n", sregnames[sr].name);
-        } else {
-            qemu_log_mask(LOG_UNIMP, "SR %d %s is not implemented\n", sr);
-        }
-        //gen_exception_cause(dc, ILLEGAL_INSTRUCTION_CAUSE);
-```
 
 
 Better flash emulation would be better. The serial device should also be emulated differently. Now serial output goes to stderr.
@@ -276,8 +256,31 @@ The command interpreter is Basic, Here you can read about it
     http://hackaday.com/2016/10/27/basic-interpreter-hidden-in-esp32-silicon/
 
 
+#Debugging tips
+```
+If you get an exception likt this
+Guru Meditation Error of type StoreProhibited occurred on core   0. Exception was unhandled.
+Register dump:
+PC      :  4008189e  PS      :  00060030  A0      :  800d05f6  A1      :  3ffe3e20  
+A2      :  3ffb1134  A3      :  0002e49c  A4      :  3ffb008c  A5      :  fffffffc  
+A6      :  3ffb008c  A7      :  ffffffff  A8      :  3ffe8000  A9      :  bffcffdc  
+A10     :  3ffb12c4  A11     :  3ffe8000  A12     :  00000019  A13     :  00000001  
+A14     :  7ffe7fe8  A15     :  00000000  SAR     :  00000004  EXCCAUSE:  0000001d  
+EXCVADDR:  bffcffe0  LBEG    :  4000c46c  LEND    :  4000c477  LCOUNT  :  ffffffff  
+Look at PC for the error then set a breakpoint there 
+(gdb) b *0x4008189e
+And reset qemu.
+We break here ,   components/freertos/./heap_regions.c
+(gdb) Pressing Ctrl-X and the o will open the source code if it exists. 
+(gdb) where
+(gdb) update
 
-#What is the problem with this code
+// This one we could also analyze more
+ets_get_detected_xtal_freq,  0x40008588
+```
+
+
+#What is some of the problem with this code
 Some i/o register name mapping in esp32.cis probably wrong.  The values returned are also many times wrong.
 I did this mapping very quickly with grep to get a better understanding of what the rom was doing.
 ```
@@ -367,13 +370,28 @@ mv rom.bin rom1.bin
 Then you can do the first part
 Those two files will be loaded by qemu and must be in same directory as you start qemu.
 ```
+
 #This is head of qemu development.
-Not so many new xtensa extensions here.
+Not so good for esp32 debugging.
 ```
 git clone git://git.qemu.org/qemu.git
 
 cd qemu
 git submodule update --init dtc
+```
+
+The instruction wsr.memctl does not work in QEMU but can be patched like this (in qemu tree).
+File translate.c, This is only needed for the qemu in the current directory
+```
+static bool gen_check_sr(DisasContext *dc, uint32_t sr, unsigned access)
+{
+    if (!xtensa_option_bits_enabled(dc->config, sregnames[sr].opt_bits)) {
+        if (sregnames[sr].name) {
+            qemu_log_mask(LOG_GUEST_ERROR, "SR %s is not configured\n", sregnames[sr].name);
+        } else {
+            qemu_log_mask(LOG_UNIMP, "SR %d %s is not implemented\n", sr);
+        }
+        //gen_exception_cause(dc, ILLEGAL_INSTRUCTION_CAUSE);
 ```
 
 A better version for qemu exists here https://github.com/OSLL/qemu-xtensa,

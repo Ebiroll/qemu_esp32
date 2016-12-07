@@ -1033,7 +1033,7 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
 
     // Map all as ram 
     ram = g_malloc(sizeof(*ram));
-    memory_region_init_ram(ram, NULL, "iram0", 0x1fffffff,  // 00000
+    memory_region_init_ram(ram, NULL, "iram0", 0x20000000,  // 00000
                            &error_abort);
 
     vmstate_register_ram_global(ram);
