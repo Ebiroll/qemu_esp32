@@ -40,6 +40,9 @@
 
 u16_t lwip_standard_chksum(const void *dataptr, int len);
 
+TaskHandle_t pollHandle = NULL;
+
+SemaphoreHandle_t xSemaphore = NULL;
 
 #include "lwip_ethoc.h"
 
@@ -70,6 +73,8 @@ static struct pbuf * low_level_input(struct netif *netif);
 
 static portMUX_TYPE lock_xmit_spinlock = portMUX_INITIALIZER_UNLOCKED;
 
+//static portMUX_TYPE lock_rx_lock = portMUX_INITIALIZER_UNLOCKED;
+#define LONG_TIME 0xffff
 
 /*----------------------------------------------------------------------------------------
   ****************************************************************************************
@@ -556,7 +561,7 @@ static void ethoc_interrupt()
 		printf("No pendig irq, spurious.\n");
 		return;
 	}
-    //printf("IRQ\n");
+    printf("IRQ\n");
 
 	ethoc_ack_irq(priv, pending);
 
@@ -570,6 +575,9 @@ static void ethoc_interrupt()
 	if (pending & (INT_MASK_TX | INT_MASK_RX)) {
 		//ethoc_disable_irq(priv, INT_MASK_TX | INT_MASK_RX);
 		//napi_schedule(&priv->napi);
+		//xTaskResumeFromISR(pollHandle);
+		//static signed BaseType_t xHigherPriorityTaskWoken;
+		xSemaphoreGiveFromISR( xSemaphore, NULL );
 	}
 
 	return;
@@ -603,7 +611,7 @@ int ethoc_poll(int budget)
 	int tx_work_done = 0;
 
 	rx_work_done = ethoc_rx(priv->netdev, budget);
-	// TODO, Dont understand the driver... This transmits agsin?!
+	// TODO, Dont understand the driver... This transmits again?!
 	//tx_work_done = ethoc_tx( budget);
 
 	if (rx_work_done < budget && tx_work_done < budget) {
@@ -706,9 +714,13 @@ void poll_task(void *pvParameter) {
     ethoc_reset(priv);
 
     for(;;) {
-      ethoc_poll(8);
-      //ethoc_interrupt();
-      vTaskDelay(5);
+	  if( xSemaphoreTake( xSemaphore, LONG_TIME ) == pdTRUE ) {
+         ethoc_poll(8);
+	  }
+	  //vTaskSuspend(NULL);
+
+      //vTaskDelay(5);
+	  
     }
 }
 
@@ -732,6 +744,9 @@ int ethoc_open(struct netif *dev)
     //                FRC_TIMER_INT_ENABLE);  
     */
     // Cant get this to work with qemu
+    xSemaphore = xSemaphoreCreateBinary();
+
+
     intr_matrix_set(xPortGetCoreID(), ETS_RWBLE_NMI_SOURCE /*ETS_ETH_MAC_INTR_SOURCE*/, 9);
     xt_set_interrupt_handler(9, &ethoc_interrupt, NULL);                                                           
     xt_ints_on(1 << 9);                                   
@@ -747,7 +762,7 @@ int ethoc_open(struct netif *dev)
 
     // Poll for input
 	// Interrupts work now, Should not need to do polling 
-    xTaskCreate(&poll_task,"poll_task",2048, NULL, 3, NULL);
+    xTaskCreate(&poll_task,"poll_task",2048, NULL, 3, &pollHandle);
 
 
 	//if (netif_queue_stopped(dev)) {
