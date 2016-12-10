@@ -397,6 +397,7 @@ static bool gen_check_sr(DisasContext *dc, uint32_t sr, unsigned access)
 
 A better version for qemu exists here https://github.com/OSLL/qemu-xtensa,
 
+```
 git clone https://github.com/OSLL/qemu-xtensa -b  xtensa-esp32 
 but requires that you run a patched gdb to run in qemu. If not you will get Remote 'g' packet reply is too long:
 The key to using the original gdb, is to set num_regs = 104, in core-esp32.c 
