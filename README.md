@@ -450,11 +450,40 @@ xtensa-softmmu/qemu-system-xtensa -d guest_errors,page,unimp  -cpu esp32 -M esp3
 ```
 
 
-Running two cores, most likely will not work so so well. But shows up in  (gdb) info threads
+Running two cores, works but APP CPU locks up because of missing flash emulation. Check  (gdb) info threads
 ```
 xtensa-softmmu/qemu-system-xtensa -d guest_errors,page,unimp  -cpu esp32 -M esp32 -m 4M -smp 2 -pflash esp32.flash -kernel  ~/esp/qemu_esp32/build/app-template.elf  -s -S  > io.txt
-I think that the app CPU quickly gets stuck in a loop. Also the WUR 234-236 & RUR 234-236 has something to do with processor syncronisation.
-This will create problems when running 2 cores.
+ets Jun  8 2016 00:22:57
+
+rst:0x10 (RTCWDT_RTC_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+I (97134) heap_alloc_caps: Initializing heap allocator:
+I (97134) heap_alloc_caps: Region 19: 3FFB5B8C len 0002A474 tag 0
+I (97134) heap_alloc_caps: Region 25: 3FFE8000 len 00018000 tag 1
+check b=0x3ffb5b98 size=173144 ok
+check b=0x3ffdfff0 size=0 ok
+check b=0x3ffe800c size=98276 ok
+I (97135) cpu_start: Pro cpu up.
+I (97135) cpu_start: Starting app cpu, user_code_start is 0x00000000
+I (97135) cpu_start: Starting app cpu, entry point is 0x40080b50
+I (68034) cpu_start: App cpu up.
+I (97140) cpu_start: App cpu started, user_code_start is 0x40080b50
+I (97140) cpu_start: Pro cpu start user code
+I (97140) rtc: rtc v160 Nov 22 2016 19:00:05
+I (97141) rtc: XTAL 40M
+I (97142) cpu_start: Starting scheduler on PRO CPU.
+I (68253) cpu_start: Starting scheduler on APP CPU.
+
+(gdb) info threads
+  Id   Target Id         Frame 
+  2    Thread 2 (CPU#1 [running]) 0x40081a75 in spi_flash_op_block_func (arg=0x1)
+    at /home/olas/esp/esp-idf/components/spi_flash/./cache_utils.c:67
+* 1    Thread 1 (CPU#0 [halted ]) 0x400d2444 in esp_vApplicationIdleHook ()
+    at /home/olas/esp/esp-idf/components/esp32/./freertos_hooks.c:52
+
+This was added to call_start_cpu0(),cpu_start.c for the extra user code start info
+    int test= (void (*)(void))REG_READ(DPORT_APPCPU_CTRL_D_REG);
+    void  *user_code_start =(void *) test;
+    ESP_EARLY_LOGI(TAG, "Starting app cpu, user_code_start is %p", user_code_start);
 ```
 
 ## Detailed boot analaysis
@@ -498,13 +527,15 @@ As I am not alwas sure of what I am doing, I would recomend this version of the 
   #define	OC_DESC_START    0x3ff69400
   #define	OC_BUF_START     0x3FFF8000          //pool 6 blk 1 <- can be used as trace memory
 
+  TODO! Check if it is safe to use this memory?? 
+  This could possibly screw up your data.
+
   Note this one  components/esp32/include/soc/soc.h
      DR_REG_EMAC_BASE                        0x3ff69000
      Here are the pins needed to get ethernet support.
-     http://espressif.com/sites/default/files/documentation/esp32_chip_pin_list_en_0.pdf
+     http://www.smartarduino.com/esp32/esp32_chip_pin_list_en.pdf
+     Note that this could be outdated.
 
-     Trying to enable emulated interrupts, but not yet sucessful. 
-     Probably I also need to mirror the memory as on the real hardware.
 ```  
 
 #Qemu backend network options:
