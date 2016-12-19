@@ -14,6 +14,10 @@ void app_main()
     nvs_flash_init();
     
     printf("starting\n");
+    uint32_t test=esp_get_free_heap_size();
+    printf("Free heap size %d\n",test);
+
+
     while (idx < MAX_ALLOCS && size > 64) {
         ptr[idx] = malloc(size);
         if (ptr[idx] == NULL) {
@@ -24,9 +28,14 @@ void app_main()
         sum += size;
         printf("ALLOCS: %d/%d, SIZE %d/%d\n", idx, MAX_ALLOCS, size, sum);
     }
+    test=esp_get_free_heap_size();
+    printf("Free heap size %d\n",test);
+
     while (idx--) {
         printf("free idx %d\n", idx);
         free(ptr[idx]);
     }
     
+    test=esp_get_free_heap_size();
+    printf("Free heap size %d\n",test);
 }
