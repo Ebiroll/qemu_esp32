@@ -5,6 +5,10 @@ Add tensilica esp32 cpu and a board to qemu and dump the rom to learn more about
 This documents how to add an esp32 cpu and a simple esp32 board to qemu in order to run an app compiled with the SDK in QEMU. Esp32 is a 240 MHz dual core Tensilica LX6 microcontroller.
 It is a good way to learn about qemu ,esp32 and the esp32 rom.
 
+## Setting up platformio
+[Platform io](./platformio.md)
+http://platformio.org/platformio-ide
+
 
 ## Setting up visual studio code
 [Works pretty well in linux now](./VSCODE.md)
