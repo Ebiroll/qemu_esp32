@@ -40,9 +40,9 @@ void readWriteTask(void *pvParameters)
         spi_flash_read(base_addr, g_rbuf, sizeof(g_rbuf));
         for (int i = 0; i < sizeof(g_rbuf)/sizeof(g_rbuf[0]); ++i) {
             if (g_rbuf[i] != g_wbuf[i]) {
-                printf("failed writing or reading at %d\n", base_addr + i * 4);
+                printf("failed writing or reading at 0x%08x\n", base_addr + i * 4);
                 printf("got %08x, expected %08x\n", g_rbuf[i], g_wbuf[i]);
-                return;
+                //return;
             }
         }
 
