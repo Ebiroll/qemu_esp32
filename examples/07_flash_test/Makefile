@@ -3,7 +3,7 @@
 # project subdirectory.
 #
 
-PROJECT_NAME := memsize
+PROJECT_NAME := flash_test
 
 include $(IDF_PATH)/make/project.mk
 

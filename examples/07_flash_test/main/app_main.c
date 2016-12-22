@@ -12,7 +12,12 @@ static uint32_t g_rbuf[SPI_FLASH_SEC_SIZE / 4];
 
 void readWriteTask(void *pvParameters)
 {
-    srand(0);
+    //srand(0);
+
+    // This is just a qemu trick to restore original rom content 
+    int *unpatch=(int *) 0x3ff00088;
+    *unpatch=0x42;
+
 
     for (uint32_t base_addr = 0x200000;
          base_addr < 0x300000;

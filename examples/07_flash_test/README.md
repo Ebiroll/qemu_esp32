@@ -2,6 +2,10 @@
 
 #SPI flash related APIs
 
+Good infor about the SPI interface,
+
+http://iot-bits.com/esp32/esp32-spi-tutorial-part-1/
+
 API Reference
 Header Files
 
