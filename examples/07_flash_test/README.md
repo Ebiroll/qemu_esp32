@@ -6,6 +6,8 @@ Good infor about the SPI interface,
 
 http://iot-bits.com/esp32/esp32-spi-tutorial-part-1/
 
+
+
 API Reference
 Header Files
 
@@ -103,3 +105,118 @@ In a single core environment (CONFIG_FREERTOS_UNICORE enabled), we simply disabl
 Application Example
 
 Instructions
+
+
+#debugging the esp_spi_flash functions.
+
+
+#Important to remember
+
+#define SPI_FLASH_SEC_SIZE  4096    /**< SPI Flash sector size */
+
+
+
+spi_flash_unlock();
+
+
+SPIUnlock();
+
+
+Wait_SPI_Idle(){
+
+ while((REG_READ(SPI_EXT2_REG(SPI_IDX)) & SPI_ST)) {                                             
+           }                                                    
+
+> 0 esp32_spi_read: +0xf8: 0x00000000
+
+ while(REG_READ(SPI_EXT2_REG(OTH_IDX)) & SPI_ST) {                                               
+            }  
+
+> 1 esp32_spi_read: +0xf8: 0x00000000
+
+
+}
+
+
+SPIUnlock(void)
+{
+ REG_WRITE(SPI_CMD_REG(SPI_IDX), SPI_FLASH_WREN); 
+>   0 esp32_spi_write: +0x00 = 0x40000000
+
+    while(REG_READ(SPI_CMD_REG(SPI_IDX)) != 0) {  
+>   0 esp32_spi_read: +0x00: 0x00000000
+
+   }
+
+  SET_PERI_REG_MASK(SPI_CTRL_REG(SPI_IDX), SPI_WRSR_2B);  
+  0 esp32_spi_read: +0x08: 0x00208000
+  0 esp32_spi_write: +0x08 = 0x00608000
+ 
+
+}
+
+SPIEraseSector(sector=0x200)
+{
+
+0 esp32_spi_read: +0x1c: read 0x00000000
+0 esp32_spi_write: +0x1c = 0x00000000
+written 0x0000001c
+0 esp32_spi_read: +0x20: read 0x00000000
+0 esp32_spi_write: +0x20 = 0x5c000000     // USER1
+written 0x00000020
+
+
+
+    0x40062d02      quou   a4, a8, a4                                                                         
+    0x40062d05      bltu   a2, a4, 0x40062d0c                                                                 
+    0x40062d08      movi.n a2, 1                                                                              
+    0x40062d0a      retw.n                                                                                    
+  > 0x40062d0c      mov.n  a10, a3           
+
+
+
+
+}
+
+
+
+ spi_flash_write(base_addr, g_wbuf, sizeof(g_wbuf)); 
+
+  0x200000,  0x3ffb162c  , 1024
+  
+io read 44  DPORT DPORT_PRO_CACHE_CTRL1_REG  3ff00044=8E6
+io read 3f0  DPORT_PRO_DCACHE_DBUG0_REG  3ff003F0=0x80
+io read 40  DPORT_PRO_CACHE_CTRL_REG  3ff00040=00000028
+io write 40,20 
+DPORT_PRO_CACHE_CTRL_REG 3ff00040
+io read 40  DPORT_PRO_CACHE_CTRL_REG  3ff00040=00000020
+io write 40,28 
+DPORT_PRO_CACHE_CTRL_REG 3ff00040
+io read 44  DPORT DPORT_PRO_CACHE_CTRL1_REG  3ff00044=8E6
+io write 44,8e6 
+
+
+ 
+
+
+             deviceid, chip_size ,         ,sector_size,status_mask
+SPIParamCfg(0x1540ef, 4*1024*1024, 64*1024, 4096, 256, 0xffff);
+
+    // Set flash chip size
+SPIParamCfg(g_rom_flashchip.deviceId, size * 0x100000, 0x10000, 0x1000, 0x100, 0xffff);
+
+
+Get flash chip size, as set in binary image header
+
+size_t spi_flash_get_chip_size();
+{
+ return (g_rom_flashchip.chip_size);
+}
+
+ p g_rom_flashchip
+
+  0x400000
+$2 = {deviceId = 1392879, chip_size = 4194304, block_size = 65536, sector_size = 4096, page_size = 256,
+  status_mask = 65535}
+
+

@@ -55,6 +55,9 @@ void readWriteTask(void *pvParameters)
     // TODO flash map and check data.
     //spi_flash_mmap
 
+    spi_flash_mmap_dump();
+
+
 
     vTaskDelete(NULL);
 }
@@ -64,6 +67,8 @@ void app_main()
 {
     // workaround: configure SPI flash size manually (2nd argument)
     SPIParamCfg(0x1540ef, 4*1024*1024, 64*1024, 4096, 256, 0xffff);
+
+    spi_flash_mmap_dump();
 
     xTaskCreatePinnedToCore(&readWriteTask, "readWriteTask", 2048, NULL, 5, NULL, 0);
 }
