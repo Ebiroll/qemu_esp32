@@ -6,7 +6,7 @@ This documents how to add an esp32 cpu and a simple esp32 board to qemu in order
 It is a good way to learn about qemu ,esp32 and the esp32 rom.
 
 ## Setting up platformio
-[Platform io](./platformio.md)
+[I would not currentrly recomed this, Setup Platform.io](./platformio.md)
 http://platformio.org/platformio-ide
 
 
@@ -84,6 +84,12 @@ esp-idf/components/esptool_py/esptool/esptool.py --chip esp32 -b 921600 -p /dev/
 Note that rom0 is smaller than the actual dump.
 Those two files will be loaded by qemu and must be in same directory as you start qemu.
 ```
+
+#Dumping flash content.
+esp/esp-idf/components/esptool_py/esptool/esptool.py --baud 920600 read_flash 0 0x400000  esp32flash.bin
+Now there is simple flash emulation in qemu. You need the file  esp32flash.bin to be in the same directory as rom.bin & rom1.bin.
+Currently write and mmao functions are not implemented. Soon they should be there.
+If no flashfile exists, an empty file will be created.
 
 
 
