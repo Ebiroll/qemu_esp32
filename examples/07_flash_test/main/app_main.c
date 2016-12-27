@@ -8,6 +8,15 @@
 #include "esp_partition.h"
 #include "esp_flash_data_types.h"
 #include "nvs_flash.h"
+#include <rom/spi_flash.h>
+#include <rom/cache.h>
+
+
+#define DPORT_PRO_FLASH_MMU_TABLE ((volatile uint32_t*) 0x3FF10000)
+
+/* Flash MMU table for APP CPU */
+#define DPORT_APP_FLASH_MMU_TABLE ((volatile uint32_t*) 0x3FF12000)
+
 
 static uint32_t g_wbuf[SPI_FLASH_SEC_SIZE / 4];
 static uint32_t g_rbuf[SPI_FLASH_SEC_SIZE / 4];
@@ -214,6 +223,22 @@ void readWriteTask(void *pvParameters)
 }
 
 
+#define REGIONS_COUNT 4
+#define PAGES_PER_REGION 64
+
+void mmu_table_dump()
+{
+    uint32_t test;    
+    for (int i = 0; i < REGIONS_COUNT * PAGES_PER_REGION; ++i) {
+        test=DPORT_PRO_FLASH_MMU_TABLE[i];
+
+        if (test!=0) {
+            printf("page %d: paddr=%08X\n",i, test);
+        }
+    }
+}
+
+
 void app_main()
 {
     // workaround: configure SPI flash size manually (2nd argument)
@@ -221,12 +246,13 @@ void app_main()
 
 
     // This is just a qemu trick to restore original rom content 
-    int *unpatch=(int *) 0x3ff005F0;
-    *unpatch=0x42;
-
+    //int *unpatch=(int *) 0x3ff005F0;
+    //*unpatch=0x42;
+    mmu_table_dump();
     nvs_flash_init();
 
     spi_flash_mmap_dump();
+    mmu_table_dump();
 
     dumpPartitionData();
 
@@ -235,6 +261,7 @@ void app_main()
     mmapPartitionData();
 
     spi_flash_mmap_dump();
+    mmu_table_dump();
 
     //xTaskCreatePinnedToCore(&readWriteTask, "readWriteTask", 2048, NULL, 5, NULL, 0);
 }
