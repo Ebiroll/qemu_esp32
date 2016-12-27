@@ -112,13 +112,23 @@ void mmapPartitionData() {
 
     printf("mmap success\n");
 
+
     //int *test=(int *)*ptr;
-    //printf( "%08X\n",(int )test);
-    unsigned int *iptr=(unsigned int *)ptr;
+    printf( "ptr @%p\n",ptr);
+
+    const esp_partition_info_t* it = (const esp_partition_info_t*)
+            (ptr + (ESP_PARTITION_TABLE_ADDR & 0xffff) / sizeof(*ptr));
+    const esp_partition_info_t* end = it + SPI_FLASH_SEC_SIZE / sizeof(*it);
+
+    unsigned int *iptr=(unsigned int *) it;
+
+    printf( "iptr @%p\n",iptr);
+
+      //((ptr + ESP_PARTITION_TABLE_ADDR)/ sizeof(*ptr));
     // Dump entire sector
     int q=0;
     int j=0;
-    for(q=0;q<1024;q++) 
+    for(q=0;q<1*1024;q++) 
     {
         g_rbuf[q]=*iptr++;
         printf( "%08X", g_rbuf[q]);
@@ -208,15 +218,19 @@ void app_main()
 {
     // workaround: configure SPI flash size manually (2nd argument)
     //SPIParamCfg(0x1540ef, 4*1024*1024, 64*1024, 4096, 256, 0xffff);
-    nvs_flash_init();
+
 
     // This is just a qemu trick to restore original rom content 
-    //int *unpatch=(int *) 0x3ff00088;
-    //*unpatch=0x42;
+    int *unpatch=(int *) 0x3ff005F0;
+    *unpatch=0x42;
+
+    nvs_flash_init();
 
     spi_flash_mmap_dump();
 
     dumpPartitionData();
+
+    spi_flash_mmap_dump();
 
     mmapPartitionData();
 

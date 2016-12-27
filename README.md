@@ -443,8 +443,62 @@ static HeapRegionTagged_t regions[]={
 ```
 
 #Adding flash qemu emulation.
+These are some functions with associated io instructions, to help me understand.
 ```
-head -c 16M /dev/zero > esp32.flash
+Cache_Read_Disable,
+io read 40  DPORT_PRO_CACHE_CTRL_REG  3ff00040=00000028
+io write 40,20 
+DPORT_PRO_CACHE_CTRL_REG 3ff00040
+io read 58  DPORT_APP_CACHE_CTRL_REG  3ff00058=00000028
+---
+Cache_Flush,
+io read 40  DPORT_PRO_CACHE_CTRL_REG  3ff00040=00000020
+io write 40,28 
+DPORT_PRO_CACHE_CTRL_REG 3ff00040
+io read 40  DPORT_PRO_CACHE_CTRL_REG  3ff00040=00000028
+io write 40,38 
+DPORT_PRO_CACHE_CTRL_REG 3ff00040
+io read 40  DPORT_PRO_CACHE_CTRL_REG  3ff00040=00000038
+io read 40  DPORT_PRO_CACHE_CTRL_REG  3ff00040=00000038
+io write 40,28 
+DPORT_PRO_CACHE_CTRL_REG 3ff00040
+---
+cache_flash_mmu_set,
+io read 44 DPORT_PRO_CACHE_CTRL1_REG  3ff00044=8E6
+io read 5c  DPORT_APP_CACHE_CTRL1_REG  3ff0005C=000008E6
+io read 5c  DPORT_APP_CACHE_CTRL1_REG  3ff0005C=000008E6
+io write 5c,8ff 
+ DPORT_APP_CACHE_CTRL1_REG  3ff0005C=000008FF
+io read 44 DPORT_PRO_CACHE_CTRL1_REG  3ff00044=8E6
+io write 44,8ff 
+ DPORT_PRO_CACHE_CTRL1_REG  3ff00044  8ff
+io write 10000,0 
+ MMU CACHE  3ff10000  0
+io write 44,8e6 
+ DPORT_PRO_CACHE_CTRL1_REG  3ff00044  8e6
+io write 5c,8e6 
+ DPORT_APP_CACHE_CTRL1_REG  3ff0005C=000008E6
+io read 44 DPORT_PRO_CACHE_CTRL1_REG  3ff00044=8E6
+io write 44,8e6 
+ DPORT_PRO_CACHE_CTRL1_REG  3ff00044  8e6
+---
+Cache_Read_Enable
+1 esp32_spi_read: +0x50: 0x00000005
+1 esp32_spi_write: +0x50 = 0x00000005
+written
+io read 40  DPORT_PRO_CACHE_CTRL_REG  3ff00040=00000028
+io write 40,28 
+DPORT_PRO_CACHE_CTRL_REG 3ff00040
+---
+We still get 
+flash read err, 1000
+
+
+
+
+
+This does not work.
+head -c 4M /dev/zero > esp32.flash
 
 xtensa-softmmu/qemu-system-xtensa -d guest_errors,page,unimp  -cpu esp32 -M esp32 -m 4M -pflash esp32.flash -kernel  ~/esp/qemu_esp32/build/app-template.elf  -s -S  > io.txt
 
