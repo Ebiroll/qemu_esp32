@@ -13,19 +13,24 @@ load:0x40078000,len:3408
 ho 0 tail 12 room 4
 load:0x40080000,len:260
 entry 0x40080034
-[0;32mI (417) heap_alloc_caps: Initializing. RAM available for dynamic allocation:[0m
-[0;32mI (418) heap_alloc_caps: At 3FFB35A4 len 0002CA5C (178 KiB): DRAM[0m
-[0;32mI (421) heap_alloc_caps: At 3FFE8000 len 00018000 (96 KiB): D/IRAM[0m
-[0;32mI (427) heap_alloc_caps: At 40090348 len 0000FCB8 (63 KiB): IRAM[0m
-[0;32mI (434) cpu_start: Pro cpu up.[0m
-[0;32mI (438) cpu_start: Starting app cpu, entry point is 0x40080abc[0m
-[0;32mI (0) cpu_start: App cpu up.[0m
-[0;32mI (448) cpu_start: Pro cpu start user code[0m
-[0;32mI (475) cpu_start: Starting scheduler on PRO CPU.[0m
-[0;32mI (39) cpu_start: Starting scheduler on APP CPU.[0m
+[0;32mI (416) heap_alloc_caps: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (416) heap_alloc_caps: At 3FFB2D60 len 0002D2A0 (180 KiB): DRAM[0m
+[0;32mI (419) heap_alloc_caps: At 3FFE8000 len 00018000 (96 KiB): D/IRAM[0m
+[0;32mI (426) heap_alloc_caps: At 40090080 len 0000FF80 (63 KiB): IRAM[0m
+[0;32mI (433) cpu_start: Pro cpu up.[0m
+[0;32mI (436) cpu_start: Single core mode[0m
+[0;32mI (440) cpu_start: Pro cpu start user code[0m
+[0;32mI (466) cpu_start: Starting scheduler on PRO CPU.[0m
+page 0: paddr=00000002
+page 77: paddr=00000004
+page 78: paddr=00000005
 page 0: refcnt=1 paddr=2
 page 77: refcnt=1 paddr=4
 page 78: refcnt=1 paddr=5
+page 0: paddr=00000002
+page 1: paddr=00000100
+page 77: paddr=00000004
+page 78: paddr=00000005
 Partition data
 Type DATA, subtype 2  nvs
 Offset 00009000, sz 00006000
@@ -161,11 +166,16 @@ FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
 FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF  
 FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF  
 FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF  
+page 0: refcnt=1 paddr=2
+page 77: refcnt=1 paddr=4
+page 78: refcnt=1 paddr=5
 mmap partition data
 mmap success
-FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF  
-FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF  
-FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF  
+ptr @0x3f410000
+iptr @0x3f418000
+020150AA00009000000060000073766E00000000000000000000000000000000  P`nvs
+010150AA0000F000000010005F79687074696E69000000000000000000000000  Pphy_init
+000050AA0001000000100000746361660079726F000000000000000000000000  Pfactory
 FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF  
 FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF  
 FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF  
@@ -296,3 +306,6 @@ page 0: refcnt=1 paddr=2
 page 1: refcnt=1 paddr=0
 page 77: refcnt=1 paddr=4
 page 78: refcnt=1 paddr=5
+page 0: paddr=00000002
+page 77: paddr=00000004
+page 78: paddr=00000005

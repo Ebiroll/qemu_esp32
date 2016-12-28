@@ -442,9 +442,99 @@ static HeapRegionTagged_t regions[]={
 	{ (uint8_t *)0x3FFB8000, 0x8000, 0, 0}, //pool 14 <- can be used for BT
 ```
 
+/* Use first 50 blocks in MMU for bootloader_mmap,
+   50th block for bootloader_flash_read
+*/
+#define MMU_BLOCK0_VADDR  0x3f400000
+#define MMU_BLOCK50_VADDR 0x3f720000
+#define MMU_FLASH_MASK    0xffff0000
+#define MMU_BLOCK_SIZE    0x00010000
+
+
+
+
 #Adding flash qemu emulation.
+You can assemble your own flash file with something like this,
+esptool.py make_image -f app.text.bin -a 0x40100000 -f app.data.bin -a 0x3ffe8000 -f app.rodata.bin -a 0x3ffe8c00 app.flash.bin
+
+
 These are some functions with associated io instructions, to help me understand.
 ```
+From boatloader
+Cache_Read_Disable(0);
+io read 40  DPORT_PRO_CACHE_CTRL_REG  3ff00040=00000020
+io write 40,20 
+DPORT_PRO_CACHE_CTRL_REG 3ff00040
+io read 58  DPORT_APP_CACHE_CTRL_REG  3ff00058=00000020
+1 esp32_spi_read: +0xf8: 0x00000000
+1 esp32_spi_read: +0x50: 0x00000004
+1 esp32_spi_write: +0x50 = 0x00000004
+written
+---
+Cache_Flush(0);  
+io read 40  DPORT_PRO_CACHE_CTRL_REG  3ff00040=00000020
+io write 40,20 
+DPORT_PRO_CACHE_CTRL_REG 3ff00040
+io read 40  DPORT_PRO_CACHE_CTRL_REG  3ff00040=00000020
+io write 40,30 
+DPORT_PRO_CACHE_CTRL_REG 3ff00040
+io read 40  DPORT_PRO_CACHE_CTRL_REG  3ff00040=00000030
+io read 40  DPORT_PRO_CACHE_CTRL_REG  3ff00040=00000030
+io write 40,20  DPORT_PRO_CACHE_CTRL_REG 3ff00040
+---
+
+/**
+  * @brief Set Flash-Cache mmu mapping.
+  *        Please do not call this function in your SDK application.
+  *
+  * @param  int cpu_no : CPU number, 0 for PRO cpu, 1 for APP cpu.
+  *
+  * @param  int pod : process identifier. Range 0~7.
+  *
+  * @param  unsigned int vaddr : virtual address in CPU address space.
+  *                              Can be IRam0, IRam1, IRom0 and DRom0 memory address.
+  *                              Should be aligned by psize.
+  *
+  * @param  unsigned int paddr : physical address in Flash.
+  *                              Should be aligned by psize.
+  *
+  * @param  int psize : page size of flash, in kilobytes. Should be 64 here.
+  *
+  * @param  int num : pages to be set.
+  *
+  * @return unsigned int: error status
+  *                   0 : mmu set success
+  *                   1 : vaddr or paddr is not aligned
+  *                   2 : pid error
+  *                   3 : psize error
+  *                   4 : mmu table to be written is out of range
+  *                   5 : vaddr is out of range
+  */
+unsigned int cache_flash_mmu_set(int cpu_no, int pid, unsigned int vaddr, unsigned int paddr,  int psize, int num);
+#define MMU_BLOCK50_VADDR 0x3f720000
+ int e = cache_flash_mmu_set(0, 0, MMU_BLOCK50_VADDR, map_at (0), 64, 1);
+io read 44 DPORT_PRO_CACHE_CTRL1_REG  3ff00044=8E6
+io read 5c  DPORT_APP_CACHE_CTRL1_REG  3ff0005C=000008E6
+io read 5c  DPORT_APP_CACHE_CTRL1_REG  3ff0005C=000008E6
+io write 5c,8ff   DPORT_APP_CACHE_CTRL1_REG  3ff0005C=000008FF
+io read 44 DPORT_PRO_CACHE_CTRL1_REG  3ff00044=8E6
+io write 44,8ff  DPORT_PRO_CACHE_CTRL1_REG  3ff00044  8ff
+io write 100c8,0 
+io write 44,8e6  DPORT_PRO_CACHE_CTRL1_REG  3ff00044  8e6
+io write 5c,8e6  DPORT_APP_CACHE_CTRL1_REG  3ff0005C=000008E6
+io read 44 DPORT_PRO_CACHE_CTRL1_REG  3ff00044=8E6
+io write 44,8e6  DPORT_PRO_CACHE_CTRL1_REG  3ff00044  8e6
+---
+Cache_Read_Enable(0)
+1 esp32_spi_read: +0x50: 0x00000004
+1 esp32_spi_write: +0x50 = 0x00000005
+written
+io read 40  DPORT_PRO_CACHE_CTRL_REG  3ff00040=00000020
+io write 40,28 
+DPORT_PRO_CACHE_CTRL_REG 3ff00040
+---
+
+
 Cache_Read_Disable,
 io read 40  DPORT_PRO_CACHE_CTRL_REG  3ff00040=00000028
 io write 40,20 

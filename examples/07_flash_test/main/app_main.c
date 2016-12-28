@@ -189,7 +189,7 @@ void readWriteTask(void *pvParameters)
         spi_flash_erase_sector(base_addr / SPI_FLASH_SEC_SIZE);
 
         for (int i = 0; i < sizeof(g_wbuf)/sizeof(g_wbuf[0]); ++i) {
-            g_wbuf[i] = i%16; //rand();
+            g_wbuf[i] = i; //rand();
         }
 
         printf("writing at %x\n", base_addr);
@@ -200,7 +200,7 @@ void readWriteTask(void *pvParameters)
         spi_flash_read(base_addr, g_rbuf, sizeof(g_rbuf));
         for (int i = 0; i < sizeof(g_rbuf)/sizeof(g_rbuf[0]); ++i) {
             if (g_rbuf[i] != g_wbuf[i]) {
-                printf("failed writing or reading at 0x%08x\n", base_addr + i * 4);
+	      printf("failed writing or reading at %d 0x%08x\n",i, base_addr + i * 4);
                 printf("got %08x, expected %08x\n", g_rbuf[i], g_wbuf[i]);
                 //return;
             }
@@ -263,5 +263,5 @@ void app_main()
     spi_flash_mmap_dump();
     mmu_table_dump();
 
-    //xTaskCreatePinnedToCore(&readWriteTask, "readWriteTask", 2048, NULL, 5, NULL, 0);
+    xTaskCreatePinnedToCore(&readWriteTask, "readWriteTask", 2048, NULL, 5, NULL, 0);
 }
