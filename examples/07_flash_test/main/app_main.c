@@ -180,7 +180,7 @@ void readWriteTask(void *pvParameters)
     //     base_addr < 0x300000;
     //     base_addr += SPI_FLASH_SEC_SIZE)
         for (uint32_t base_addr = 0x000000;
-         base_addr < 0x100000;
+         base_addr < 0x8000;
          base_addr += SPI_FLASH_SEC_SIZE)
     {
         vTaskDelay(1000 / portTICK_PERIOD_MS);

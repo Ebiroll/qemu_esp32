@@ -91,6 +91,57 @@ Now there is simple flash emulation in qemu. You need the file  esp32flash.bin t
 Currently write and mmao functions are not implemented. Soon they should be there.
 If no flashfile exists, an empty file will be created.
 
+Now you can also debug the bootloder with qemu. There used to be some 
+problem with the elf file, but its fixed with the latest versions,
+Set Bootloader config
+(X) Verbose 
+```
+xtensa-softmmu/qemu-system-xtensa  -cpu esp32 -M esp32 -m 4M  -kernel  ~/esp/qemu_esp32/build/bootloader/bootloader.elf -s  > io.txt
+
+ Jun  8 2016 00:22:57
+
+rst:0x10 (RTCWDT_RTC_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+I (0) boot: Espressif ESP32 2nd stage bootloader v. V0.1
+I (0) boot: compile time 23:25:16
+D (1) esp_image: reading image header @ 0x1000
+D (1) bootloader_flash: mmu set block paddr=0x00000000 (was 0xffffffff)
+(qemu) Flash map  00000000 to memory, 3F720000
+(qemu) Flash partition data is loaded.
+D (1) boot: magic e9
+D (1) boot: segments 04
+D (1) boot: spi_mode 02
+D (1) boot: spi_speed 00
+D (1) boot: spi_size 01
+I (1) boot: SPI Speed      : 40MHz
+I (1) boot: SPI Mode       : DIO
+I (1) boot: SPI Flash Size : 2MB
+I (1) boot: Partition Table:
+I (2) boot: ## Label            Usage          Type ST Offset   Length
+D (2) bootloader_flash: mmu set paddr=00000000 count=1
+D (2) boot: mapped partition table 0x8000 at 0x3f408000
+D (2) boot: load partition table entry 0x3f408000
+D (2) boot: type=0 subtype=0
+I (2) boot: End of partition table
+E (2) boot: nothing to load
+user code done
+```
+Running the bootloader without downloading the flash content will give an output like this,
+```
+TRYING to MAP esp32flash.bin MAPPED esp32flash.bin
+ets Jun  8 2016 00:22:57
+rst:0x10 (RTCWDT_RTC_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+I (0) boot: Espressif ESP32 2nd stage bootloader v. V0.1
+I (0) boot: compile time 23:25:16
+D (1) esp_image: reading image header @ 0x1000
+D (1) bootloader_flash: mmu set block paddr=0x00000000 (was 0xffffffff)
+(qemu) Flash map  00000000 to memory, 3F720000
+Flash partition data is loaded.
+E (1) esp_image: image at 0x1000 has invalid magic byte
+E (1) boot: failed to load bootloader header!
+user code done
+```
+This because qemu will create an empty file esp32flash.bin and there is no partition table in this flash.
+
 
 
 ### Start qemu
@@ -101,8 +152,7 @@ If no flashfile exists, an empty file will be created.
 
 ### Start the debugger
 ```
-  > xtensa-esp32-elf-gdb  build/app-template.elf
-  (gdb) target remote:1234
+  > xtensa-esp32-elf-gdb  build/app-template.elf -ex 'target remote:1234'
 
   (gdb) x/10i $pc
   (gdb) x/10i 0x40000400
@@ -198,7 +248,7 @@ by the rom to start the loaded elf file. The functions SPIEraseSector & SPIWrite
 The rom function -- ets_unpack_flash_code is located at 0x40007018.
 
 
-Better flash emulation would be better. The serial device should also be emulated differently. Now serial output goes to stderr.
+The serial device should also be emulated differently. Now serial output goes to stderr.
 
 To get proper serial emulation you can remove the comment around this in the file esp32.c,
 ```
@@ -206,6 +256,9 @@ To get proper serial emulation you can remove the comment around this in the fil
 //            115200, serial_hds[0], DEVICE_LITTLE_ENDIAN);
 ```
 However it does not always work. You can use qemu to generate reset and it might work sometimes.
+I think that the rom-code and the application uses different interrupts.
+
+Soon I will add emulation for the other UARTS also.
 
 ```
 xtensa-softmmu/qemu-system-xtensa -d guest_errors,page,unimp  -cpu esp32 -M esp32 -m 4M  -kernel  ~/esp/qemu_esp32/build/app-template.elf  -S -s > io.txt
@@ -241,7 +294,8 @@ RUR 234 not implemented, TBD(pc = 40091301): /home/olas/qemu/target-xtensa/trans
 RUR 235 not implemented, TBD(pc = 40091306): /home/olas/qemu/target-xtensa/translate.c:1876
 RUR 236 not implemented, TBD(pc = 4009130b): /home/olas/qemu/target-xtensa/translate.c:1876
 
-The WUR and RUR instructions are specific for the ESP32.
+The WUR and RUR instructions are not implemented in qemu yet,
+My version has some hadling of these instructions.
 
 
 When configuring, choose
@@ -293,7 +347,7 @@ ets_get_detected_xtal_freq,  0x40008588
 
 
 #What is some of the problems with this code
-Some i/o register name mapping in esp32.cis probably wrong.  The values returned are also many times wrong.
+Some i/o register name mapping in esp32.c is probably wrong.  The values returned are also many times wrong.
 I did this mapping very quickly with grep to get a better understanding of what the rom was doing.
 ```
 Terminal 1
@@ -410,9 +464,8 @@ A better version for qemu exists here https://github.com/OSLL/qemu-xtensa,
 
 ```
 git clone https://github.com/OSLL/qemu-xtensa -b  xtensa-esp32 
-but requires that you run a patched gdb to run in qemu. If not you will get Remote 'g' packet reply is too long:
+but requires that you run a patched gdb to run gdb with qemu. If not you will get Remote 'g' packet reply is too long:
 The key to using the original gdb, is to set num_regs = 104, in core-esp32.c 
-
 
 
 git clone https://github.com/Ebiroll/qemu_esp32.git qemu_esp32_patch
@@ -445,20 +498,21 @@ static HeapRegionTagged_t regions[]={
 /* Use first 50 blocks in MMU for bootloader_mmap,
    50th block for bootloader_flash_read
 */
+```
 #define MMU_BLOCK0_VADDR  0x3f400000
 #define MMU_BLOCK50_VADDR 0x3f720000
 #define MMU_FLASH_MASK    0xffff0000
 #define MMU_BLOCK_SIZE    0x00010000
-
+```
 
 
 
 #Adding flash qemu emulation.
-You can assemble your own flash file with something like this,
+You could probably assemble your own qemu flash file with something like this,
 esptool.py make_image -f app.text.bin -a 0x40100000 -f app.data.bin -a 0x3ffe8000 -f app.rodata.bin -a 0x3ffe8c00 app.flash.bin
 
 
-These are some functions with associated io instructions, to help me understand.
+Here are some functions with the associated io instructions, to help me improve flash emulation.
 ```
 From boatloader
 Cache_Read_Disable(0);
@@ -533,8 +587,28 @@ io read 40  DPORT_PRO_CACHE_CTRL_REG  3ff00040=00000020
 io write 40,28 
 DPORT_PRO_CACHE_CTRL_REG 3ff00040
 ---
+partitions = bootloader_mmap(ESP_PARTITION_TABLE_ADDR, ESP_PARTITION_TABLE_DATA_LEN); 
 
-
+cache_flash_mmu_set( 0, 0, MMU_BLOCK0_VADDR, src_addr_aligned(0), 64, count ); 
+D (2) bootloader_flash: mmu set paddr=00000000 count=1
+io read 44 DPORT_PRO_CACHE_CTRL1_REG  3ff00044=8E6
+io read 5c  DPORT_APP_CACHE_CTRL1_REG  3ff0005C=000008E6
+io read 5c  DPORT_APP_CACHE_CTRL1_REG  3ff0005C=000008E6
+io write 5c,8ff 
+ DPORT_APP_CACHE_CTRL1_REG  3ff0005C=000008FF
+io read 44 DPORT_PRO_CACHE_CTRL1_REG  3ff00044=8E6
+io write 44,8ff 
+ DPORT_PRO_CACHE_CTRL1_REG  3ff00044  8ff
+io write 10000,0 
+ MMU CACHE  3ff10000  0
+io write 44,8e6 
+ DPORT_PRO_CACHE_CTRL1_REG  3ff00044  8e6
+io write 5c,8e6 
+ DPORT_APP_CACHE_CTRL1_REG  3ff0005C=000008E6
+io read 44 DPORT_PRO_CACHE_CTRL1_REG  3ff00044=8E6
+io write 44,8e6 
+ DPORT_PRO_CACHE_CTRL1_REG  3ff00044  8e6
+---
 Cache_Read_Disable,
 io read 40  DPORT_PRO_CACHE_CTRL_REG  3ff00040=00000028
 io write 40,20 
@@ -582,7 +656,7 @@ DPORT_PRO_CACHE_CTRL_REG 3ff00040
 ---
 We still get 
 flash read err, 1000
-
+If unpatching the ets_unpack_flash_code rom function.
 
 
 
@@ -606,7 +680,7 @@ xtensa-softmmu/qemu-system-xtensa -d guest_errors,page,unimp  -cpu esp32 -M esp3
 ```
 
 
-Running two cores, works but APP CPU locks up because of missing flash emulation. Check  (gdb) info threads
+Running two cores, is default behaviour now  (gdb) info threads
 ```
 xtensa-softmmu/qemu-system-xtensa -d guest_errors,page,unimp  -cpu esp32 -M esp32 -m 4M -smp 2 -pflash esp32.flash -kernel  ~/esp/qemu_esp32/build/app-template.elf  -s -S  > io.txt
 ets Jun  8 2016 00:22:57
@@ -672,8 +746,8 @@ As I am not alwas sure of what I am doing, I would recomend this version of the 
 
 #Networking support
      There exists networking support of an emulated opencore network device,
-     main/lwip_ethoc.c is the driver, without interrupts. A task poll_task() is created. 
-     All files in the net direcory is just for reference, they are currently not used.
+     main/lwip_ethoc.c is the driver.
+     All files in the net/ direcory is just for reference, they are currently not used.
 
 ```  
      Dont try running   emulated_net(); on actual hardware. 
@@ -834,4 +908,101 @@ This rom.elf also works with the original gdb with panic handler gdbstub.
        (gdb) c
        (gdb) b app_main
 ```
+
+#The ESP32 memory layout
+
+The MMU will map flash data/instruction to the processors depending on how these are set.
+...
+/* Flash MMU table for PRO CPU */
+//#define DPORT_PRO_FLASH_MMU_TABLE ((volatile uint32_t*) 0x3FF10000)
+4 regions with 64 
+
+
+/* Flash MMU table for APP CPU */
+//#define DPORT_APP_FLASH_MMU_TABLE ((volatile uint32_t*) 0x3FF12000)
+...
+
+...
+MMU_BLOCK0_VADDR 0x3f400000    // Dont use this one. Overlapping memory? Bug?
+MMU_BLOCK1_VADDR 0x3f410000
+..
+MMU_BLOCK63_VADDR 0x3fA30000
+
+MMU_BLOCK50_VADDR 0x3f720000
+..
+MMU_BLOCK50_VADDR 0x3fd50000
+
+...
+Flash layout single app (subject to change)
+...
+
+Offset, length, name    ,  data  
+ 0x1000 , 2000          ,    Bootloader
+ 0x8000 , <100          ,    Partition table
+ 0x9000 , 6000    nvs   ,    wifi auth data 
+ 0xf000 , 1000    phy_init   rf data, caclibration
+ 0x10000 , <50000 factory,   application
+0x3E8000 4MB flash
+
+Old locations?
+ 0x6000 , 6000    nvs   ,   wifi auth data 
+Note that the esp32 can save rf calibration data for subsequent startups
+
+qemu uses a simplified memory map, (subject to change)
+
+            0x2000_0000 - 0x4000_0000  ram
+            0x4000_0000 - 0x40BF_FFFF  ram1
+
+            0x3ff0_0000 - 0x3ff0_0000   system_io
+            0x3FF9_0000 - 0x3FF9_FFFF   rom1.bin 
+            0x4000_0000 - 0x40c1_FFFF   rom.bin
+
+            0x5000_0000 - 0x5008_0000  ulp ram
+            0x6000_0000 - 0x5008_0000  wifi io
+...
+
+flash mmu emulation is done by copying from the file esp32flash.bin when the
+registers DPORT_PRO_FLASH_MMU_TABLE are written to.
+
+```
+ROM0  384 KB   0x4000_0000 0x4005_FFFF    Static MPU
+ROM1  64 KB    0x3FF9_0000 0x3FF9_FFFF    Static MPU
+SRAM0 64 KB    0x4007_0000 0x4007_FFFF    Static MPU
+      128 KB   0x4008_0000 0x4009_FFFF    SRAM0 MMU
+SRAM1 128 KB   0x3FFE_0000 0x3FFF_FFFF    Static MPU
+      128 KB   0x400A_0000 0x400B_FFFF    Static MPU
+SRAM2 72 KB    0x3FFA_E000 0x3FFB_FFFF    Static MPU
+      128 KB   0x3FFC_0000 0x3FFD_FFFF    SRAM2 MMU
+RTC FAST 8 KB  0x3FF8_0000 0x3FF8_1FFF    RTC FAST MPU
+       8 KB    0x400C_0000 0x400C_1FFF    RTC FAST MPU
+RTC SLOW 8 KB  0x5000_0000 0x5000_1FFF    RTC SLOW MPU
+
+```
+#Layout
+
+```
+
+Bus Type   |  Boundary Address     |     Size | Target
+            Low Address | High Add 
+            0x0000_0000  0x3F3F_FFFF             Reserved 
+Data        0x3F40_0000  0x3F7F_FFFF   4 MB      External Memory
+Data        0x3F80_0000  0x3FBF_FFFF   4 MB      External Memory
+            0x3FC0_0000  0x3FEF_FFFF   3 MB      Reserved
+Data        0x3FF0_0000  0x3FF7_FFFF  512 KB     Peripheral (io)
+Data        0x3FF8_0000  0x3FFF_FFFF  512 KB     Embedded Memory
+Instruction 0x4000_0000  0x400C_1FFF  776 KB     Embedded Memory rom
+Instruction 0x400C_2000  0x40BF_FFFF  11512 KB   External Memory
+            0x40C0_0000  0x4FFF_FFFF  244 MB     Reserved
+            0x5000_0000 0x5000_1FFF   8 KB       Embedded Memory
+            0x5000_2000 0xFFFF_FFFF              Reserved
+
+```
+
+The linker scripts contains information of how to layout the code and variables.
+componenets/esp32/ld
+```
+  /* IRAM for PRO cpu. Not sure if happy with this, this is MMU area... */
+  iram0_0_seg (RX) :                 org = 0x40080000, len = 0x20000
+```
+
 

@@ -392,7 +392,8 @@ void emulated_net(void *pvParameter) {
     char tmpBuff[20];
     // Arpscan network
     while (true) {
-//#if 0
+#if 0
+      // ARP requests
         sprintf(tmpBuff,"192.168.1.%d",hostnum);
         IP4_ADDR(&scanaddr, 192, 168 , 1, hostnum);
 
@@ -418,7 +419,7 @@ void emulated_net(void *pvParameter) {
                         printf("%d  %d.%d.%d.%d\n",j,IP2STR(cacheaddr));
                     }
         }
-//#endif
+#endif
     }
 }
 
@@ -503,12 +504,12 @@ void ethernet_main()
 
 void app_main()
 {
+    int *unpatch=(int *)  0x3ff00088;
+    *unpatch=0x42;
 
     esp_log_level_set("*", ESP_LOG_INFO);
     nvs_flash_init();
     //asm("break.n 1");
-    // deprecated init
-    //system_init();
     //xTaskCreate(&wifi_task,"wifi_task",2048, NULL, 5, NULL);
     // Better run in main thread for faster processing
     //xTaskCreate(&emulated_net, "emulated_net", 4096, NULL, 5, NULL);
