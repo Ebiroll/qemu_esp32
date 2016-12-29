@@ -912,7 +912,7 @@ This rom.elf also works with the original gdb with panic handler gdbstub.
 #The ESP32 memory layout
 
 The MMU will map flash data/instruction to the processors depending on how these are set.
-...
+```
 /* Flash MMU table for PRO CPU */
 //#define DPORT_PRO_FLASH_MMU_TABLE ((volatile uint32_t*) 0x3FF10000)
 4 regions with 64 
@@ -920,9 +920,9 @@ The MMU will map flash data/instruction to the processors depending on how these
 
 /* Flash MMU table for APP CPU */
 //#define DPORT_APP_FLASH_MMU_TABLE ((volatile uint32_t*) 0x3FF12000)
-...
+```
 
-...
+```
 MMU_BLOCK0_VADDR 0x3f400000    // Dont use this one. Overlapping memory? Bug?
 MMU_BLOCK1_VADDR 0x3f410000
 ..
@@ -932,9 +932,9 @@ MMU_BLOCK50_VADDR 0x3f720000
 ..
 MMU_BLOCK50_VADDR 0x3fd50000
 
-...
-Flash layout single app (subject to change)
-...
+```
+#Flash layout single app (subject to change)
+```
 
 Offset, length, name    ,  data  
  0x1000 , 2000          ,    Bootloader
@@ -959,7 +959,7 @@ qemu uses a simplified memory map, (subject to change)
 
             0x5000_0000 - 0x5008_0000  ulp ram
             0x6000_0000 - 0x5008_0000  wifi io
-...
+```
 
 flash mmu emulation is done by copying from the file esp32flash.bin when the
 registers DPORT_PRO_FLASH_MMU_TABLE are written to.
