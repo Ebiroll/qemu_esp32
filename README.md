@@ -893,6 +893,7 @@ Here is an important register. DPORT_PRO_CACHE_CTRL_REG
 (gdb) awatch *0x3ff00040
 (gdb) info watchpoints
 Dont forget that you can reset qemu hardware and start again.
+```      
 
 
 ## Rom symbols from rom.elf
