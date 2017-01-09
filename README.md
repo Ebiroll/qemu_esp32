@@ -854,7 +854,7 @@ As I am not alwas sure of what I am doing, I would recomend this version of the 
 http://blog.vmsplice.net/2011/04/how-to-capture-vm-network-traffic-using.html
 
 ## Remote debugging with gdbstub.c
-It is a good idea to save the original  xtensa-esp32-elf-gdb as the one in the bin directory works best tit qemu
+It is a good idea to save the original  xtensa-esp32-elf-gdb as the one in the bin directory works best with qemu
 
 ```    
   Component config  --->
@@ -862,15 +862,10 @@ It is a good idea to save the original  xtensa-esp32-elf-gdb as the one in the b
              Panic handler behaviour (Invoke GDBStub)  --->   
 ```
 
-    esp32.c creates a thread with socket on port 8888 tto allow connect to the serial port over a socket.
-    This allows connecting to panic handler gdbstub. 
-    To enable this feature you must call,
-        esp32_serial_init(system_io, 0x40000, "esp32.uart0",
-                        xtensa_get_extint(env, 5), serial_hds[0]);
-    I think the application switches the interrupt for this and thats why it is not working.
-
+    esp32.c creates a 3 threads with socket on port 8880-8882 tto allow connect to the serial port over a socket.
+    This allows connecting to panic handler gdbstub. You can also use this to debug the debugstub code.
 ``` 
-    xtensa-esp32-elf-gdb.sav  build/app-template.elf  -ex 'target remote:8888'
+    xtensa-esp32-elf-gdb.sav  build/app-template.elf  -ex 'target remote:8880'
     Another solution if you are running qemu-gdb is to set a breakpoint in the stub.
     (gdb)b esp_gdbstub_panic_handler 
 ```
