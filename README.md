@@ -905,6 +905,40 @@ This rom.elf also works with the original gdb with panic handler gdbstub.
        (gdb) b app_main
 ```
 
+##.gdbinit freertos_show_threads 
+The .gdbinit file contains code to list all tasks, freertos_show_threads 
+It will list all the tasks, 
+  hande,name,core,stack,stack_usage
+It will also list current location of the $pc
+Take care that because of how the Xtensa core works, the leftmost digit of the hex number may be off and you have to manually correct it to '4'. For example, for $pc = 0x800820a2, you would want to look up 0x400820a2.
+list *0x400820a2, then you can see what the ipc0 thread is doing.
+--terminating-- , in this example it is empty, no threads are terminating.
+
+```
+(gdb) freertos_show_threads 
+0x3ffb80a0	IDLE	0x0	0x3ffb7b44	0x3ffb7f00		956
+   0x400d0d9e <esp_task_wdt_feed+6>:	or	a2, a10, a10
+   0x400d0da1 <esp_task_wdt_feed+9>:	l32r	a3, 0x400d00c0 <_stext+168>
+   0x400d0da4 <esp_task_wdt_feed+12>:	l32i	a3, a3, 0
+0x3ffb78b4	main	0x0	0x3ffb6898	0x3ffb7750		3768
+$1 = 0x80083070
+0x3ffb9798	tiT		0x7fffffff	0x3ffb8f7c	0x3ffb9620	1700
+$2 = 0x800820a2
+0x3ffba140	poll_task	0x7fffffff	0x3ffb9924	0x3ffba060	1852
+$3 = 0x80083070
+0x3ffb8890	Tmr Svc		0x0		0x3ffb8334	0x3ffb8790		1116
+$4 = 0x80083b9e
+--suspended--
+0x3ffbaae8	echo_thread	0x7fffffff	0x3ffba2cc	0x3ffba8b0	1508
+$5 = 0x800820a2
+0x3ffb670c	ipc0		0x0		0x3ffb61b0	0x3ffb6600	1104
+$6 = 0x800820a2
+--terminating--
+```
+
+
+
+
 #The ESP32 memory layout
 
 The MMU will map flash data/instruction to the processors depending on how these are set.
