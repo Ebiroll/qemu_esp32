@@ -296,6 +296,7 @@ void wifi_task(void *pvParameter) {
     unsigned char hostnum=1;
     char tmpBuff[20];
     // Arpscan network
+#if 0
     while (true) {
 
         sprintf(tmpBuff,"192.168.1.%d",hostnum);
@@ -329,7 +330,7 @@ void wifi_task(void *pvParameter) {
         vTaskDelay(300 / portTICK_PERIOD_MS);
         hostnum++;
     }
-
+#endif
 }
 
 extern void Task_lwip_init(void * pParam);
@@ -502,10 +503,77 @@ void ethernet_main()
 }
 
 
+void dump_regs(void *pvParameter)
+{
+    unsigned char*mem_location=(unsigned char*)0x40000000;
+    unsigned int*simple_mem_location=(unsigned int*)mem_location;
+    unsigned int* end=(unsigned int*)0x400C1FFF;
+    int j=0;
+
+    printf("\n");
+
+    int *GPIO_STRAP_TEST=(int *)0x3ff44038;
+    printf( "GPIO STRAP REG=%08X\n", *GPIO_STRAP_TEST);
+
+    int *test=(int *)RTC_CNTL_RESET_STATE_REG;
+    printf( "RTC_CNTL_RESET_STATE_REG,%08X=%08X\n",RTC_CNTL_RESET_STATE_REG, *test);
+
+    test=(int *)RTC_CNTL_INT_ST_REG;
+    printf( "RTC_CNTL_INT_ST_REG; %08X=%08X\n",RTC_CNTL_INT_ST_REG, *test);
+
+#if 0
+    case 0x1c018:
+        //return 0;
+        return 0x980020b6;
+        // Some difference should land between these values
+              // 0x980020c0;
+              // 0x980020b0;
+        //return   0x800000;
+    case 0x33c00:
+#endif
+
+    for (j=0;j<4;j++) {
+        test=(int *)0x6001c018;
+        printf( "0x6001c018 ; %08X=%08X\n",0x6001c018, *test);
+
+        test=(int *)0x60033c00;
+        printf( "0x60033c00; %08X=%08X\n",0x60033c00, *test);
+    }
+
+}
+
+extern uint8_t rom_i2c_readReg(uint8_t block, uint8_t host_id, uint8_t reg_add);
+
+void dump_i2c_regs()
+{
+  uint8_t j;
+  uint8_t ret=rom_i2c_readReg(0x62,0x01,0x06);
+
+  printf( "rom_i2c_reg block 0x62 reg 0x6 %02x\n",ret);
+
+  for (j=0;j<16;j++) {
+    ret=rom_i2c_readReg(0x62,0x01,j);
+    printf( "%02x\n",ret);
+  }
+
+  ret=rom_i2c_readReg(0x67,0x01,0x06);
+
+  printf( "rom_i2c_reg block 0x67 reg 0x6 %02x\n",ret);
+
+  for (j=0;j<16;j++) {
+    ret=rom_i2c_readReg(0x67,0x01,j);
+    printf( "%02x\n",ret);
+  }
+
+
+}
+
+
+
 void app_main()
 {
-    int *unpatch=(int *)  0x3ff00088;
-    *unpatch=0x42;
+    //int *unpatch=(int *)  0x3ff00088;
+    //*unpatch=0x42;
 
     esp_log_level_set("*", ESP_LOG_INFO);
     nvs_flash_init();
@@ -513,11 +581,12 @@ void app_main()
     //xTaskCreate(&wifi_task,"wifi_task",2048, NULL, 5, NULL);
     // Better run in main thread for faster processing
     //xTaskCreate(&emulated_net, "emulated_net", 4096, NULL, 5, NULL);
-    emulated_net(NULL);
-    //wifi_task(NULL);
-    //dump_task(NULL);
-    //ethernet_main();
+    //emulated_net(NULL);
 
+    //dump_i2c_regs();
+    wifi_task(NULL);
+    //dump_regs(NULL);
+    //ethernet_main();
 
     // Dumping rom is best done with the esptool.py
     //xTaskCreate(&dump_task, "dump_task", 2048, NULL, 5, NULL);
