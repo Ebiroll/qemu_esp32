@@ -86,11 +86,41 @@ Those two files will be loaded by qemu and must be in same directory as you star
 ```
 
 #Dumping flash content.
-esp/esp-idf/components/esptool_py/esptool/esptool.py --baud 920600 read_flash 0 0x400000  esp32flash.bin
 Now there is simple flash emulation in qemu. You need the file  esp32flash.bin to be in the same directory as rom.bin & rom1.bin.
-Currently write and mmao functions are not implemented. Soon they should be there.
 If no flashfile exists, an empty file will be created.
+```
+esp/esp-idf/components/esptool_py/esptool/esptool.py --baud 920600 read_flash 0 0x400000  esp32flash.bin
+```
+Currently mmap function are not correctory implemented. 
+The reason for this is that the bootloader will initiate the FLASH_MMU_TABLE
+to something like this. page 0 must be mapped correctly as it contains the .flash.roadata from the elf file.
+0x3f400010 size 5794 bytes.
+```
+#define DPORT_PRO_FLASH_MMU_TABLE ((volatile uint32_t) 0x3FF10000)
+PAGE 0 is the content of 0x3FF10000 the virtual adress ranged mapped would be adress 0x3f400000 - 0x3f410000
+Page 1 would be adress 0x3f410000 - 0x3f420000
+I guess paddr=2 would means that this virtual range is mapped to flash content at 0x20000? 
+This is output from spi_flash_mmap_dump(); after running the second stage bootloader but before nv_init().
+Note that the enable phy at startup would call nv_init before app_main. 
+spi_flash_mmap_dump()
+    Display information about mapped regions.
+    This function lists handles obtained using spi_flash_mmap, along with range of pages allocated to each handle. It also lists all non-zero entries of MMU table and corresponding reference counts.
+page 0: refcnt=1 paddr=2
+page 77: refcnt=1 paddr=4
+page 78: refcnt=1 paddr=5
+Here is the bootloader output from loading the app partition.
+I (80) boot: Loading app partition at offset 00010000[0m
+I (435) boot: segment 0: paddr=0x00010018 vaddr=0x00000000 size=0x0ffe8 ( 65512) [0m
+I (435) boot: segment 1: paddr=0x00020008 vaddr=0x3f400010 size=0x03824 ( 14372) map[0m
+I (440) boot: segment 2: paddr=0x00023834 vaddr=0x3ffb2ac0 size=0x012a0 (  4768) load[0m
+I (451) boot: segment 3: paddr=0x00024adc vaddr=0x40080000 size=0x00400 (  1024) load[0m
+I (458) boot: segment 4: paddr=0x00024ee4 vaddr=0x40080400 size=0x0fdd4 ( 64980) load[0m
+I (496) boot: segment 5: paddr=0x00034cc0 vaddr=0x400c0000 size=0x00000 (     0) load[0m
+I (497) boot: segment 6: paddr=0x00034cc8 vaddr=0x00000000 size=0x0b340 ( 45888) [0m
+I (502) boot: segment 7: paddr=0x00040010 vaddr=0x400d0018 size=0x11dcc ( 73164) map[0m
+I (510) boot: segment 8: paddr=0x00051de4 vaddr=0x50000000 size=0x00008 (     8) load[0m
 
+```
 Now you can also debug the bootloder with qemu. There used to be some 
 problem with the elf file, but its fixed with the latest versions,
 Set Bootloader config
@@ -970,7 +1000,7 @@ Offset, length, name    ,  data
  0x1000 , 2000          ,    Bootloader
  0x8000 , <100          ,    Partition table
  0x9000 , 6000    nvs   ,    wifi auth data 
- 0xf000 , 1000    phy_init   rf data, caclibration
+ 0xf000 , 1000    phy_init   rf data, calibration data
  0x10000 , <50000 factory,   application
 0x3E8000 4MB flash
 
