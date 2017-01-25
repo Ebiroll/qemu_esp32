@@ -5,10 +5,6 @@ Add tensilica esp32 cpu and a board to qemu and dump the rom to learn more about
 This documents how to add an esp32 cpu and a simple esp32 board to qemu in order to run an app compiled with the SDK in QEMU. Esp32 is a 240 MHz dual core Tensilica LX6 microcontroller.
 It is a good way to learn about qemu ,esp32 and the esp32 rom.
 
-## Setting up platformio
-[I would not currentrly recomed this, Setup Platform.io](./platformio.md)
-http://platformio.org/platformio-ide
-
 
 ## Setting up visual studio code
 [Works pretty well in linux now](./VSCODE.md)
@@ -50,6 +46,33 @@ The goal was to run the app-template.elf and connect the debugger to qemu to all
 Optimization level (Debug) 
 Not sure if this is necessary,
  Xtensa timer to use as the FreeRTOS tick source (Timer 0 (int 6, level 1))
+
+Now I have also added the possibility to initialize PHY in startup code.
+This however reqires that you match the EFUSE mac adresses with the ones dumped from the flash dump.
+
+      case 0x5a004:
+           printf("EFUSE MAC\n"); 
+           return 0xc400c870;
+           break;
+      case 0x5a008:
+           printf("EFUSE MAC\n"); 
+           return 0xffda240a;
+           break;
+
+Starting wifi works sometimes but its better to do like this, if you want to be able to flash and run 
+the same app.
+
+    int *quemu_test=(int *)  0x3ff005f0;
+
+    if (*quemu_test==0x42) {
+        printf("Running in qemu\n");
+        emulated_net(NULL);
+    }
+    else {
+      wifi_task(NULL);
+    }
+
+
 ```
 UART emulation is not so good as output is only on stderr. It would be much better if we could use the qemu driver with, serial_init(), however this only works in the rom part.
 
@@ -109,16 +132,16 @@ page 0: refcnt=1 paddr=2
 page 77: refcnt=1 paddr=4
 page 78: refcnt=1 paddr=5
 Here is the bootloader output from loading the app partition.
-I (80) boot: Loading app partition at offset 00010000[0m
-I (435) boot: segment 0: paddr=0x00010018 vaddr=0x00000000 size=0x0ffe8 ( 65512) [0m
-I (435) boot: segment 1: paddr=0x00020008 vaddr=0x3f400010 size=0x03824 ( 14372) map[0m
-I (440) boot: segment 2: paddr=0x00023834 vaddr=0x3ffb2ac0 size=0x012a0 (  4768) load[0m
-I (451) boot: segment 3: paddr=0x00024adc vaddr=0x40080000 size=0x00400 (  1024) load[0m
-I (458) boot: segment 4: paddr=0x00024ee4 vaddr=0x40080400 size=0x0fdd4 ( 64980) load[0m
-I (496) boot: segment 5: paddr=0x00034cc0 vaddr=0x400c0000 size=0x00000 (     0) load[0m
-I (497) boot: segment 6: paddr=0x00034cc8 vaddr=0x00000000 size=0x0b340 ( 45888) [0m
-I (502) boot: segment 7: paddr=0x00040010 vaddr=0x400d0018 size=0x11dcc ( 73164) map[0m
-I (510) boot: segment 8: paddr=0x00051de4 vaddr=0x50000000 size=0x00008 (     8) load[0m
+I (80) boot: Loading app partition at offset 00010000
+I (435) boot: segment 0: paddr=0x00010018 vaddr=0x00000000 size=0x0ffe8 ( 65512) 
+I (435) boot: segment 1: paddr=0x00020008 vaddr=0x3f400010 size=0x03824 ( 14372) map
+I (440) boot: segment 2: paddr=0x00023834 vaddr=0x3ffb2ac0 size=0x012a0 (  4768) load
+I (451) boot: segment 3: paddr=0x00024adc vaddr=0x40080000 size=0x00400 (  1024) load
+I (458) boot: segment 4: paddr=0x00024ee4 vaddr=0x40080400 size=0x0fdd4 ( 64980) load
+I (496) boot: segment 5: paddr=0x00034cc0 vaddr=0x400c0000 size=0x00000 (     0) load
+I (497) boot: segment 6: paddr=0x00034cc8 vaddr=0x00000000 size=0x0b340 ( 45888)
+I (502) boot: segment 7: paddr=0x00040010 vaddr=0x400d0018 size=0x11dcc ( 73164) map
+I (510) boot: segment 8: paddr=0x00051de4 vaddr=0x50000000 size=0x00008 (     8) load
 
 ```
 Now you can also debug the bootloder with qemu. There used to be some 
@@ -126,6 +149,9 @@ problem with the elf file, but its fixed with the latest versions,
 Set Bootloader config
 (X) Verbose 
 ```
+Before running bootloader, locate all // TO TEST BOOTLOADER 
+and add ir remove commtnts.
+
 xtensa-softmmu/qemu-system-xtensa  -cpu esp32 -M esp32 -m 4M  -kernel  ~/esp/qemu_esp32/build/bootloader/bootloader.elf -s  > io.txt
 
  Jun  8 2016 00:22:57
@@ -288,7 +314,7 @@ To get proper serial emulation you can remove the comment around this in the fil
 However it does not always work. You can use qemu to generate reset and it might work sometimes.
 I think that the rom-code and the application uses different interrupts.
 
-Soon I will add emulation for the other UARTS also.
+Soon I will add better emulation for the other UARTS also.
 
 ```
 xtensa-softmmu/qemu-system-xtensa -d guest_errors,page,unimp  -cpu esp32 -M esp32 -m 4M  -kernel  ~/esp/qemu_esp32/build/app-template.elf  -S -s > io.txt
@@ -778,6 +804,7 @@ As I am not alwas sure of what I am doing, I would recomend this version of the 
      There exists networking support of an emulated opencore network device,
      main/lwip_ethoc.c is the driver.
      All files in the net/ direcory is just for reference, they are currently not used.
+     With the 2.0 version of esp-idf emulated networking is broken. Need to investigate whats changed.
 
 ```  
      Dont try running   emulated_net(); on actual hardware. 
@@ -861,11 +888,11 @@ As I am not alwas sure of what I am doing, I would recomend this version of the 
      (unsigned)htons(ethhdr->type));
 
 
-     // Some threads when running lwip,
+     // Some threads when running lwip and the exho task,
      "tiT"   tcpip
      "ech"
-     "mai"   main task?
-     "IDL"   idle task?
+     "mai"   main task
+     "IDL"   idle task
 
       Yes! Got it to work with this.
       xtensa-softmmu/qemu-system-xtensa -net nic,model=vlan0 -net user,id=simnet,ipver4=on,net=192.168.1.0/24,host=192.168.1.40,hostfwd=tcp::10077-192.168.1.3:7  -net dump,file=/tmp/vm0.pcap  -d guest_errors,unimp  -cpu esp32 -M esp32 -m 16M  -kernel  ~/esp/qemu_esp32/build/app-template.elf -s -S   > io.txt

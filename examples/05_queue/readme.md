@@ -1,6 +1,10 @@
 #Emulating register_chipv7
 To allow easier use of qemu without having to disable,  Initialize PHY in startup code.
 
+Another option would to use calibration data from flash dump,
+Stop in phy_byte_to_word to find where mac adress is stored, probably in EFUSE area.
+
+
 ```
 register_chipv7_phy
 calls 

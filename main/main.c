@@ -503,6 +503,18 @@ void ethernet_main()
 }
 
 
+void dump_mac_with_crc(void *pvParameter)
+{
+      //case 0x5a004:
+      //case 0x5a008:
+    int *test=(int *) 0x3ff5a004;
+    printf( "EFUSE MAC ,%08X=%08X\n",(unsigned int)test, *test);
+
+    test=(int *) 0x3ff5a008;
+    printf( "EFUSE MAC ,%08X=%08X\n",(unsigned int)test, *test);
+
+}
+
 void dump_regs(void *pvParameter)
 {
     unsigned char*mem_location=(unsigned char*)0x40000000;
@@ -572,11 +584,15 @@ void dump_i2c_regs()
 
 void app_main()
 {
-    //int *unpatch=(int *)  0x3ff00088;
+    //int *unpatch=(int *)  0x3ff005f0;
     //*unpatch=0x42;
+    int *quemu_test=(int *)  0x3ff005f0;
+
 
     esp_log_level_set("*", ESP_LOG_INFO);
     nvs_flash_init();
+    dump_mac_with_crc(NULL);
+
     //asm("break.n 1");
     //xTaskCreate(&wifi_task,"wifi_task",2048, NULL, 5, NULL);
     // Better run in main thread for faster processing
@@ -584,8 +600,13 @@ void app_main()
     //emulated_net(NULL);
 
     //dump_i2c_regs();
-    wifi_task(NULL);
-    //dump_regs(NULL);
+    if (*quemu_test==0x42) {
+        printf("Running in qemu\n");
+    }
+    else {
+      wifi_task(NULL);
+    }
+    dump_regs(NULL);
     //ethernet_main();
 
     // Dumping rom is best done with the esptool.py

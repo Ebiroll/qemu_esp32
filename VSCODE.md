@@ -75,3 +75,10 @@ A bit annoying but for hight level c functions it is nice to have a gdb gui.
 
 ![debugger](img/vscode.png)
 
+
+
+## Setting up platformio
+Here is another ide that uses the atom editor, could be useful if it gets better.
+[I would not currentrly recomed this, Setup Platform.io](./platformio.md)
+http://platformio.org/platformio-ide
+
