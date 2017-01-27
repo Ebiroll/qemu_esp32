@@ -1010,29 +1010,34 @@ The MMU will map flash data/instruction to the processors depending on how these
 ```
 
 ```
-MMU_BLOCK0_VADDR 0x3f400000    // Dont use this one. Overlapping memory? Bug?
+MMU_BLOCK0_VADDR 0x3f400000    // Dont use this one. Must be mapped to flash.rodata 
 MMU_BLOCK1_VADDR 0x3f410000
 ..
-MMU_BLOCK63_VADDR 0x3fA30000
 
 MMU_BLOCK50_VADDR 0x3f720000
 ..
-MMU_BLOCK50_VADDR 0x3fd50000
+MMU_BLOCK63_VADDR 0x3fA30000
+
+qemu emulates flash mapping by looking at the X_FLASH_MMU_TABLE[]
+A value of 2 in DPORT_PRO_FLASH_MMU_TABLE[1] means that 
+contents of the flash file at location 0x20000-0x30000 will be mapped to virtual address 0x3f410000-0x3f420000
+I think that from BLOCK50 and up  memory is mapped as instructions. BLOCK0-49 is data.
 
 ```
 #Flash layout single app (subject to change)
 ```
 
-Offset, length, name    ,  data  
- 0x1000 , 2000          ,    Bootloader
- 0x8000 , <100          ,    Partition table
- 0x9000 , 6000    nvs   ,    wifi auth data 
- 0xf000 , 1000    phy_init   rf data, calibration data
- 0x10000 , <50000 factory,   application
-0x3E8000 4MB flash
+Offset, length,    name  ,  data  
+ 0x1000  , 2000          ,    Bootloader
+ 0x8000  , >100          ,    Partition table
+ 0x9000  , 6000    nvs   ,    wifi auth data 
+ 0xf000  , 1000    phy_init   rf data, calibration data
+ 0x10000 , >50000 factory,    application
+0x3E8000 is the end for a 4MB flash
 
-Old locations?
- 0x6000 , 6000    nvs   ,   wifi auth data 
+Old locations? Used in olfer version of the idf.
+  0x6000 , 6000    nvs   ,   wifi auth data 
+
 Note that the esp32 can save rf calibration data for subsequent startups
 
 qemu uses a simplified memory map, (subject to change)
@@ -1041,15 +1046,20 @@ qemu uses a simplified memory map, (subject to change)
             0x4000_0000 - 0x40BF_FFFF  ram1
 
             0x3ff0_0000 - 0x3ff0_0000   system_io
+The rom dumps are just copied into ram, but is probably protected.
+Also some of the ram was also dumped and is restored, this is probably a good thing.	    
             0x3FF9_0000 - 0x3FF9_FFFF   rom1.bin 
             0x4000_0000 - 0x40c1_FFFF   rom.bin
 
             0x5000_0000 - 0x5008_0000  ulp ram
-            0x6000_0000 - 0x5008_0000  wifi io
+            0x6000_0000 -              wifi io, undocumented i/o
 ```
 
 flash mmu emulation is done by copying from the file esp32flash.bin when the
 registers DPORT_PRO_FLASH_MMU_TABLE are written to.
+
+# Embedded memory.
+
 
 ```
 ROM0  384 KB   0x4000_0000 0x4005_FFFF    Static MPU
@@ -1065,6 +1075,26 @@ RTC FAST 8 KB  0x3FF8_0000 0x3FF8_1FFF    RTC FAST MPU
 RTC SLOW 8 KB  0x5000_0000 0x5000_1FFF    RTC SLOW MPU
 
 ```
+
+The on-chip memory is governed by fixed-function MPUs, configurable MPUs, and MMUs:
+
+Both the upper 128 KB of SRAM0 and the upper 128 KB of SRAM2 are governed by an MMU. 
+      128 KB   0x4008_0000 0x4009_FFFF    SRAM0 MMU
+      128 KB   0x3FFC_0000 0x3FFD_FFFF    SRAM2 MMU
+
+
+The internal RAM MMUs divide the memory range they govern into 16 pages. The
+page size is configurable as 8 KB, 4 KB and 2 KB. When the page size is 8 KB, the 16 pages span the entire 128
+KB memory region; when the page size is 4 KB or 2 KB, a non-MMU-covered region of 64 or 96 KB,
+respectively, will exist at the end of the memory space. 
+
+The address range of the first 32 KB of the ROM 0 (0x4000_0000 ~ 0x4000_7FFF) can be remapped in order to
+access a part of Internal SRAM 1 that normally resides in a memory range of 0x400B_0000 ~ 0x400B_7FFF.
+While remapping, the 32 KB SRAM cannot be accessed by an address range of 0x400B_0000 ~ 0x400B_7FFF
+any more, but it can still be accessible through the data bus (0x3FFE_8000 ~ 0x3FFE_FFFF
+
+
+
 #Layout
 
 ```
