@@ -34,7 +34,7 @@ SOFTWARE.
 #include "driver/gpio.h"
 #include "driver/uart.h"
 #include "esp_log.h"
-//#include "driver/adc.h"
+#include <string.h>
 #include <sys/time.h>
 
 
@@ -45,15 +45,16 @@ static const char *TAG = "uart";
 extern "C" char *readLine(uart_port_t uart,char *line,int len);
 extern "C" char *pollLine(uart_port_t uart,char *line,int len);
 
-
+#define BUF_SIZE 512
 
 char echoLine[512];
 
 
 // Sends This is a test string on uart 1
 static void uartTestTask(void *inpar) {
-
+  uart_port_t uart_num = UART_NUM_1;                                     //uart port number
   const char* test_str = "This is a test string.\r\n";
+  uint8_t* data;
   uart_tx_chars(uart_num, (const char*)test_str,strlen(test_str));
   printf("ESP32 uart Send\n");
   data = (uint8_t*) malloc(BUF_SIZE);
