@@ -28,7 +28,9 @@ git clone git://github.com/Ebiroll/qemu-xtensa-esp32
 Requires that you run a patched gdb to run in qemu. If not you will get Remote 'g' packet reply is too long:
 The key to using the original gdb, is to set num_regs = 104, in core-esp32.c
 However debugging c-functions in the elf file requires a patched qemu.
-In the bin directory there are patched versions of xtensa-esp32-elf-gdb
+In the bin directory there are patched versions of xtensa-esp32-elf-gdb.
+You can also build your own. Just apply this patch,
+https://github.com/jcmvbkbc/xtensa-toolchain-build/blob/master/fixup-gdb.sh
 
 ## Building qemu
 ```
@@ -48,7 +50,7 @@ Not sure if this is necessary,
  Xtensa timer to use as the FreeRTOS tick source (Timer 0 (int 6, level 1))
 
 Now I have also added the possibility to initialize PHY in startup code.
-This however reqires that you match the EFUSE mac adresses with the ones dumped from the flash dump.
+This however reqires that you match the EFUSE mac adresses with the ones dumped from the flash dump. (esp32.c)
 
       case 0x5a004:
            printf("EFUSE MAC\n"); 
@@ -60,7 +62,7 @@ This however reqires that you match the EFUSE mac adresses with the ones dumped 
            break;
 
 Starting wifi works sometimes but its better to do like this, if you want to be able to flash and run 
-the same app.
+the same app in qemu.
 
     int *quemu_test=(int *)  0x3ff005f0;
 
@@ -74,7 +76,12 @@ the same app.
 
 
 ```
-UART emulation is not so good as output is only on stderr. It would be much better if we could use the qemu driver with, serial_init(), however this only works in the rom part.
+UART emulation is not so good as output is only on stderr. Also interrupts are not emulated.
+esp32.c creates a 3 threads with socket on port 8880-8882 tto allow connect to the serial port over a socket. 
+In the starting terminal you can see output from all uarts mixed. However if you want to see output from only one uart,
+do, 
+nc 127.0.0.1 8880
+
 
 When running I advise that you patch gdb as described in this document or use the gdb provided in the /bin directory (linux 64 bit). This improves the debugging exerience quite a bit.
 
@@ -114,9 +121,10 @@ If no flashfile exists, an empty file will be created.
 ```
 esp/esp-idf/components/esptool_py/esptool/esptool.py --baud 920600 read_flash 0 0x400000  esp32flash.bin
 ```
-Currently mmap function are not correctory implemented. 
+Currently mmap function are not correctly implemented. 
 The reason for this is that the bootloader will initiate the FLASH_MMU_TABLE
-to something like this. page 0 must be mapped correctly as it contains the .flash.roadata from the elf file.
+to something. page 0 must be mapped correctly as it contains the .flash.roadata from the elf file.
+but qemu will not run the bootloader as it loads the elf file directly.
 0x3f400010 size 5794 bytes.
 ```
 #define DPORT_PRO_FLASH_MMU_TABLE ((volatile uint32_t) 0x3FF10000)
@@ -132,7 +140,7 @@ page 0: refcnt=1 paddr=2
 page 77: refcnt=1 paddr=4
 page 78: refcnt=1 paddr=5
 Here is the bootloader output from loading the app partition.
-I (80) boot: Loading app partition at offset 00010000
+I (80) boot: Loading app partition at offset 00010000
 I (435) boot: segment 0: paddr=0x00010018 vaddr=0x00000000 size=0x0ffe8 ( 65512) 
 I (435) boot: segment 1: paddr=0x00020008 vaddr=0x3f400010 size=0x03824 ( 14372) map
 I (440) boot: segment 2: paddr=0x00023834 vaddr=0x3ffb2ac0 size=0x012a0 (  4768) load
@@ -145,12 +153,12 @@ I (510) boot: segment 8: paddr=0x00051de4 vaddr=0x50000000 size=0x00008 (     8)
 
 ```
 Now you can also debug the bootloder with qemu. There used to be some 
-problem with the elf file, but its fixed with the latest versions,
+problem with the elf file, but its fixed with the later versions of esp-idf,
+```
 Set Bootloader config
 (X) Verbose 
-```
-Before running bootloader, locate all // TO TEST BOOTLOADER 
-and add ir remove commtnts.
+Before running bootloader, locate all // TO TEST BOOTLOADER in (esp32.c)
+and add or remove comments.
 
 xtensa-softmmu/qemu-system-xtensa  -cpu esp32 -M esp32 -m 4M  -kernel  ~/esp/qemu_esp32/build/bootloader/bootloader.elf -s  > io.txt
 
@@ -181,7 +189,7 @@ I (2) boot: End of partition table
 E (2) boot: nothing to load
 user code done
 ```
-Running the bootloader without downloading the flash content will give an output like this,
+Running the bootloader without dumpimg the flash content will give an output like this,
 ```
 TRYING to MAP esp32flash.bin MAPPED esp32flash.bin
 ets Jun  8 2016 00:22:57
@@ -212,6 +220,7 @@ This because qemu will create an empty file esp32flash.bin and there is no parti
 
   (gdb) x/10i $pc
   (gdb) x/10i 0x40000400
+  (gdb) continue
 ```
 
 To disassemble a specific function you can set pc from gdb,
@@ -305,16 +314,9 @@ The rom function -- ets_unpack_flash_code is located at 0x40007018.
 
 
 The serial device should also be emulated differently. Now serial output goes to stderr.
-
-To get proper serial emulation you can remove the comment around this in the file esp32.c,
-```
-//  serial_init(system_io, 0x40000 , 2, xtensa_get_extint(env, 0),
-//            115200, serial_hds[0], DEVICE_LITTLE_ENDIAN);
-```
-However it does not always work. You can use qemu to generate reset and it might work sometimes.
-I think that the rom-code and the application uses different interrupts.
-
-Soon I will add better emulation for the other UARTS also.
+All io calls are printed on stdout thats why you must do  > io.txt 
+Opening anoter terminal and doing tail -f io.txt allows you to see what io ports are
+accessed.
 
 ```
 xtensa-softmmu/qemu-system-xtensa -d guest_errors,page,unimp  -cpu esp32 -M esp32 -m 4M  -kernel  ~/esp/qemu_esp32/build/app-template.elf  -S -s > io.txt
@@ -350,7 +352,7 @@ RUR 234 not implemented, TBD(pc = 40091301): /home/olas/qemu/target-xtensa/trans
 RUR 235 not implemented, TBD(pc = 40091306): /home/olas/qemu/target-xtensa/translate.c:1876
 RUR 236 not implemented, TBD(pc = 4009130b): /home/olas/qemu/target-xtensa/translate.c:1876
 
-The WUR and RUR instructions are not implemented in qemu yet,
+The RER, WUR and RUR instructions are not implemented in qemu yet,
 My version has some hadling of these instructions.
 
 
@@ -715,8 +717,6 @@ flash read err, 1000
 If unpatching the ets_unpack_flash_code rom function.
 
 
-
-
 This does not work.
 head -c 4M /dev/zero > esp32.flash
 
@@ -736,7 +736,8 @@ xtensa-softmmu/qemu-system-xtensa -d guest_errors,page,unimp  -cpu esp32 -M esp3
 ```
 
 
-Running two cores, is default behaviour now  (gdb) info threads
+Running two cores, is default behaviour now, try (gdb) info threads
+The app cpu starts stalled and will be unstalled by the pro cpu.
 ```
 xtensa-softmmu/qemu-system-xtensa -d guest_errors,page,unimp  -cpu esp32 -M esp32 -m 4M -smp 2 -pflash esp32.flash -kernel  ~/esp/qemu_esp32/build/app-template.elf  -s -S  > io.txt
 ets Jun  8 2016 00:22:57
@@ -784,17 +785,16 @@ To use it properly you must increase the num_regs = 104 to i.e. 172 in core-esp3
 
 
 ## Another version of qemu for xtensa
-As I am not alwas sure of what I am doing, I would recomend this version of the software. Currently it is not yet finnished (11//11) but will most certainly be better if Max finds the time to work on it.
+The base of all this is done by Max Filippov
+https://github.com/OSLL/qemu-xtensa
 
-#A better version of qemu with esp32 exists here,
+#Another version of qemu with esp32 exists here,
+However the work is not yet finished.
    
     git clone https://github.com/OSLL/qemu-xtensa
     cd qemu-xtensa
     git checkout  xtensa-esp32
     git submodule update --init dtc
-       Add /hw/xtensa/esp32.c as described eariler in this doc
-       Edit this row
-       serial_hds[0] = qemu_chr_new("serial0", "null",NULL);
     cd ..
     mkdir build-qemu-xtensa
     cd build-qemu-xtensa
@@ -805,6 +805,7 @@ As I am not alwas sure of what I am doing, I would recomend this version of the 
      main/lwip_ethoc.c is the driver.
      All files in the net/ direcory is just for reference, they are currently not used.
      With the 2.0 version of esp-idf emulated networking is broken. Need to investigate whats changed.
+     probably something about the tcpip_task_hdlxxx : 3ffc4e50, prio:18,stack:2048
 
 ```  
      Dont try running   emulated_net(); on actual hardware. 
@@ -888,7 +889,7 @@ As I am not alwas sure of what I am doing, I would recomend this version of the 
      (unsigned)htons(ethhdr->type));
 
 
-     // Some threads when running lwip and the exho task,
+     // Some threads when running lwip and the echo task,
      "tiT"   tcpip
      "ech"
      "mai"   main task
@@ -901,11 +902,9 @@ As I am not alwas sure of what I am doing, I would recomend this version of the 
       The options allows you to do connect to the echoserver
       in order to test the echo server that is running on port 7
       wireshark /tmp/vm0.pcap
+      However with latest esp-idf it is broken, needs debugging.
 
 ```    
-
-
-
 
 
 http://blog.vmsplice.net/2011/04/how-to-capture-vm-network-traffic-using.html
@@ -969,7 +968,7 @@ It will list all the tasks,
 It will also list current location of the $pc
 Take care that because of how the Xtensa core works, the leftmost digit of the hex number may be off and you have to manually correct it to '4'. For example, for $pc = 0x800820a2, you would want to look up 0x400820a2.
 list *0x400820a2, then you can see what the ipc0 thread is doing.
---terminating-- , in this example it is empty, no threads are terminating.
+Note that --terminating-- , in this example it is empty, no threads are terminating.
 
 ```
 (gdb) freertos_show_threads 
@@ -992,8 +991,6 @@ $5 = 0x800820a2
 $6 = 0x800820a2
 --terminating--
 ```
-
-
 
 
 #The ESP32 memory layout
@@ -1059,7 +1056,6 @@ flash mmu emulation is done by copying from the file esp32flash.bin when the
 registers DPORT_PRO_FLASH_MMU_TABLE are written to.
 
 # Embedded memory.
-
 
 ```
 ROM0  384 KB   0x4000_0000 0x4005_FFFF    Static MPU
