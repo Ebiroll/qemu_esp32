@@ -72,7 +72,7 @@ uint32_t delta[MAX_TEST];
 
 bool g_my_app_init_done=false;
 
-
+#if 0
 
 void IRAM_ATTR start_cpu1(void)
 {
@@ -104,6 +104,9 @@ void IRAM_ATTR start_cpu1(void)
 
 }
 
+#endif
+
+int taskno=0;
 
 static void test1(void *param) {
    char *id = (char *)param;
@@ -120,6 +123,7 @@ static void test1(void *param) {
       printf( "%s - tick: %d\n", id, timeval_durationBeforeNow(&start));
       ESP_LOGD(tag, "%s - tick: %d", id, timeval_durationBeforeNow(&start));
    }
+   cycles[taskno++]=get_ccount();
    vTaskDelay(10000 / portTICK_PERIOD_MS);
    vTaskDelete(NULL);
 }
@@ -138,7 +142,7 @@ void task_tests(void *ignore) {
 void app_main()
 {
     int i=0;
-    //nvs_flash_init();
+    nvs_flash_init();
     g_my_app_init_done=true;
     
     printf("starting\n");

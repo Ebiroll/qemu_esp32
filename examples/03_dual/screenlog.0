@@ -1,0 +1,178 @@
+cycles 1 886338880 767966	767966
+cycles 2 887107951 769071	1105
+cycles 3 887961718 853767	84696
+cycles 4 888312331 350613	4294464142
+cycles 5 888997177 684846	334233
+cycles 6 0 3405970119	3405285273
+cycles 7 0 0	888997177
+cycles 8 0 0	0
+cycles 9 0 0	0
+cycles 10 0 0	0
+cycles 11 0 0	0
+cycles 12 0 0	0
+cycles 13 0 0	0
+cycles 14 0 0	0
+cycles 15 0 0	0
+cycles 16 0 0	0
+cycles 17 0 0	0
+cycles 18 0 0	0
+cycles 19 0 0	0
+cycles 20 0 0	0
+cycles 21 0 0	0
+cycles 22 0 0	0
+cycles 23 0 0	0
+cycles 24 0 0	0
+cycles 25 0 0	0
+cycles 26 0 0	0
+cycles 27 0 0	0
+cycles 28 0 0	0
+cycles 29 0 0	0
+cycles 30 0 0	0
+cycles 31 0 0	0
+ets Jun  8 2016 00:22:57
+
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+ets Jun  8 2016 00:22:57
+
+rst:0x10 (RTCWDT_RTC_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0x00
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0008,len:8
+load:0x3fff0010,len:3364
+load:0x40078000,len:7500
+load:0x40080000,len:252
+entry 0x40080034
+[0;32mI (28) boot: ESP-IDF  2nd stage bootloader[0m
+[0;32mI (28) boot: compile time 00:11:16[0m
+[0;32mI (61) boot: Enabling RNG early entropy source...[0m
+[0;32mI (62) boot: SPI Speed      : 40MHz[0m
+[0;32mI (62) boot: SPI Mode       : DIO[0m
+[0;32mI (75) boot: SPI Flash Size : 4MB[0m
+[0;32mI (87) boot: Partition Table:[0m
+[0;32mI (98) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (121) boot:  0 nvs              WiFi data        01 02 00009000 00006000[0m
+[0;32mI (144) boot:  1 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (167) boot:  2 factory          factory app      00 00 00010000 00100000[0m
+[0;32mI (190) boot: End of partition table[0m
+[0;32mI (203) boot: Disabling RNG early entropy source...[0m
+[0;32mI (220) boot: Loading app partition at offset 00010000[0m
+[0;32mI (703) boot: segment 0: paddr=0x00010018 vaddr=0x00000000 size=0x0ffe8 ( 65512) [0m
+[0;32mI (703) boot: segment 1: paddr=0x00020008 vaddr=0x3f400010 size=0x0590c ( 22796) map[0m
+[0;32mI (719) boot: segment 2: paddr=0x0002591c vaddr=0x3ffb0000 size=0x023d8 (  9176) load[0m
+[0;32mI (750) boot: segment 3: paddr=0x00027cfc vaddr=0x40080000 size=0x00400 (  1024) load[0m
+[0;32mI (773) boot: segment 4: paddr=0x00028104 vaddr=0x40080400 size=0x13210 ( 78352) load[0m
+[0;32mI (836) boot: segment 5: paddr=0x0003b31c vaddr=0x400c0000 size=0x00000 (     0) load[0m
+[0;32mI (837) boot: segment 6: paddr=0x0003b324 vaddr=0x00000000 size=0x04ce4 ( 19684) [0m
+[0;32mI (856) boot: segment 7: paddr=0x00040010 vaddr=0x400d0018 size=0x21018 (135192) map[0m
+[0;32mI (883) heap_alloc_caps: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (906) heap_alloc_caps: At 3FFB56D8 len 0002A928 (170 KiB): DRAM[0m
+[0;32mI (926) heap_alloc_caps: At 3FFE8000 len 00018000 (96 KiB): D/IRAM[0m
+[0;32mI (948) heap_alloc_caps: At 40093610 len 0000C9F0 (50 KiB): IRAM[0m
+[0;32mI (968) cpu_start: Pro cpu up.[0m
+[0;32mI (980) cpu_start: Starting app cpu, entry point is 0x40080a28[0m
+[0;32mI (0) cpu_start: App cpu up.[0m
+[0;32mI (1011) cpu_start: Pro cpu start user code[0m
+[0;32mI (1071) cpu_start: Starting scheduler on PRO CPU.[0m
+[0;32mI (80) cpu_start: Starting scheduler on APP CPU.[0m
+starting
+Task2 - tick: 3363
+Task3 - tick: 3356
+Task4 - tick: 3349
+Task6 - tick: 3333
+Task1 - tick: 3376
+Task5 - tick: 3347
+cycles 0 885569047
+cycles 1 886336937
+cycles 2 887106275
+cycles 3 887960513
+cycles 4 888311201
+cycles 5 888995891
+cycles 6 0
+cycles 7 0
+cycles 8 0
+cycles 9 0
+cycles 10 0
+cycles 11 0
+cycles 12 0
+cycles 13 0
+cycles 14 0
+cycles 15 0
+cycles 16 0
+cycles 17 0
+cycles 18 0
+cycles 19 0
+cycles 20 0
+cycles 21 0
+cycles 22 0
+cycles 23 0
+cycles 24 0
+cycles 25 0
+cycles 26 0
+cycles 27 0
+cycles 28 0
+cycles 29 0
+cycles 30 0
+cycles 31 0
+cycles 1 886336937 767890	767890
+cycles 2 887106275 769338	1448
+cycles 3 887960513 854238	84900
+cycles 4 888311201 350688	4294463746
+cycles 5 888995891 684690	334002
+cycles 6 0 3405971405	3405286715
+cycles 7 0 0	888995891
+cycles 8 0 0	0
+cycles 9 0 0	0
+cycles 10 0 0	0
+cycles 11 0 0	0
+cycles 12 0 0	0
+cycles 13 0 0	0
+cycles 14 0 0	0
+cycles 15 0 0	0
+cycles 16 0 0	0
+cycles 17 0 0	0
+cycles 18 0 0	0
+cycles 19 0 0	0
+cycles 20 0 0	0
+cycles 21 0 0	0
+cycles 22 0 0	0
+cycles 23 0 0	0
+cycles 24 0 0	0
+cycles 25 0 0	0
+cycles 26 0 0	0
+cycles 27 0 0	0
+cycles 28 0 0	0
+cycles 29 0 0	0
+cycles 30 0 0	0
+cycles 31 0 0	0
+cycles 1 886336937 767890	767890
+cycles 2 887106275 769338	1448
+cycles 3 887960513 854238	84900
+cycles 4 888311201 350688	4294463746
+cycles 5 888995891 684690	334002
+cycles 6 0 3405971405	3405286715
+cycles 7 0 0	888995891
+cycles 8 0 0	0
+cycles 9 0 0	0
+cycles 10 0 0	0
+cycles 11 0 0	0
+cycles 12 0 0	0
+cycles 13 0 0	0
+cycles 14 0 0	0
+cycles 15 0 0	0
+cycles 16 0 0	0
+cycles 17 0 0	0
+cycles 18 0 0	0
+cycles 19 0 0	0
+cycles 20 0 0	0
+cycles 21 0 0	0
+cycles 22 0 0	0
+cycles 23 0 0	0
+cycles 24 0 0	0
+cycles 25 0 0	0
+cycles 26 0 0	0
+cycles 27 0 0	0
+cycles 28 0 0	0
+cycles 29 0 0	0
+cycles 30 0 0	0
+cycles 31 0 0	0
