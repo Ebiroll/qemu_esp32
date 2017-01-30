@@ -68,11 +68,12 @@ uint32_t timeval_durationBeforeNow(struct timeval *a) {
 #define MAX_TEST 32
 
 uint32_t cycles[MAX_TEST];
+uint32_t delta[MAX_TEST];
 
 bool g_my_app_init_done=false;
 
 
-#if 0
+
 void IRAM_ATTR start_cpu1(void)
 {
     int i;
@@ -102,7 +103,7 @@ void IRAM_ATTR start_cpu1(void)
    }
 
 }
-#endif
+
 
 static void test1(void *param) {
    char *id = (char *)param;
@@ -151,7 +152,8 @@ void app_main()
 
     for(;;) {
       for (i=1;i<MAX_TEST;i++) {
-	printf("cycles %d %u %u\n",i,cycles[i],cycles[i]-cycles[i-1]);
+	delta[i]=cycles[i]-cycles[i-1];
+	printf("cycles %d %u %u\t%u\n",i,cycles[i],delta[i],delta[i]-delta[i-1]);
       }
       vTaskDelay(5000 / portTICK_PERIOD_MS);
     }
