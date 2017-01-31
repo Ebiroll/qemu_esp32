@@ -92,7 +92,7 @@ void IRAM_ATTR start_cpu1(void)
     //has started, but it isn't active *on this CPU* yet.
     esp_crosscore_int_init();
 
-    ESP_EARLY_LOGI(tag, "Not starting scheduler on APP CPU.");
+    ESP_EARLY_LOGI(tag, "Starting scheduler on APP CPU.");
     cpu1_scheduler_started=true;
     // Scheduler never returns... 
     xPortStartScheduler();
@@ -111,6 +111,7 @@ static void test1(void *param) {
    int taskno=task_par->id;
    ESP_LOGD(tag, ">> %s", id);
    int i;
+   //vTaskDelay(1 / portTICK_PERIOD_MS);
    while(1) 
    {
       struct timeval start;
@@ -123,7 +124,7 @@ static void test1(void *param) {
       printf( "%s - tick: %d\n", id, timeval_durationBeforeNow(&start));
       ESP_LOGD(tag, "%s - tick: %d", id, timeval_durationBeforeNow(&start));
       cycles[taskno]=get_ccount();
-      vTaskDelay(5000 / portTICK_PERIOD_MS);
+      vTaskDelay(6000 / portTICK_PERIOD_MS);
    }
    vTaskDelete(NULL);
 }
@@ -182,7 +183,7 @@ void app_main()
 {
     int i=0;
     // flash uses ipc between cores.
-    vTaskDelay(500 / portTICK_PERIOD_MS);
+    //vTaskDelay(500 / portTICK_PERIOD_MS);
     //nvs_flash_init();
     g_my_app_init_done=true;
     
