@@ -6,6 +6,7 @@
 #include "esp_system.h"
 #include "nvs_flash.h"
 #include <stdio.h>
+#include <string.h>
 
 //#include "c_timeutils.h"
 #include "sdkconfig.h"
@@ -106,10 +107,17 @@ void IRAM_ATTR start_cpu1(void)
 
 #endif
 
-int taskno=0;
+
+
+typedef struct taskParam {
+  char name[32];
+  int id;
+} taskParam;
 
 static void test1(void *param) {
-   char *id = (char *)param;
+   taskParam* task_par=(taskParam *)param;
+   char *id = task_par->name;
+   int taskno=task_par->id;
    ESP_LOGD(tag, ">> %s", id);
    int i;
    //while(1) 
@@ -123,21 +131,44 @@ static void test1(void *param) {
       printf( "%s - tick: %d\n", id, timeval_durationBeforeNow(&start));
       ESP_LOGD(tag, "%s - tick: %d", id, timeval_durationBeforeNow(&start));
    }
-   cycles[taskno++]=get_ccount();
+   cycles[taskno]=get_ccount();
    vTaskDelay(10000 / portTICK_PERIOD_MS);
    vTaskDelete(NULL);
 }
 
+taskParam param[10];
+
+void init_param() {
+  int i=0;
+  for (i=0;i<10;i++) {
+    char Buff[32];
+    sprintf(Buff,"Task%d",i);
+    param[i].id=i;
+    strcpy(param[i].name,Buff);
+  }
+}
+
 void task_tests(void *ignore) {
-   xTaskCreate(&test1, "task1", 2048, "Task1", 5, NULL);
-   xTaskCreate(&test1, "task2", 2048, "Task2", 5, NULL);
-   xTaskCreate(&test1, "task3", 2048, "Task3", 5, NULL);
-   xTaskCreate(&test1, "task4", 2048, "Task4", 5, NULL);
-   xTaskCreate(&test1, "task5", 2048, "Task5", 5, NULL);
-   xTaskCreate(&test1, "task6", 2048, "Task6", 5, NULL);
+   init_param();
+   xTaskCreate(&test1, "task0", 2048, &param[0], 5, NULL);
+   xTaskCreate(&test1, "task1", 2048, &param[1], 5, NULL);
+   xTaskCreate(&test1, "task2", 2048, &param[2], 5, NULL);
+   xTaskCreate(&test1, "task3", 2048, &param[3], 5, NULL);
+   xTaskCreate(&test1, "task4", 2048,&param[4], 5, NULL);
+   xTaskCreate(&test1, "task5", 2048,&param[5], 5, NULL);
    vTaskDelete(NULL);
 }
 
+void pinned_tests(void *ignore) {
+   init_param();
+   xTaskCreatePinnedToCore(&test1, "task0", 2048, &param[0], 5, NULL,1);
+   xTaskCreatePinnedToCore(&test1, "task1", 2048, &param[1], 5, NULL,0);
+   xTaskCreatePinnedToCore(&test1, "task2", 2048, &param[2], 5, NULL,1);
+   xTaskCreatePinnedToCore(&test1, "task3", 2048, &param[3], 5, NULL,0);
+   xTaskCreatePinnedToCore(&test1, "task4", 2048,&param[4], 5, NULL,1);
+   xTaskCreatePinnedToCore(&test1, "task5", 2048,&param[5], 5, NULL,0);
+   vTaskDelete(NULL);
+}
 
 void app_main()
 {
@@ -148,6 +179,7 @@ void app_main()
     printf("starting\n");
 
     xTaskCreate(&task_tests, "test", 2048, "test", 5, NULL);
+    //xTaskCreate(&pinned_tests, "test", 2048, "test", 5, NULL);
     //task_tests(NULL);
 
     for (i=0;i<MAX_TEST;i++) {
