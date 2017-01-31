@@ -198,7 +198,7 @@ void app_main()
     for(;;) {
       for (i=1;i<MAX_TEST;i++) {
 	delta[i]=cycles[i]-cycles[i-1];
-	printf("cycles %d %u %u\t%u\n",i,cycles[i],delta[i],delta[i]-delta[i-1]);
+	printf("cycles %d %u %u\t%d\n",i,cycles[i],delta[i],delta[i]-delta[i-1]);
       }
       vTaskDelay(5000 / portTICK_PERIOD_MS);
     }
