@@ -67,13 +67,13 @@ uint32_t timeval_durationBeforeNow(struct timeval *a) {
 } // timeval_durationBeforeNow
 
 
-#define MAX_TEST 16
+#define MAX_TEST 10
 
 uint32_t cycles[MAX_TEST];
 uint32_t core[MAX_TEST];
 
 bool g_my_app_init_done=false;
-
+bool cpu1_scheduler_started=false;
 
 
 void IRAM_ATTR start_cpu1(void)
@@ -93,6 +93,7 @@ void IRAM_ATTR start_cpu1(void)
     esp_crosscore_int_init();
 
     ESP_EARLY_LOGI(tag, "Not starting scheduler on APP CPU.");
+    cpu1_scheduler_started=true;
     // Scheduler never returns... 
     xPortStartScheduler();
 }
@@ -116,7 +117,7 @@ static void test1(void *param) {
       gettimeofday(&start, NULL);
       int volatile j=0;
       core[taskno]=xPortGetCoreID();
-      for (i=0; i<900000; i++) {
+      for (i=0; i<9000000; i++) {
          j=j+1;
       }
       printf( "%s - tick: %d\n", id, timeval_durationBeforeNow(&start));
@@ -142,6 +143,7 @@ void init_param() {
 void task_tests(void *ignore) {
    init_param();
    xTaskCreate(&test1, "tk0", 2048, &param[0], 5, NULL);
+   //xTaskCreatePinnedToCore(&test1, "tk0", 2048, &param[0], 5, NULL,1);
    xTaskCreate(&test1, "tk1", 2048, &param[1], 5, NULL);
    xTaskCreate(&test1, "tk2", 2048, &param[2], 5, NULL);
    xTaskCreate(&test1, "tk3", 2048, &param[3], 5, NULL);
@@ -179,11 +181,17 @@ void pinned_to_pro_tests(void *ignore) {
 void app_main()
 {
     int i=0;
-    // Cannot initialize flash as it uses ipc between cores.
+    // flash uses ipc between cores.
+    vTaskDelay(500 / portTICK_PERIOD_MS);
     //nvs_flash_init();
     g_my_app_init_done=true;
     
     printf("starting\n");
+
+    while (!cpu1_scheduler_started) {
+      ;
+    }
+    printf("started\n");
 
     xTaskCreate(&task_tests, "test", 2048, "test", 5, NULL);
     //xTaskCreate(&pinned_mixed_tests, "test", 2048, "test", 5, NULL);
@@ -195,7 +203,7 @@ void app_main()
     }
 
     for(;;) {
-      for (i=1;i<MAX_TEST;i++) {
+      for (i=0;i<MAX_TEST;i++) {
 	printf("cycles%d %u\t%u\n",i,cycles[i],core[i]);
       }
       vTaskDelay(5000 / portTICK_PERIOD_MS);
