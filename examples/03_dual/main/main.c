@@ -73,7 +73,7 @@ uint32_t delta[MAX_TEST];
 
 bool g_my_app_init_done=false;
 
-#if 0
+
 
 void IRAM_ATTR start_cpu1(void)
 {
@@ -102,10 +102,7 @@ void IRAM_ATTR start_cpu1(void)
 	pos=0;
       }
    }
-
 }
-
-#endif
 
 
 
@@ -170,17 +167,29 @@ void pinned_tests(void *ignore) {
    vTaskDelete(NULL);
 }
 
+void pinned_to_pro_tests(void *ignore) {
+   init_param();
+   xTaskCreatePinnedToCore(&test1, "task0", 2048, &param[0], 5, NULL,0);
+   xTaskCreatePinnedToCore(&test1, "task1", 2048, &param[1], 5, NULL,0);
+   xTaskCreatePinnedToCore(&test1, "task2", 2048, &param[2], 5, NULL,0);
+   xTaskCreatePinnedToCore(&test1, "task3", 2048, &param[3], 5, NULL,0);
+   xTaskCreatePinnedToCore(&test1, "task4", 2048,&param[4], 5, NULL,0);
+   xTaskCreatePinnedToCore(&test1, "task5", 2048,&param[5], 5, NULL,0);
+   vTaskDelete(NULL);
+}
+
 void app_main()
 {
     int i=0;
-    nvs_flash_init();
+    //nvs_flash_init();
     g_my_app_init_done=true;
     
     printf("starting\n");
 
-    xTaskCreate(&task_tests, "test", 2048, "test", 5, NULL);
+    //xTaskCreate(&task_tests, "test", 2048, "test", 5, NULL);
     //xTaskCreate(&pinned_tests, "test", 2048, "test", 5, NULL);
-    //task_tests(NULL);
+    xTaskCreate(&pinned_to_pro_tests, "test", 2048, "test", 5, NULL);
+    //pinned_to_pro_tests(NULL);
 
     for (i=0;i<MAX_TEST;i++) {
       printf("cycles %d %u\n",i,cycles[i]);
