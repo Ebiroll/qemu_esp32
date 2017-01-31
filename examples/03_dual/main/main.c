@@ -3,6 +3,7 @@
 #include <freertos/task.h>
 #include <esp_attr.h>
 #include <sys/time.h>
+#include <esp_crosscore_int.h>
 #include "esp_system.h"
 #include "nvs_flash.h"
 #include <stdio.h>
@@ -83,6 +84,18 @@ void IRAM_ATTR start_cpu1(void)
     while (!g_my_app_init_done) {
         ;
     }
+    // Wait for FreeRTOS initialization to finish on PRO CPU
+    //while (port_xSchedulerRunning[0] == 0) {
+    //    ;
+    //}
+    //Take care putting stuff here: if asked, FreeRTOS will happily tell you the scheduler
+    //has started, but it isn't active *on this CPU* yet.
+    esp_crosscore_int_init();
+
+    ESP_EARLY_LOGI(tag, "Not starting scheduler on APP CPU.");
+    // Scheduler never returns... 
+    //xPortStartScheduler();
+
     // do things
     for (i=0;i<MAX_TEST;i++) {
       cycles[i]=0;
@@ -99,7 +112,7 @@ void IRAM_ATTR start_cpu1(void)
       cycles[pos]=get_ccount();
       pos++;
       if (pos>=MAX_TEST) {
-	pos=0;
+	      pos=0;
       }
    }
 }
@@ -181,6 +194,7 @@ void pinned_to_pro_tests(void *ignore) {
 void app_main()
 {
     int i=0;
+    // Cannot initialize flash as it uses ipc between cores.
     //nvs_flash_init();
     g_my_app_init_done=true;
     
