@@ -1,4 +1,4 @@
-# Start dummy tasks on any core and log where it actually was schedule
+# Start dummy tasks on any core and log where it actually was scheduled
 
 
 Inspired by this discussion.
