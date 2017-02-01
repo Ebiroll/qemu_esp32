@@ -75,7 +75,7 @@ uint32_t core[MAX_TEST];
 bool g_my_app_init_done=false;
 bool cpu1_scheduler_started=false;
 
-
+#if 0
 void IRAM_ATTR start_cpu1(void)
 {
     int i;
@@ -97,7 +97,7 @@ void IRAM_ATTR start_cpu1(void)
     // Scheduler never returns... 
     xPortStartScheduler();
 }
-
+#endif
 
 
 typedef struct taskParam {
@@ -110,14 +110,19 @@ static void test1(void *param) {
    char *id = task_par->name;
    int taskno=task_par->id;
    ESP_LOGD(tag, ">> %s", id);
+   printf("%s started\n",id);
    int i;
+   int times=2;
    //vTaskDelay(1 / portTICK_PERIOD_MS);
-   while(1) 
+   while(times-->0) 
    {
       struct timeval start;
       gettimeofday(&start, NULL);
       int volatile j=0;
       core[taskno]=xPortGetCoreID();
+      if (xPortGetCoreID()==1) {
+	printf("Running on APP CPU!!!!!!!!\n");
+      }
       for (i=0; i<9000000; i++) {
          j=j+1;
       }
@@ -126,6 +131,7 @@ static void test1(void *param) {
       cycles[taskno]=get_ccount();
       vTaskDelay(6000 / portTICK_PERIOD_MS);
    }
+   printf("%s finished\n",id);
    vTaskDelete(NULL);
 }
 
@@ -165,6 +171,10 @@ void pinned_mixed_tests(void *ignore) {
    xTaskCreatePinnedToCore(&test1, "task3", 2048, &param[3], 5, NULL,0);
    xTaskCreatePinnedToCore(&test1, "task4", 2048,&param[4], 5, NULL,1);
    xTaskCreatePinnedToCore(&test1, "task5", 2048,&param[5], 5, NULL,0);
+   xTaskCreatePinnedToCore(&test1, "task6", 2048,&param[6], 5, NULL,1);
+   xTaskCreatePinnedToCore(&test1, "task7", 2048,&param[7], 5, NULL,0);
+   xTaskCreatePinnedToCore(&test1, "task8", 2048,&param[8], 5, NULL,1);
+   xTaskCreatePinnedToCore(&test1, "task9", 2048,&param[9], 5, NULL,0);
    vTaskDelete(NULL);
 }
 
@@ -184,18 +194,18 @@ void app_main()
     int i=0;
     // flash uses ipc between cores.
     //vTaskDelay(500 / portTICK_PERIOD_MS);
-    //nvs_flash_init();
+    nvs_flash_init();
     g_my_app_init_done=true;
     
     printf("starting\n");
 
-    while (!cpu1_scheduler_started) {
-      ;
-    }
-    printf("started\n");
+    //while (!cpu1_scheduler_started) {
+    //  ;
+    //}
+    //printf("started\n");
 
-    xTaskCreate(&task_tests, "test", 2048, "test", 5, NULL);
-    //xTaskCreate(&pinned_mixed_tests, "test", 2048, "test", 5, NULL);
+    //xTaskCreate(&task_tests, "test", 2048, "test", 5, NULL);
+    xTaskCreate(&pinned_mixed_tests, "test", 2048, "test", 5, NULL);
     //xTaskCreate(&pinned_to_pro_tests, "test", 2048, "test", 5, NULL);
     //pinned_to_pro_tests(NULL);
 
