@@ -1,3 +1,21 @@
+Task3 finished
+Task8 - tick: 2582
+Task5 finished
+Task4 - tick: 2742
+Task0 - tick: 2735
+cycles0 3607133872	1
+cycles1 1894460298	0
+cycles2 1511220085	1
+cycles3 2027142858	0
+cycles4 3606429226	1
+cycles5 2165661519	0
+cycles6 1511689120	1
+cycles7 2300745711	0
+cycles8 3553629304	1
+cycles9 2433429060	0
+Task2 - tick: 2724
+Task6 - tick: 2712
+Task7 finished
 [0;32mI (28) boot: ESP-IDF  2nd stage bootloader[0m
 [0;32mI (28) boot: compile time 08:27:06[0m
 [0;32mI (61) boot: Enabling RNG early entropy source...[0m
@@ -12,27 +30,28 @@
 [0;32mI (190) boot: End of partition table[0m
 [0;32mI (203) boot: Disabling RNG early entropy source...[0m
 [0;32mI (220) boot: Loading app partition at offset 00010000[0m
-[0;32mI (705) boot: segment 0: paddr=0x00010018 vaddr=0x00000000 size=0x0ffe8 ( 65512) [0m
+[0;32mI (704) boot: segment 0: paddr=0x00010018 vaddr=0x00000000 size=0x0ffe8 ( 65512) [0m
 [0;32mI (705) boot: segment 1: paddr=0x00020008 vaddr=0x3f400010 size=0x05d78 ( 23928) map[0m
-[0;32mI (721) boot: segment 2: paddr=0x00025d88 vaddr=0x3ffb0000 size=0x023e4 (  9188) load[0m
-[0;32mI (751) boot: segment 3: paddr=0x00028174 vaddr=0x40080000 size=0x00400 (  1024) load[0m
-[0;32mI (774) boot: segment 4: paddr=0x0002857c vaddr=0x40080400 size=0x13ba0 ( 80800) load[0m
-[0;32mI (838) boot: segment 5: paddr=0x0003c124 vaddr=0x400c0000 size=0x00000 (     0) load[0m
-[0;32mI (839) boot: segment 6: paddr=0x0003c12c vaddr=0x00000000 size=0x03edc ( 16092) [0m
-[0;32mI (858) boot: segment 7: paddr=0x00040010 vaddr=0x400d0018 size=0x2170c (136972) map[0m
+[0;32mI (721) boot: segment 2: paddr=0x00025d88 vaddr=0x3ffb0000 size=0x023ec (  9196) load[0m
+[0;32mI (751) boot: segment 3: paddr=0x0002817c vaddr=0x40080000 size=0x00400 (  1024) load[0m
+[0;32mI (774) boot: segment 4: paddr=0x00028584 vaddr=0x40080400 size=0x13bf4 ( 80884) load[0m
+[0;32mI (838) boot: segment 5: paddr=0x0003c180 vaddr=0x400c0000 size=0x00000 (     0) load[0m
+[0;32mI (839) boot: segment 6: paddr=0x0003c188 vaddr=0x00000000 size=0x03e80 ( 16000) [0m
+[0;32mI (858) boot: segment 7: paddr=0x00040010 vaddr=0x400d0018 size=0x21714 (136980) map[0m
 [0;32mI (885) heap_alloc_caps: Initializing. RAM available for dynamic allocation:[0m
-[0;32mI (907) heap_alloc_caps: At 3FFB57A8 len 0002A858 (170 KiB): DRAM[0m
+[0;32mI (907) heap_alloc_caps: At 3FFB57B0 len 0002A850 (170 KiB): DRAM[0m
 [0;32mI (928) heap_alloc_caps: At 3FFE8000 len 00018000 (96 KiB): D/IRAM[0m
-[0;32mI (949) heap_alloc_caps: At 40093FA0 len 0000C060 (48 KiB): IRAM[0m
+[0;32mI (949) heap_alloc_caps: At 40093FF4 len 0000C00C (48 KiB): IRAM[0m
 [0;32mI (970) cpu_start: Pro cpu up.[0m
-[0;32mI (981) cpu_start: Starting app cpu, entry point is 0x40080a2c[0m
+[0;32mI (981) cpu_start: Starting app cpu, entry point is 0x40080a40[0m
 [0;32mI (0) cpu_start: App cpu up.[0m
-[0;32mI (1013) cpu_start: Pro cpu start user code[0m
-[0;31mE (1126) phy_init: PHY data partition validated[0m
-[0;32mI (1260) phy: phy_version: 258, Nov 29 2016, 15:51:07, 1, 0[0m
-[0;32mI (2332) cpu_start: Starting scheduler on PRO CPU.[0m
+[0;32mI (1012) cpu_start: Pro cpu start user code[0m
+[0;31mE (1125) phy_init: PHY data partition validated[0m
+[0;32mI (1265) phy: phy_version: 258, Nov 29 2016, 15:51:07, 1, 0[0m
+[0;32mI (1424) cpu_start: Starting scheduler on PRO CPU.[0m
+Running on APP CPU!!!!!!!!
+[0;32mI (429) tasks: Starting scheduler on APP CPU.[0m
 starting
-[0;32mI (1337) cpu_start: Starting scheduler on APP CPU.[0m
 Task1 started
 Task1 - tick: 563
 Task3 started
@@ -44,82 +63,182 @@ Task7 - tick: 563
 Task9 started
 Task9 - tick: 563
 cycles 0 0 0
-cycles 1 196427231 0
+cycles 1 292430028 0
 cycles 2 0 0
-cycles 3 331694027 0
+cycles 3 427641881 0
 cycles 4 0 0
-cycles 5 466969188 0
+cycles 5 562860653 0
 cycles 6 0 0
-cycles 7 602243336 0
+cycles 7 698078492 0
 cycles 8 0 0
-cycles 9 737541744 0
+cycles 9 833317118 0
+Task8 started
+Task0 started
+Running on APP CPU!!!!!!!!
+Task2 started
+Running on APP CPU!!!!!!!!
+Running on APP CPU!!!!!!!!
+Task4 started
+Running on APP CPU!!!!!!!!
 cycles0 0	0
-cycles1 196427231	0
-cycles2 0	0
-cycles3 331694027	0
-cycles4 0	0
-cycles5 466969188	0
+cycles1 292430028	0
+cycles2 0	1
+cycles3 427641881	0
+cycles4 0	1
+cycles5 562860653	0
 cycles6 0	0
-cycles7 602243336	0
-cycles8 0	0
-cycles9 737541744	0
-Task1 - tick: 563
-Task3 - tick: 563
-Task5 - tick: 563
-Task7 - tick: 563
-cycles0 0	0
-cycles1 1770351698	0
-cycles2 0	0
-cycles3 1905593917	0
-cycles4 0	0
-cycles5 2041552072	0
-cycles6 0	0
-cycles7 2176791257	0
-cycles8 0	0
-Task9 - tick: 563
-cycles9 2312759961	0
+cycles7 698078492	0
+cycles8 0	1
+cycles9 833317118	0
+Task6 started
+Running on APP CPU!!!!!!!!
+Task8 - tick: 2748
+Task4 - tick: 2782
+Task0 - tick: 2807
+Task2 - tick: 2792
+Task6 - tick: 2764
+Task1 - tick: 572
+Task3 - tick: 565
+Task5 - tick: 572
+Task7 - tick: 575
+Task9 - tick: 568
+cycles0 1484035306	1
+cycles1 1868965491	0
+cycles2 1485711676	1
+cycles3 2001648024	0
+cycles4 1483339075	1
+cycles5 2140166718	0
+cycles6 1486179676	1
+cycles7 2275250913	0
+cycles8 1468951696	1
+cycles9 2407934262	0
+Running on APP CPU!!!!!!!!
+Running on APP CPU!!!!!!!!
+Running on APP CPU!!!!!!!!
+Running on APP CPU!!!!!!!!
+Running on APP CPU!!!!!!!!
 Task1 finished
 Task3 finished
+Task8 - tick: 2582
 Task5 finished
-cycles0 0	0
-cycles1 1770351698	0
-cycles2 0	0
-cycles3 1905593917	0
-cycles4 0	0
-cycles5 2041552072	0
-cycles6 0	0
-cycles7 2176791257	0
-cycles8 0	0
-cycles9 2312759961	0
+Task4 - tick: 2742
+Task0 - tick: 2735
+cycles0 3581625442	1
+cycles1 1868965491	0
+cycles2 1485711676	1
+cycles3 2001648024	0
+cycles4 3580920814	1
+cycles5 2140166718	0
+cycles6 1486179676	1
+cycles7 2275250913	0
+cycles8 3528121774	1
+cycles9 2407934262	0
+Task2 - tick: 2724
+Task6 - tick: 2712
 Task7 finished
 Task9 finished
-cycles0 0	0
-cycles1 1770351698	0
-cycles2 0	0
-cycles3 1905593917	0
-cycles4 0	0
-cycles5 2041552072	0
-cycles6 0	0
-cycles7 2176791257	0
-cycles8 0	0
-cycles9 2312759961	0
-cycles0 0	0
-cycles1 1770351698	0
-cycles2 0	0
-cycles3 1905593917	0
-cycles4 0	0
-cycles5 2041552072	0
-cycles6 0	0
-cycles7 2176791257	0
-cycles8 0	0
-cycles9 2312759961	0
-cycles0 0	0
-cycles1 1770351698	0
-cycles2 0	0
-cycles3 1905593917	0
-cycles4 0	0
-cycles5 2041552072	0
-cycles6 0	0
-cycles7 2176791257	0
-cycles8 0	0
-cycles9 2312759961	0
+cycles0 3581625442	1
+cycles1 1868965491	0
+cycles2 3585018173	1
+cycles3 2001648024	0
+cycles4 3580920814	1
+cycles5 2140166718	0
+cycles6 3585026333	1
+cycles7 2275250913	0
+cycles8 3528121774	1
+cycles9 2407934262	0
+Task8 finished
+Task0 finished
+Task4 finished
+Task6 finished
+Task2 finished
+cycles0 3581625442	1
+cycles1 1868965491	0
+cycles2 3585018173	1
+cycles3 2001648024	0
+cycles4 3580920814	1
+cycles5 2140166718	0
+cycles6 3585026333	1
+cycles7 2275250913	0
+cycles8 3528121774	1
+cycles9 2407934262	0
+cycles0 3581625442	1
+cycles1 1868965491	0
+cycles2 3585018173	1
+cycles3 2001648024	0
+cycles4 3580920814	1
+cycles5 2140166718	0
+cycles6 3585026333	1
+cycles7 2275250913	0
+cycles8 3528121774	1
+cycles9 2407934262	0
+cycles0 3581625442	1
+cycles1 1868965491	0
+cycles2 3585018173	1
+cycles3 2001648024	0
+cycles4 3580920814	1
+cycles5 2140166718	0
+cycles6 3585026333	1
+cycles7 2275250913	0
+cycles8 3528121774	1
+cycles9 2407934262	0
+cycles0 3581625442	1
+cycles1 1868965491	0
+cycles2 3585018173	1
+cycles3 2001648024	0
+cycles4 3580920814	1
+cycles5 2140166718	0
+cycles6 3585026333	1
+cycles7 2275250913	0
+cycles8 3528121774	1
+cycles9 2407934262	0
+cycles0 3581625442	1
+cycles1 1868965491	0
+cycles2 3585018173	1
+cycles3 2001648024	0
+cycles4 3580920814	1
+cycles5 2140166718	0
+cycles6 3585026333	1
+cycles7 2275250913	0
+cycles8 3528121774	1
+cycles9 2407934262	0
+cycles0 3581625442	1
+cycles1 1868965491	0
+cycles2 3585018173	1
+cycles3 2001648024	0
+cycles4 3580920814	1
+cycles5 2140166718	0
+cycles6 3585026333	1
+cycles7 2275250913	0
+cycles8 3528121774	1
+cycles9 2407934262	0
+cycles0 3581625442	1
+cycles1 1868965491	0
+cycles2 3585018173	1
+cycles3 2001648024	0
+cycles4 3580920814	1
+cycles5 2140166718	0
+cycles6 3585026333	1
+cycles7 2275250913	0
+cycles8 3528121774	1
+cycles9 2407934262	0
+cycles0 3581625442	1
+cycles1 1868965491	0
+cycles2 3585018173	1
+cycles3 2001648024	0
+cycles4 3580920814	1
+cycles5 2140166718	0
+cycles6 3585026333	1
+cycles7 2275250913	0
+cycles8 3528121774	1
+cycles9 2407934262	0
+cycles0 3581625442	1
+cycles1 1868965491	0
+cycles2 3585018173	1
+cycles3 2001648024	0
+cycles4 3580920814	1
+cycles5 2140166718	0
+cycles6 3585026333	1
+cycles7 2275250913	0
+cycles8 3528121774	1
+cycles9 2407934262	0

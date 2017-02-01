@@ -75,7 +75,7 @@ uint32_t core[MAX_TEST];
 bool g_my_app_init_done=false;
 bool cpu1_scheduler_started=false;
 
-#if 0
+
 void IRAM_ATTR start_cpu1(void)
 {
     int i;
@@ -92,12 +92,16 @@ void IRAM_ATTR start_cpu1(void)
     //has started, but it isn't active *on this CPU* yet.
     esp_crosscore_int_init();
 
+      if (xPortGetCoreID()==1) {
+	printf("Running on APP CPU!!!!!!!!\n");
+      }
+
     ESP_EARLY_LOGI(tag, "Starting scheduler on APP CPU.");
     cpu1_scheduler_started=true;
     // Scheduler never returns... 
     xPortStartScheduler();
 }
-#endif
+
 
 
 typedef struct taskParam {
@@ -193,9 +197,10 @@ void app_main()
 {
     int i=0;
     // flash uses ipc between cores.
-    //vTaskDelay(500 / portTICK_PERIOD_MS);
-    nvs_flash_init();
     g_my_app_init_done=true;
+    vTaskDelay(500 / portTICK_PERIOD_MS);
+    nvs_flash_init();
+
     
     printf("starting\n");
 
