@@ -3,17 +3,37 @@
 #include <freertos/task.h>
 #include <esp_attr.h>
 #include <sys/time.h>
+#include "esp_system.h"
 #include <esp_crosscore_int.h>
 #include "esp_system.h"
 #include "nvs_flash.h"
 #include <stdio.h>
 #include <string.h>
+#include "rom/uart.h"
+#include "soc/dport_reg.h" 
+#include "soc/cpu.h" 
+#include "rom/cache.h" 
+#include "esp_newlib.h"
+#include "driver/rtc_io.h"
+#include "esp_task.h"
+#include "esp_vfs_dev.h" 
+#include "esp_spi_flash.h"
+#include "esp_int_wdt.h"
+#include "esp_task_wdt.h"
+#include "soc/timer_group_reg.h"
+#include "soc/rtc_cntl_reg.h"
+
+#define STRINGIFY(a) #a
 
 //#include "c_timeutils.h"
 #include "sdkconfig.h"
 
 static char tag[] = "tasks";
 
+extern int _init_start;
+extern void (*__init_array_start)(void);
+extern void (*__init_array_end)(void);
+extern void app_main(void);
 
 
 //-----------------------------------------------------------------------------
@@ -75,12 +95,87 @@ uint32_t core[MAX_TEST];
 bool g_my_app_init_done=false;
 bool cpu1_scheduler_started=false;
 
+
+void IRAM_ATTR start_cpu1(void)
+{
+    int i;
+    int pos=0;
+    // Wait for the app to initialze on CPU0
+    //while (!g_my_app_init_done) {
+    //    ;
+    //}
+    // Wait for FreeRTOS initialization to finish on PRO CPU
+    //while (port_xSchedulerRunning[0] == 0) {
+    //    ;
+    //}
+    //Take care putting stuff here: if asked, FreeRTOS will happily tell you the scheduler
+    //has started, but it isn't active *on this CPU* yet.
+    esp_crosscore_int_init();
+
+      if (xPortGetCoreID()==1) {
+	printf("Running on APP CPU!!!!!!!!\n");
+      }
+
+    ESP_EARLY_LOGI(tag, "Starting scheduler on APP CPU.");
+    cpu1_scheduler_started=true;
+    // S 
+    //xPortStartScheduler();
+    // Run your code here, dont use operating system calls.
+    uint32_t start=get_ccount();
+
+    uint32_t test;
+    for(;;) {
+       test=get_ccount();
+       if (test<start) {
+	 printf("cpu1 wrap ccount\n");
+	 test=start;
+       }
+    }
+}
+
+
+
+void IRAM_ATTR call_start_cpu1()
+{
+    asm volatile (\
+                  "wsr    %0, vecbase\n" \
+                  ::"r"(&_init_start));
+
+    cpu_configure_region_protection();
+
+    uartAttach();
+    ets_install_uart_printf();
+    uart_tx_switch(CONFIG_CONSOLE_UART_NUM);
+
+    ESP_EARLY_LOGI(tag, "Undercover app cpu up.");
+    start_cpu1();
+}
+
+
+static void do_global_ctors(void)
+{
+    void (**p)(void);
+    for (p = &__init_array_end - 1; p >= &__init_array_start; --p) {
+        (*p)();
+    }
+}
+
+static void main_task(void* args)
+{
+    // Now that the application is about to start, disable boot watchdogs
+    REG_CLR_BIT(TIMG_WDTCONFIG0_REG(0), TIMG_WDT_FLASHBOOT_MOD_EN_S);
+    REG_CLR_BIT(RTC_CNTL_WDTCONFIG0_REG, RTC_CNTL_WDT_FLASHBOOT_MOD_EN);
+    app_main();
+    vTaskDelete(NULL);
+}
+
+
 void IRAM_ATTR start_cpu0(void)
 {
 
    // UNSTALL cpu1 (app cpu)
    // This would normally be done for multicore only
-    ESP_EARLY_LOGI(TAG, "Starting app cpu, entry point is %p", call_start_cpu1);
+    ESP_EARLY_LOGI(tag, "Starting app cpu, entry point is %p", call_start_cpu1);
     //Flush and enable icache for APP CPU
     Cache_Flush(1);
     Cache_Read_Enable(1);
@@ -116,51 +211,14 @@ void IRAM_ATTR start_cpu0(void)
        //esp_ipc_init();
        spi_flash_init();
 
-       spi_flash_guard_set(&g_flash_guard_default_ops);
+       //spi_flash_guard_set(&g_flash_guard_default_ops);
 
 
        xTaskCreatePinnedToCore(&main_task, "main",
 			       ESP_TASK_MAIN_STACK, NULL,
 			       ESP_TASK_MAIN_PRIO, NULL, 0);
-       ESP_LOGI(TAG, "Starting scheduler on PRO CPU.");
+       ESP_LOGI(tag, "Starting scheduler on PRO CPU.");
        vTaskStartScheduler();
-}
-
-void IRAM_ATTR start_cpu1(void)
-{
-    int i;
-    int pos=0;
-    // Wait for the app to initialze on CPU0
-    while (!g_my_app_init_done) {
-        ;
-    }
-    // Wait for FreeRTOS initialization to finish on PRO CPU
-    //while (port_xSchedulerRunning[0] == 0) {
-    //    ;
-    //}
-    //Take care putting stuff here: if asked, FreeRTOS will happily tell you the scheduler
-    //has started, but it isn't active *on this CPU* yet.
-    esp_crosscore_int_init();
-
-      if (xPortGetCoreID()==1) {
-	printf("Running on APP CPU!!!!!!!!\n");
-      }
-
-    ESP_EARLY_LOGI(tag, "Starting scheduler on APP CPU.");
-    cpu1_scheduler_started=true;
-    // S 
-    //xPortStartScheduler();
-    // Run your code here, dont use operating system calls.
-    uint32_t start=get_ccount(void);
-
-    uint32_t test;
-    for(;;) {
-       test=get_ccount(void);
-       if (test<start) {
-	 printf("cpu1 wrap ccount\n");
-	 test=start;
-       }
-    }
 }
 
 
