@@ -1,0 +1,70 @@
+ets Jun  8 2016 00:22:57
+
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+ets Jun  8 2016 00:22:57
+
+rst:0x10 (RTCWDT_RTC_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0x00
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0008,len:8
+load:0x3fff0010,len:3364
+load:0x40078000,len:7500
+load:0x40080000,len:252
+entry 0x40080034
+[0;32mI (28) boot: ESP-IDF  2nd stage bootloader[0m
+[0;32mI (28) boot: compile time 00:01:17[0m
+[0;32mI (61) boot: Enabling RNG early entropy source...[0m
+[0;32mI (61) boot: SPI Speed      : 40MHz[0m
+[0;32mI (62) boot: SPI Mode       : DIO[0m
+[0;32mI (74) boot: SPI Flash Size : 4MB[0m
+[0;32mI (87) boot: Partition Table:[0m
+[0;32mI (98) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (120) boot:  0 nvs              WiFi data        01 02 00009000 00006000[0m
+[0;32mI (144) boot:  1 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (167) boot:  2 factory          factory app      00 00 00010000 00100000[0m
+[0;32mI (190) boot: End of partition table[0m
+[0;32mI (203) boot: Disabling RNG early entropy source...[0m
+[0;32mI (220) boot: Loading app partition at offset 00010000[0m
+[0;32mI (934) boot: segment 0: paddr=0x00010018 vaddr=0x00000000 size=0x0ffe8 ( 65512) [0m
+[0;32mI (935) boot: segment 1: paddr=0x00020008 vaddr=0x3f400010 size=0x08768 ( 34664) map[0m
+[0;32mI (951) boot: segment 2: paddr=0x00028778 vaddr=0x3ffb0000 size=0x02438 (  9272) load[0m
+[0;32mI (981) boot: segment 3: paddr=0x0002abb8 vaddr=0x40080000 size=0x00400 (  1024) load[0m
+[0;32mI (1004) boot: segment 4: paddr=0x0002afc0 vaddr=0x40080400 size=0x1c890 (116880) load[0m
+[0;32mI (1086) boot: segment 5: paddr=0x00047858 vaddr=0x400c0000 size=0x00000 (     0) load[0m
+[0;32mI (1087) boot: segment 6: paddr=0x00047860 vaddr=0x00000000 size=0x087a8 ( 34728) [0m
+[0;32mI (1103) boot: segment 7: paddr=0x00050010 vaddr=0x400d0018 size=0x399c4 (235972) map[0m
+[0;32mI (1130) heap_alloc_caps: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (1153) heap_alloc_caps: At 3FFB7698 len 00028968 (162 KiB): DRAM[0m
+[0;32mI (1174) heap_alloc_caps: At 3FFE8000 len 00018000 (96 KiB): D/IRAM[0m
+[0;32mI (1195) heap_alloc_caps: At 4009CC90 len 00003370 (12 KiB): IRAM[0m
+check b=0x3ffb76a4 size=166224 ok
+check b=0x3ffdfff4 size=0 ok
+check b=0x3ffe800c size=98280 ok
+check b=0x3ffffff4 size=0 ok
+check b=0x4009cc9c size=13144 ok
+[0;32mI (1260) cpu_start: Pro cpu up.[0m
+[0;32mI (1272) cpu_start: Starting app cpu, entry point is 0x40080b48[0m
+[0;32mI (0) cpu_start: App cpu up.[0m
+[0;32mI (1303) cpu_start: Pro cpu start user code[0m
+[0;31mE (1420) phy_init: PHY data partition validated[0m
+[0;32mI (1568) phy: phy_version: 258, Nov 29 2016, 15:51:07, 1, 0[0m
+[0;32mI (2657) cpu_start: Starting scheduler on PRO CPU.[0m
+[0;32mI (1371) cpu_start: Starting scheduler on APP CPU.[0m
+I (1371) wifi: frc2_timer_task_hdl:3ffbe910, prio:22, stack:2048
+I (1381) wifi: Init lldesc rx mblock:25
+I (1381) wifi: Init lldesc rx ampdu len mblock:7
+I (1381) wifi: Init lldesc rx ampdu entry mblock:4
+I (1381) wifi: pp_task_hdl : 3ffcbad4, prio:23, stack:8192
+I (1391) wifi: mode : sta (24:0a:c4:00:c8:70)
+I (1511) wifi: n:1 0, o:1 0, ap:255 255, sta:1 0, prof:1
+I (2171) wifi: state: init -> auth (b0)
+I (2171) wifi: state: auth -> assoc (0)
+I (2181) wifi: state: assoc -> run (10)
+I (2191) wifi: connected with p, channel 1
+[0;32mI (3501) event: ip: 192.168.1.117, mask: 255.255.255.0, gw: 192.168.1.1[0m
+I (12181) wifi: pm start, type:0
+
+New Websocket frame. Length 5, payload Hello 
+New Websocket frame. Length 4, payload Data 
+New Websocket frame. Length 10, payload Data again 

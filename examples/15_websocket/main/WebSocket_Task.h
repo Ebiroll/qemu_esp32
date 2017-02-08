@@ -30,7 +30,7 @@
 #ifndef	_WEBSOCKET_TASK_H_
 #define _WEBSOCKET_TASK_H_
 
-#include "lwip/API.h"
+#include "lwip/api.h"
 
 #define WS_MASK_L		0x4		/**< \brief Length of MASK field in WebSocket Header*/
 
