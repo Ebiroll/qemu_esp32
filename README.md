@@ -760,18 +760,56 @@ I (97141) rtc: XTAL 40M
 I (97142) cpu_start: Starting scheduler on PRO CPU.
 I (68253) cpu_start: Starting scheduler on APP CPU.
 
+There seems to be some problem with the scheduling and probably some other error as well.
+When calling nvs_flash_init() qemu always hangs here,
+
 (gdb) info threads
   Id   Target Id         Frame 
   2    Thread 2 (CPU#1 [running]) 0x40081a75 in spi_flash_op_block_func (arg=0x1)
     at /home/olas/esp/esp-idf/components/spi_flash/./cache_utils.c:67
 * 1    Thread 1 (CPU#0 [halted ]) 0x400d2444 in esp_vApplicationIdleHook ()
     at /home/olas/esp/esp-idf/components/esp32/./freertos_hooks.c:52
-
 This was added to call_start_cpu0(),cpu_start.c for the extra user code start info
     int test= (void (*)(void))REG_READ(DPORT_APPCPU_CTRL_D_REG);
     void  *user_code_start =(void *) test;
     ESP_EARLY_LOGI(TAG, "Starting app cpu, user_code_start is %p", user_code_start);
 ```
+
+This could probably also be emulated better,
+```
+     void esp_crosscore_int_send_yield(int coreId) {                                                                  
+             assert(coreId<portNUM_PROCESSORS);                                                                       
+    //Mark the reason we interrupt the other CPU   
+    portENTER_CRITICAL(&reasonSpinlock);
+      reason[coreId]|=REASON_YIELD; 
+         portEXIT_CRITICAL(&reasonSpinlock);           
+             //Poke the other CPU.                                             
+      if (coreId==0) {                                           
+        WRITE_PERI_REG(DPORT_CPU_INTR_FROM_CPU_0_REG, DPORT_CPU_INTR_FROM_CPU_0);
+      } else {                                                                                                        
+        WRITE_PERI_REG(DPORT_CPU_INTR_FROM_CPU_1_REG, DPORT_CPU_INTR_FROM_CPU_1);              
+}
+
+This results in
+
+io write dc,1   if coreId==0
+
+io write e0,1   if coreId==1
+
+```
+
+##Making tree_rtos tick.
+Good information here,
+https://github.com/espressif/esp-idf/blob/master/components/freertos/readme_xtensa.txt
+
+```
+The timer tick is handled here,
+_frxt_timer_int ()
+This calls the 
+xTaskIncrementTick function.
+
+```
+
 
 ## Detailed boot analaysis
 [More about the boot of the romdumps](./BOOT.md)
