@@ -153,43 +153,43 @@ void init_param() {
 
 void task_tests(void *ignore) {
    init_param();
-   xTaskCreate(&test1, "tk0", 2048, &param[0], 5, NULL);
-   //xTaskCreatePinnedToCore(&test1, "tk0", 2048, &param[0], 5, NULL,1);
-   xTaskCreate(&test1, "tk1", 2048, &param[1], 5, NULL);
-   xTaskCreate(&test1, "tk2", 2048, &param[2], 5, NULL);
-   xTaskCreate(&test1, "tk3", 2048, &param[3], 5, NULL);
-   xTaskCreate(&test1, "tk4", 2048,&param[4], 5, NULL);
-   xTaskCreate(&test1, "tk5", 2048,&param[5], 5, NULL);
-   xTaskCreate(&test1, "tk6", 2048,&param[6], 5, NULL);
-   xTaskCreate(&test1, "tk7", 2048,&param[7], 5, NULL);
-   xTaskCreate(&test1, "tk8", 2048,&param[8], 5, NULL);
-   xTaskCreate(&test1, "tk9", 2048,&param[9], 5, NULL);
+   xTaskCreate(&test1, "tk0", 4096, &param[0], 5, NULL);
+   //xTaskCreatePinnedToCore(&test1, "tk0", 4096, &param[0], 5, NULL,1);
+   xTaskCreate(&test1, "tk1", 4096, &param[1], 5, NULL);
+   xTaskCreate(&test1, "tk2", 4096, &param[2], 5, NULL);
+   xTaskCreate(&test1, "tk3", 4096, &param[3], 5, NULL);
+   xTaskCreate(&test1, "tk4", 4096,&param[4], 5, NULL);
+   xTaskCreate(&test1, "tk5", 4096,&param[5], 5, NULL);
+   xTaskCreate(&test1, "tk6", 4096,&param[6], 5, NULL);
+   xTaskCreate(&test1, "tk7", 4096,&param[7], 5, NULL);
+   xTaskCreate(&test1, "tk8", 4096,&param[8], 5, NULL);
+   xTaskCreate(&test1, "tk9", 4096,&param[9], 5, NULL);
    vTaskDelete(NULL);
 }
 
 void pinned_mixed_tests(void *ignore) {
    init_param();
-   xTaskCreatePinnedToCore(&test1, "task0", 2048, &param[0], 5, NULL,1);
-   xTaskCreatePinnedToCore(&test1, "task1", 2048, &param[1], 5, NULL,0);
-   xTaskCreatePinnedToCore(&test1, "task2", 2048, &param[2], 5, NULL,1);
-   xTaskCreatePinnedToCore(&test1, "task3", 2048, &param[3], 5, NULL,0);
-   xTaskCreatePinnedToCore(&test1, "task4", 2048,&param[4], 5, NULL,1);
-   xTaskCreatePinnedToCore(&test1, "task5", 2048,&param[5], 5, NULL,0);
-   xTaskCreatePinnedToCore(&test1, "task6", 2048,&param[6], 5, NULL,1);
-   xTaskCreatePinnedToCore(&test1, "task7", 2048,&param[7], 5, NULL,0);
-   xTaskCreatePinnedToCore(&test1, "task8", 2048,&param[8], 5, NULL,1);
-   xTaskCreatePinnedToCore(&test1, "task9", 2048,&param[9], 5, NULL,0);
+   xTaskCreatePinnedToCore(&test1, "task0", 4096, &param[0], 5, NULL,1);
+   xTaskCreatePinnedToCore(&test1, "task1", 4096, &param[1], 5, NULL,0);
+   xTaskCreatePinnedToCore(&test1, "task2", 4096, &param[2], 5, NULL,1);
+   xTaskCreatePinnedToCore(&test1, "task3", 4096, &param[3], 5, NULL,0);
+   xTaskCreatePinnedToCore(&test1, "task4", 4096,&param[4], 5, NULL,1);
+   xTaskCreatePinnedToCore(&test1, "task5", 4096,&param[5], 5, NULL,0);
+   xTaskCreatePinnedToCore(&test1, "task6", 4096,&param[6], 5, NULL,1);
+   xTaskCreatePinnedToCore(&test1, "task7", 4096,&param[7], 5, NULL,0);
+   xTaskCreatePinnedToCore(&test1, "task8", 4096,&param[8], 5, NULL,1);
+   xTaskCreatePinnedToCore(&test1, "task9", 4096,&param[9], 5, NULL,0);
    vTaskDelete(NULL);
 }
 
 void pinned_to_pro_tests(void *ignore) {
    init_param();
-   xTaskCreatePinnedToCore(&test1, "task0", 2048, &param[0], 5, NULL,0);
-   xTaskCreatePinnedToCore(&test1, "task1", 2048, &param[1], 5, NULL,0);
-   xTaskCreatePinnedToCore(&test1, "task2", 2048, &param[2], 5, NULL,0);
-   xTaskCreatePinnedToCore(&test1, "task3", 2048, &param[3], 5, NULL,0);
-   xTaskCreatePinnedToCore(&test1, "task4", 2048,&param[4], 5, NULL,0);
-   xTaskCreatePinnedToCore(&test1, "task5", 2048,&param[5], 5, NULL,0);
+   xTaskCreatePinnedToCore(&test1, "task0", 4096, &param[0], 5, NULL,0);
+   xTaskCreatePinnedToCore(&test1, "task1", 4096, &param[1], 5, NULL,0);
+   xTaskCreatePinnedToCore(&test1, "task2", 4096, &param[2], 5, NULL,0);
+   xTaskCreatePinnedToCore(&test1, "task3", 4096, &param[3], 5, NULL,0);
+   xTaskCreatePinnedToCore(&test1, "task4", 4096,&param[4], 5, NULL,0);
+   xTaskCreatePinnedToCore(&test1, "task5", 4096,&param[5], 5, NULL,0);
    vTaskDelete(NULL);
 }
 
@@ -199,7 +199,7 @@ void app_main()
     // flash uses ipc between cores.
     g_my_app_init_done=true;
     vTaskDelay(500 / portTICK_PERIOD_MS);
-    nvs_flash_init();
+    //nvs_flash_init();
 
     
     printf("starting\n");
@@ -209,9 +209,9 @@ void app_main()
     //}
     //printf("started\n");
 
-    //xTaskCreate(&task_tests, "test", 2048, "test", 5, NULL);
-    xTaskCreate(&pinned_mixed_tests, "test", 2048, "test", 5, NULL);
-    //xTaskCreate(&pinned_to_pro_tests, "test", 2048, "test", 5, NULL);
+    //xTaskCreate(&task_tests, "test", 4096, "test", 5, NULL);
+    xTaskCreate(&pinned_mixed_tests, "test", 4096, "test", 5, NULL);
+    //xTaskCreate(&pinned_to_pro_tests, "test", 4096, "test", 5, NULL);
     //pinned_to_pro_tests(NULL);
 
     for (i=0;i<MAX_TEST;i++) {
