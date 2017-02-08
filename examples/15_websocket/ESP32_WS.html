@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>ESP32 WebSocket Test</title>
+	<script src="http://code.jquery.com/jquery-latest.js"></script>
+    <script type="text/javascript">
+	
+		var WebSocket_connection;
+
+		
+	    if (!"WebSocket" in window){  
+			alert("WebSocket NOT supported by your Browser!");
+			$('#WebSocket_State').text("WebSocket NOT supported by your Browser!");			
+		}
+		
+		window.onbeforeunload = function() {
+			websocket.onclose = function () {}; // disable onclose handler first
+			websocket.close()
+		};
+				
+		function connect(){
+			WebSocket_connection = new WebSocket($('#websocket_address').val());
+
+			$('#WebSocket_State').text("Connecting");
+			
+			WebSocket_connection.onopen = function(){
+			  $('#WebSocket_State').html('<input type="text" id="websocket_message" value="Data to be send"/><a href=\"javascript:WebSocketSend()\">send WebSocket</a>');
+			};
+		   
+			WebSocket_connection.onmessage = function (evt) { 
+				//read data and append it to output_div
+				$( "#output_div" ).append( evt.data + "<br>" );	
+			};
+
+			WebSocket_connection.onerror = function()
+			{
+				$('#WebSocket_State').text("Error,...  connection closed");
+			};
+			
+			WebSocket_connection.onclose = function()
+			{ 
+				$('#WebSocket_State').text("Disconnected");
+			};
+		}
+			
+				
+        function WebSocketSend(){
+			WebSocket_connection.send($('#websocket_message').val());
+        }
+		
+      </script>
+		
+   </head>
+   <body>
+
+	<div id="WebSocket_State">
+		WebSocket Server: 
+		<input type="text" id="websocket_address" value="ws://192.168.4.1:9998"/>
+		<a href="javascript:connect()">Connect</a>
+		</div>
+	<br>
+	<div id="output_div">
+	Received WebSocket Messages:<br>
+	</div>
+	  
+      
+   </body>
+</html>
