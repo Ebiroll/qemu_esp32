@@ -59,6 +59,9 @@ Now go to File->Preferences->Keyboard Shortcuts and add the following key bindin
 ]
 ```
 
+#More info
+
+https://github.com/espressif/esp-idf/issues/303
 
 #Debugging
 Look at the .vscode/launch.json file.

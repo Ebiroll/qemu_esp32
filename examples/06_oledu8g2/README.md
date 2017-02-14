@@ -52,3 +52,6 @@ COMPONENT_ADD_INCLUDEDIRS:=csrc
 ##Development
 While in principal, there should be nothing specific needed beyond this addition to make U8g2 work on the ESP32, only a small
 number of boards have been tested.  In addition, currently only SPI displays have been tested.  This will be remidied over time.
+
+
+https://iotexpert.com/2016/12/26/pinball-oled-display/
