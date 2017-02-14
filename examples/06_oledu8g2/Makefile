@@ -3,7 +3,7 @@
 # project subdirectory.
 #
 
-PROJECT_NAME := queue
+PROJECT_NAME := oled
 
 include $(IDF_PATH)/make/project.mk
 
