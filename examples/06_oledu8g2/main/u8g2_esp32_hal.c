@@ -10,7 +10,7 @@
 #include "sdkconfig.h"
 #include "u8g2_esp32_hal.h"
 
-//static char tag[] = "u8g2_esp32_hal";
+static char tag[] = "u8g2_esp32_hal";
 
 static spi_device_handle_t handle; // SPI handle.
 static u8g2_esp32_hal_t u8g2_esp32_hal; // HAL state data.
@@ -23,7 +23,7 @@ void u8g2_esp32_hal_init(u8g2_esp32_hal_t u8g2_esp32_hal_param) {
 } // u8g2_esp32_hal_init
 
 
-/*
+
 static char *bytesToString(int length, char *data) {
 	static char ret[1024];
 	strcpy(ret, "");
@@ -120,7 +120,7 @@ static char *msgToString(uint8_t msg, uint8_t arg_int, void *arg_ptr) {
 	      return "Unknown";
 	  }
 }
-*/
+
 
 
 /*
@@ -128,7 +128,7 @@ static char *msgToString(uint8_t msg, uint8_t arg_int, void *arg_ptr) {
  * to handle callbacks for communications.
  */
 uint8_t u8g2_esp32_msg_comms_cb(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void *arg_ptr) {
-	//ESP_LOGD(tag, "msg_comms_cb: Received a msg: %d: %s", msg, msgToString(msg, arg_int, arg_ptr));
+	ESP_LOGD(tag, "msg_comms_cb: Received a msg: %d: %s", msg, msgToString(msg, arg_int, arg_ptr));
 	switch(msg) {
 		case U8X8_MSG_BYTE_SET_DC:
 			if (u8g2_esp32_hal.dc != U8G2_ESP32_HAL_UNDEFINED) {
@@ -149,7 +149,7 @@ uint8_t u8g2_esp32_msg_comms_cb(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void
 		  bus_config.miso_io_num   = -1; // MISO
 		  bus_config.quadwp_io_num = -1; // Not used
 		  bus_config.quadhd_io_num = -1; // Not used
-		  //ESP_LOGI(tag, "... Initializing bus.");
+		  ESP_LOGI(tag, "... Initializing bus.");
 		  ESP_ERROR_CHECK(spi_bus_initialize(HSPI_HOST, &bus_config, 1));
 
 
@@ -167,7 +167,7 @@ uint8_t u8g2_esp32_msg_comms_cb(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void
 			dev_config.queue_size       = 200;
 			dev_config.pre_cb           = NULL;
 			dev_config.post_cb          = NULL;
-			//ESP_LOGI(tag, "... Adding device bus.");
+			ESP_LOGI(tag, "... Adding device bus.");
 			ESP_ERROR_CHECK(spi_bus_add_device(HSPI_HOST, &dev_config, &handle));
 			break;
 		}
@@ -182,7 +182,7 @@ uint8_t u8g2_esp32_msg_comms_cb(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void
 			trans_desc.tx_buffer = arg_ptr;
 			trans_desc.rx_buffer = NULL;
 
-			//ESP_LOGI(tag, "... Transmitting %d bytes.", arg_int);
+			ESP_LOGI(tag, "... Transmitting %d bytes.", arg_int);
 			ESP_ERROR_CHECK(spi_device_transmit(handle, &trans_desc));
 			break;
 		}
@@ -196,7 +196,7 @@ uint8_t u8g2_esp32_msg_comms_cb(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void
  * to handle callbacks for GPIO and delay functions.
  */
 uint8_t u8g2_esp32_msg_gpio_and_delay_cb(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void *arg_ptr) {
-	//ESP_LOGD(tag, "msg_gpio_and_delay_cb: Received a msg: %d: %s", msg, msgToString(msg, arg_int, arg_ptr));
+	ESP_LOGD(tag, "msg_gpio_and_delay_cb: Received a msg: %d: %s", msg, msgToString(msg, arg_int, arg_ptr));
 	switch(msg) {
 
 	// Initialize the GPIO and DELAY HAL functions.  If the pins for DC and RESET have been
