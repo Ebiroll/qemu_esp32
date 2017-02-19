@@ -42,13 +42,13 @@ void task_test_SSD1306i2c(void *ignore) {
 	ESP_LOGI(TAG, "u8g2_ClearBuffer");
 	u8g2_ClearBuffer(&u8g2);
 	ESP_LOGI(TAG, "u8g2_DrawBox");
-	u8g2_DrawBox(&u8g2, 0, 26, 80,6);
-	u8g2_DrawFrame(&u8g2, 0,26,100,6);
+	u8g2_DrawBox(&u8g2, 0, 2, 80,6);
+	u8g2_DrawFrame(&u8g2, 0,2,100,6);
 
 	ESP_LOGI(TAG, "u8g2_SetFont");
     u8g2_SetFont(&u8g2, u8g2_font_ncenB14_tr);
 	ESP_LOGI(TAG, "u8g2_DrawStr");
-    u8g2_DrawStr(&u8g2, 2,17,"Hi nkolban!");
+    u8g2_DrawStr(&u8g2, 2,26,"Hi 1306!");
 	ESP_LOGI(TAG, "u8g2_SendBuffer");
 	u8g2_SendBuffer(&u8g2);
 
