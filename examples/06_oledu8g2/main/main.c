@@ -11,12 +11,16 @@
 
 static char tag[] = "mpcd";
 
+
+extern void task_test_SSD1306i2c(void *ignore);
 extern void task_test_SSD1306(void *ignore);
 
 
 void app_main(void)
 {
 
-	xTaskCreatePinnedToCore(&task_test_SSD1306, "task_test_SSD1306", 8048, NULL, 5, NULL, 0);
+	//xTaskCreatePinnedToCore(&task_test_SSD1306, "task_test_SSD1306", 8048, NULL, 5, NULL, 0);
+    // i2c version 	
+	xTaskCreatePinnedToCore(&task_test_SSD1306i2c, "SSD1306i2c", 8048, NULL, 5, NULL, 0);
 }
 

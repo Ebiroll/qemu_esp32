@@ -1,0 +1,58 @@
+ets Jun  8 2016 00:22:57
+
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+ets Jun  8 2016 00:22:57
+
+rst:0x10 (RTCWDT_RTC_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0x00
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0008,len:8
+load:0x3fff0010,len:3464
+load:0x40078000,len:7544
+load:0x40080000,len:252
+entry 0x40080034
+[0;32mI (28) boot: ESP-IDF  2nd stage bootloader[0m
+[0;32mI (28) boot: compile time 01:05:01[0m
+[0;32mI (61) boot: Enabling RNG early entropy source...[0m
+[0;32mI (61) boot: SPI Speed      : 40MHz[0m
+[0;32mI (62) boot: SPI Mode       : DIO[0m
+[0;32mI (74) boot: SPI Flash Size : 4MB[0m
+[0;32mI (87) boot: Partition Table:[0m
+[0;32mI (98) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (120) boot:  0 nvs              WiFi data        01 02 00009000 00006000[0m
+[0;32mI (144) boot:  1 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (167) boot:  2 factory          factory app      00 00 00010000 00100000[0m
+[0;32mI (190) boot: End of partition table[0m
+[0;32mI (203) boot: Disabling RNG early entropy source...[0m
+[0;32mI (220) boot: Loading app partition at offset 00010000[0m
+[0;32mI (722) boot: segment 0: paddr=0x00010018 vaddr=0x00000000 size=0x0ffe8 ( 65512) [0m
+[0;32mI (723) boot: segment 1: paddr=0x00020008 vaddr=0x3f400010 size=0x07504 ( 29956) map[0m
+[0;32mI (739) boot: segment 2: paddr=0x00027514 vaddr=0x3ffb0000 size=0x01c40 (  7232) load[0m
+[0;32mI (768) boot: segment 3: paddr=0x0002915c vaddr=0x40080000 size=0x00400 (  1024) load[0m
+[0;32mI (792) boot: segment 4: paddr=0x00029564 vaddr=0x40080400 size=0x14498 ( 83096) load[0m
+[0;32mI (857) boot: segment 5: paddr=0x0003da04 vaddr=0x400c0000 size=0x00000 (     0) load[0m
+[0;32mI (858) boot: segment 6: paddr=0x0003da0c vaddr=0x00000000 size=0x025fc (  9724) [0m
+[0;32mI (875) boot: segment 7: paddr=0x00040010 vaddr=0x400d0018 size=0x24688 (149128) map[0m
+[0;32mI (902) heap_alloc_caps: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (925) heap_alloc_caps: At 3FFB5218 len 0002ADE8 (171 KiB): DRAM[0m
+[0;32mI (946) heap_alloc_caps: At 3FFE8000 len 00018000 (96 KiB): D/IRAM[0m
+[0;32mI (967) heap_alloc_caps: At 40094898 len 0000B768 (45 KiB): IRAM[0m
+[0;32mI (987) cpu_start: Pro cpu up.[0m
+[0;32mI (999) cpu_start: Single core mode[0m
+[0;32mI (1012) cpu_start: Pro cpu start user code[0m
+[0;32mI (1275) phy: phy_version: 258, Nov 29 2016, 15:51:07, 1, 0[0m
+[0;32mI (1275) cpu_start: Starting scheduler on PRO CPU.[0m
+[0;32mI (1282) ssd1306: u8g2_InitDisplay[0m
+[0;32mI (1282) u8g2_hal: sda_io_num 21[0m
+[0;32mI (1282) u8g2_hal: scl_io_num 22[0m
+[0;32mI (1292) u8g2_hal: clk_speed 50000[0m
+[0;32mI (1292) u8g2_hal: i2c_param_config 1[0m
+[0;32mI (1302) u8g2_hal: i2c_driver_install 1[0m
+[0;32mI (1612) ssd1306: u8g2_SetPowerSave[0m
+[0;32mI (1612) ssd1306: u8g2_ClearBuffer[0m
+[0;32mI (1612) ssd1306: u8g2_DrawBox[0m
+[0;32mI (1612) ssd1306: u8g2_SetFont[0m
+[0;32mI (1622) ssd1306: u8g2_DrawStr[0m
+[0;32mI (1622) ssd1306: u8g2_SendBuffer[0m
+[0;32mI (1732) ssd1306: All done![0m
