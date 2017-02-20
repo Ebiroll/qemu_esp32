@@ -1,4 +1,68 @@
-#Emulating register_chipv7
+#Test of freertos queues
+ets Jun  8 2016 00:22:57
+
+rst:0x10 (RTCWDT_RTC_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+I (1) heap_alloc_caps: Initializing. RAM available for dynamic allocation:
+I (1) heap_alloc_caps: At 3FFB4DD8 len 0002B228 (172 KiB): DRAM
+I (1) heap_alloc_caps: At 3FFE8000 len 00018000 (96 KiB): D/IRAM
+I (1) heap_alloc_caps: At 40093390 len 0000CC70 (51 KiB): IRAM
+I (1) cpu_start: Pro cpu up.
+I (2) cpu_start: Single core mode
+I (2) cpu_start: Pro cpu start user code
+I (4) cpu_start: Starting scheduler on PRO CPU.
+(qemu)  00008000 to memory, 3F408000
+I (5120) test queues: Received = 200
+I (5120) test queues: Received = 100
+I (5620) test queues: Received = 100
+I (5620) test queues: Received = 200
+I (6120) test queues: Received = 200
+I (6120) test queues: Received = 100
+I (6620) test queues: Received = 100
+I (6620) test queues: Received = 200
+I (7120) test queues: Received = 200
+I (7120) test queues: Received = 100
+I (7620) test queues: Received = 100
+I (7620) test queues: Received = 200
+I (8120) test queues: Received = 200
+I (8120) test queues: Received = 100
+I (8620) test queues: Received = 100
+I (8620) test queues: Received = 200
+I (9120) test queues: Received = 200
+I (9120) test queues: Received = 100
+I (9620) test queues: Received = 100
+I (9620) test queues: Received = 200
+
+#Flash emulation
+It seems that I probably have to emulate flash erase write (0xff) on erase. To prevent this crash.
+If you get this assert try, mv mv esp32flash.bin saveflash.bin
+When starting qemu you should start with an empty flash.
+
+ets Jun  8 2016 00:22:57
+
+rst:0x10 (RTCWDT_RTC_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+I (1) heap_alloc_caps: Initializing. RAM available for dynamic allocation:
+I (1) heap_alloc_caps: At 3FFB4DD8 len 0002B228 (172 KiB): DRAM
+I (1) heap_alloc_caps: At 3FFE8000 len 00018000 (96 KiB): D/IRAM
+I (1) heap_alloc_caps: At 40093390 len 0000CC70 (51 KiB): IRAM
+I (1) cpu_start: Pro cpu up.
+I (2) cpu_start: Single core mode
+I (2) cpu_start: Pro cpu start user code
+I (4) cpu_start: Starting scheduler on PRO CPU.
+(qemu)  00008000 to memory, 3F408000
+assertion "state == EntryState::WRITTEN || state == EntryState::EMPTY" failed: file "/home/olas/esp/esp-idf/components/nvs_flash/src/nvs_page.cpp", line 315, function: esp_err_t nvs::Page::eraseEntryAndSpan(size_t)
+abort() was called at PC 0x400de1a7
+Guru Meditation Error: Core  0 panic'ed (abort)
+
+Backtrace: 0x400de20e:0x3ffb64f0 0x00000000:0x3ffb6510 0x400ec571:0x3ffb6540 0x400ecb6d:0x3ffb6580 0x400ecda6:0x3ffb65f0 0x400ed5c4:0x3ffb6650 0x400ebdf8:0x3ffb66b0 0x400ebad6:0x3ffb6700 0x400ebb22:0x3ffb6720 0x400ef512:0x3ffb6740 0x400d09d5:0x3ffb6770
+
+Rebooting...
+
+
+
+
+
+#This was also used to analyse why Initialize PHY in startup code fails to work. 
+Emulating register_chipv7
 To allow easier use of qemu without having to disable,  Initialize PHY in startup code.
 
 Another option would to use calibration data from flash dump,

@@ -1,3 +1,35 @@
+#This example runs on hardware but fails in qemu like this.
+
+
+```
+ets Jun  8 2016 00:22:57
+
+rst:0x10 (RTCWDT_RTC_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+I (1) heap_alloc_caps: Initializing. RAM available for dynamic allocation:
+I (1) heap_alloc_caps: At 3FFB5200 len 0002AE00 (171 KiB): DRAM
+I (1) heap_alloc_caps: At 3FFE8000 len 00018000 (96 KiB): D/IRAM
+I (1) heap_alloc_caps: At 40093DBC len 0000C244 (48 KiB): IRAM
+I (2) cpu_start: Pro cpu up.
+I (2) cpu_start: Single core mode
+I (2) cpu_start: Pro cpu start user code
+I (4) cpu_start: Starting scheduler on PRO CPU.
+I (5) ssd1306: u8g2_InitDisplay
+I (5) u8g2_hal: sda_io_num 21
+I (5) u8g2_hal: scl_io_num 22
+I (5) u8g2_hal: clk_speed 50000
+I (5) u8g2_hal: i2c_param_config 1
+I (5) u8g2_hal: i2c_driver_install 1
+E (1305) err: esp_err_t = 263
+assertion "0 && "i2c_master_cmd_begin(I2C_MASTER_NUM, cmd, 1000 / portTICK_RATE_MS)"" failed: file "/home/olas/esp/qemu_esp32/examples/06_oledu8g2/main/./u8g2_esp32_hal.c", line 156, function: u8g2_esp32_msg_i2c_cb
+abort() was called at PC 0x400de367
+Guru Meditation Error: Core  0 panic'ed (abort)
+
+Backtrace: 0x400de3ce:0x3ffb9950 0x40084001:0x3ffb9970 0x400eef15:0x3ffb99a0 0x400f3629:0x3ffb99e0 0x400f28ce:0x3ffb9a00 0x400f2280:0x3ffb9a30 0x400f2214:0x3ffb9a50 0x400f22e0:0x3ffb9a80 0x400f23e3:0x3ffb9aa0 0x400f3220:0x3ffb9ac0 0x400eeb9a:0x3ffb9ae0
+
+Rebooting...
+```
+
+
 #ESP32 U8G2 library support
 There is an excellent open source library called `u8g2` that can be found on Github here:
 
