@@ -798,7 +798,7 @@ io write e0,1   if coreId==1
 
 ```
 
-##Making tree_rtos tick.
+##Making free_rtos tick.
 Good information here,
 https://github.com/espressif/esp-idf/blob/master/components/freertos/readme_xtensa.txt
 
