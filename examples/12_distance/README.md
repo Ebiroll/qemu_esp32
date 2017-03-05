@@ -1,5 +1,14 @@
 Ultrasonic sensor to measure the distance and a 1306 display to show the results.
 
+Note that this is a 3.3V only version of the ultrasonic sensor.
+
+https://www.aliexpress.com/item/HC-SR04P-Ultrasonic-Ranging-Module-Ranging-Sensor-Module-3-5-5V-Wide-Voltage-Performance-Is-Stronger/32711959780.html
+
+https://www.aliexpress.com/store/product/Free-shipping-Yellow-blue-double-color-128X64-OLED-LCD-LED-Display-Module-For-Arduino-0-96/1735233_32665937977.html?spm=2114.12010608.0.0.4xaOy8
+
+![ultra](ultra.jpg)
+
+
 ##Compiling U8G2
 To use the actual U8g2 library in your ESP32 project, perform the following steps:
 

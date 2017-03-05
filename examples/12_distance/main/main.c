@@ -36,6 +36,10 @@ SOFTWARE.
 #include "esp_log.h"
 //#include "driver/adc.h"
 #include <sys/time.h>
+#include <u8g2.h>
+
+#include "sdkconfig.h"
+#include "u8g2_esp32_hal.h"
 
 
 #define ECHO_PIN GPIO_NUM_4
@@ -135,22 +139,23 @@ static void measure_Distance() {
 
 }
 
+u8g2_t u8g2; // a structure which will contain all the data for one display
+
+
 void init_SSD1306i2c() {
 	u8g2_esp32_hal_t u8g2_esp32_hal = U8G2_ESP32_HAL_DEFAULT;
-	u8g2_esp32_hal.sda   = PIN_SDA;
-	u8g2_esp32_hal.scl  = PIN_SCL;
+	u8g2_esp32_hal.sda   = (gpio_num_t) PIN_SDA;
+	u8g2_esp32_hal.scl  = (gpio_num_t) PIN_SCL;
 	u8g2_esp32_hal_init(u8g2_esp32_hal);
 
 
-	u8g2_t u8g2; // a structure which will contain all the data for one display
 	u8g2_Setup_ssd1306_128x32_univision_f(
 		&u8g2,
 		U8G2_R0,
 		//u8x8_byte_sw_i2c,
 		u8g2_esp32_msg_i2c_cb,
 		u8g2_esp32_msg_i2c_and_delay_cb);  // init u8g2 structure
-	//u8x8_SetI2CAddress(&u8g2.u8x8,0x78);
-        u8x8_SetI2CAddress(&u8g2.u8x8,0x02);
+	    u8x8_SetI2CAddress(&u8g2.u8x8,0x78);
 
 	ESP_LOGI(TAG, "u8g2_InitDisplay");
 	u8g2_InitDisplay(&u8g2); // send init sequence to the display, display is in sleep mode after this,
