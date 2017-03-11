@@ -51,6 +51,24 @@ type tasks, select configure task runner, select other, This is for compiling qe
     ]
 }
 
+#Header files 
+.vscode/c_cpp_properties.json 
+```
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": ["~/esp-idf/components/"],
+            "browse" : {
+                "limitSymbolsToIncludedHeaders" : true,
+                "databaseFilename" : ""
+            }
+        }
+    ]
+}
+```
+
+
 Now go to File->Preferences->Keyboard Shortcuts and add the following key binding for the build task:
 
 // Place your key bindings in this file to overwrite the defaults
