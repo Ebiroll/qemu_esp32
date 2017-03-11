@@ -11,6 +11,7 @@ https://github.com/Microsoft/vscode-cpptools/issues/19#issuecomment-247211865
 For just the Visual studio code ide you only need glibc2.15.
 
 Install extension C/C++ & Native debug (webfreak)
+```
 
 Look att my examples in the directory .vscode
 
@@ -18,6 +19,7 @@ Look att my examples in the directory .vscode
 Visual studio code works fine for navigating both qemu and esp32 sources
 Press ctrl-shift-P 
 type tasks, select configure task runner, select other, This is for compiling qemu.
+```
 {
     "version": "0.1.0",
     "command": "make",
@@ -50,7 +52,7 @@ type tasks, select configure task runner, select other, This is for compiling qe
         }
     ]
 }
-
+```
 #Header files 
 .vscode/c_cpp_properties.json 
 ```
