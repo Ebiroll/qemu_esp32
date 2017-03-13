@@ -983,6 +983,22 @@ Here is an important register. DPORT_PRO_CACHE_CTRL_REG
 (gdb) info watchpoints
 Dont forget that you can reset qemu hardware and start again.
 ```      
+## esp_intr_alloc
+In order to invoke the correct interrupts this is some useful info
+```      
+esp_intr_alloc(ETS_TIMER1_INTR_SOURCE, 0, &frc_timer_isr, NULL, NULL);
+io write 1e4,2
+esp_intr_alloc(ETS_TG0_WDT_LEVEL_INTR_SOURCE, 0, task_wdt_isr, NULL, NULL); 
+io write 144,3 
+ret = esp_intr_alloc(ETS_I2C_EXT0_INTR_SOURCE, intr_alloc_flags, fn, arg, handle); 
+int intr=get_free_int(flags, cpu, force);
+intr=12
+xt_set_interrupt_handler(intr, handler, arg); 
+intr_matrix_set(cpu, source, intr);  
+io write 1c8,c 
+
+
+```      
 
 
 ## Rom symbols from rom.elf
