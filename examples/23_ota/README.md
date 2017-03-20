@@ -9,7 +9,7 @@ To run with qemu you will need to run the bootloader,
 locate all // TO TEST BOOTLOADER in (esp32.c) and recompile qemu-system-xtensa
 
 You must compile the toflash program. It adds partition information and application code to
-gcc -g ../../toflash.c -o qemu_flash
+gcc -g toflash.c -o qemu_flash
 
 cp /home/olas/qemu_esp32/esp32flash.bin . 
 ./qemu_flash  build/ota.bin
