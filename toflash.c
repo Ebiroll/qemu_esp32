@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 //
 // qemu_toflash
 // 
@@ -12,7 +13,7 @@ void merge_flash(char *binfile,char *flashfile,int flash_pos)
 {
     FILE *fbin;
     FILE *fflash;
-    char *tmp_data;
+    unsigned char *tmp_data;
 
     int file_size=0;
 
@@ -35,22 +36,33 @@ void merge_flash(char *binfile,char *flashfile,int flash_pos)
         printf("   Can't open '%s' for writing.\n", flashfile);
         return;
     }
-    fseek(flashfile,flash_pos,SEEK_SET);
+    fseek(fflash,flash_pos,SEEK_SET);
 
-    tmp_data=malloc(file_size*sizeof(char));
+    tmp_data=malloc(1+file_size*sizeof(char));
     //size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream);
     //size_t fwrite(const void *ptr, size_t size, size_t nmemb,
     //                 FILE *stream);
 
+    if (file_size<=0) {
+      printf("Not able to get file size %s",binfile);
+    }
 
-    fread(tmp_data,file_size,sizeof(char),fbin);
+    int len_read=fread(tmp_data,sizeof(char),file_size,fbin);
 
-    fwrite(tmp_data,file_size,sizeof(char),flashfile);
+    int len_write=fwrite(tmp_data,sizeof(char),file_size,fflash);
+
+    if (len_read!=len_write) {
+      printf("Not able to merge %s",binfile);
+    }
 
     fclose(fbin);
 
-    fclose(flashfile);
+    if (fseek(fbin, 0 , SEEK_END) != 0) {
+    }
 
+    fclose(fflash);
+
+    free(tmp_data);
 }
 
 
@@ -59,7 +71,7 @@ int main(int argc,char *argv[])
     // system("cp esp32flash.bin esp32flash.bak");
 
     // Add bootloader
-    merge_flash("bootloader/bootloader.bin","esp32flash.bin",0x1000);
+    merge_flash("build/bootloader/bootloader.bin","esp32flash.bin",0x1000);
     // Add partitions, test OTA here
     merge_flash("build/partitions_two_ota.bin","esp32flash.bin",0x8000);
     // Add application
