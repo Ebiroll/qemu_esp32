@@ -14,8 +14,10 @@ void merge_flash(char *binfile,char *flashfile,int flash_pos)
     FILE *fbin;
     FILE *fflash;
     unsigned char *tmp_data;
+    unsigned char *flash_data;
 
     int file_size=0;
+    int flash_size=0;
 
     fbin = fopen(binfile, "r");
     if (fbin == NULL) {
@@ -27,18 +29,27 @@ void merge_flash(char *binfile,char *flashfile,int flash_pos)
        /* Handle Error */
     }
     file_size = ftell(fbin);
+
     if (fseek(fbin, 0 , SEEK_SET) != 0) {
       /* Handle Error */
     }
 
-    fflash  = fopen(flashfile, "w");
+    fflash  = fopen(flashfile, "r+");
     if (fflash == NULL) {
         printf("   Can't open '%s' for writing.\n", flashfile);
         return;
     }
+    if (fseek(fflash, 0 , SEEK_END) != 0) {
+       /* Handle Error */
+    }
+    flash_size = ftell(fflash);
+    rewind(fflash);
     fseek(fflash,flash_pos,SEEK_SET);
 
-    tmp_data=malloc(1+file_size*sizeof(char));
+    //flash_data=malloc((1+flash_size)*sizeof(char));    
+    //int len_read=fread(tmp_data,sizeof(char),file_size,fbin);
+
+    tmp_data=malloc((1+file_size)*sizeof(char));
     //size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream);
     //size_t fwrite(const void *ptr, size_t size, size_t nmemb,
     //                 FILE *stream);
@@ -57,7 +68,7 @@ void merge_flash(char *binfile,char *flashfile,int flash_pos)
 
     fclose(fbin);
 
-    if (fseek(fbin, 0 , SEEK_END) != 0) {
+    if (fseek(fflash, 0 , SEEK_END) != 0) {
     }
 
     fclose(fflash);
