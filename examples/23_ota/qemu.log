@@ -1,0 +1,473 @@
+tensa-softmmu/qemu-system-xtensa  -d guest_errors   -cpu esp32 -M esp32 -m 4M -net nic,model=vlan0 -net user,id=simnet,ipver4=on,net=192.168.1.0/24,host=192.168.1.40,hostfwd=tcp::10077-192.168.1.3:7  -net dump,file=/tmp/vm0.pcap  -kernel   ~/esp/qemu_esp32/examples/23_ota/build/bootloader/bootloader.elf -s  -S  > io.txt 
+TRYING to MAP esp32flash.binMAPPED esp32flash.binets Jun  8 2016 00:22:57
+
+rst:0x10 (RTCWDT_RTC_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+(qemu)  00000000 to memory, 3F410000
+(qemu)  00000000 to memory, 3F420000
+(qemu)  00000000 to memory, 3F430000
+(qemu)  00000000 to memory, 3F440000
+(qemu)  00000000 to memory, 3F450000
+(qemu)  00000000 to memory, 3F460000
+(qemu)  00000000 to memory, 3F400000
+(qemu)  00007000 to memory, 3F407000
+(qemu)  00000000 to memory, 3F410000
+(qemu)  00000000 to memory, 3F420000
+(qemu)  00000000 to memory, 3F430000
+(qemu)  00000000 to memory, 3F440000
+(qemu)  00000000 to memory, 3F450000
+(qemu)  00000000 to memory, 3F460000
+I (1) boot: ESP-IDF  2nd stage bootloader
+I (1) boot: compile time 21:22:47
+I (1) boot: Enabling RNG early entropy source...
+D (1) esp_image: reading image header @ 0x1000
+D (1) bootloader_flash: mmu set block paddr=0x00000000 (was 0xffffffff)
+(qemu)  00000000 to memory, 3F720000
+D (1) boot: magic e9
+D (1) boot: segments 04
+D (2) boot: spi_mode 02
+D (2) boot: spi_speed 00
+D (2) boot: spi_size 02
+I (2) boot: SPI Speed      : 40MHz
+I (2) boot: SPI Mode       : SLOW READ
+I (2) boot: SPI Flash Size : 4MB
+D (2) bootloader_flash: mmu set paddr=00000000 count=1
+(qemu)  00000000 to memory, 3F400000
+(qemu)  00007000 to memory, 3F407000
+D (2) boot: mapped partition table 0x8000 at 0x3f408000
+D (2) flash_parts: partition table verified, 6 entries
+I (2) boot: Partition Table:
+I (3) boot: ## Label            Usage          Type ST Offset   Length
+D (3) boot: load partition table entry 0x3f408000
+D (3) boot: type=1 subtype=2
+I (3) boot:  0 nvs              WiFi data        01 02 00009000 00004000
+D (3) boot: load partition table entry 0x3f408020
+D (3) boot: type=1 subtype=0
+I (3) boot:  1 otadata          OTA data         01 00 0000d000 00002000
+D (4) boot: load partition table entry 0x3f408040
+D (4) boot: type=1 subtype=1
+I (4) boot:  2 phy_init         RF data          01 01 0000f000 00001000
+D (4) boot: load partition table entry 0x3f408060
+D (4) boot: type=0 subtype=0
+I (4) boot:  3 factory          factory app      00 00 00010000 00100000
+D (4) boot: load partition table entry 0x3f408080
+D (5) boot: type=0 subtype=10
+I (5) boot:  4 ota_0            OTA app          00 10 00110000 00100000
+D (5) boot: load partition table entry 0x3f4080a0
+D (5) boot: type=0 subtype=11
+I (5) boot:  5 ota_1            OTA app          00 11 00210000 00100000
+(qemu)  00000000 to memory, 3F410000
+(qemu)  00000000 to memory, 3F420000
+(qemu)  00000000 to memory, 3F430000
+(qemu)  00000000 to memory, 3F440000
+(qemu)  00000000 to memory, 3F450000
+(qemu)  00000000 to memory, 3F460000
+I (5) boot: End of partition table
+D (6) bootloader_flash: mmu set paddr=00000000 count=1
+(qemu)  00000000 to memory, 3F400000
+(qemu)  00007000 to memory, 3F407000
+(qemu)  00000000 to memory, 3F410000
+(qemu)  00000000 to memory, 3F420000
+(qemu)  00000000 to memory, 3F430000
+(qemu)  00000000 to memory, 3F440000
+(qemu)  00000000 to memory, 3F450000
+(qemu)  00000000 to memory, 3F460000
+E (6) boot: ota data partition invalid, falling back to factory
+I (6) boot: Disabling RNG early entropy source...
+I (6) boot: Loading app partition at offset 00010000
+D (6) esp_image: reading image header @ 0x10000
+D (6) bootloader_flash: mmu set block paddr=0x00010000 (was 0xffffffff)
+(qemu)  00010000 to memory, 3F720000
+(qemu) MMU 100c8  1
+D (7) esp_image: reading 8 image segments
+V (7) esp_image: loading segment header 0 at offset 0x10018
+V (7) esp_image: segment data length 0xffe8 data starts 0x10020
+D (42) bootloader_flash: mmu set block paddr=0x00020000 (was 0x00010000)
+(qemu)  00020000 to memory, 3F720000
+(qemu) MMU 100c8  2
+V (43) esp_image: loading segment header 0 at offset 0x10018
+D (43) bootloader_flash: mmu set block paddr=0x00010000 (was 0x00020000)
+(qemu)  00010000 to memory, 3F720000
+(qemu) MMU 100c8  1
+V (43) esp_image: segment data length 0xffe8 data starts 0x10020
+V (43) esp_image: loading segment header 1 at offset 0x20008
+D (43) bootloader_flash: mmu set block paddr=0x00020000 (was 0x00010000)
+(qemu)  00020000 to memory, 3F720000
+(qemu) MMU 100c8  2
+V (43) esp_image: segment data length 0x9384 data starts 0x20010
+V (64) esp_image: loading segment header 0 at offset 0x10018
+D (64) bootloader_flash: mmu set block paddr=0x00010000 (was 0x00020000)
+(qemu)  00010000 to memory, 3F720000
+(qemu) MMU 100c8  1
+V (64) esp_image: segment data length 0xffe8 data starts 0x10020
+V (65) esp_image: loading segment header 1 at offset 0x20008
+D (65) bootloader_flash: mmu set block paddr=0x00020000 (was 0x00010000)
+(qemu)  00020000 to memory, 3F720000
+(qemu) MMU 100c8  2
+V (65) esp_image: segment data length 0x9384 data starts 0x20010
+V (65) esp_image: loading segment header 2 at offset 0x29394
+V (65) esp_image: segment data length 0x1c94 data starts 0x2939c
+V (69) esp_image: loading segment header 0 at offset 0x10018
+D (70) bootloader_flash: mmu set block paddr=0x00010000 (was 0x00020000)
+(qemu)  00010000 to memory, 3F720000
+(qemu) MMU 100c8  1
+V (70) esp_image: segment data length 0xffe8 data starts 0x10020
+V (70) esp_image: loading segment header 1 at offset 0x20008
+D (70) bootloader_flash: mmu set block paddr=0x00020000 (was 0x00010000)
+(qemu)  00020000 to memory, 3F720000
+(qemu) MMU 100c8  2
+V (70) esp_image: segment data length 0x9384 data starts 0x20010
+V (70) esp_image: loading segment header 2 at offset 0x29394
+V (71) esp_image: segment data length 0x1c94 data starts 0x2939c
+V (71) esp_image: loading segment header 3 at offset 0x2b030
+V (71) esp_image: segment data length 0x400 data starts 0x2b038
+V (72) esp_image: loading segment header 0 at offset 0x10018
+D (72) bootloader_flash: mmu set block paddr=0x00010000 (was 0x00020000)
+(qemu)  00010000 to memory, 3F720000
+(qemu) MMU 100c8  1
+V (72) esp_image: segment data length 0xffe8 data starts 0x10020
+V (72) esp_image: loading segment header 1 at offset 0x20008
+D (72) bootloader_flash: mmu set block paddr=0x00020000 (was 0x00010000)
+(qemu)  00020000 to memory, 3F720000
+(qemu) MMU 100c8  2
+V (73) esp_image: segment data length 0x9384 data starts 0x20010
+V (73) esp_image: loading segment header 2 at offset 0x29394
+V (73) esp_image: segment data length 0x1c94 data starts 0x2939c
+V (73) esp_image: loading segment header 3 at offset 0x2b030
+V (73) esp_image: segment data length 0x400 data starts 0x2b038
+V (73) esp_image: loading segment header 4 at offset 0x2b438
+V (74) esp_image: segment data length 0x19e04 data starts 0x2b440
+D (84) bootloader_flash: mmu set block paddr=0x00030000 (was 0x00020000)
+(qemu)  00030000 to memory, 3F720000
+(qemu) MMU 100c8  3
+D (120) bootloader_flash: mmu set block paddr=0x00040000 (was 0x00030000)
+(qemu)  00040000 to memory, 3F720000
+(qemu) MMU 100c8  4
+V (131) esp_image: loading segment header 0 at offset 0x10018
+D (132) bootloader_flash: mmu set block paddr=0x00010000 (was 0x00040000)
+(qemu)  00010000 to memory, 3F720000
+(qemu) MMU 100c8  1
+V (132) esp_image: segment data length 0xffe8 data starts 0x10020
+V (132) esp_image: loading segment header 1 at offset 0x20008
+D (132) bootloader_flash: mmu set block paddr=0x00020000 (was 0x00010000)
+(qemu)  00020000 to memory, 3F720000
+(qemu) MMU 100c8  2
+V (132) esp_image: segment data length 0x9384 data starts 0x20010
+V (133) esp_image: loading segment header 2 at offset 0x29394
+V (133) esp_image: segment data length 0x1c94 data starts 0x2939c
+V (133) esp_image: loading segment header 3 at offset 0x2b030
+V (133) esp_image: segment data length 0x400 data starts 0x2b038
+V (133) esp_image: loading segment header 4 at offset 0x2b438
+V (133) esp_image: segment data length 0x19e04 data starts 0x2b440
+V (134) esp_image: loading segment header 5 at offset 0x45244
+D (134) bootloader_flash: mmu set block paddr=0x00040000 (was 0x00020000)
+(qemu)  00040000 to memory, 3F720000
+(qemu) MMU 100c8  4
+V (134) esp_image: segment data length 0x0 data starts 0x4524c
+V (134) esp_image: loading segment header 0 at offset 0x10018
+D (134) bootloader_flash: mmu set block paddr=0x00010000 (was 0x00040000)
+(qemu)  00010000 to memory, 3F720000
+(qemu) MMU 100c8  1
+V (134) esp_image: segment data length 0xffe8 data starts 0x10020
+V (135) esp_image: loading segment header 1 at offset 0x20008
+D (135) bootloader_flash: mmu set block paddr=0x00020000 (was 0x00010000)
+(qemu)  00020000 to memory, 3F720000
+(qemu) MMU 100c8  2
+V (135) esp_image: segment data length 0x9384 data starts 0x20010
+V (135) esp_image: loading segment header 2 at offset 0x29394
+V (135) esp_image: segment data length 0x1c94 data starts 0x2939c
+V (135) esp_image: loading segment header 3 at offset 0x2b030
+V (136) esp_image: segment data length 0x400 data starts 0x2b038
+V (136) esp_image: loading segment header 4 at offset 0x2b438
+V (136) esp_image: segment data length 0x19e04 data starts 0x2b440
+V (136) esp_image: loading segment header 5 at offset 0x45244
+D (136) bootloader_flash: mmu set block paddr=0x00040000 (was 0x00020000)
+(qemu)  00040000 to memory, 3F720000
+(qemu) MMU 100c8  4
+V (137) esp_image: segment data length 0x0 data starts 0x4524c
+V (137) esp_image: loading segment header 6 at offset 0x4524c
+V (137) esp_image: segment data length 0xadbc data starts 0x45254
+D (161) bootloader_flash: mmu set block paddr=0x00050000 (was 0x00040000)
+(qemu)  00050000 to memory, 3F720000
+(qemu) MMU 100c8  5
+V (161) esp_image: loading segment header 0 at offset 0x10018
+D (161) bootloader_flash: mmu set block paddr=0x00010000 (was 0x00050000)
+(qemu)  00010000 to memory, 3F720000
+(qemu) MMU 100c8  1
+V (162) esp_image: segment data length 0xffe8 data starts 0x10020
+V (162) esp_image: loading segment header 1 at offset 0x20008
+D (162) bootloader_flash: mmu set block paddr=0x00020000 (was 0x00010000)
+(qemu)  00020000 to memory, 3F720000
+(qemu) MMU 100c8  2
+V (162) esp_image: segment data length 0x9384 data starts 0x20010
+V (162) esp_image: loading segment header 2 at offset 0x29394
+V (163) esp_image: segment data length 0x1c94 data starts 0x2939c
+V (163) esp_image: loading segment header 3 at offset 0x2b030
+V (163) esp_image: segment data length 0x400 data starts 0x2b038
+V (163) esp_image: loading segment header 4 at offset 0x2b438
+V (163) esp_image: segment data length 0x19e04 data starts 0x2b440
+V (163) esp_image: loading segment header 5 at offset 0x45244
+D (164) bootloader_flash: mmu set block paddr=0x00040000 (was 0x00020000)
+(qemu)  00040000 to memory, 3F720000
+(qemu) MMU 100c8  4
+V (164) esp_image: segment data length 0x0 data starts 0x4524c
+V (164) esp_image: loading segment header 6 at offset 0x4524c
+V (164) esp_image: segment data length 0xadbc data starts 0x45254
+V (164) esp_image: loading segment header 7 at offset 0x50010
+D (164) bootloader_flash: mmu set block paddr=0x00050000 (was 0x00040000)
+(qemu)  00050000 to memory, 3F720000
+(qemu) MMU 100c8  5
+V (165) esp_image: segment data length 0x3f7f0 data starts 0x50018
+D (200) bootloader_flash: mmu set block paddr=0x00060000 (was 0x00050000)
+(qemu)  00060000 to memory, 3F720000
+(qemu) MMU 100c8  6
+D (236) bootloader_flash: mmu set block paddr=0x00070000 (was 0x00060000)
+(qemu)  00070000 to memory, 3F720000
+(qemu) MMU 100c8  7
+D (272) bootloader_flash: mmu set block paddr=0x00080000 (was 0x00070000)
+(qemu)  00080000 to memory, 3F720000
+(qemu) MMU 100c8  8
+V (306) esp_image: unpadded image length 0x7f808
+V (306) esp_image: padded image length 0x7f810
+D (306) esp_image: reading checksum block at 0x8f800
+D (306) esp_image: reading image header @ 0x10000
+D (307) bootloader_flash: mmu set block paddr=0x00010000 (was 0x00080000)
+(qemu)  00010000 to memory, 3F720000
+(qemu) MMU 100c8  1
+D (307) boot: bin_header: 233 8 2 2 40080a84
+V (307) esp_image: loading segment header 0 at offset 0x10018
+V (307) esp_image: segment data length 0xffe8 data starts 0x10020
+I (307) boot: segment 0: paddr=0x00010018 vaddr=0x00000000 size=0x0ffe8 ( 65512) 
+V (308) esp_image: loading segment header 0 at offset 0x10018
+V (308) esp_image: segment data length 0xffe8 data starts 0x10020
+V (308) esp_image: loading segment header 1 at offset 0x20008
+D (308) bootloader_flash: mmu set block paddr=0x00020000 (was 0x00010000)
+(qemu)  00020000 to memory, 3F720000
+(qemu) MMU 100c8  2
+V (308) esp_image: segment data length 0x9384 data starts 0x20010
+D (308) boot: found drom segment, map from 00020010 to 3f400010
+I (309) boot: segment 1: paddr=0x00020008 vaddr=0x3f400010 size=0x09384 ( 37764) map
+V (309) esp_image: loading segment header 0 at offset 0x10018
+D (309) bootloader_flash: mmu set block paddr=0x00010000 (was 0x00020000)
+(qemu)  00010000 to memory, 3F720000
+(qemu) MMU 100c8  1
+V (309) esp_image: segment data length 0xffe8 data starts 0x10020
+V (309) esp_image: loading segment header 1 at offset 0x20008
+D (310) bootloader_flash: mmu set block paddr=0x00020000 (was 0x00010000)
+(qemu)  00020000 to memory, 3F720000
+(qemu) MMU 100c8  2
+V (310) esp_image: segment data length 0x9384 data starts 0x20010
+V (310) esp_image: loading segment header 2 at offset 0x29394
+V (310) esp_image: segment data length 0x1c94 data starts 0x2939c
+I (310) boot: segment 2: paddr=0x00029394 vaddr=0x3ffb0000 size=0x01c94 (  7316) load
+V (311) boot: bootloader_mmap data_offs=0002939c data_len=00001c94
+D (311) bootloader_flash: mmu set paddr=00020000 count=1
+(qemu)  00020000 to memory, 3F400000
+(qemu)  00027000 to memory, 3F407000
+(qemu) MMU 10000  2
+(qemu)  00000000 to memory, 3F410000
+(qemu)  00000000 to memory, 3F420000
+(qemu)  00000000 to memory, 3F430000
+(qemu)  00000000 to memory, 3F440000
+(qemu)  00000000 to memory, 3F450000
+(qemu)  00000000 to memory, 3F460000
+V (311) esp_image: loading segment header 0 at offset 0x10018
+D (311) bootloader_flash: mmu set block paddr=0x00010000 (was 0xffffffff)
+(qemu)  00010000 to memory, 3F720000
+(qemu) MMU 100c8  1
+V (312) esp_image: segment data length 0xffe8 data starts 0x10020
+V (312) esp_image: loading segment header 1 at offset 0x20008
+D (312) bootloader_flash: mmu set block paddr=0x00020000 (was 0x00010000)
+(qemu)  00020000 to memory, 3F720000
+(qemu) MMU 100c8  2
+V (312) esp_image: segment data length 0x9384 data starts 0x20010
+V (312) esp_image: loading segment header 2 at offset 0x29394
+V (312) esp_image: segment data length 0x1c94 data starts 0x2939c
+V (313) esp_image: loading segment header 3 at offset 0x2b030
+V (313) esp_image: segment data length 0x400 data starts 0x2b038
+I (313) boot: segment 3: paddr=0x0002b030 vaddr=0x40080000 size=0x00400 (  1024) load
+V (313) boot: bootloader_mmap data_offs=0002b038 data_len=00000400
+D (313) bootloader_flash: mmu set paddr=00020000 count=1
+(qemu)  00020000 to memory, 3F400000
+(qemu)  00027000 to memory, 3F407000
+(qemu) MMU 10000  2
+(qemu)  00000000 to memory, 3F410000
+(qemu)  00000000 to memory, 3F420000
+(qemu)  00000000 to memory, 3F430000
+(qemu)  00000000 to memory, 3F440000
+(qemu)  00000000 to memory, 3F450000
+(qemu)  00000000 to memory, 3F460000
+V (314) esp_image: loading segment header 0 at offset 0x10018
+D (314) bootloader_flash: mmu set block paddr=0x00010000 (was 0xffffffff)
+(qemu)  00010000 to memory, 3F720000
+(qemu) MMU 100c8  1
+V (314) esp_image: segment data length 0xffe8 data starts 0x10020
+V (314) esp_image: loading segment header 1 at offset 0x20008
+D (314) bootloader_flash: mmu set block paddr=0x00020000 (was 0x00010000)
+(qemu)  00020000 to memory, 3F720000
+(qemu) MMU 100c8  2
+V (315) esp_image: segment data length 0x9384 data starts 0x20010
+V (315) esp_image: loading segment header 2 at offset 0x29394
+V (315) esp_image: segment data length 0x1c94 data starts 0x2939c
+V (315) esp_image: loading segment header 3 at offset 0x2b030
+V (315) esp_image: segment data length 0x400 data starts 0x2b038
+V (315) esp_image: loading segment header 4 at offset 0x2b438
+V (316) esp_image: segment data length 0x19e04 data starts 0x2b440
+I (316) boot: segment 4: paddr=0x0002b438 vaddr=0x40080400 size=0x19e04 (105988) load
+V (316) boot: bootloader_mmap data_offs=0002b440 data_len=00019e04
+D (316) bootloader_flash: mmu set paddr=00020000 count=3
+(qemu)  00020000 to memory, 3F400000
+(qemu)  00027000 to memory, 3F407000
+(qemu) MMU 10000  2
+(qemu)  00030000 to memory, 3F410000
+(qemu) MMU 10004  3
+(qemu)  00040000 to memory, 3F420000
+(qemu) MMU 10008  4
+(qemu)  00000000 to memory, 3F410000
+(qemu)  00000000 to memory, 3F420000
+(qemu)  00000000 to memory, 3F430000
+(qemu)  00000000 to memory, 3F440000
+(qemu)  00000000 to memory, 3F450000
+(qemu)  00000000 to memory, 3F460000
+V (319) esp_image: loading segment header 0 at offset 0x10018
+D (319) bootloader_flash: mmu set block paddr=0x00010000 (was 0xffffffff)
+(qemu)  00010000 to memory, 3F720000
+(qemu) MMU 100c8  1
+V (319) esp_image: segment data length 0xffe8 data starts 0x10020
+V (320) esp_image: loading segment header 1 at offset 0x20008
+D (320) bootloader_flash: mmu set block paddr=0x00020000 (was 0x00010000)
+(qemu)  00020000 to memory, 3F720000
+(qemu) MMU 100c8  2
+V (320) esp_image: segment data length 0x9384 data starts 0x20010
+V (320) esp_image: loading segment header 2 at offset 0x29394
+V (320) esp_image: segment data length 0x1c94 data starts 0x2939c
+V (320) esp_image: loading segment header 3 at offset 0x2b030
+V (321) esp_image: segment data length 0x400 data starts 0x2b038
+V (321) esp_image: loading segment header 4 at offset 0x2b438
+V (321) esp_image: segment data length 0x19e04 data starts 0x2b440
+V (321) esp_image: loading segment header 5 at offset 0x45244
+D (321) bootloader_flash: mmu set block paddr=0x00040000 (was 0x00020000)
+(qemu)  00040000 to memory, 3F720000
+(qemu) MMU 100c8  4
+V (322) esp_image: segment data length 0x0 data starts 0x4524c
+I (322) boot: segment 5: paddr=0x00045244 vaddr=0x400c0000 size=0x00000 (     0) load
+V (322) boot: bootloader_mmap data_offs=0004524c data_len=00000000
+D (322) bootloader_flash: mmu set paddr=00040000 count=1
+(qemu)  00040000 to memory, 3F400000
+(qemu)  00047000 to memory, 3F407000
+(qemu) MMU 10000  4
+(qemu)  00000000 to memory, 3F410000
+(qemu)  00000000 to memory, 3F420000
+(qemu)  00000000 to memory, 3F430000
+(qemu)  00000000 to memory, 3F440000
+(qemu)  00000000 to memory, 3F450000
+(qemu)  00000000 to memory, 3F460000
+V (322) esp_image: loading segment header 0 at offset 0x10018
+D (323) bootloader_flash: mmu set block paddr=0x00010000 (was 0xffffffff)
+(qemu)  00010000 to memory, 3F720000
+(qemu) MMU 100c8  1
+V (323) esp_image: segment data length 0xffe8 data starts 0x10020
+V (323) esp_image: loading segment header 1 at offset 0x20008
+D (323) bootloader_flash: mmu set block paddr=0x00020000 (was 0x00010000)
+(qemu)  00020000 to memory, 3F720000
+(qemu) MMU 100c8  2
+V (323) esp_image: segment data length 0x9384 data starts 0x20010
+V (323) esp_image: loading segment header 2 at offset 0x29394
+V (324) esp_image: segment data length 0x1c94 data starts 0x2939c
+V (324) esp_image: loading segment header 3 at offset 0x2b030
+V (324) esp_image: segment data length 0x400 data starts 0x2b038
+V (324) esp_image: loading segment header 4 at offset 0x2b438
+V (324) esp_image: segment data length 0x19e04 data starts 0x2b440
+V (324) esp_image: loading segment header 5 at offset 0x45244
+D (325) bootloader_flash: mmu set block paddr=0x00040000 (was 0x00020000)
+(qemu)  00040000 to memory, 3F720000
+(qemu) MMU 100c8  4
+V (325) esp_image: segment data length 0x0 data starts 0x4524c
+V (325) esp_image: loading segment header 6 at offset 0x4524c
+V (325) esp_image: segment data length 0xadbc data starts 0x45254
+I (325) boot: segment 6: paddr=0x0004524c vaddr=0x00000000 size=0x0adbc ( 44476) 
+V (326) esp_image: loading segment header 0 at offset 0x10018
+D (326) bootloader_flash: mmu set block paddr=0x00010000 (was 0x00040000)
+(qemu)  00010000 to memory, 3F720000
+(qemu) MMU 100c8  1
+V (326) esp_image: segment data length 0xffe8 data starts 0x10020
+V (326) esp_image: loading segment header 1 at offset 0x20008
+D (326) bootloader_flash: mmu set block paddr=0x00020000 (was 0x00010000)
+(qemu)  00020000 to memory, 3F720000
+(qemu) MMU 100c8  2
+V (326) esp_image: segment data length 0x9384 data starts 0x20010
+V (327) esp_image: loading segment header 2 at offset 0x29394
+V (327) esp_image: segment data length 0x1c94 data starts 0x2939c
+V (327) esp_image: loading segment header 3 at offset 0x2b030
+V (327) esp_image: segment data length 0x400 data starts 0x2b038
+V (327) esp_image: loading segment header 4 at offset 0x2b438
+V (327) esp_image: segment data length 0x19e04 data starts 0x2b440
+V (328) esp_image: loading segment header 5 at offset 0x45244
+D (328) bootloader_flash: mmu set block paddr=0x00040000 (was 0x00020000)
+(qemu)  00040000 to memory, 3F720000
+(qemu) MMU 100c8  4
+V (328) esp_image: segment data length 0x0 data starts 0x4524c
+V (328) esp_image: loading segment header 6 at offset 0x4524c
+V (328) esp_image: segment data length 0xadbc data starts 0x45254
+V (328) esp_image: loading segment header 7 at offset 0x50010
+D (329) bootloader_flash: mmu set block paddr=0x00050000 (was 0x00040000)
+(qemu)  00050000 to memory, 3F720000
+(qemu) MMU 100c8  5
+V (329) esp_image: segment data length 0x3f7f0 data starts 0x50018
+D (329) boot: found irom segment, map from 00050018 to 400d0018
+I (329) boot: segment 7: paddr=0x00050010 vaddr=0x400d0018 size=0x3f7f0 (260080) map
+D (330) boot: configure drom and irom and start
+V (330) boot: d mmu set paddr=00020000 vaddr=3f400000 size=37772 n=1
+(qemu)  00020000 to memory, 3F400000
+(qemu)  00027000 to memory, 3F407000
+(qemu) MMU 10000  2
+V (330) boot: rc=0
+V (330) boot: rc=0
+V (330) boot: i mmu set paddr=00050000 vaddr=400d0000 size=260088 n=4
+(qemu)  00050000 to memory, 400D0000
+(qemu) MMU 10134  5
+(qemu)  00060000 to memory, 400E0000
+(qemu) MMU 10138  6
+(qemu)  00070000 to memory, 400F0000
+(qemu) MMU 1013c  7
+(qemu)  00080000 to memory, 40100000
+(qemu) MMU 10140  8
+V (330) boot: rc=0
+V (330) boot: rc=0
+D (330) boot: start: 0x40080a84
+I (331) cpu_start: Pro cpu up.
+I (331) cpu_start: Single core mode
+I (331) heap_alloc_caps: Initializing. RAM available for dynamic allocation:
+I (332) heap_alloc_caps: At 3FFAE2A0 len 00001D60 (7 KiB): DRAM
+I (332) heap_alloc_caps: At 3FFB7E68 len 00028198 (160 KiB): DRAM
+I (332) heap_alloc_caps: At 3FFE0440 len 00003BC0 (14 KiB): D/IRAM
+I (332) heap_alloc_caps: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM
+I (332) heap_alloc_caps: At 4009A204 len 00005DFC (23 KiB): IRAM
+I (333) cpu_start: Pro cpu start user code
+I (335) cpu_start: Starting scheduler on PRO CPU.
+(qemu)  00008000 to memory, 3F408000
+(qemu)  00000000 to memory, 3F410000
+Running in qemu
+ethoc: num_tx: 8 num_rx: 8
+TCP/IP initializing...
+TCP/IP initialized.
+Applications started.
+Finished
+I (344) ota: Starting OTA example...
+(qemu)  00000000 to memory, 3F410000
+E (344) esp_ota_ops: ota data invalid, no current app. Assuming factory
+I (344) ota: Running partition type 0 subtype 0 (offset 0x00010000)
+I (344) ota: Connect to Wifi ! Start to Connect to Server....
+I (344) ota: Server IP: 192.168.0.3 Server Port:8070
+stopping queue
+Guru Meditation Error of type InstrFetchProhibited occurred on core  0. Exception was unhandled.
+Register dump:
+PC      : 0xffffffff  PS      : 0x00060633  A0      : 0x8010d0aa  A1      : 0x3ffba370  
+A2      : 0xffffffff  A3      : 0x3f408e84  A4      : 0x00000001  A5      : 0x3ffb60c8  
+A6      : 0x00000000  A7      : 0x00000004  A8      : 0x8010c06d  A9      : 0x3ffba350  
+A10     : 0x00000001  A11     : 0x00060620  A12     : 0x00060020  A13     : 0x00000000  
+A14     : 0x00000000  A15     : 0x6e650fe0  SAR     : 0x0000001c  EXCCAUSE: 0x00000014  
+EXCVADDR: 0xffffffff  LBEG    : 0x00000000  LEND    : 0x00000000  LCOUNT  : 0x00000000  
+
+Backtrace: 0x7fffffff:0x3ffba370 0x4010d0aa:0x3ffba390 0x400eda3d:0x3ffba3b0 0x400ede6a:0x3ffba3d0 0x400f11da:0x3ffba3f0 0x400f1354:0x3ffba410 0x400f2ca7:0x3ffba430
+
+Rebooting...
