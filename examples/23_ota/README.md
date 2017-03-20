@@ -5,6 +5,24 @@ This example demonstrates a working OTA (over the air) firmware update workflow.
 
 This example is a *simplified demonstration*, for production firmware updates you should use a secure protocol such as HTTPS.
 
+To run with qemu you will need to run the bootloader,
+locate all // TO TEST BOOTLOADER in (esp32.c) and recompile qemu-system-xtensa
+
+You must compile the toflash program. It adds partition information and application code to
+gcc -g ../../toflash.c -o qemu_flash
+
+cp /home/olas/qemu_esp32/esp32flash.bin . 
+./qemu_flash  build/ota.bin
+The copy your qemu flash to the location where you run qemu
+cp esp32flash.bin /home/olas/qemu_esp32
+
+xtensa-softmmu/qemu-system-xtensa  -d guest_errors   -cpu esp32 -M esp32 -m 4M -net nic,model=vlan0 -net user,id=simnet,ipver4=on,net=192.168.1.0/24,host=192.168.1.40,hostfwd=tcp::10077-192.168.1.3:7  -net dump,file=/tmp/vm0.pcap  -kernel   ~/esp/qemu_esp32/examples/23_ota/build/bootloader/bootloader.elf -s   > io.txt
+
+
+xtensa-esp32-elf-gdb  build/ota.elf -ex 'target remote:1234'
+
+
+
 ---
 
 # Aim

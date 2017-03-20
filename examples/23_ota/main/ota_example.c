@@ -42,6 +42,9 @@ static int binary_file_length = 0;
 static int socket_id = -1;
 static char http_request[64] = {0};
 
+
+extern void Task_lwip_init(void *pvParameter);  
+  
 /* FreeRTOS event group to signal when we are connected & ready to make a request */
 static EventGroupHandle_t wifi_event_group;
 
@@ -197,8 +200,8 @@ void main_task(void *pvParameter)
     /* Wait for the callback to set the CONNECTED_BIT in the
        event group.
     */
-    xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT,
-                        false, true, portMAX_DELAY);
+    //xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT,
+    //                    false, true, portMAX_DELAY);
     ESP_LOGI(TAG, "Connect to Wifi ! Start to Connect to Server....");
 
     /*connect to http server*/
@@ -279,7 +282,14 @@ void main_task(void *pvParameter)
 
 void app_main()
 {
+    int *quemu_test=(int *)  0x3ff005f0;
     nvs_flash_init();
-    initialise_wifi();
+    if (*quemu_test==0x42) {
+        printf("Running in qemu\n");
+        Task_lwip_init(NULL);  
+    }
+    else {
+         initialise_wifi();
+    }
     xTaskCreate(&main_task, "main_task", 8192, NULL, 5, NULL);
 }
