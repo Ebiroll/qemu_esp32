@@ -81,6 +81,14 @@ Restarting in 8 seconds...
 
 ```
 
+Works 13 times then we get this error. Try resetting 13 times.
+```
+assertion "state == EntryState::WRITTEN || state == EntryState::EMPTY" failed: file "/home/olas/esp/esp-idf/components/nvs_flash/src/nvs_page.cpp", line 315, function: esp_err_t nvs::Page::eraseEntryAndSpan(size_t)
+abort() was called at PC 0x400e099f
+Guru Meditation Error: Core  0 panic'ed (abort)
+```
+
+
 ```
 Problem was here, wher is length??
 Only 4 bytes written,

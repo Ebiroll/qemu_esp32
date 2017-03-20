@@ -51,7 +51,7 @@ SemaphoreHandle_t xSemaphore = NULL;
 
 /* Define those to better describe your network interface. */
 #define IFNAME0 'e'
-#define IFNAME1 't'
+#define IFNAME1 'n'
 
 static char hostname[16];
 
@@ -363,7 +363,7 @@ static int ethoc_rx(struct netif *dev, int limit)
 			if (bd.stat & RX_BD_EMPTY) {
 			}
 			else {
-                printf("rx_data in %d entry %d\n",count,entry);	
+                //printf("rx_data in %d entry %d\n",count,entry);	
 				//entry=count;
 				//bd.stat &= ~RX_BD_STATS;
 				//bd.stat |=  RX_BD_EMPTY;
@@ -413,13 +413,14 @@ static int ethoc_rx(struct netif *dev, int limit)
 					//printf("trace_open_eth_receive_desc(%x,%x)\n",(unsigned int)src, size);
 
 					ethhdr = (struct eth_hdr *)src;
-    //printf("ethernet_driver: dest:%"X8_F":%"X8_F":%"X8_F":%"X8_F":%"X8_F":%"X8_F", src:%"X8_F":%"X8_F":%"X8_F":%"X8_F":%"X8_F":%"X8_F", type:%"X16_F"\n",
-    // (unsigned)ethhdr->dest.addr[0], (unsigned)ethhdr->dest.addr[1], (unsigned)ethhdr->dest.addr[2],
-    // (unsigned)ethhdr->dest.addr[3], (unsigned)ethhdr->dest.addr[4], (unsigned)ethhdr->dest.addr[5],
-    // (unsigned)ethhdr->src.addr[0], (unsigned)ethhdr->src.addr[1], (unsigned)ethhdr->src.addr[2],
-    // (unsigned)ethhdr->src.addr[3], (unsigned)ethhdr->src.addr[4], (unsigned)ethhdr->src.addr[5],
-    // (unsigned)htons(ethhdr->type));
-
+#if 0
+    printf("ethernet_driver: dest:%"X8_F":%"X8_F":%"X8_F":%"X8_F":%"X8_F":%"X8_F", src:%"X8_F":%"X8_F":%"X8_F":%"X8_F":%"X8_F":%"X8_F", type:%"X16_F"\n",
+     (unsigned)ethhdr->dest.addr[0], (unsigned)ethhdr->dest.addr[1], (unsigned)ethhdr->dest.addr[2],
+     (unsigned)ethhdr->dest.addr[3], (unsigned)ethhdr->dest.addr[4], (unsigned)ethhdr->dest.addr[5],
+     (unsigned)ethhdr->src.addr[0], (unsigned)ethhdr->src.addr[1], (unsigned)ethhdr->src.addr[2],
+     (unsigned)ethhdr->src.addr[3], (unsigned)ethhdr->src.addr[4], (unsigned)ethhdr->src.addr[5],
+     (unsigned)htons(ethhdr->type));
+#endif
 
 
 
@@ -558,21 +559,22 @@ static void ethoc_interrupt()
 	// No interrupt to handle....
 	if (unlikely(pending == 0))
 	{
-		printf("No pendig irq, spurious.\n");
+		//printf("No pendig irq, spurious.\n");
 		return;
 	}
-    printf("IRQ\n");
+    //printf("IRQ\n");
 
 	ethoc_ack_irq(priv, pending);
 
 	/* We always handle the dropped packet interrupt */
 	if (pending & INT_MASK_BUSY) {
-		printf("packet dropped\n");
+		//printf("packet dropped\n");
 		//dev->stats.rx_dropped++;
 	}
 
-	/* Handle receive/transmit event by switching to polling */
-	if (pending & (INT_MASK_TX | INT_MASK_RX)) {
+	/* Handle receive/transmit event by switching to polling */ 
+	// INT_MASK_TX 
+	if (pending & ( INT_MASK_RX)) {
 		//ethoc_disable_irq(priv, INT_MASK_TX | INT_MASK_RX);
 		//napi_schedule(&priv->napi);
 		//xTaskResumeFromISR(pollHandle);
@@ -762,7 +764,7 @@ int ethoc_open(struct netif *dev)
 
     // Poll for input
 	// Interrupts work now, Should not need to do polling 
-    xTaskCreate(&poll_task,"poll_task",2048, NULL, 3, &pollHandle);
+    xTaskCreate(&poll_task,"poll_task",2048, NULL, 15, &pollHandle);
 
 
 	//if (netif_queue_stopped(dev)) {

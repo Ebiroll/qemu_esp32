@@ -56,15 +56,6 @@ void Task_lwip_init(void * pParam)
   netif_init(); 
 #endif  // The initiation above is done in tcpip_init
 
-  printf("TCP/IP initializing...\n");  
-  if (sys_sem_new(&sem,0)!=ERR_OK) {
-    printf("Failed creating semaphore\n");
-  }
-  // OLAS 
-  tcpip_init(tcpip_init_done_ok, &sem);
-  sys_sem_wait(sem);
-  sys_sem_free(sem);
-  printf("TCP/IP initialized.\n");
   
   //add loop interface //set local loop-interface 127.0.0.1
   /*
@@ -74,7 +65,7 @@ void Task_lwip_init(void * pParam)
   netif_add(&loop_if, &ipaddr, &netmask, &gw, NULL, loopif_init,
 	    tcpip_input);
   */
-  //add ne2k interface
+  //add interface
   IP4_ADDR(&gw, 192,168,1,1);
   IP4_ADDR(&ipaddr, 192,168,1,3);
   IP4_ADDR(&netmask, 255,255,255,0);
@@ -83,6 +74,18 @@ void Task_lwip_init(void * pParam)
   netif_set_default(&ethoc_if);
   netif_set_up(&ethoc_if); 
   
+
+  printf("TCP/IP initializing...\n");  
+  if (sys_sem_new(&sem,0)!=ERR_OK) {
+    printf("Failed creating semaphore\n");
+  }
+  // OLAS 
+  tcpip_init(tcpip_init_done_ok, &sem);
+  sys_sem_wait(sem);
+  sys_sem_free(sem);
+  printf("TCP/IP initialized.\n");
+
+
   printf("Applications started.\n");
   
   //---------------------------------------------------------------------
