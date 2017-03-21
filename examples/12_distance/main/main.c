@@ -202,7 +202,7 @@ void display_Avg() {
 
 
 
-extern "C" void app_main(void)
+void app_main(void)
 {
     nvs_flash_init();
     init_SSD1306i2c();
