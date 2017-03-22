@@ -43,6 +43,8 @@
 
 #include "WebSocket_Task.h"
 
+extern void Task_lwip_init(void * pParam);
+
 //WebSocket frame receive queue
 QueueHandle_t WebSocket_rx_queue;
 
@@ -80,24 +82,32 @@ esp_err_t event_handler(void *ctx, system_event_t *event)
 
 void app_main(void)
 {
-
+    int *quemu_test=(int *)  0x3ff005f0;
     nvs_flash_init();
-    tcpip_adapter_init();
-    ESP_ERROR_CHECK( esp_event_loop_init(event_handler, NULL) );
-    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-    ESP_ERROR_CHECK( esp_wifi_init(&cfg) );
-    ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
-    ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_STA) );
-    wifi_config_t sta_config = {
-        .sta = {
-            .ssid = "access_point_name",
-            .password = "password",
-            .bssid_set = false
-        }
-    };
-    ESP_ERROR_CHECK( esp_wifi_set_config(WIFI_IF_STA, &sta_config) );
-    ESP_ERROR_CHECK( esp_wifi_start() );
-    ESP_ERROR_CHECK( esp_wifi_connect() );
+
+    if (*quemu_test==0x42) {
+        printf("Running in qemu\n");
+        Task_lwip_init(NULL);  
+    }
+    else {
+        tcpip_adapter_init();
+        ESP_ERROR_CHECK( esp_event_loop_init(event_handler, NULL) );
+	wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+	ESP_ERROR_CHECK( esp_wifi_init(&cfg) );
+	ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
+	ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_STA) );
+	wifi_config_t sta_config = {
+	   .sta = {
+	   .ssid = "access_point_name",
+	   .password = "password",
+		 .bssid_set = false
+	    }
+	    };
+	    ESP_ERROR_CHECK( esp_wifi_set_config(WIFI_IF_STA, &sta_config) );
+	    ESP_ERROR_CHECK( esp_wifi_start() );
+	    ESP_ERROR_CHECK( esp_wifi_connect() );
+    }
+
 
     //create WebSocker receive task
     xTaskCreate(&task_process_WebSocket, "ws_process_rx", 2048, NULL, 5, NULL);
