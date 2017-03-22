@@ -95,8 +95,10 @@ This also works for the original gdb and gives you all names of the functions in
 To setup esp-idf do, 
 ```
 git clone --recursive https://github.com/espressif/esp-idf.git
+```
 #To keep the esp-idf updated, do git pull & git submodule update --recursive
 
+```
 export PATH=$PATH:$HOME/esp/xtensa-esp32-elf/bin
 export IDF_PATH=~/esp/esp-idf
 ```
