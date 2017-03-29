@@ -95,27 +95,27 @@ This also works for the original gdb and gives you all names of the functions in
 To setup esp-idf do, 
 ```
 git clone --recursive https://github.com/espressif/esp-idf.git
-#To keep the esp-idf updated, do git pull & git submodule update --recursive
+#  To keep the esp-idf updated, do git pull & git submodule update --recursive
 
 export PATH=$PATH:$HOME/esp/xtensa-esp32-elf/bin
 export IDF_PATH=~/esp/esp-idf
 ```
 
-#Dumping the ROM0 & ROM1 using esp-idf esptool.py
+#  Dumping the ROM0 & ROM1 using esp-idf esptool.py
 ```
 cd ..
 git clone --recursive https://github.com/espressif/esp-idf.git
-# dump_mem ROM0(776KB) to rom.bin
+#  dump_mem ROM0(776KB) to rom.bin
 esp-idf/components/esptool_py/esptool/esptool.py --chip esp32 -b 921600 -p /dev/ttyUSB0 dump_mem 0x40000000 0x000C2000 rom.bin
 
-# dump_mem ROM1(64KB) to rom1.bin
+#  dump_mem ROM1(64KB) to rom1.bin
 esp-idf/components/esptool_py/esptool/esptool.py --chip esp32 -b 921600 -p /dev/ttyUSB0 dump_mem 0x3FF90000 0x00010000 rom1.bin
 
 Note that rom0 is smaller than the actual dump.
 Those two files will be loaded by qemu and must be in same directory as you start qemu.
 ```
 
-#Dumping flash content.
+#  Dumping flash content.
 Now there is simple flash emulation in qemu. You need the file  esp32flash.bin to be in the same directory as rom.bin & rom1.bin.
 If no flashfile exists, an empty file will be created.
 ```
