@@ -95,11 +95,15 @@ This also works for the original gdb and gives you all names of the functions in
 To setup esp-idf do, 
 ```
 git clone --recursive https://github.com/espressif/esp-idf.git
+
 #  To keep the esp-idf updated, do git pull & git submodule update --recursive
 
+
+```
 export PATH=$PATH:$HOME/esp/xtensa-esp32-elf/bin
 export IDF_PATH=~/esp/esp-idf
 ```
+
 
 #  Dumping the ROM0 & ROM1 using esp-idf esptool.py
 ```
@@ -115,12 +119,22 @@ Note that rom0 is smaller than the actual dump.
 Those two files will be loaded by qemu and must be in same directory as you start qemu.
 ```
 
+
 #  Dumping flash content.
 Now there is simple flash emulation in qemu. You need the file  esp32flash.bin to be in the same directory as rom.bin & rom1.bin.
 If no flashfile exists, an empty file will be created.
 ```
 esp/esp-idf/components/esptool_py/esptool/esptool.py --baud 920600 read_flash 0 0x400000  esp32flash.bin
 ```
+Another possibility in order to create a proper flash file is by running the following.
+```
+Double check the toflash.c program as it copies the generated esp32flash.bin file to the directory where we start qemu
+It also assumes partitioning according to partitions_singleapp.bin
+gcc toflash.c -o qemu_flashgcc toflash.c -o qemu_flash
+./qemu_flash build/app-template.bin
+```
+
+
 Currently mmap function are not correctly implemented. 
 The reason for this is that the bootloader will initiate the FLASH_MMU_TABLE
 to something. page 0 must be mapped correctly as it contains the .flash.roadata from the elf file.
@@ -295,7 +309,15 @@ Disassembly of section .text.jump:
    9:	0008e0          callx8	a8
    c:	f01d            retw.n
 ```
-
+#i2c emulation
+Emulation of i2c0 is started but not yet finished. 
+The files involved in the emulation are,
+```
+hw/i2c/i2c_esp32.c
+hw/xtensa/tmpbme280.c
+hw/display/ssd1306.c
+```
+The idea was to emulate a 1306 display over i2c.
 
 #Results
 If you get something like this,
@@ -566,8 +588,6 @@ static HeapRegionTagged_t regions[]={
 
 
 #Adding flash qemu emulation.
-You could probably assemble your own qemu flash file with something like this,
-esptool.py make_image -f app.text.bin -a 0x40100000 -f app.data.bin -a 0x3ffe8000 -f app.rodata.bin -a 0x3ffe8c00 app.flash.bin
 
 
 Here are some functions with the associated io instructions, to help me improve flash emulation.
