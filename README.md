@@ -95,6 +95,7 @@ This also works for the original gdb and gives you all names of the functions in
 To setup esp-idf do, 
 ```
 git clone --recursive https://github.com/espressif/esp-idf.git
+```
 
 #  To keep the esp-idf updated, do git pull & git submodule update --recursive
 
@@ -388,7 +389,7 @@ When configuring, choose
 ```
 
 
-##Before the rom patches
+##  Before the rom patches
 Before the rom patches we got this
 ```
 xtensa-softmmu/qemu-system-xtensa -d guest_errors,int,page,unimp  -cpu esp32 -M esp32 -m 4M  -kernel  ~/esp/qemu_esp32/build/app-template.elf    > io.txt 
@@ -402,7 +403,7 @@ The command interpreter is Basic, Here you can read about it
     http://hackaday.com/2016/10/27/basic-interpreter-hidden-in-esp32-silicon/
 
 
-#Debugging tips
+#  Debugging tips
 ```
 If you get an exception like this
 Guru Meditation Error of type StoreProhibited occurred on core   0. Exception was unhandled.
@@ -426,7 +427,7 @@ ets_get_detected_xtal_freq,  0x40008588
 ```
 
 
-#What is some of the problems with this code
+#  What is some of the problems with this code
 Some i/o register name mapping in esp32.c is probably wrong.  The values returned are also many times wrong.
 I did this mapping very quickly with grep to get a better understanding of what the rom was doing.
 ```
@@ -488,7 +489,7 @@ io write 000480b4 18CB18CB RTC_CNTL_STORE5_REG 3ff480b4
 (gdb) finish
 ```
 
-#Dumping the ROM with the main/main.c program
+#  Dumping the ROM with the main/main.c program
 Please use other method (esptool.py), its easier and faster. This is saved for historical reasons and for the screen instructions.
 Set the environment properly. Build the romdump app and flash it.
 Use i.e screen as serial terminal.
@@ -517,7 +518,7 @@ Then you can do the first part
 Those two files will be loaded by qemu and must be in same directory as you start qemu.
 ```
 
-#This is head of qemu development.
+#  This is head of qemu development.
 Not so good for esp32 debugging.
 ```
 git clone git://git.qemu.org/qemu.git
@@ -587,7 +588,7 @@ static HeapRegionTagged_t regions[]={
 
 
 
-#Adding flash qemu emulation.
+#  Adding flash qemu emulation.
 
 
 Here are some functions with the associated io instructions, to help me improve flash emulation.
@@ -818,7 +819,7 @@ io write e0,1   if coreId==1
 
 ```
 
-##Making free_rtos tick.
+##  Making free_rtos tick.
 Good information here,
 https://github.com/espressif/esp-idf/blob/master/components/freertos/readme_xtensa.txt
 
