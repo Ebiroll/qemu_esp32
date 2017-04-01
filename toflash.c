@@ -1,0 +1,89 @@
+#include <stdio.h>
+#include <stdlib.h>
+//
+// qemu_toflash
+// 
+// python /home/olas/esp/esp-idf/components/esptool_py/esptool/esptool.py --chip esp32 --port /dev/ttyUSB0 --baud 115200 --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_freq 40m --flash_size detect 
+// 0x1000  /home/olas/esp/esp-idf/examples/system/ota/build/bootloader/bootloader.bin  
+// 0x10000 /home/olas/esp/esp-idf/examples/system/ota/build/ota.bin 
+// 0x8000 /home/olas/esp/esp-idf/examples/system/ota/build/partitions_two_ota.bin
+//
+
+void merge_flash(char *binfile,char *flashfile,int flash_pos)
+{
+    FILE *fbin;
+    FILE *fflash;
+    unsigned char *tmp_data;
+
+    int file_size=0;
+    int flash_size=0;
+
+    fbin = fopen(binfile, "r");
+    if (fbin == NULL) {
+        printf("   Can't open '%s' for reading.\n", binfile);
+		return;
+	}
+
+    if (fseek(fbin, 0 , SEEK_END) != 0) {
+       /* Handle Error */
+    }
+    file_size = ftell(fbin);
+
+    if (fseek(fbin, 0 , SEEK_SET) != 0) {
+      /* Handle Error */
+    }
+
+    fflash  = fopen(flashfile, "r+");
+    if (fflash == NULL) {
+        printf("   Can't open '%s' for writing.\n", flashfile);
+        return;
+    }
+    if (fseek(fflash, 0 , SEEK_END) != 0) {
+       /* Handle Error */
+    }
+    flash_size = ftell(fflash);
+    rewind(fflash);
+    fseek(fflash,flash_pos,SEEK_SET);
+
+
+    tmp_data=malloc((1+file_size)*sizeof(char));
+
+    if (file_size<=0) {
+      printf("Not able to get file size %s",binfile);
+    }
+
+    int len_read=fread(tmp_data,sizeof(char),file_size,fbin);
+
+    int len_write=fwrite(tmp_data,sizeof(char),file_size,fflash);
+
+    if (len_read!=len_write) {
+      printf("Not able to merge %s",binfile);
+    }
+
+    fclose(fbin);
+
+    if (fseek(fflash, 0x3E8000*4 , SEEK_SET) != 0) {
+    }
+
+    fclose(fflash);
+
+    free(tmp_data);
+}
+
+
+int main(int argc,char *argv[])
+{
+
+    // Overwrites esp32flash.bin file
+    system("dd if=/dev/zero bs=1M count=4  | tr \"\\000\" \"\\377\" >  esp32flash.bin");
+
+    // Add bootloader
+    merge_flash("build/bootloader/bootloader.bin","esp32flash.bin",0x1000);
+    // Add partitions, test OTA here
+    merge_flash("build/partitions_singleapp.bin","esp32flash.bin",0x8000);
+    // Add application
+    merge_flash(argv[1],"esp32flash.bin",0x10000);
+
+    system("cp esp32flash.bin ~/qemu_esp32");
+}
+

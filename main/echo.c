@@ -131,7 +131,7 @@ void echo_application_thread(void *pvParameters)
 		if ((new_sd = accept(sock, (struct sockaddr *)&remote, (socklen_t *)&size)) > 0) {
 			printf("accepted new echo connection\n");
                         echo_param1->new_sd = new_sd;
-			sys_thread_new("echo connexion", process_echo_request,(void*)echo_param1,2*THREAD_STACKSIZE,DEFAULT_THREAD_PRIO);
+			sys_thread_new("echo connection", process_echo_request,(void*)echo_param1,2*THREAD_STACKSIZE,DEFAULT_THREAD_PRIO);
 		}
 	}
 }

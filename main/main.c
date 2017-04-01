@@ -296,7 +296,6 @@ void wifi_task(void *pvParameter) {
     unsigned char hostnum=1;
     char tmpBuff[20];
     // Arpscan network
-#if 0
     while (true) {
 
         sprintf(tmpBuff,"192.168.1.%d",hostnum);
@@ -330,7 +329,6 @@ void wifi_task(void *pvParameter) {
         vTaskDelay(300 / portTICK_PERIOD_MS);
         hostnum++;
     }
-#endif
 }
 
 extern void Task_lwip_init(void * pParam);
@@ -382,21 +380,21 @@ void emulated_net(void *pvParameter) {
     struct eth_addr *cachemac;
 
 
-    netif=netif_find("et0");
+    netif=netif_find("en0");
     if (!netif) {
-        printf("No et0");
+        printf("No en0");
     }
 
-    xTaskCreate(&echo_application_thread, "echo_thread", 2048, NULL, 12, NULL);
+    xTaskCreate(&echo_application_thread, "echo_thread", 2048, NULL, 2, NULL);
 
     unsigned char hostnum=1;
     char tmpBuff[20];
     // Arpscan network
     while (true) {
-#if 0
+#if 1
       // ARP requests
         sprintf(tmpBuff,"192.168.1.%d",hostnum);
-        IP4_ADDR(&scanaddr, 192, 168 , 1, hostnum);
+        IP4_ADDR(&scanaddr, 192, 168 , 4, hostnum);
 
 
         //gpio_set_level(GPIO_NUM_4, level);
@@ -411,7 +409,7 @@ void emulated_net(void *pvParameter) {
 
         level = !level;
 	    //printf(".");
-        vTaskDelay(300 / portTICK_PERIOD_MS);
+        vTaskDelay(10000 / portTICK_PERIOD_MS);
         hostnum++;
         struct netif *chacheif=netif;
         for (int j=0;j<ARP_TABLE_SIZE;j++) {
@@ -588,7 +586,6 @@ void app_main()
     //*unpatch=0x42;
     int *quemu_test=(int *)  0x3ff005f0;
 
-
     esp_log_level_set("*", ESP_LOG_INFO);
     nvs_flash_init();
     dump_mac_with_crc(NULL);
@@ -602,9 +599,10 @@ void app_main()
     //dump_i2c_regs();
     if (*quemu_test==0x42) {
         printf("Running in qemu\n");
-    }
-    else {
-      wifi_task(NULL);
+        xTaskCreate(&emulated_net, "emulated_net", 4096, NULL, 5, NULL); 
+        // emulated_net(NULL);
+    } else {
+        xTaskCreate(&wifi_task,"wifi_task",2048, NULL, 5, NULL);
     }
     dump_regs(NULL);
     //ethernet_main();

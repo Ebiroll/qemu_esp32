@@ -95,32 +95,47 @@ This also works for the original gdb and gives you all names of the functions in
 To setup esp-idf do, 
 ```
 git clone --recursive https://github.com/espressif/esp-idf.git
-#To keep the esp-idf updated, do git pull & git submodule update --recursive
+```
 
+#  To keep the esp-idf updated, do git pull & git submodule update --recursive
+
+
+```
 export PATH=$PATH:$HOME/esp/xtensa-esp32-elf/bin
 export IDF_PATH=~/esp/esp-idf
 ```
 
-#Dumping the ROM0 & ROM1 using esp-idf esptool.py
+
+#  Dumping the ROM0 & ROM1 using esp-idf esptool.py
 ```
 cd ..
 git clone --recursive https://github.com/espressif/esp-idf.git
-# dump_mem ROM0(776KB) to rom.bin
+#  dump_mem ROM0(776KB) to rom.bin
 esp-idf/components/esptool_py/esptool/esptool.py --chip esp32 -b 921600 -p /dev/ttyUSB0 dump_mem 0x40000000 0x000C2000 rom.bin
 
-# dump_mem ROM1(64KB) to rom1.bin
+#  dump_mem ROM1(64KB) to rom1.bin
 esp-idf/components/esptool_py/esptool/esptool.py --chip esp32 -b 921600 -p /dev/ttyUSB0 dump_mem 0x3FF90000 0x00010000 rom1.bin
 
 Note that rom0 is smaller than the actual dump.
 Those two files will be loaded by qemu and must be in same directory as you start qemu.
 ```
 
-#Dumping flash content.
+
+#  Dumping flash content.
 Now there is simple flash emulation in qemu. You need the file  esp32flash.bin to be in the same directory as rom.bin & rom1.bin.
 If no flashfile exists, an empty file will be created.
 ```
 esp/esp-idf/components/esptool_py/esptool/esptool.py --baud 920600 read_flash 0 0x400000  esp32flash.bin
 ```
+Another possibility in order to create a proper flash file is by running the following.
+```
+Double check the toflash.c program as it copies the generated esp32flash.bin file to the directory where we start qemu
+It also assumes partitioning according to partitions_singleapp.bin
+gcc toflash.c -o qemu_flashgcc toflash.c -o qemu_flash
+./qemu_flash build/app-template.bin
+```
+
+
 Currently mmap function are not correctly implemented. 
 The reason for this is that the bootloader will initiate the FLASH_MMU_TABLE
 to something. page 0 must be mapped correctly as it contains the .flash.roadata from the elf file.
@@ -295,7 +310,15 @@ Disassembly of section .text.jump:
    9:	0008e0          callx8	a8
    c:	f01d            retw.n
 ```
-
+#i2c emulation
+Emulation of i2c0 is started but not yet finished. 
+The files involved in the emulation are,
+```
+hw/i2c/i2c_esp32.c
+hw/xtensa/tmpbme280.c
+hw/display/ssd1306.c
+```
+The idea was to emulate a 1306 display over i2c.
 
 #Results
 If you get something like this,
@@ -366,7 +389,7 @@ When configuring, choose
 ```
 
 
-##Before the rom patches
+##  Before the rom patches
 Before the rom patches we got this
 ```
 xtensa-softmmu/qemu-system-xtensa -d guest_errors,int,page,unimp  -cpu esp32 -M esp32 -m 4M  -kernel  ~/esp/qemu_esp32/build/app-template.elf    > io.txt 
@@ -380,7 +403,7 @@ The command interpreter is Basic, Here you can read about it
     http://hackaday.com/2016/10/27/basic-interpreter-hidden-in-esp32-silicon/
 
 
-#Debugging tips
+#  Debugging tips
 ```
 If you get an exception like this
 Guru Meditation Error of type StoreProhibited occurred on core   0. Exception was unhandled.
@@ -404,7 +427,7 @@ ets_get_detected_xtal_freq,  0x40008588
 ```
 
 
-#What is some of the problems with this code
+#  What is some of the problems with this code
 Some i/o register name mapping in esp32.c is probably wrong.  The values returned are also many times wrong.
 I did this mapping very quickly with grep to get a better understanding of what the rom was doing.
 ```
@@ -466,7 +489,7 @@ io write 000480b4 18CB18CB RTC_CNTL_STORE5_REG 3ff480b4
 (gdb) finish
 ```
 
-#Dumping the ROM with the main/main.c program
+#  Dumping the ROM with the main/main.c program
 Please use other method (esptool.py), its easier and faster. This is saved for historical reasons and for the screen instructions.
 Set the environment properly. Build the romdump app and flash it.
 Use i.e screen as serial terminal.
@@ -495,7 +518,7 @@ Then you can do the first part
 Those two files will be loaded by qemu and must be in same directory as you start qemu.
 ```
 
-#This is head of qemu development.
+#  This is head of qemu development.
 Not so good for esp32 debugging.
 ```
 git clone git://git.qemu.org/qemu.git
@@ -565,9 +588,7 @@ static HeapRegionTagged_t regions[]={
 
 
 
-#Adding flash qemu emulation.
-You could probably assemble your own qemu flash file with something like this,
-esptool.py make_image -f app.text.bin -a 0x40100000 -f app.data.bin -a 0x3ffe8000 -f app.rodata.bin -a 0x3ffe8c00 app.flash.bin
+#  Adding flash qemu emulation.
 
 
 Here are some functions with the associated io instructions, to help me improve flash emulation.
@@ -798,7 +819,7 @@ io write e0,1   if coreId==1
 
 ```
 
-##Making free_rtos tick.
+##  Making free_rtos tick.
 Good information here,
 https://github.com/espressif/esp-idf/blob/master/components/freertos/readme_xtensa.txt
 
