@@ -26,7 +26,8 @@ void task_test_SSD1306i2c(void *ignore) {
 
 
 	u8g2_t u8g2; // a structure which will contain all the data for one display
-	u8g2_Setup_ssd1306_128x32_univision_f(
+	
+	u8g2_Setup_ssd1306_128x64_noname_f (
 		&u8g2,
 		U8G2_R0,
 		//u8x8_byte_sw_i2c,
@@ -46,9 +47,11 @@ void task_test_SSD1306i2c(void *ignore) {
 	u8g2_DrawFrame(&u8g2, 0,2,100,6);
 
 	ESP_LOGI(TAG, "u8g2_SetFont");
-    u8g2_SetFont(&u8g2, u8g2_font_ncenB14_tr);
+        u8g2_SetFont(&u8g2, u8g2_font_ncenB14_tr);
 	ESP_LOGI(TAG, "u8g2_DrawStr");
-    u8g2_DrawStr(&u8g2, 2,26,"Hi 1306!");
+        u8g2_DrawStr(&u8g2, 2,35,"Hi 1306!");
+	u8g2_DrawCircle(&u8g2,60,50,10,U8G2_DRAW_ALL);
+	
 	ESP_LOGI(TAG, "u8g2_SendBuffer");
 	u8g2_SendBuffer(&u8g2);
 

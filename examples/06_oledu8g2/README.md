@@ -1,4 +1,45 @@
-#This example runs on hardware but fails in qemu like this.
+#Use of U8G2 library with ssd1306
+This example runs on hardware and can also run in qemu if I2C_MASTER_NUM is set to I2C_MASTER_NUM I2C_NUM_0
+
+Olikraus now also has hw i2c for SSD 1306
+https://github.com/olikraus/u8g2/commit/b9b3a65c4f2b4e25adf3bd53bd4ada1a29499072
+This code might have to be reworked.
+
+```
+(qemu)  00000000 to memory, 3F400000
+TRYING to MAP esp32flash.bin
+MAPPED esp32flash.bin
+ets Jun  8 2016 00:22:57
+
+rst:0x10 (RTCWDT_RTC_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+[0;32mI (0) cpu_start: Pro cpu up.[0m
+[0;32mI (0) cpu_start: Single core mode[0m
+[0;32mI (1) heap_alloc_caps: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (1) heap_alloc_caps: At 3FFAE2A0 len 00001D60 (7 KiB): DRAM[0m
+[0;32mI (1) heap_alloc_caps: At 3FFB2290 len 0002DD70 (183 KiB): DRAM[0m
+[0;32mI (1) heap_alloc_caps: At 3FFE0440 len 00003BC0 (14 KiB): D/IRAM[0m
+[0;32mI (2) heap_alloc_caps: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (2) heap_alloc_caps: At 400895FC len 00016A04 (90 KiB): IRAM[0m
+[0;32mI (2) cpu_start: Pro cpu start user code[0m
+[0;32mI (4) cpu_start: Starting scheduler on PRO CPU.[0m
+[0;32mI (5) ssd1306: u8g2_InitDisplay[0m
+[0;32mI (5) u8g2_hal: sda_io_num 21[0m
+[0;32mI (5) u8g2_hal: scl_io_num 22[0m
+[0;32mI (5) u8g2_hal: clk_speed 50000[0m
+[0;32mI (5) u8g2_hal: i2c_param_config 1[0m
+[0;32mI (5) u8g2_hal: i2c_driver_install 0[0m
+i2c apb write 1301c,78 
+i2c apb write 1301c,0 
+i2c apb write 1301c,ae 
+i2c apb write 1301c,78 
+i2c apb write 1301c,0 
+i2c apb write 1301c,d5 
+i2c apb write 1301c,78 
+i2c apb write 1301c,0 
+..etc
+
+```
+
 
 
 ```
