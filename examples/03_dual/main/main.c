@@ -75,7 +75,7 @@ uint32_t delta[MAX_TEST];
 bool g_my_app_init_done=false;
 
 
-
+#if 0
 void IRAM_ATTR start_cpu1(void)
 {
     int i;
@@ -116,7 +116,7 @@ void IRAM_ATTR start_cpu1(void)
       }
    }
 }
-
+#endif
 
 
 typedef struct taskParam {
@@ -195,7 +195,7 @@ void app_main()
 {
     int i=0;
     // Cannot initialize flash as it uses ipc between cores.
-    //nvs_flash_init();
+    nvs_flash_init();
     g_my_app_init_done=true;
     
     printf("starting\n");
