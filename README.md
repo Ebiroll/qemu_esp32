@@ -393,6 +393,8 @@ When configuring, choose
       [ ] Initialize PHY in startup code  
 
 ```
+However, it might not be necessary to run o only first core anymore.
+This patch seems to do the trick. https://github.com/espressif/esp-idf/commit/47b8f78cb0e15fa43647788a808dac353167a485
 
 
 ##  Before the rom patches
@@ -524,32 +526,21 @@ Then you can do the first part
 Those two files will be loaded by qemu and must be in same directory as you start qemu.
 ```
 
-#  This is head of qemu development.
-Not so good for esp32 debugging.
+#This is head of qemu development.
+Now it also works for esp32 debugging. (2.9.0)
 ```
 git clone git://git.qemu.org/qemu.git
 
 cd qemu
-git submodule update --init dtc
+This is probably no longer necessary. git submodule update --init dtc
 ```
 
-The instruction wsr.memctl does not work in QEMU but can be patched like this (in qemu tree).
-File translate.c, This is only needed for the qemu in the current directory
-```
-static bool gen_check_sr(DisasContext *dc, uint32_t sr, unsigned access)
-{
-    if (!xtensa_option_bits_enabled(dc->config, sregnames[sr].opt_bits)) {
-        if (sregnames[sr].name) {
-            qemu_log_mask(LOG_GUEST_ERROR, "SR %s is not configured\n", sregnames[sr].name);
-        } else {
-            qemu_log_mask(LOG_UNIMP, "SR %d %s is not implemented\n", sr);
-        }
-        //gen_exception_cause(dc, ILLEGAL_INSTRUCTION_CAUSE);
 ```
 
-A better version for qemu exists here https://github.com/OSLL/qemu-xtensa,
+Another version for qemu exists here https://github.com/OSLL/qemu-xtensa,
 
 ```
+However I think the important stuff has been mereged into HEA of qemu.
 git clone https://github.com/OSLL/qemu-xtensa -b  xtensa-esp32 
 but requires that you run a patched gdb to run gdb with qemu. If not you will get Remote 'g' packet reply is too long:
 The key to using the original gdb, is to set num_regs = 104, in core-esp32.c 
@@ -568,10 +559,17 @@ in qemu source tree, manually add to makefiles:
 ```
 hw/xtensa/Makefile.objs
   obj-y += esp32.o
+  obj-y += MemoryMapped.o
 
-target-xtensa/Makefile.objs
+target/xtensa/Makefile.objs
   obj-y += core-esp32.o
 ```
+
+If running qemu head (2.9.0) make sure to disable this. from the esp32 options
+```
+[ ] Make exception and panic handlers JTAG/OCD aware       
+```
+
 
 Interesting info. To be investigated. 
 ```
@@ -787,7 +785,7 @@ I (97141) rtc: XTAL 40M
 I (97142) cpu_start: Starting scheduler on PRO CPU.
 I (68253) cpu_start: Starting scheduler on APP CPU.
 
-There seems to be some problem with the scheduling and probably some other error as well.
+There used to be some problem with the scheduling and probably some other error as well.
 When calling nvs_flash_init() qemu always hangs here,
 
 (gdb) info threads
@@ -801,6 +799,10 @@ This was added to call_start_cpu0(),cpu_start.c for the extra user code start in
     void  *user_code_start =(void *) test;
     ESP_EARLY_LOGI(TAG, "Starting app cpu, user_code_start is %p", user_code_start);
 ```
+This seems fixed now,
+https://github.com/espressif/esp-idf/commit/47b8f78cb0e15fa43647788a808dac353167a485
+You should be able to run on two cores.
+
 
 This could probably also be emulated better,
 ```
