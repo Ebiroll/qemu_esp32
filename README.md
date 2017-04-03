@@ -526,7 +526,7 @@ Then you can do the first part
 Those two files will be loaded by qemu and must be in same directory as you start qemu.
 ```
 
-#This is head of qemu development.
+#  This is head of qemu development.
 Now it also works for esp32 debugging. (2.9.0)
 ```
 git clone git://git.qemu.org/qemu.git
@@ -535,7 +535,6 @@ cd qemu
 This is probably no longer necessary. git submodule update --init dtc
 ```
 
-```
 
 Another version for qemu exists here https://github.com/OSLL/qemu-xtensa,
 
