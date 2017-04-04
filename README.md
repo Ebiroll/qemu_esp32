@@ -316,7 +316,7 @@ Disassembly of section .text.jump:
    9:	0008e0          callx8	a8
    c:	f01d            retw.n
 ```
-#i2c emulation
+# i2c emulation
 Emulation of i2c0 is started but not yet finished. 
 The files involved in the emulation are,
 ```
@@ -325,8 +325,10 @@ hw/xtensa/tmpbme280.c
 hw/display/ssd1306.c
 ```
 The idea was to emulate a 1306 display over i2c.
+Not quite there yet, but fun with visual feedback
+[[https://raw.githubusercontent.com/Ebiroll/qemu_esp32/master/img/1306.jpg]]
 
-#Results
+# Results
 If you get something like this,
 ```
 Illegal entry instruction(pc = 40080a4c), PS = 0000001f
@@ -437,7 +439,7 @@ ets_get_detected_xtal_freq,  0x40008588
 
 #  What is some of the problems with this code
 Some i/o register name mapping in esp32.c is probably wrong.  The values returned are also many times wrong.
-I did this mapping very quickly with grep to get a better understanding of what the rom was doing.
+I did this mapping very quickly with grep to get a better understanding of what the rom was doing. I have made the emulation based on what the code expects, should have done more by reading the document.
 ```
 Terminal 1
 >xtensa-softmmu/qemu-system-xtensa -d guest_errors,int,mmu,page,unimp  -cpu esp32 -M esp32 -m 4M  -kernel  ~/esp/qemu_esp32/build/app-template.elf   -S -s
