@@ -5,6 +5,9 @@ Olikraus now also has hw i2c for SSD 1306
 https://github.com/olikraus/u8g2/commit/b9b3a65c4f2b4e25adf3bd53bd4ada1a29499072
 This code might have to be reworked.
 
+
+[(!image)https://raw.githubusercontent.com/Ebiroll/qemu_esp32/master/img/1306.jpg]
+
 ```
 (qemu)  00000000 to memory, 3F400000
 TRYING to MAP esp32flash.bin
