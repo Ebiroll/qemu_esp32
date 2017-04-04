@@ -65,11 +65,11 @@ static const uint8_t SCL = 22;
 
 
 void simpleTest() {
-   uint32_t frequency=100000;
+   uint32_t frequency=50000;
    uint8_t i2cnum=0;
    uint8_t test_num;
 
-   i2c_t *i2c = i2cInit(i2cnum, 0 /*0x78*/, false);
+   i2c_t *i2c = i2cInit(i2cnum, 0 /* 0==master */, false);
    set_i2c(i2c);
    i2cSetFrequency(i2c,frequency);
    i2cAttachSCL(i2c,SCL);

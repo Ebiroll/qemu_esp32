@@ -19,11 +19,14 @@
 extern "C" {
 #endif
 
+#include "freertos/FreeRTOS.h"
+#include <sys/lock.h>
+#include "freertos/semphr.h"
 #include <stdint.h>
 #include <stdbool.h>
 #include "soc/i2c_struct.h"
 
-#define CONFIG_DISABLE_HAL_LOCKS 1
+//#define CONFIG_DISABLE_HAL_LOCKS 1
 
 
 typedef enum {
