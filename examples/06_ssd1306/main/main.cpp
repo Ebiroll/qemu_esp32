@@ -11,9 +11,14 @@
 #include <iostream>
 using namespace std;
 
-OLED oled = OLED(GPIO_NUM_19, GPIO_NUM_22, SSD1306_128x64);
+#include "test.h"
+
+//
 
 void myTask(void *pvParameters) {
+
+    OLED oled = OLED(GPIO_NUM_21, GPIO_NUM_22, SSD1306_128x64);
+
 	adc1_config_width(ADC_WIDTH_12Bit);
 	adc1_config_channel_atten(ADC1_CHANNEL_4, ADC_ATTEN_0db);
 
@@ -55,12 +60,45 @@ void myTask(void *pvParameters) {
 
 }
 
+static const uint8_t SDA = 21;
+static const uint8_t SCL = 22;
+
+
+void simpleTest() {
+   uint32_t frequency=100000;
+   uint8_t i2cnum=0;
+   uint8_t test_num;
+
+   i2c_t *i2c = i2cInit(i2cnum, 0 /*0x78*/, false);
+   set_i2c(i2c);
+   i2cSetFrequency(i2c,frequency);
+   i2cAttachSCL(i2c,SCL);
+   i2cAttachSDA(i2c,SDA);
+   // TODO!! Handle this in qemu
+   i2cInitFix(i2c);
+
+   Initial();
+   Display_Chess(0xAA);
+   vTaskDelay(4000 / portTICK_PERIOD_MS);
+
+
+   for(test_num=0;test_num<100;test_num++) {
+	 display_three_numbers(test_num);
+	 vTaskDelay(500 / portTICK_PERIOD_MS);
+   }
+
+}
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 void app_main() {
 
-	oled = OLED(GPIO_NUM_19, GPIO_NUM_22, SSD1306_128x64);
+
+  simpleTest();
+  #if 0
+	oled = OLED(GPIO_NUM_21, GPIO_NUM_22, SSD1306_128x64);
 	if (oled.init()) {
 		ESP_LOGI("OLED", "oled inited");
 //		oled.draw_rectangle(10, 30, 20, 20, WHITE);
@@ -80,6 +118,7 @@ void app_main() {
 	} else {
 		ESP_LOGE("OLED", "oled init failed");
 	}
+	#endif
 }
 #ifdef __cplusplus
 }
