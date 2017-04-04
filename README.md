@@ -326,7 +326,7 @@ hw/display/ssd1306.c
 ```
 The idea was to emulate a 1306 display over i2c.
 Not quite there yet, but fun with visual feedback
- [[https://raw.githubusercontent.com/Ebiroll/qemu_esp32/master/img/1306.jpg|alt=octocat]image]
+[[https://github.com/Ebiroll/qemu_esp32/blob/master/img/1306.jpg|alt=octocat]]
 
 # Results
 If you get something like this,
