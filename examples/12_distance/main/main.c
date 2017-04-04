@@ -149,7 +149,7 @@ void init_SSD1306i2c() {
 	u8g2_esp32_hal_init(u8g2_esp32_hal);
 
 
-	u8g2_Setup_ssd1306_128x32_univision_f(
+	u8g2_Setup_ssd1306_128x64_noname_f(
 		&u8g2,
 		U8G2_R0,
 		//u8x8_byte_sw_i2c,
@@ -169,9 +169,9 @@ void init_SSD1306i2c() {
 	u8g2_DrawFrame(&u8g2, 0,2,100,6);
 
 	ESP_LOGI(TAG, "u8g2_SetFont");
-    u8g2_SetFont(&u8g2, u8g2_font_ncenB14_tr);
+    u8g2_SetFont(&u8g2, u8g2_font_ncenB24_tr);
 	ESP_LOGI(TAG, "u8g2_DrawStr");
-    u8g2_DrawStr(&u8g2, 2,26,"Hej Alla!");
+    u8g2_DrawStr(&u8g2, 2,55,"Hej Alla!");
 	ESP_LOGI(TAG, "u8g2_SendBuffer");
 	u8g2_SendBuffer(&u8g2);
 
@@ -191,9 +191,9 @@ void display_Avg() {
     sprintf(Buff,"%.2f cm", avg_distance * 100);
 
 	ESP_LOGI(TAG, "u8g2_SetFont");
-    u8g2_SetFont(&u8g2, u8g2_font_ncenB14_tr);
+    u8g2_SetFont(&u8g2, u8g2_font_ncenB18_tf);
 	ESP_LOGI(TAG, "u8g2_DrawStr");
-    u8g2_DrawStr(&u8g2, 2,26,Buff);
+    u8g2_DrawStr(&u8g2, 2,55,Buff);
 	ESP_LOGI(TAG, "u8g2_SendBuffer");
 	u8g2_SendBuffer(&u8g2);
 
