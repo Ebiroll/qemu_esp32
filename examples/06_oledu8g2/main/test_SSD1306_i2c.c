@@ -49,8 +49,10 @@ void task_test_SSD1306i2c(void *ignore) {
 	ESP_LOGI(TAG, "u8g2_SetFont");
         u8g2_SetFont(&u8g2, u8g2_font_ncenB14_tr);
 	ESP_LOGI(TAG, "u8g2_DrawStr");
-        u8g2_DrawStr(&u8g2, 2,35,"Hi 1306!");
-	u8g2_DrawCircle(&u8g2,60,50,10,U8G2_DRAW_ALL);
+        u8g2_DrawStr(&u8g2, 0,35,"Hi 1306!");
+	u8g2_DrawCircle(&u8g2,20,40,10,U8G2_DRAW_ALL);
+
+	u8g2_DrawCircle(&u8g2,20,50,10,U8G2_DRAW_ALL);
 	
 	ESP_LOGI(TAG, "u8g2_SendBuffer");
 	u8g2_SendBuffer(&u8g2);
