@@ -1047,7 +1047,7 @@ This rom.elf also works with the original gdb with panic handler gdbstub.
        (gdb) b app_main
 ```
 
-##.gdbinit freertos_show_threads 
+##  .gdbinit freertos_show_threads 
 The .gdbinit file contains code to list all tasks, freertos_show_threads 
 It will list all the tasks, 
   hande,name,core,stack,stack_usage
