@@ -241,13 +241,15 @@ void setup_drawdemo() {
   delay(2000);
   display.clear();
 
-  for(j=0;j<64;j++)
+  for(j=0;j<500;j++)
   {
-    delay(10);
+    delay(20);
     drawProgressBarDemo(j);
   }
 
   delay(500);
+  display.clear();
+
 
   drawLines();
   delay(1000);
