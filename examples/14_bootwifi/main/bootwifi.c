@@ -509,3 +509,18 @@ void bootWiFi(bootwifi_callback_t callback) {
 
 	ESP_LOGD(tag, "<< bootWiFi");
 } // bootWiFi
+
+
+//typedef void (*bootwifi_callback_t)(int rc);
+
+void my_callback(int rc) {
+  printf("Congrats, You have bootstrapped to the wifi network");
+}
+
+// Use this with your own app
+void app_main(void)
+{
+   bootWiFi(my_callback);
+   
+
+}

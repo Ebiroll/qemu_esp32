@@ -2,6 +2,31 @@
 Originally from here.
 https://github.com/nkolban/esp32-snippets
 
+Relys on [Cesanta](https://www.cesanta.com/)
+
+
+
+1. In your project directory, create a components directory.
+2. In the components directory, clone Mongoose:
+git clone https://github.com/cesanta/mongoose.git
+3. In the new Mongoose directory, create a component.mk file containing:
+COMPONENT_ADD_INCLUDEDIRS=.
+COMPONENT_SRCDIRS:=.
+4. Compile your solution.
+
+  mkdir components
+  cd components
+  git clone https://github.com/cesanta/mongoose.git
+  echo "COMPONENT_ADD_INCLUDEDIRS=.\
+        COMPONENT_SRCDIRS:=."  > component.mk
+  
+
+# To run with qemu
+Patch main/bootwifi.c
+
+xtensa-softmmu/qemu-system-xtensa -d unimp,guest_errors  -cpu esp32 -M esp32 -m 4M -kernel  ~/esp/qemu_esp32/examples/14_bootwifi/build/bootwifi.elf  -net nic,model=vlan0 -net user,id=simnet,net=192.168.1.0/24,host=192.168.1.40,hostfwd=tcp::10080-192.168.1.3:80  -net dump,file=/tmp/vm0.pcap  -s  -S   > io.txt  
+ 
+
 It is common to want to start an ESP32 and have it connect to a WiFi environment but how
 does one bootstrap it?  To connect to a WiFi environment, we typically need to know the
 SSID and password of the network to which we wish to connect.  But without network connection
