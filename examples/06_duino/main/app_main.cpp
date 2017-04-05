@@ -204,7 +204,7 @@ extern "C" void app_main()
     nvs_flash_init();
 
 
-    i2c_init();
+    //i2c_init();
     
 	xTaskCreatePinnedToCore(&setup_task, "setup_task", 8048, NULL, 5, NULL, 0);
 
