@@ -24,6 +24,7 @@
  *
  */
 
+
  // Include the correct display library
  // For a connection via I2C using Wire include
  #include <Wire.h>  // Only needed for Arduino 1.6.5 and earlier
@@ -60,6 +61,10 @@
  // Initialize the OLED display using Wire library
  // The real Duino uses SDA=5 SCLK=4
 // SSD1306  display(0x3c, 5, 4);
+#include "images.h"
+
+
+
 SSD1306  display(0x3c, 21, 22);
  // SH1106 display(0x3c, D3, D5);
 
@@ -200,12 +205,49 @@ void printBuffer(void) {
   }
 }
 
+
+
+void drawProgressBarDemo(int counter) {
+  int progress = (counter / 5) % 100;
+  // draw the progress bar
+  display.drawProgressBar(0, 32, 120, 10, progress);
+
+  // draw the percentage as String
+  display.setTextAlignment(TEXT_ALIGN_CENTER);
+  display.drawString(64, 15, String(progress) + "%");
+  display.display();
+}
+
+
+void drawImageDemo() {
+    // see http://blog.squix.org/2015/05/esp8266-nodemcu-how-to-create-xbm.html
+    // on how to create xbm files
+    display.drawXbm(34, 14, WiFi_Logo_width, WiFi_Logo_height, WiFi_Logo_bits);
+    display.display();
+}
+
 void setup_drawdemo() {
+  int j;
   display.init();
 
   display.flipScreenVertically();
 
   display.setContrast(255);
+
+  display.clear();
+  delay(10);
+
+  drawImageDemo();
+  delay(2000);
+  display.clear();
+
+  for(j=0;j<64;j++)
+  {
+    delay(10);
+    drawProgressBarDemo(j);
+  }
+
+  delay(500);
 
   drawLines();
   delay(1000);

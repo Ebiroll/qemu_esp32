@@ -193,9 +193,16 @@ static void initialise_wifi(void)
 
 extern void setup_drawdemo();
 
+extern void ui_setup();
+
+extern void ui_loop();
 
 void setup_task(void *ignore) {
     setup_drawdemo();
+    ui_setup();
+    for(;;) {
+        ui_loop();
+    }
 }
 
 extern "C" void app_main()
