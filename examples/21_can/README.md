@@ -3,6 +3,8 @@ Hardware should be SJA1000 compatible.
 
 https://www.nxp.com/documents/data_sheet/SJA1000.pdf
 
+Does not currently run in qemu, due to floats/doubles???
+
 # ESP32-CAN-Driver
 CAN driver project for the Espressif ESP32
 

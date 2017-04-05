@@ -50,6 +50,7 @@ The goal was to run the app-template.elf and connect the debugger to qemu to all
 ```
 [*] Run FreeRTOS only on first core,    
 [ ] Initialize PHY in startup code
+[ ] Make exception and panic handlers JTAG/OCD aware       
 
 Optimization level (Debug) 
 Not sure if this is necessary,
@@ -103,7 +104,8 @@ To setup esp-idf do,
 git clone --recursive https://github.com/espressif/esp-idf.git
 ```
 
-#  To keep the esp-idf updated, do git pull & git submodule update --recursive
+#  To keep the esp-idf updated  
+  git pull & git submodule update --recursive
 
 
 ```
@@ -268,7 +270,7 @@ Setting programcounter (pc) to a function,
 
 ```
 
-#Objdump
+#  Objdump
 Dump mixed source/disassemply listing,
 ```
 xtensa-esp32-elf-objdump -d -S build/bootloader/bootloader.elf
@@ -845,7 +847,7 @@ xTaskIncrementTick function.
 [More about the boot of the romdumps](./BOOT.md)
 
 
-##Patched gdb,
+##  Patched gdb,
 In the bin directory there is an improved gdb version. The following patch was applied,
 https://github.com/jcmvbkbc/xtensa-toolchain-build/blob/master/fixup-gdb.sh
 To use it properly you must increase the num_regs = 104 to i.e. 172 in core-esp32.c
@@ -894,7 +896,7 @@ However the work is not yet finished.
 
 ```  
 
-#Qemu backend network options:
+# Qemu backend network options:
 ```  
     -netdev user,id=str[,ipv4[=on|off]][,net=addr[/mask]][,host=addr]
          [,ipv6[=on|off]][,ipv6-net=addr[/int]][,ipv6-host=addr]
@@ -1077,7 +1079,7 @@ $6 = 0x800820a2
 ```
 
 
-#The ESP32 memory layout
+# The ESP32 memory layout
 
 The MMU will map flash data/instruction to the processors depending on how these are set.
 ```
@@ -1105,7 +1107,7 @@ contents of the flash file at location 0x20000-0x30000 will be mapped to virtual
 I think that from BLOCK50 and up  memory is mapped as instructions. BLOCK0-49 is data.
 
 ```
-#Flash layout single app (subject to change)
+# Flash layout single app (subject to change)
 ```
 
 Offset, length,    name  ,  data  
