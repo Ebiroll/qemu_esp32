@@ -209,6 +209,8 @@ void printBuffer(void) {
 
 void drawProgressBarDemo(int counter) {
   int progress = (counter / 5) % 100;
+  display.clear();
+
   // draw the progress bar
   display.drawProgressBar(0, 32, 120, 10, progress);
 
@@ -243,8 +245,9 @@ void setup_drawdemo() {
 
   for(j=0;j<500;j++)
   {
-    delay(20);
     drawProgressBarDemo(j);
+    delay(20);
+
   }
 
   delay(500);
