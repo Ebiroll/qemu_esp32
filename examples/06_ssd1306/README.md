@@ -1,8 +1,8 @@
 #ESP32 I2C OLED SSD1306 library for esp-idf
 
-Note that this does not work! USE at own risk.
-It is highly experimental to develop and debug qemu ssd1306 driver.
-Does not run on actual hardware.
+
+This driver is highly experimental to develop and debug qemu ssd1306 driver.
+Does run on hardware.
 
 This is a library of i2c oled ssd1306 for [esp-idf](https://github.com/espressif/esp-idf).
 

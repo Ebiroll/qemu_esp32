@@ -24,6 +24,7 @@ void task_test_SSD1306i2c(void *ignore) {
 	u8g2_esp32_hal.scl  = PIN_SCL;
 	u8g2_esp32_hal_init(u8g2_esp32_hal);
 
+	int i;
 
 	u8g2_t u8g2; // a structure which will contain all the data for one display
 	
@@ -47,13 +48,25 @@ void task_test_SSD1306i2c(void *ignore) {
 	u8g2_DrawFrame(&u8g2, 0,2,100,6);
 
 	ESP_LOGI(TAG, "u8g2_SetFont");
-        u8g2_SetFont(&u8g2, u8g2_font_ncenB14_tr);
+    u8g2_SetFont(&u8g2, u8g2_font_ncenB14_tr);
 	ESP_LOGI(TAG, "u8g2_DrawStr");
-        u8g2_DrawStr(&u8g2, 0,35,"Hi 1306!");
+    u8g2_DrawStr(&u8g2, 0,35,"Hi 1306!");
 	u8g2_DrawCircle(&u8g2,20,40,10,U8G2_DRAW_ALL);
 
 	u8g2_DrawCircle(&u8g2,20,50,10,U8G2_DRAW_ALL);
-	
+	/*
+	for (i=0;i<64;i+=6) {
+  	    u8g2_DrawLine(&u8g2,0,i,128,i);
+		
+	}
+
+	for (i=0;i<128;i+=6) {
+  	    u8g2_DrawLine(&u8g2,i,0,i,64);
+		
+	}
+*/
+
+
 	ESP_LOGI(TAG, "u8g2_SendBuffer");
 	u8g2_SendBuffer(&u8g2);
 

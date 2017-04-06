@@ -237,18 +237,11 @@ void setup_drawdemo() {
   display.setContrast(255);
 
   display.clear();
-  delay(10);
 
   drawImageDemo();
   delay(2000);
   display.clear();
 
-  for(j=0;j<500;j++)
-  {
-    drawProgressBarDemo(j);
-    delay(20);
-
-  }
 
   delay(500);
   display.clear();
@@ -265,6 +258,16 @@ void setup_drawdemo() {
   fillRect();
   delay(1000);
   display.clear();
+
+
+  for(j=0;j<500;j++)
+  {
+    drawProgressBarDemo(j);
+    delay(20);
+
+  }
+
+
 
   drawCircle();
   delay(1000);

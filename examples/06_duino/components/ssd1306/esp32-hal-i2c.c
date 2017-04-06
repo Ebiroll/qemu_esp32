@@ -269,6 +269,7 @@ void i2cSetCmd(i2c_t * i2c, uint8_t index, uint8_t op_code, uint8_t byte_num, bo
 
 void i2cResetCmd(i2c_t * i2c){
     int i;
+    // This should not be necessary
     for(i=0;i<16;i++){
         i2c->dev->command[i].val = 0;
     }
@@ -340,28 +341,28 @@ i2c_err_t i2cWrite(i2c_t * i2c, uint16_t address, bool addr_10bit, uint8_t * dat
         while(1) {
             //have been looping for too long
             if((millis() - startAt)>50){
-                //log_e("Timeout! Addr: %x", address >> 1);
+                printf("Timeout! Addr: %x", address >> 1);
                 I2C_MUTEX_UNLOCK();
                 return I2C_ERROR_BUS;
             }
 
             //Bus failed (maybe check for this while waiting?
             if(i2c->dev->int_raw.arbitration_lost) {
-                //log_e("Bus Fail! Addr: %x", address >> 1);
+                printf("Bus Fail! Addr: %x", address >> 1);
                 I2C_MUTEX_UNLOCK();
                 return I2C_ERROR_BUS;
             }
 
             //Bus timeout
             if(i2c->dev->int_raw.time_out) {
-                //log_e("Bus Timeout! Addr: %x", address >> 1);
+                printf("Bus Timeout! Addr: %x", address >> 1);
                 I2C_MUTEX_UNLOCK();
                 return I2C_ERROR_TIMEOUT;
             }
 
             //Transmission did not finish and ACK_ERR is set
             if(i2c->dev->int_raw.ack_err) {
-                //log_w("Ack Error! Addr: %x", address >> 1);
+                printf("Ack Error! Addr: %x", address >> 1);
                 while(i2c->dev->status_reg.bus_busy);
                 I2C_MUTEX_UNLOCK();
                 return I2C_ERROR_ACK;
@@ -587,6 +588,6 @@ void i2cInitFix(i2c_t * i2c){
     i2cSetCmd(i2c, 1, I2C_CMD_WRITE, 1, false, false, false);
     i2cSetCmd(i2c, 2, I2C_CMD_STOP, 0, false, false, false);
     i2c->dev->ctr.trans_start = 1;
-    //while(!i2c->dev->command[2].done);
+    while(!i2c->dev->command[2].done);
     I2C_MUTEX_UNLOCK();
 }

@@ -213,7 +213,7 @@ extern "C" void app_main()
 
     //i2c_init();
     
-	xTaskCreatePinnedToCore(&setup_task, "setup_task", 8048, NULL, 5, NULL, 0);
+	xTaskCreatePinnedToCore(&setup_task, "setup_task", 9216, NULL, 5, NULL, 0);
 
 
 }

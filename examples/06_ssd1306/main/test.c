@@ -52,12 +52,10 @@ void Start(void)
 void Stop(void)
 {
 	i2cSetCmd(my_i2c, 1, I2C_CMD_WRITE, bytes_in_fifo, false, false, true);
+    i2cSetCmd(my_i2c, 2, I2C_CMD_STOP, 0, false, false, false);
 
 
     my_i2c->dev->ctr.trans_start = 1;
-
-    i2cSetCmd(my_i2c, 2, I2C_CMD_STOP, 0, false, false, false);
-
 	bytes_in_fifo=0;
 
 
@@ -72,12 +70,6 @@ void Stop(void)
 	}
 
 
-	//if(dataLen || !sendStop) {
-    //        i2cSetCmd(my_i2c, 2, I2C_CMD_END, 0, false, false, false);
-    //} else if(sendStop) {
-    //        i2cSetCmd(my_i2c, 2, I2C_CMD_STOP, 0, false, false, false);
-    //}
-
 }
 
 // Stop condition
@@ -88,6 +80,7 @@ void SentByte(unsigned char data)
    {
 	   	printf("i2c sending more than 32 bytes!\n");
 	   	i2cSetCmd(my_i2c, 1, I2C_CMD_WRITE, bytes_in_fifo, false, false, true);
+        i2cSetCmd(my_i2c, 2, I2C_CMD_END, 0, false, false, false);
 
         //START Transmission
         my_i2c->dev->ctr.trans_start = 1;
@@ -152,11 +145,11 @@ void Write_number(unsigned char *n,unsigned char k,unsigned char station_dot)
         Start();
         SentByte(Write_Address);
         SentByte(0x40);
-	for(i=0;i<8;i++)
+	  for(i=0;i<8;i++)
 	  {
 	    SentByte(*(n+16*k+i));
 	  }
-        Stop();
+      Stop();
 				
 
 	Set_Page_Address(Start_page+1)	;
@@ -208,15 +201,16 @@ void Initial(void)
 
 	SentByte(0x80);
 	SentByte(0x80);//--set divide ratio
-
 	SentByte(0x80);
 	SentByte(0xa8);//--set multiplex ratio(1 to 64)
 
-    Stop();
-	Start();
-
 	SentByte(0x80);
 	SentByte(0x3f);//--1/64 duty
+
+    Stop();
+	Start();
+	SentByte(Write_Address);
+
 
 	SentByte(0x80);
 	SentByte(0xd3);//-set display offset
@@ -233,6 +227,10 @@ void Initial(void)
 	SentByte(0x80);
 	SentByte(0x40);//--set start line address
 
+    Stop();
+	Start();
+	SentByte(Write_Address);
+
 	SentByte(0x80);
 	SentByte(0xa6);//--set normal display
 
@@ -247,6 +245,7 @@ void Initial(void)
 
     Stop();
 	Start();
+	SentByte(Write_Address);
 
 	SentByte(0x80);
 	SentByte(0xda);//--set com pins hardware configuration
@@ -260,6 +259,10 @@ void Initial(void)
 	SentByte(0x80);
 	SentByte(Contrast_level);
 
+    Stop();
+	Start();
+	SentByte(Write_Address);
+
 	SentByte(0x80);
 	SentByte(0xd9);//--set pre-charge period
 
@@ -272,10 +275,22 @@ void Initial(void)
 	SentByte(0x80);
 	SentByte(0x40);
 
+    Stop();
+
+	Start();
+	SentByte(Write_Address);
 	SentByte(0x80);
 	SentByte(0xaf);//--turn on oled panel
-
  	Stop();
+
+	// Turn on twice..
+	Start();
+	SentByte(Write_Address);
+	SentByte(0x80);
+	SentByte(0xaf);//--turn on oled panel
+ 	Stop();
+
+
 }
 
 void Display_Chess(unsigned char value)
@@ -284,20 +299,22 @@ void Display_Chess(unsigned char value)
     for(i=0;i<0x08;i++)
 	{
 		Set_Page_Address(i);
-
-                Set_Column_Address(0x00);
+        Set_Column_Address(0x00);
 		
-		Start();
-		SentByte(Write_Address);
-		SentByte(0x40);
 		for(j=0;j<0x10;j++)
-		{
+		{		
+			Start();
+		    SentByte(Write_Address);
+		    SentByte(0x40);
+
+
 		    for(k=0;k<0x04;k++)
 				SentByte(value);
 		    for(k=0;k<0x04;k++)
 				SentByte(~value);
+
+			Stop();		
 		}
-		 	Stop();
 	}
     return;
 }

@@ -78,7 +78,7 @@ void simpleTest() {
    i2cInitFix(i2c);
 
    Initial();
-   Display_Chess(0xAA);
+   Display_Chess(0xFF);
    vTaskDelay(4000 / portTICK_PERIOD_MS);
 
 
