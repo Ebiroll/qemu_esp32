@@ -17,8 +17,9 @@ COMPONENT_SRCDIRS:=.
   mkdir components
   cd components
   git clone https://github.com/cesanta/mongoose.git
-  echo "COMPONENT_ADD_INCLUDEDIRS=.\
-        COMPONENT_SRCDIRS:=."  > component.mk
+  cd mongoose
+  echo "COMPONENT_ADD_INCLUDEDIRS=." > component.mk
+  echo "COMPONENT_SRCDIRS:=."       >> component.mk
   
 
 # To run with qemu
