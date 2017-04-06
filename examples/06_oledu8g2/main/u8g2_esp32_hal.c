@@ -134,7 +134,7 @@ uint8_t u8g2_esp32_msg_i2c_cb(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void *
 			if (arg_int==1) {
 				cmddata=0x80;
 				ESP_ERROR_CHECK(i2c_master_write(cmd, &cmddata, 1, ACK_CHECK_EN));
-//				   printf("0x%02X ",zerodata);
+				   printf("master-write 0x%02X ",cmddata);
 			} else {
 				cmddata=0x40;
 				ESP_ERROR_CHECK(i2c_master_write(cmd, &cmddata, 1, ACK_CHECK_EN));
@@ -145,11 +145,11 @@ uint8_t u8g2_esp32_msg_i2c_cb(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void *
 
 		    while( arg_int > 0 ) {
 			   ESP_ERROR_CHECK(i2c_master_write_byte(cmd, *data, ACK_CHECK_EN));
-//			   printf("0x%02X ",*data);
+			   printf("0x%02X ",*data);
 			   data++;
 			   arg_int--;
 		    }
-//			printf("\n");
+			printf("\n");
 
 			ESP_ERROR_CHECK(i2c_master_stop(cmd));
 //			ESP_LOGI(TAG, "i2c_master_cmd_begin %d", I2C_MASTER_NUM);

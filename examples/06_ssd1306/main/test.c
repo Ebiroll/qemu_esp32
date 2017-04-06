@@ -39,9 +39,9 @@ void set_i2c(i2c_t *i2c) {
 // Start condition
 void Start(void)
 {
-	i2cResetFiFo(my_i2c);
+    i2cResetFiFo(my_i2c);
     i2cResetCmd(my_i2c);
-	bytes_in_fifo=0;
+    bytes_in_fifo=0;
 
     //CMD START
     i2cSetCmd(my_i2c, 0, I2C_CMD_RSTART, 0, false, false, false);
@@ -51,23 +51,24 @@ void Start(void)
 // Stop condition
 void Stop(void)
 {
-	i2cSetCmd(my_i2c, 1, I2C_CMD_WRITE, bytes_in_fifo, false, false, true);
+    printf("\n ===== ");
+    i2cSetCmd(my_i2c, 1, I2C_CMD_WRITE, bytes_in_fifo, false, false, true);
     i2cSetCmd(my_i2c, 2, I2C_CMD_STOP, 0, false, false, false);
 
 
     my_i2c->dev->ctr.trans_start = 1;
-	bytes_in_fifo=0;
+    bytes_in_fifo=0;
 
 
-	uint32_t startAt = millis();
-	while(!my_i2c->dev->command[2].done) {
-		// BUSY WAIT UNTIL COMMAND DONE
-		if((millis() - startAt)>200){
-			//printf("Timeout! Addr: %x", address >> 1);
-			printf("Stop Timeout, not finished!\n");
-			return;
-		}
+    uint32_t startAt = millis();
+    while(!my_i2c->dev->command[2].done) {
+	// BUSY WAIT UNTIL COMMAND DONE
+	if((millis() - startAt)>200){
+		//printf("Timeout! Addr: %x", address >> 1);
+		printf("Stop Timeout, not finished!\n");
+		return;
 	}
+    }
 
 
 }
@@ -75,6 +76,7 @@ void Stop(void)
 // Stop condition
 void SentByte(unsigned char data) 
 {
+  printf("0x%x ",data);
    // ONLY 32 bytes in fifo 
    if (bytes_in_fifo>=31) 
    {
