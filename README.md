@@ -113,6 +113,18 @@ export PATH=$PATH:$HOME/esp/xtensa-esp32-elf/bin
 export IDF_PATH=~/esp/esp-idf
 ```
 
+#  Recomended version  
+
+```
+ git checkout v2.0
+ git submodule update --init
+```
+There is however also a problem with this version.
+```
+/home/olas/esp/esp-idf/components/freertos/./queue.c:1448 (xQueueGenericReceive)- assert failed!
+abort() was called at PC 0x40083a7f
+```
+
 
 #  Dumping the ROM0 & ROM1 using esp-idf esptool.py
 ```

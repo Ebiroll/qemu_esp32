@@ -41,7 +41,7 @@
 #define I2C_MASTER_NUM   I2C_NUM_0   /*!< I2C port number for master dev */
 #define I2C_MASTER_TX_BUF_DISABLE   0   /*!< I2C master do not need buffer */
 #define I2C_MASTER_RX_BUF_DISABLE   0   /*!< I2C master do not need buffer */
-#define I2C_MASTER_FREQ_HZ    100000     /*!< I2C master clock frequency */
+#define I2C_MASTER_FREQ_HZ    50000     /*!< I2C master clock frequency */
 
 #define WRITE_BIT  I2C_MASTER_WRITE /*!< I2C master write */
 #define READ_BIT   I2C_MASTER_READ  /*!< I2C master read */
@@ -159,18 +159,25 @@ void blink_task(void *pvParameters)
  */
 esp_err_t i2c_1306_write_command( uint8_t* data,int len)
 {
+    int i=0;
     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-    i2c_master_start(cmd);
-    i2c_master_write_byte(cmd, g_addr << 1 | WRITE_BIT, ACK_CHECK_EN);
+    int ret=0;
     // Not sure if cheap chinese displays will ack, otherwise ACK_CHECK_EN would be better
-    i2c_master_write_byte(cmd, 0x40, ACK_CHECK_DIS);
-    i2c_master_write(cmd,  data,len,ACK_CHECK_DIS);
-    i2c_master_stop(cmd);
-    // Try twice if failed first attempt
-    int ret = i2c_master_cmd_begin(g_1306_port, cmd, 1000 / portTICK_RATE_MS);
-    if (ret==ESP_FAIL) {
-       ret = i2c_master_cmd_begin(g_1306_port, cmd, 1000 / portTICK_RATE_MS);
+    while(i<len) {
+        i2c_master_start(cmd);
+        i2c_master_write_byte(cmd, g_addr << 1 | WRITE_BIT, ACK_CHECK_EN);
+   
+        i2c_master_write_byte(cmd, 0x80, ACK_CHECK_DIS);
+        i2c_master_write_byte(cmd, data[i],ACK_CHECK_DIS);
+        i2c_master_stop(cmd);
+        ret = i2c_master_cmd_begin(g_1306_port, cmd, 1000 / portTICK_RATE_MS);
+        if (ret==ESP_FAIL) {
+           ret = i2c_master_cmd_begin(g_1306_port, cmd, 1000 / portTICK_RATE_MS);
+        }
+
+        i++;
     }
+    // Try twice if failed first attempt
     i2c_cmd_link_delete(cmd);
     if (ret == ESP_FAIL) {
         return ret;

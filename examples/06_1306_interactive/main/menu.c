@@ -86,9 +86,10 @@ void process_menu_request(void *p)
 	char *send_buf=malloc(1024*2);
 
 	while (1) {
+		send_buf[0]=0;
 		int len=printMenu(send_buf,1024*2);
 
-		if ((nwrote = write(sd, recv_buf, len)) < 0) {
+		if ((nwrote = write(sd, send_buf, len)) < 0) {
 			printf("%s: ERROR Sending menu. , towrite=%d written = %d\r\n",__FUNCTION__,len, nwrote);
 			printf("Closing socket %d\r\n", sd);
 			break;
@@ -101,6 +102,10 @@ void process_menu_request(void *p)
 			break;
 		}
 		printf("read %d menusocket bytes\n",n);
+		if (n>2) {
+  		   printf("%c%c\n",recv_buf[0],recv_buf[1]);
+		}
+		recv_buf[n+1]=0;
 
 		/* break if the recved message = "quit" */
 		if (!strncmp(recv_buf, "quit", 4))
@@ -108,6 +113,7 @@ void process_menu_request(void *p)
 
 		if (!strncmp(recv_buf, "0", 1))
 		{
+			printf("i2c_scan\n");
 			i2c_scan();
 		}
 
