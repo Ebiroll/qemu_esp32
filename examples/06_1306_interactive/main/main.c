@@ -37,6 +37,7 @@ SOFTWARE.
 #include <sys/time.h>
 #include "1306.h"
 #include "esp32_i2c.h"
+#include "menu.h"
 
 #include <string.h>
 
@@ -108,6 +109,8 @@ static esp_err_t esp32_wifi_eventHandler(void *ctx, system_event_t *event) {
                 display_dot(11);
                 display_three_numbers(a,12);                
             }
+
+            xTaskCreate(&menu_application_thread, "menu thread", 2048, NULL, 5, NULL);
 
 			break;
 
@@ -231,18 +234,14 @@ static void uartLoopTask(void *inpar)
 void app_main(void)
 {
     nvs_flash_init();
-
     i2c_init(0,0x3C);
-
     ssd1306_128x64_noname_init();
-
     initialise_wifi();
 
     // Uart
     xTaskCreatePinnedToCore(&uartLoopTask, "loop", 4096, NULL, 20, NULL, 0);
 
     // wifi socket with 
-    initialise_wifi();
 
 
 #if 0
