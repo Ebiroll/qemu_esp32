@@ -113,17 +113,25 @@ export PATH=$PATH:$HOME/esp/xtensa-esp32-elf/bin
 export IDF_PATH=~/esp/esp-idf
 ```
 
-#  Recomended version  
+#  Recomended version of esp-idf for qemu.
+```
+git checkout 47b8f78cb0e15fa43647788a808dac353167a485
+git submodule update
+``` 
 
+If you use v2.0 you might get problems
 ```
  git checkout v2.0
  git submodule update --init
 ```
-There is however also a problem with this version.
+My guess i that the ipc tasks are causing these problems.
+It could also be that timer interrups occur in qemu before they are be enabled
+by some i/o register.
 ```
 /home/olas/esp/esp-idf/components/freertos/./queue.c:1448 (xQueueGenericReceive)- assert failed!
 abort() was called at PC 0x40083a7f
 ```
+However if you dont call nvs_flash_init things work better.
 
 
 #  Dumping the ROM0 & ROM1 using esp-idf esptool.py
