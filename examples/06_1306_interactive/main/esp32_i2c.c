@@ -160,10 +160,11 @@ void blink_task(void *pvParameters)
 esp_err_t i2c_1306_write_command( uint8_t* data,int len)
 {
     int i=0;
-    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+    i2c_cmd_handle_t cmd ;
     int ret=0;
     // Not sure if cheap chinese displays will ack, otherwise ACK_CHECK_EN would be better
     while(i<len) {
+        cmd = i2c_cmd_link_create();
         i2c_master_start(cmd);
         i2c_master_write_byte(cmd, g_addr << 1 | WRITE_BIT, ACK_CHECK_EN);
    
@@ -171,14 +172,11 @@ esp_err_t i2c_1306_write_command( uint8_t* data,int len)
         i2c_master_write_byte(cmd, data[i],ACK_CHECK_DIS);
         i2c_master_stop(cmd);
         ret = i2c_master_cmd_begin(g_1306_port, cmd, 1000 / portTICK_RATE_MS);
-        if (ret==ESP_FAIL) {
-           ret = i2c_master_cmd_begin(g_1306_port, cmd, 1000 / portTICK_RATE_MS);
-        }
 
         i++;
+        i2c_cmd_link_delete(cmd);
     }
     // Try twice if failed first attempt
-    i2c_cmd_link_delete(cmd);
     if (ret == ESP_FAIL) {
         return ret;
     }

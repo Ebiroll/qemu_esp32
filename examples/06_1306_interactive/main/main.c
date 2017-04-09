@@ -97,17 +97,19 @@ static esp_err_t esp32_wifi_eventHandler(void *ctx, system_event_t *event) {
 			ESP_LOGD(tag, "********************************************");
             {
                 u32_t *my_ip=(u32_t *)&event->event_info.got_ip.ip_info.ip;
+                ssd1306_128x64_noname_powersave_off();
+
                 unsigned char a=(*my_ip >> 24) & 0xff;
-                display_three_numbers(a,0);
+                display_three_numbers(a,12);
                 a=(*my_ip >> 16) & 0xff;
                 display_dot(3);
-                display_three_numbers(a,4);
+                display_three_numbers(a,8);
                 a=(*my_ip >> 8) & 0xff;
                 display_dot(7);
-                display_three_numbers(a,8);
+                display_three_numbers(a,4);
                 a=(*my_ip) & 0xff;
                 display_dot(11);
-                display_three_numbers(a,12);                
+                display_three_numbers(a,0);                
             }
 
             xTaskCreate(&menu_application_thread, "menu thread", 2048, NULL, 5, NULL);
@@ -197,6 +199,9 @@ static void uartLoopTask(void *inpar)
     // driver_install, otherwise E (20206) uart: uart_read_bytes(841): uart driver error
     ESP_ERROR_CHECK(uart_driver_install(uart_num, 512 * 2, 512 * 2, 10, &uart_queue, 0));
     sprintf(line,"Select 1,2,3,4 or 5\n");
+    ssd1306_128x64_noname_powersave_off();
+
+
     uart_tx_chars(UART_NUM_1, (const char *)line, strlen(line));
     
     printf("1. Menu\n");
@@ -235,29 +240,26 @@ static void uartLoopTask(void *inpar)
 
 void app_main(void)
 {
+    int *quemu_test=(int *)  0x3ff005f0;
     nvs_flash_init();
     i2c_init(0,0x3C);
     ssd1306_128x64_noname_init();
-    initialise_wifi();
 
-    // Uart
-    //xTaskCreatePinnedToCore(&uartLoopTask, "loop", 4096, NULL, 20, NULL, 0);
+
+    if (*quemu_test==0x42) {
+        printf("Running in qemu\n");
+       // Uart
+       xTaskCreatePinnedToCore(&uartLoopTask, "loop", 4096, NULL, 20, NULL, 0);
+
+    } else {
+        initialise_wifi();
+    }
+    
 
     // wifi socket with 
 
 
 #if 0
-    int *quemu_test=(int *)  0x3ff005f0;
-
-
-    if (*quemu_test==0x42) {
-        printf("Running in qemu\n");
-
-        Task_lwip_init(NULL); 
-
-    } else {
-        initialise_wifi();
-    }
 #endif
 
 

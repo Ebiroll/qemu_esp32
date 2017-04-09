@@ -43,9 +43,9 @@ const unsigned char dot[] = {
     0x00,
     0x00,
     0x00,
-    0x18,
-    0x18,
     0x00,
+    0x60,
+    0x60,
     0x00,
     0x00
 };
@@ -86,6 +86,21 @@ void ssd1306_128x64_noname_init()  {
   //1306_END()             			/* end of sequence */
 };
 
+void ssd1306_128x64_noname_powersave_off() 
+{
+  //U8X8_START_TRANSFER(),             	/* enable chip, delay is part of the transfer start */
+  I2C_1306_C(0x0af);		                /* display on */
+  //U8X8_END_TRANSFER(),             	/* disable chip */
+  //U8X8_END()             			/* end of sequence */
+};
+
+void ssd1306_128x64_noname_powersave_on()
+{
+  //U8X8_START_TRANSFER(),             	/* enable chip, delay is part of the transfer start */
+  I2C_1306_C(0x0ae);		                /* display off */
+  //U8X8_END_TRANSFER(),             	/* disable chip */
+  //U8X8_END()             			/* end of sequence */
+};
 
 
 
@@ -139,12 +154,11 @@ void Write_number(unsigned char *n,unsigned char k,unsigned char station_dot)
     }
     i2c_1306_write_data(data,8);
    				
-
 	Set_Page_Address(Start_page+1)	;
     Set_Column_Address(Start_column+station_dot*8);	
     for(i=8;i<16;i++)
     {
-            data[i]=(*(n+16*k+i));
+            data[i-8]=(*(n+16*k+i));
     }
     i2c_1306_write_data(data,8);
 }
@@ -161,13 +175,13 @@ void display_three_numbers(unsigned char number,unsigned char start_col)
 	number1=number/100;number2=number%100/10;number3=number%100%10;
 	Set_Column_Address(Start_column+0*8+start_col*8);
 	Set_Page_Address(Start_page);
-    Write_number(num,number1,0);
+    Write_number(num,number1,0+start_col);
 	Set_Column_Address(Start_column+1*8+start_col*8);
 	Set_Page_Address(Start_page);
-	Write_number(num,number2,1);
+	Write_number(num,number2,1+start_col);
 	Set_Column_Address(Start_column+2*8+start_col*8);
 	Set_Page_Address(Start_page);
-	Write_number(num,number3,2);
+	Write_number(num,number3,2+start_col);
 }
 
 #if 0

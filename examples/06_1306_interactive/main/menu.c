@@ -135,7 +135,7 @@ void process_menu_request(void *p)
 
 		if (!strncmp(recv_buf, "4", 1))
 		{
-			Set_Column_Address(0);
+			Set_Column_Address(4);
 		}
 
 		if (!strncmp(recv_buf, "5", 1))
