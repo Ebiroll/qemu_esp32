@@ -35,14 +35,18 @@ SOFTWARE.
 #include "driver/uart.h"
 #include "esp_log.h"
 #include <sys/time.h>
+#include "1306.h"
+#include "esp32_i2c.h"
 
-static const char *TAG = "interact";
+#include <string.h>
+
+static const char *tag = "1306";
 
 
 
 // readline from readLine.c
-extern "C" char *readLine(uart_port_t uart,char *line,int len);
-extern "C" char *pollLine(uart_port_t uart,char *line,int len);
+extern char *readLine(uart_port_t uart,char *line,int len);
+extern char *pollLine(uart_port_t uart,char *line,int len);
 
 
 
@@ -51,31 +55,93 @@ extern "C" char *pollLine(uart_port_t uart,char *line,int len);
 char echoLine[512];
 
 
+/**
+ * An ESP32 WiFi event handler.
+ * The types of events that can be received here are:
+ *
+ * SYSTEM_EVENT_AP_PROBEREQRECVED
+ * SYSTEM_EVENT_AP_STACONNECTED
+ * SYSTEM_EVENT_AP_STADISCONNECTED
+ * SYSTEM_EVENT_AP_START
+ * SYSTEM_EVENT_AP_STOP
+ * SYSTEM_EVENT_SCAN_DONE
+ * SYSTEM_EVENT_STA_AUTHMODE_CHANGE
+ * SYSTEM_EVENT_STA_CONNECTED
+ * SYSTEM_EVENT_STA_DISCONNECTED
+ * SYSTEM_EVENT_STA_GOT_IP
+ * SYSTEM_EVENT_STA_START
+ * SYSTEM_EVENT_STA_STOP
+ * SYSTEM_EVENT_WIFI_READY
+ */
+static esp_err_t esp32_wifi_eventHandler(void *ctx, system_event_t *event) {
+	// Your event handling code here...
+	switch(event->event_id) {
+		// When we have started being an access point, then start being a web server.
+		case SYSTEM_EVENT_AP_START: 
+			break;
+
+		// If we fail to connect to an access point as a station, become an access point.
+		case SYSTEM_EVENT_STA_DISCONNECTED: 
+			ESP_LOGD(tag, "Station disconnected started");
+			// We think we tried to connect as a station and failed! ... become
+			// an access point.
+			break;
+
+		// If we connected as a station then we are done and we can stop being a
+		// web server.
+		case SYSTEM_EVENT_STA_GOT_IP: 
+			ESP_LOGD(tag, "********************************************");
+			ESP_LOGD(tag, "* We are now connected to AP")
+			ESP_LOGD(tag, "* - Our IP address is: " IPSTR, IP2STR(&event->event_info.got_ip.ip_info.ip));
+			ESP_LOGD(tag, "********************************************");
+            {
+                u32_t *my_ip=(u32_t *)&event->event_info.got_ip.ip_info.ip;
+                unsigned char a=(*my_ip >> 24) & 0xff;
+                display_three_numbers(a,0);
+                a=(*my_ip >> 16) & 0xff;
+                display_dot(3);
+                display_three_numbers(a,4);
+                a=(*my_ip >> 8) & 0xff;
+                display_dot(7);
+                display_three_numbers(a,8);
+                a=(*my_ip) & 0xff;
+                display_dot(11);
+                display_three_numbers(a,12);                
+            }
+
+			break;
+
+		default: // Ignore the other event types
+			break;
+	} // Switch event
+
+	return ESP_OK;
+} // esp32_wifi_eventHandler
+
+
+
 static void initialise_wifi(void)
 {
     tcpip_adapter_init();
-    wifi_event_group = xEventGroupCreate();
-    ESP_ERROR_CHECK( esp_event_loop_init(event_handler, NULL) );
+    //wifi_event_group = xEventGroupCreate();
+    ESP_ERROR_CHECK( esp_event_loop_init(esp32_wifi_eventHandler, NULL) );
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK( esp_wifi_init(&cfg) );
     ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
     wifi_config_t wifi_config = {
         .sta = {
+            //#include "secret.i"
             .ssid = "ssid",
-            .password = "password",
+            .password = "passwd",
         },
     };
-    ESP_LOGI(TAG, "Setting WiFi configuration SSID %s...", wifi_config.sta.ssid);
+    ESP_LOGI(tag, "Setting WiFi configuration SSID %s...", wifi_config.sta.ssid);
     ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_STA) );
     ESP_ERROR_CHECK( esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config) );
     ESP_ERROR_CHECK( esp_wifi_start() );
 }
 
 
-esp_err_t event_handler(void *ctx, system_event_t *event)
-{
-    return ESP_OK;
-}
 
 // Similar to uint32_t system_get_time(void)
 uint32_t get_usec() {
@@ -99,20 +165,11 @@ uint32_t get_usec() {
 
 char line[256];
 
-void printMenu {
-    printf("1. Scan i2c bus.\n");
-    printf("2. Ultrasound measure.\n");
-    printf("3. Echo to UART 2, add crlf before send.\n");
-    printf("4. Try connecting over gprs with A6Lib.\n");
-    printf("5. Try send data over gprs with A6Thingspeak.\n");
-}
-
 //
 // Menu from uart 1
 //
 static void uartLoopTask(void *inpar)
 {
-    bool ultraDistanceRunning = false;
     QueueHandle_t uart_queue;
 
     // Could not get to work with UART0 
@@ -125,9 +182,11 @@ static void uartLoopTask(void *inpar)
         .flow_ctrl = UART_HW_FLOWCTRL_DISABLE, //hardware flow control(cts/rts)
         .rx_flow_ctrl_thresh = 122,            //flow control threshold
     };
-    ESP_LOGI(TAG, "Setting UART configuration number %d...", uart_num);
+    ESP_LOGI(tag, "Setting UART configuration number %d...", uart_num);
+    ESP_LOGI(tag, "Setting UART configuration number %d...", uart_num);
+    ESP_ERROR_CHECK( uart_param_config(uart_num, &uart_config));
 
-    // Should be set
+    // UART pins
     ESP_ERROR_CHECK(uart_set_pin(uart_num, 23, 19, -1, -1));
 
     // driver_install, otherwise E (20206) uart: uart_read_bytes(841): uart driver error
@@ -146,7 +205,7 @@ static void uartLoopTask(void *inpar)
         if (strcmp(data, "1") == 0)
         {
             printf("Menu\n");
-            I2CScanner();
+            //I2CScanner();
         }
         else if (strcmp(data, "2") == 0)
         {
@@ -169,41 +228,35 @@ static void uartLoopTask(void *inpar)
     //#endif
 }
 
-extern "C" void app_main(void)
+void app_main(void)
 {
     nvs_flash_init();
 
-    //Serial.begin(115200);
+    i2c_init(0,0x3C);
 
-    // Note!! Sonar also uses UART 1
-    //xTaskCreatePinnedToCore(&maxSonarInput, "sonar", 8048, NULL, 5, NULL, 0);
+    ssd1306_128x64_noname_init();
 
-    // Continusly transmit on uart2, (for qemu tests)
-    //xTaskCreatePinnedToCore(&uartTestTask, "uart", 8048, NULL, 5, NULL, 0);
+    initialise_wifi();
 
-    //xTaskCreatePinnedToCore(&A6TestTask, "A6", 8048, NULL, 5, NULL, 0);
-    //xTaskCreatePinnedToCore(&ultraDistanceTask, "ultra", 4096, NULL, 20, NULL, 0);
-
+    // Uart
     xTaskCreatePinnedToCore(&uartLoopTask, "loop", 4096, NULL, 20, NULL, 0);
+
+    // wifi socket with 
+    initialise_wifi();
 
 
 #if 0
-    tcpip_adapter_init();
-    ESP_ERROR_CHECK( esp_event_loop_init(event_handler, NULL) );
-    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-    ESP_ERROR_CHECK( esp_wifi_init(&cfg) );
-    ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
-    ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_STA) );
-    wifi_config_t sta_config = {
-        .sta = {
-            .ssid = "access_point_name",
-            .password = "password",
-            .bssid_set = false
-        }
-    };
-    ESP_ERROR_CHECK( esp_wifi_set_config(WIFI_IF_STA, &sta_config) );
-    ESP_ERROR_CHECK( esp_wifi_start() );
-    ESP_ERROR_CHECK( esp_wifi_connect() );
+    int *quemu_test=(int *)  0x3ff005f0;
+
+
+    if (*quemu_test==0x42) {
+        printf("Running in qemu\n");
+
+        Task_lwip_init(NULL); 
+
+    } else {
+        initialise_wifi();
+    }
 #endif
 
 

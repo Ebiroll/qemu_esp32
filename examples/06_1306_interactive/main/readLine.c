@@ -29,16 +29,16 @@ char *pollLine(uart_port_t uart,char *line,int len) {
 	char *ptr = line;
 	switch (uart) {
 		case UART_NUM_0:
-		    FIFO=0x3ff40000;
-			RX_STATUS=0x3ff4001c;
+		    FIFO=(volatile uint32_t*)0x3ff40000;
+			RX_STATUS=(volatile uint32_t*)0x3ff4001c;
 		break;
 		case UART_NUM_1:
-			FIFO=0x3ff50000;
-			RX_STATUS=0x3ff5001c;
+			FIFO=(volatile uint32_t*)0x3ff50000;
+			RX_STATUS=(volatile uint32_t*)0x3ff5001c;
 		break;
 		case UART_NUM_2:
-			FIFO=0x3ff6e000;	
-			RX_STATUS=0x3ff6e01c;			
+			FIFO=(volatile uint32_t*)0x3ff6e000;	
+			RX_STATUS=(volatile uint32_t*)0x3ff6e01c;			
 		break;		
 		default:
 		break;
