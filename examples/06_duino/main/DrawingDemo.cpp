@@ -65,7 +65,7 @@
 
 
 
-SSD1306  display(0x3c, 21, 22);
+SSD1306  display(0x3c, 5, 4);
  // SH1106 display(0x3c, D3, D5);
 
 // Adapted from Adafruit_SSD1306
