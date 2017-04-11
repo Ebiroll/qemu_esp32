@@ -135,8 +135,8 @@ static void initialise_wifi(void)
     ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
     wifi_config_t wifi_config = {
         .sta = {
-            //#include "secret.i"
-            .ssid = "ssid",
+	     //#include "secret.i"
+	     .ssid = "ssid",
             .password = "password",
         },
     };
@@ -160,8 +160,8 @@ uint32_t get_usec() {
  //                suseconds_t tv_usec;    // microseconds
  //              };
 
- gettimeofday(&tv,NULL);
- return (tv.tv_sec*1000000 + tv.tv_usec);
+   gettimeofday(&tv,NULL);
+   return (tv.tv_sec*1000000 + tv.tv_usec);
 
 
   //uint64_t tmp=get_time_since_boot();
@@ -170,14 +170,15 @@ uint32_t get_usec() {
 }
 
 
-char line[256];
-
 //
 // Menu from uart 1
 //
 static void uartLoopTask(void *inpar)
 {
     QueueHandle_t uart_queue;
+    char* line=malloc(1024*2);
+    int display_number=123;
+    unsigned char display_data[16];
 
     // Could not get to work with UART0 
     uart_port_t uart_num = UART_NUM_1; // uart port number
@@ -200,52 +201,122 @@ static void uartLoopTask(void *inpar)
     ESP_ERROR_CHECK(uart_driver_install(uart_num, 512 * 2, 512 * 2, 10, &uart_queue, 0));
     sprintf(line,"Select 1,2,3,4 or 5\n");
     ssd1306_128x64_noname_powersave_off();
+    display_three_numbers(display_number,0);
 
 
+    printMenu(line,2*1024);
     uart_tx_chars(UART_NUM_1, (const char *)line, strlen(line));
     
-    printf("1. Menu\n");
+    printf("Uart Menu\n");
 
     //#if 0
     char *data;
 
     while (true)
     {
-        data = pollLine(uart_num, line, 256);
-        if (strcmp(data, "1") == 0)
-        {
-            printf("Menu\n");
-            //I2CScanner();
-        }
-        else if (strcmp(data, "2") == 0)
-        {
+        data = readLine(uart_num, line, 256);
+		/* break if the recved message = "quit" */
+		if (!strncmp(line, "quit", 4))
+			break;
 
-        }
-        else if (strcmp(data, "3") == 0)
-        {
-        }
-        else if (strcmp(data, "4") == 0)
-        {
-        }
-        else if (strcmp(data, "5") == 0)
-        {
-        }
-        else
-        {
+		if (!strncmp(line, "0", 1))
+		{
+			printf("i2c_scan\n");
+			i2c_scan();
+		}
 
-        }
+		if (!strncmp(line, "1", 1))
+		{
+			clear_display();
+		}
+
+		if (!strncmp(line, "2", 1))
+		{
+			Set_Page_Address(0);
+			Set_Column_Address(0);
+		}
+
+		if (!strncmp(line, "3", 1))
+		{
+			Set_Page_Address(4);
+		}
+
+		if (!strncmp(line, "4", 1))
+		{
+			Set_Column_Address(4);
+		}
+
+		if (!strncmp(line, "5", 1))
+		{
+			int j=0;
+			for (j=0;j<8;j++) {
+				display_data[j]=0xff;
+			}
+			Write_data(display_data,8);
+
+		}
+
+		if (!strncmp(line, "6", 1))
+		{
+			int j=0;
+			for (j=0;j<8;j++) {
+				display_data[j]=0x0f;
+			}
+			Write_data(display_data,8);
+		}
+
+		if (!strncmp(line, "7", 1))
+		{
+			display_number++;
+			display_three_numbers(display_number,0);
+		}
+
+		if (!strncmp(line, "8", 1))
+		{
+			display_dot(4);
+		}
     }
     //#endif
 }
 
+
+//
+//
+#define BLINK_GPIO 5
+
+void blink_task(void *pvParameters)
+{
+    gpio_pad_select_gpio(BLINK_GPIO);
+    gpio_set_direction(BLINK_GPIO, GPIO_MODE_OUTPUT);
+
+
+	while (1) {
+          gpio_set_level(BLINK_GPIO, 0);
+          vTaskDelay(1000 / portTICK_RATE_MS);
+          gpio_set_level(BLINK_GPIO, 1);
+          vTaskDelay(1000 / portTICK_RATE_MS);
+          gpio_set_level(BLINK_GPIO, 0);
+          vTaskDelay(1000 / portTICK_RATE_MS);
+          gpio_set_level(BLINK_GPIO, 1);
+          vTaskDelay(1000 / portTICK_RATE_MS);
+	}
+}
+
+
+
 void app_main(void)
 {
-    int *quemu_test=(int *)  0x3ff005f0;
+    //int *quemu_test=(int *)  0x3ff005f0;
     nvs_flash_init();
     i2c_init(0,0x3C);
     ssd1306_128x64_noname_init();
+    //printf("t=0x%x\n",*quemu_test);
+    initialise_wifi();
+
+    xTaskCreatePinnedToCore(&blink_task, "blink", 4096, NULL, 20, NULL, 0);
 
 
+#if 0
     if (*quemu_test==0x42) {
         printf("Running in qemu\n");
        // Uart
@@ -254,7 +325,7 @@ void app_main(void)
     } else {
         initialise_wifi();
     }
-    
+#endif
 
     // wifi socket with 
 

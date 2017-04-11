@@ -126,28 +126,6 @@ void i2c_scan() {
 }
 
 
-//
-//
-#define BLINK_GPIO 5
-
-void blink_task(void *pvParameters)
-{
-    gpio_pad_select_gpio(BLINK_GPIO);
-    gpio_set_direction(BLINK_GPIO, GPIO_MODE_OUTPUT);
-
-
-	while (1) {
-          gpio_set_level(BLINK_GPIO, 0);
-          vTaskDelay(1000 / portTICK_RATE_MS);
-          gpio_set_level(BLINK_GPIO, 1);
-          vTaskDelay(1000 / portTICK_RATE_MS);
-          gpio_set_level(BLINK_GPIO, 0);
-          vTaskDelay(1000 / portTICK_RATE_MS);
-          gpio_set_level(BLINK_GPIO, 1);
-          vTaskDelay(1000 / portTICK_RATE_MS);
-	}
-}
-
 
 /**
  *   https://www.olimex.com/Products/Modules/LCD/MOD-OLED-128x64/resources/SSD1306.pdf
