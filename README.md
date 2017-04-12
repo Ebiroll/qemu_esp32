@@ -119,19 +119,18 @@ git checkout 47b8f78cb0e15fa43647788a808dac353167a485
 git submodule update
 ``` 
 
-If you use v2.0 you might get problems
+If you use v2.0 you might get problems, and with the latest version you will not be able to run in qemu until esp_crosscore_int_send_yield is implemented.
+Dont do this yet..
 ```
  git checkout v2.0
  git submodule update --init
 ```
-My guess i that the ipc tasks are causing these problems.
-It could also be that timer interrups occur in qemu before they are be enabled
-by some i/o register.
+If you did not use the old version you will get this.
 ```
 /home/olas/esp/esp-idf/components/freertos/./queue.c:1448 (xQueueGenericReceive)- assert failed!
 abort() was called at PC 0x40083a7f
 ```
-However if you dont call nvs_flash_init things work better.
+I am working on this.
 
 
 #  Dumping the ROM0 & ROM1 using esp-idf esptool.py

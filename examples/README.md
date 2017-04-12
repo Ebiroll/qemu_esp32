@@ -23,6 +23,7 @@ esp-idf evolves.
 15_websocket, Websocket example
 16_wifi_sniffer, Wifi sniffer
 17_wifi_scan, Does not compile yet
+18_long_range, Experiments with undocumented WIFI_PROTOCOL_LR
 20_ext_wakeup, Sleep mode with external wakeup
 20_timer_wakeup, Sleep mode with timer wakeup
 21_can, can driver example. Not runnable in QEMU
