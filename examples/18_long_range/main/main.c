@@ -1,6 +1,3 @@
-//
-// Lots of this based on ncolbans work
-// https://github.com/nkolban/esp32-snippets
 /*
 MIT License
 
@@ -25,6 +22,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+#define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
+
+
 #include "freertos/FreeRTOS.h"
 #include "esp_wifi.h"
 #include "esp_system.h"
@@ -33,28 +33,21 @@ SOFTWARE.
 #include "nvs_flash.h"
 #include "driver/gpio.h"
 #include "driver/uart.h"
+#include "freertos/event_groups.h"
 #include "esp_log.h"
 #include <sys/time.h>
 #include "1306.h"
 #include "esp32_i2c.h"
 #include "menu.h"
+#include <lwip/netif.h>
 
 #include <string.h>
 
-static const char *tag = "1306";
+static const char *TAG = "LR";
 
-
-
-// readline from readLine.c
-extern char *readLine(uart_port_t uart,char *line,int len);
-extern char *pollLine(uart_port_t uart,char *line,int len);
-
-
-
-#define BUF_SIZE 512
-
-char echoLine[512];
-
+static EventGroupHandle_t wifi_event_group;
+const int CONNECTED_BIT = BIT0;
+const int STARTED_BIT = BIT1;
 
 /**
  * An ESP32 WiFi event handler.
@@ -75,15 +68,38 @@ char echoLine[512];
  * SYSTEM_EVENT_WIFI_READY
  */
 static esp_err_t esp32_wifi_eventHandler(void *ctx, system_event_t *event) {
-	// Your event handling code here...
+
 	switch(event->event_id) {
-		// When we have started being an access point, then start being a web server.
+        case SYSTEM_EVENT_WIFI_READY:
+        	ESP_LOGD(TAG, "EVENT_WIFI_READY");
+
+            break;
+
+        case SYSTEM_EVENT_AP_STACONNECTED:
+        	ESP_LOGD(TAG, "EVENT_AP_START");
+            break;
+
+		// When we have started being an access point
 		case SYSTEM_EVENT_AP_START: 
+        	ESP_LOGD(TAG, "EVENT_START");
+            xEventGroupSetBits(wifi_event_group, STARTED_BIT);            
+            xTaskCreate(&menu_application_thread, "menu thread", 2048, NULL, 5, NULL);
+
+			break;
+        case SYSTEM_EVENT_SCAN_DONE:
+        	ESP_LOGD(TAG, "EVENT_SCAN_DONE");
 			break;
 
+		case SYSTEM_EVENT_STA_CONNECTED: 
+       		ESP_LOGD(TAG, "EVENT_STA_CONNECTED");
+            xEventGroupSetBits(wifi_event_group, CONNECTED_BIT);
+            break;
+
 		// If we fail to connect to an access point as a station, become an access point.
-		case SYSTEM_EVENT_STA_DISCONNECTED: 
-			ESP_LOGD(tag, "Station disconnected started");
+		case SYSTEM_EVENT_STA_DISCONNECTED:
+            xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
+
+			ESP_LOGD(TAG, "EVENT_STA_DISCONNECTED");
 			// We think we tried to connect as a station and failed! ... become
 			// an access point.
 			break;
@@ -91,10 +107,10 @@ static esp_err_t esp32_wifi_eventHandler(void *ctx, system_event_t *event) {
 		// If we connected as a station then we are done and we can stop being a
 		// web server.
 		case SYSTEM_EVENT_STA_GOT_IP: 
-			ESP_LOGD(tag, "********************************************");
-			ESP_LOGD(tag, "* We are now connected to AP")
-			ESP_LOGD(tag, "* - Our IP address is: " IPSTR, IP2STR(&event->event_info.got_ip.ip_info.ip));
-			ESP_LOGD(tag, "********************************************");
+			ESP_LOGD(TAG, "********************************************");
+			ESP_LOGD(TAG, "* We are now connected to AP")
+			ESP_LOGD(TAG, "* - Our IP address is: " IPSTR, IP2STR(&event->event_info.got_ip.ip_info.ip));
+			ESP_LOGD(TAG, "********************************************");
             {
                 u32_t *my_ip=(u32_t *)&event->event_info.got_ip.ip_info.ip;
                 ssd1306_128x64_noname_powersave_off();
@@ -125,26 +141,54 @@ static esp_err_t esp32_wifi_eventHandler(void *ctx, system_event_t *event) {
 
 
 
-static void initialise_wifi(void)
+static void init_wifi(wifi_mode_t mode)
 {
+
+    const uint8_t protocol = WIFI_PROTOCOL_LR;
+
     tcpip_adapter_init();
-    //wifi_event_group = xEventGroupCreate();
     ESP_ERROR_CHECK( esp_event_loop_init(esp32_wifi_eventHandler, NULL) );
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-    ESP_ERROR_CHECK( esp_wifi_init(&cfg) );
-    ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
-    wifi_config_t wifi_config = {
-        .sta = {
-	     #include "secret.i"
-	//.ssid = "ssid",
-	//.password = "password",
-        },
-    };
-    ESP_LOGI(tag, "Setting WiFi configuration SSID %s...", wifi_config.sta.ssid);
-    ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_STA) );
-    ESP_ERROR_CHECK( esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config) );
-    ESP_ERROR_CHECK( esp_wifi_start() );
-    ESP_ERROR_CHECK( esp_wifi_connect() );
+	ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+	ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
+
+    ESP_ERROR_CHECK(esp_wifi_set_mode(mode));
+    wifi_event_group=xEventGroupCreate();
+
+    if ( mode == WIFI_MODE_STA ) {
+        ESP_ERROR_CHECK(esp_wifi_set_protocol(WIFI_IF_STA,protocol));
+        wifi_config_t config = {
+            .sta = {
+  			   .ssid = "lr_ssid",
+               .password = "passthelr",
+               .bssid_set = false
+            }
+        };
+        ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &config));
+	    ESP_ERROR_CHECK(esp_wifi_start());
+	    ESP_ERROR_CHECK(esp_wifi_connect());
+        xEventGroupWaitBits(wifi_event_group,CONNECTED_BIT,
+        false,true,portMAX_DELAY);
+        ESP_LOGI(TAG,"Connected to AP");
+    } else {
+        ESP_ERROR_CHECK(esp_wifi_set_protocol(WIFI_IF_AP,protocol));
+        wifi_config_t ap_config = {
+            .ap = {
+                .ssid = "lr_ssid",
+                .password = "passthelr",
+                .ssid_len = 7,
+                //.channel = 1,
+                .authmode = WIFI_AUTH_WPA2_PSK,
+                .ssid_hidden = false,
+                .max_connection = 3,
+                .beacon_interval = 100
+            }
+        };
+
+        ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &ap_config));
+        ESP_ERROR_CHECK(esp_wifi_start());
+        //ESP_ERROR_CHECK(esp_wifi_set_ps(WIFI_PS_NONE));
+    }
 
 }
 
@@ -153,13 +197,7 @@ static void initialise_wifi(void)
 // Similar to uint32_t system_get_time(void)
 uint32_t get_usec() {
 
- struct timeval tv;
-
- //              struct timeval {
- //                time_t      tv_sec;     // seconds
- //                suseconds_t tv_usec;    // microseconds
- //              };
-
+  struct timeval tv;
    gettimeofday(&tv,NULL);
    return (tv.tv_sec*1000000 + tv.tv_usec);
 
@@ -170,137 +208,7 @@ uint32_t get_usec() {
 }
 
 
-//
-// Menu from uart 1
-//
-static void uartLoopTask(void *inpar)
-{
-    QueueHandle_t uart_queue;
-    char* line=malloc(1024*2);
-    int display_number=123;
-    unsigned char display_data[16];
 
-    // Could not get to work with UART0 
-    uart_port_t uart_num = UART_NUM_1; // uart port number
-    uart_config_t uart_config = {
-        .baud_rate = 115200,                   //baudrate
-        .data_bits = UART_DATA_8_BITS,         //data bit mode
-        .parity = UART_PARITY_DISABLE,         //parity mode
-        .stop_bits = UART_STOP_BITS_1,         //stop bit mode
-        .flow_ctrl = UART_HW_FLOWCTRL_DISABLE, //hardware flow control(cts/rts)
-        .rx_flow_ctrl_thresh = 122,            //flow control threshold
-    };
-    ESP_LOGI(tag, "Setting UART configuration number %d...", uart_num);
-    ESP_LOGI(tag, "Setting UART configuration number %d...", uart_num);
-    ESP_ERROR_CHECK( uart_param_config(uart_num, &uart_config));
-
-    // UART pins
-    ESP_ERROR_CHECK(uart_set_pin(uart_num, 23, 19, -1, -1));
-
-    // driver_install, otherwise E (20206) uart: uart_read_bytes(841): uart driver error
-    ESP_ERROR_CHECK(uart_driver_install(uart_num, 512 * 2, 512 * 2, 10, &uart_queue, 0));
-    sprintf(line,"Select 1,2,3,4 or 5\n");
-    ssd1306_128x64_noname_powersave_off();
-    display_three_numbers(display_number,0);
-
-
-    printMenu(line,2*1024);
-    uart_tx_chars(UART_NUM_1, (const char *)line, strlen(line));
-    
-    printf("Uart Menu\n");
-
-    //#if 0
-    char *data;
-
-    while (true)
-    {
-        data = readLine(uart_num, line, 256);
-		/* break if the recved message = "quit" */
-		if (!strncmp(line, "quit", 4))
-			break;
-
-		if (!strncmp(line, "0", 1))
-		{
-			printf("i2c_scan\n");
-			i2c_scan();
-		}
-
-		if (!strncmp(line, "1", 1))
-		{
-			clear_display();
-		}
-
-		if (!strncmp(line, "2", 1))
-		{
-			Set_Page_Address(0);
-			Set_Column_Address(0);
-		}
-
-		if (!strncmp(line, "3", 1))
-		{
-			Set_Page_Address(4);
-		}
-
-		if (!strncmp(line, "4", 1))
-		{
-			Set_Column_Address(4);
-		}
-
-		if (!strncmp(line, "5", 1))
-		{
-			int j=0;
-			for (j=0;j<8;j++) {
-				display_data[j]=0xff;
-			}
-			Write_data(display_data,8);
-
-		}
-
-		if (!strncmp(line, "6", 1))
-		{
-			int j=0;
-			for (j=0;j<8;j++) {
-				display_data[j]=0x0f;
-			}
-			Write_data(display_data,8);
-		}
-
-		if (!strncmp(line, "7", 1))
-		{
-			display_number++;
-			display_three_numbers(display_number,0);
-		}
-
-		if (!strncmp(line, "8", 1))
-		{
-			display_dot(4);
-		}
-    }
-    //#endif
-}
-
-
-//
-//
-#define BLINK_GPIO 5
-
-void blink_task(void *pvParameters)
-{
-    gpio_pad_select_gpio(BLINK_GPIO);
-    gpio_set_direction(BLINK_GPIO, GPIO_MODE_OUTPUT);
-
-
-	while (1) {
-          gpio_set_level(BLINK_GPIO, 0);
-          vTaskDelay(1000 / portTICK_RATE_MS);
-          gpio_set_level(BLINK_GPIO, 1);
-          vTaskDelay(1000 / portTICK_RATE_MS);
-          gpio_set_level(BLINK_GPIO, 0);
-          vTaskDelay(1000 / portTICK_RATE_MS);
-          gpio_set_level(BLINK_GPIO, 1);
-          vTaskDelay(1000 / portTICK_RATE_MS);
-	}
-}
 
 
 
@@ -311,9 +219,23 @@ void app_main(void)
     i2c_init(0,0x3C);
     ssd1306_128x64_noname_init();
     //printf("t=0x%x\n",*quemu_test);
-    initialise_wifi();
+    init_wifi(WIFI_MODE_AP);
+    // WIFI_MODE_STA
 
-    //xTaskCreatePinnedToCore(&blink_task, "blink", 4096, NULL, 20, NULL, 0);
+    xEventGroupWaitBits(wifi_event_group,STARTED_BIT,
+    false,true,portMAX_DELAY);
+
+    printf("List all networks\n");
+    ip4_addr_t *addr;
+    struct netif *netif;
+    for (netif = netif_list; netif != NULL; netif = netif->next) {
+        printf("%c%c%d\n",netif->name[0],netif->name[1],netif->num);
+        addr=(ip4_addr_t *) &netif->ip_addr;
+        printf("ip_addr %d.%d.%d.%d\n",IP2STR((addr)));
+        fflush(stdout);
+    }
+    // Assume we have adress 192.168.4.1 for AP 
+    //ip_addr
 
 
 #if 0

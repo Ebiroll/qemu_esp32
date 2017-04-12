@@ -195,30 +195,39 @@ void process_menu_request(void *p)
 void menu_application_thread(void *pvParameters)
 {
 	int sock, new_sd;
+	int ret;
 	struct sockaddr_in address, remote;
 	int size;
         echo_param* echo_param1 = malloc(sizeof(echo_param));
 
 	if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-		return;
-
-	address.sin_family = AF_INET;
-	address.sin_port = htons(echo_port);
-	address.sin_addr.s_addr = INADDR_ANY;
-
-	if (bind(sock, (struct sockaddr *)&address, sizeof (address)) < 0)
-		return;
-
-	listen(sock, 0);
-
-	size = sizeof(remote);
-        echo_param1->StatSem = pvParameters;
-
-	while (1) {
-		if ((new_sd = accept(sock, (struct sockaddr *)&remote, (socklen_t *)&size)) > 0) {
-			printf("accepted new menu connection\n");
-                        echo_param1->new_sd = new_sd;
-			sys_thread_new("menu connection", process_menu_request,(void*)echo_param1,2*THREAD_STACKSIZE,DEFAULT_THREAD_PRIO);
-		}
+	{
+		printf("Failed creating socket %d\r\n", sock);
+				return;
 	}
+
+		address.sin_family = AF_INET;
+		address.sin_port = htons(echo_port);
+		address.sin_addr.s_addr = INADDR_ANY;
+		ret=bind(sock, (struct sockaddr *)&address, sizeof (address));
+
+		if (ret < 0)
+		{
+			printf("Failed binding socket %d\r\n", ret);
+					return;
+		}
+
+		printf("Listening on socket\r\n");
+		listen(sock, 0);
+
+		size = sizeof(remote);
+		echo_param1->StatSem = pvParameters;
+
+		while (1) {
+			if ((new_sd = accept(sock, (struct sockaddr *)&remote, (socklen_t *)&size)) > 0) {
+				printf("accepted new menu connection\n");
+							echo_param1->new_sd = new_sd;
+				sys_thread_new("menu connection", process_menu_request,(void*)echo_param1,2*THREAD_STACKSIZE,DEFAULT_THREAD_PRIO);
+			}
+		}
 }
