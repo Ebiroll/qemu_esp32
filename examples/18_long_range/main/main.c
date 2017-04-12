@@ -40,6 +40,8 @@ SOFTWARE.
 #include "esp32_i2c.h"
 #include "menu.h"
 #include <lwip/netif.h>
+#include "esp_wifi.h"
+#include "esp_wifi_types.h"
 
 #include <string.h>
 
@@ -48,6 +50,24 @@ static const char *TAG = "LR";
 static EventGroupHandle_t wifi_event_group;
 const int CONNECTED_BIT = BIT0;
 const int STARTED_BIT = BIT1;
+
+extern char *readLine(uart_port_t uart,char *line,int len);
+
+typedef struct {
+	unsigned frame_ctrl:16;
+	unsigned duration_id:16;
+	uint8_t addr1[6]; /* receiver address */
+	uint8_t addr2[6]; /* sender address */
+	uint8_t addr3[6]; /* filtering address */
+	unsigned sequence_ctrl:16;
+	uint8_t addr4[6]; /* optional */
+} wifi_ieee80211_mac_hdr_t;
+
+typedef struct {
+	wifi_ieee80211_mac_hdr_t hdr;
+	uint8_t payload[0]; /* network data ended with 4 bytes csum (CRC32) */
+} wifi_ieee80211_packet_t;
+
 
 /**
  * An ESP32 WiFi event handler.
@@ -207,13 +227,116 @@ uint32_t get_usec() {
   //return ret;
 }
 
+const char *
+wifi_sniffer_packet_type2str(wifi_promiscuous_pkt_type_t type)
+{
+	switch(type) {
+	case WIFI_PKT_CTRL: return "CTRL";
+	case WIFI_PKT_MGMT: return "MGMT";
+	case WIFI_PKT_DATA: return "DATA";
+	default:	
+	case WIFI_PKT_MISC: return "MISC";
+	}
+}
+
+unsigned char bar_data[256];
+
+unsigned char last_pack=0;
+
+unsigned char progress_data[4];
 
 
+void showRSS(int rss) {
+    int ix=0;
+    if (rss<0) {
+        rss=-1*rss;
+    }
 
+    Set_Page_Address(0);
+    Set_Column_Address(0);
+    display_three_numbers( rss,0);
+
+    Set_Page_Address(2);
+    Set_Column_Address(0);
+
+    for (ix=0;ix<rss && ix<200;ix++) {
+        bar_data[ix]=0xff;
+        if (ix%10==0) {
+           bar_data[ix]=0x0f;           
+        }
+    }
+    while (ix<128) {
+        bar_data[ix]=0x0;
+        ix++;
+    }
+
+    Write_data(progress_data,4);
+
+    Set_Page_Address(2);
+    Set_Column_Address(0);
+
+    last_pack=(last_pack+1)%100;
+
+    Write_data(bar_data,200);
+
+    Set_Page_Address(4);
+    Set_Column_Address(last_pack);
+
+    Write_data(progress_data,4);
+
+
+}
+
+void
+wifi_sniffer_packet_handler(void* buff, wifi_promiscuous_pkt_type_t type)
+{
+
+	if (type != WIFI_PKT_MGMT)
+		return;
+
+	const wifi_promiscuous_pkt_t *ppkt = (wifi_promiscuous_pkt_t *)buff;
+	const wifi_ieee80211_packet_t *ipkt = (wifi_ieee80211_packet_t *)ppkt->payload;
+	const wifi_ieee80211_mac_hdr_t *hdr = &ipkt->hdr;
+
+    // Only log espresstif AP:s
+    if ((hdr->addr2[0]==0x24) && (hdr->addr2[1]==0x0a)) {
+        showRSS(ppkt->rx_ctrl.rssi);
+    }
+
+	printf("PACKET TYPE=%s, CHAN=%02d, RSSI=%02d, TS=%d"
+		" ADDR1=%02x:%02x:%02x:%02x:%02x:%02x,"
+		" ADDR2=%02x:%02x:%02x:%02x:%02x:%02x,"
+		" ADDR3=%02x:%02x:%02x:%02x:%02x:%02x\n",
+		wifi_sniffer_packet_type2str(type),
+		ppkt->rx_ctrl.channel,
+		ppkt->rx_ctrl.rssi,
+        ppkt->rx_ctrl.timestamp,
+		/* ADDR1 */
+		hdr->addr1[0],hdr->addr1[1],hdr->addr1[2],
+		hdr->addr1[3],hdr->addr1[4],hdr->addr1[5],
+		/* ADDR2 */
+		hdr->addr2[0],hdr->addr2[1],hdr->addr2[2],
+		hdr->addr2[3],hdr->addr2[4],hdr->addr2[5],
+		/* ADDR3 */
+		hdr->addr3[0],hdr->addr3[1],hdr->addr3[2],
+		hdr->addr3[3],hdr->addr3[4],hdr->addr3[5]
+	);
+}
 
 
 void app_main(void)
 {
+    char *line=malloc(256);
+    char *data;
+
+    uart_port_t uart_num = UART_NUM_0; // uart port number
+
+    // Small moving bar updated for each new value
+    progress_data[0]=0;
+    progress_data[1]=0;
+    progress_data[2]=0xff;
+    progress_data[3]=0xff;
+
     //int *quemu_test=(int *)  0x3ff005f0;
     nvs_flash_init();
     i2c_init(0,0x3C);
@@ -221,6 +344,10 @@ void app_main(void)
     //printf("t=0x%x\n",*quemu_test);
     init_wifi(WIFI_MODE_AP);
     // WIFI_MODE_STA
+    clear_display();
+    ssd1306_128x64_noname_powersave_off();
+    display_three_numbers( 0,0);
+
 
     xEventGroupWaitBits(wifi_event_group,STARTED_BIT,
     false,true,portMAX_DELAY);
@@ -235,8 +362,33 @@ void app_main(void)
         fflush(stdout);
     }
     // Assume we have adress 192.168.4.1 for AP 
-    //ip_addr
+    esp_wifi_set_promiscuous(true);
+    esp_wifi_set_promiscuous_rx_cb(&wifi_sniffer_packet_handler);
 
+#if 0
+
+    while (true)
+    {
+        data = readLine(uart_num, line, 256);
+		/* break if the recved message = "quit" */
+		if (!strncmp(line, "quit", 4))
+			break;
+
+		if (!strncmp(line, "0", 1))
+		{
+            printf("0. Entering promisc mode\n");
+
+            esp_wifi_set_promiscuous(true);
+	        esp_wifi_set_promiscuous_rx_cb(&wifi_sniffer_packet_handler);
+
+		} else if (!strncmp(line, "1", 1))
+		{
+			printf("1\n");            
+		} else {
+			printf("what?\n 0. enters promisc mode\n");                        
+        }
+    }
+#endif
 
 #if 0
     if (*quemu_test==0x42) {
@@ -248,16 +400,6 @@ void app_main(void)
         initialise_wifi();
     }
 #endif
-
-    // wifi socket with 
-
-
-#if 0
-#endif
-
-
-// 
-
 
 
 
