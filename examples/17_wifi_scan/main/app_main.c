@@ -26,34 +26,66 @@
 #include "esp_system.h"
 #include "nvs_flash.h"
 
+#include "esp_event_loop.h"
+#include "esp_wifi.h"
+#include "esp_log.h"
+
+#define MAX_APs 20
+#define	WIFI_CHANNEL_MAX		(13)
+
+
+// From auth_mode code to string
+static char* getAuthModeName(wifi_auth_mode_t auth_mode) {
+	
+	char *names[] = {"OPEN", "WEP", "WPA PSK", "WPA2 PSK", "WPA WPA2 PSK", "MAX"};
+	return names[auth_mode];
+}
+
+wifi_ap_record_t ap_records[MAX_APs];
+
+void
+wifi_set_channel(uint8_t channel)
+{	
+	esp_wifi_set_channel(channel, WIFI_SECOND_CHAN_NONE);
+}
+
+
 void scan_ap_task(void *pvParameters)
 {
+	uint8_t channel = 1;
+	uint16_t ap_num = MAX_APs;
 	uint16_t n = 0;
-	wifi_ap_list_t *al;
+	wifi_scan_config_t scan_config = {
+			.ssid = 0,
+			.bssid = 0,
+			.channel = 0,
+			.show_hidden = true
+	};
+
     while (1) {
 
-		esp_wifi_scan_start(NULL, true);
-		esp_wifi_get_ap_num(&n);
+		ESP_ERROR_CHECK(esp_wifi_scan_start(&scan_config, true));
+		printf(" Completed scan!\n");
+ 
+        ESP_ERROR_CHECK(esp_wifi_scan_get_ap_records(&ap_num, ap_records));
+        printf("Found %d access points:\n", ap_num);
 
-		printf("Scanned %d APs \r\n", n);
-		al = malloc(n * sizeof(wifi_ap_list_t));
-		if (al == NULL) {
-			return;
-		}
-		if (esp_wifi_get_ap_list(&n, al) == ESP_OK) {
-			for (uint16_t i = 0; i < n; i++) {
-				uint8_t *bi = al[i].bssid;
-				printf("%32s (%02x:%02x:%02x:%02x:%02x:%02x) rssi: %02d auth: %02d\r\n",
-						al[i].ssid,
+			for (uint16_t i = 0; i < ap_num; i++) {
+				uint8_t *bi = ap_records[i].bssid;
+				printf("%32s (%02x:%02x:%02x:%02x:%02x:%02x) rssi: %02d auth: %12s\r\n",
+						ap_records[i].ssid,
 						MAC2STR(bi),
-						al[i].rssi,
-						al[i].authmode
+						ap_records[i].rssi,
+						getAuthModeName(ap_records[i].authmode)
 					);
 			}
-		}
-		free(al);
 
 		printf("------------ delay 6s to start a new scanning ... --------------\r\n");
+		channel = (channel % WIFI_CHANNEL_MAX) + 1;
+		// I think channel config = 0 means scan all channels
+		wifi_set_channel(channel);
+		printf(" Channel %d\n",channel);
+
         vTaskDelay(6000 / portTICK_PERIOD_MS);
     }
 }
@@ -66,20 +98,19 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
 static void wifi_init(void)
 {
 	tcpip_adapter_init();
-	esp_event_loop_init(event_handler, NULL);
+	ESP_ERROR_CHECK(esp_event_loop_init(event_handler, NULL));
 	wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-	esp_wifi_init(&cfg);
+	ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
-	esp_wifi_set_mode(WIFI_MODE_STA);
-	esp_wifi_start();
+	ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+	ESP_ERROR_CHECK(esp_wifi_start());
 }
 
 void app_main()
 {
 	nvs_flash_init();
-	system_init();
+	//system_init();
 	wifi_init();
-	printf("Welcome to Noduino Quantum\r\n");
 	printf("WiFi AP SSID Scanning... \r\n");
-    xTaskCreatePinnedToCore(&scan_ap_task, "scan_ap_task", 1024, NULL, 5, NULL, 0);
+    xTaskCreatePinnedToCore(&scan_ap_task, "scan_ap_task", 8*1024, NULL, 5, NULL, 0);
 }
