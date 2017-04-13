@@ -72,10 +72,11 @@ void scan_ap_task(void *pvParameters)
 
 			for (uint16_t i = 0; i < ap_num; i++) {
 				uint8_t *bi = ap_records[i].bssid;
-				printf("%32s (%02x:%02x:%02x:%02x:%02x:%02x) rssi: %02d auth: %12s\r\n",
+				printf("%32s (%02x:%02x:%02x:%02x:%02x:%02x) rssi: %02d %s auth: %12s\r\n",
 						ap_records[i].ssid,
 						MAC2STR(bi),
 						ap_records[i].rssi,
+						(ap_records[i].low_rate_enable==1) ? " LR " : "    " ,
 						getAuthModeName(ap_records[i].authmode)
 					);
 			}
@@ -97,12 +98,15 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
 
 static void wifi_init(void)
 {
+	const uint8_t protocol = WIFI_PROTOCOL_LR;
+
 	tcpip_adapter_init();
 	ESP_ERROR_CHECK(esp_event_loop_init(event_handler, NULL));
 	wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
 	ESP_ERROR_CHECK(esp_wifi_init(&cfg));
-
 	ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+	ESP_ERROR_CHECK(esp_wifi_set_protocol(WIFI_IF_STA,protocol));
+
 	ESP_ERROR_CHECK(esp_wifi_start());
 }
 
