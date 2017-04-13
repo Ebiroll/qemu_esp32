@@ -33,6 +33,7 @@
 #define MAX_APs 20
 #define	WIFI_CHANNEL_MAX		(13)
 
+unsigned int chanel=1;
 
 // From auth_mode code to string
 static char* getAuthModeName(wifi_auth_mode_t auth_mode) {
@@ -42,12 +43,6 @@ static char* getAuthModeName(wifi_auth_mode_t auth_mode) {
 }
 
 wifi_ap_record_t ap_records[MAX_APs];
-
-void
-wifi_set_channel(uint8_t channel)
-{	
-	esp_wifi_set_channel(channel, WIFI_SECOND_CHAN_NONE);
-}
 
 
 void scan_ap_task(void *pvParameters)
@@ -64,6 +59,10 @@ void scan_ap_task(void *pvParameters)
 
     while (1) {
 
+		// Setting this has no effect
+		//scan_config.channel = chanel;		
+
+
 		ESP_ERROR_CHECK(esp_wifi_scan_start(&scan_config, true));
 		printf(" Completed scan!\n");
  
@@ -72,8 +71,9 @@ void scan_ap_task(void *pvParameters)
 
 			for (uint16_t i = 0; i < ap_num; i++) {
 				uint8_t *bi = ap_records[i].bssid;
-				printf("%32s (%02x:%02x:%02x:%02x:%02x:%02x) rssi: %02d %s auth: %12s\r\n",
+				printf("%32s %2d%s (%02x:%02x:%02x:%02x:%02x:%02x) rssi: %02d %s auth: %12s\r\n",
 						ap_records[i].ssid,
+						ap_records[i].primary,(ap_records[i].second>0) ? "(HT40)" : "      ",
 						MAC2STR(bi),
 						ap_records[i].rssi,
 						(ap_records[i].low_rate_enable==1) ? " LR " : "    " ,
@@ -83,8 +83,7 @@ void scan_ap_task(void *pvParameters)
 
 		printf("------------ delay 6s to start a new scanning ... --------------\r\n");
 		channel = (channel % WIFI_CHANNEL_MAX) + 1;
-		// I think channel config = 0 means scan all channels
-		wifi_set_channel(channel);
+		//wifi_set_channel(channel);
 		printf(" Channel %d\n",channel);
 
         vTaskDelay(6000 / portTICK_PERIOD_MS);
