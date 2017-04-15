@@ -114,24 +114,16 @@ export IDF_PATH=~/esp/esp-idf
 ```
 
 #  Recomended version of esp-idf for qemu.
-```
-git checkout 47b8f78cb0e15fa43647788a808dac353167a485
-git submodule update
-``` 
 
-If you use v2.0 you might get problems, and with the latest version you will not be able to run in qemu until esp_crosscore_int_send_yield is implemented.
-Dont do this yet..
+Now  esp_crosscore_int_send_yield is implemented.
+You can again use head of esp-idf.
+
+Or you can try version 2.0
 ```
  git checkout v2.0
  git submodule update --init
 ```
-If you did not use the old version you will get this.
-```
-/home/olas/esp/esp-idf/components/freertos/./queue.c:1448 (xQueueGenericReceive)- assert failed!
-abort() was called at PC 0x40083a7f
-```
-I am working on this.
-
+Anyways, things will probably work much better now.
 
 #  Dumping the ROM0 & ROM1 using esp-idf esptool.py
 ```
