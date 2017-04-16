@@ -578,7 +578,7 @@ void dump_i2c_regs()
 
 }
 
-
+extern void sys_init();
 
 void app_main()
 {
@@ -586,6 +586,8 @@ void app_main()
     //*unpatch=0x42;
     int *quemu_test=(int *)  0x3ff005f0;
 
+
+    sys_init();
     esp_log_level_set("*", ESP_LOG_INFO);
     nvs_flash_init();
     dump_mac_with_crc(NULL);
@@ -599,10 +601,10 @@ void app_main()
     //dump_i2c_regs();
     if (*quemu_test==0x42) {
         printf("Running in qemu\n");
-        xTaskCreate(&emulated_net, "emulated_net", 4096, NULL, 5, NULL); 
+        xTaskCreate(&emulated_net, "emulated_net",2*4096, NULL, 20, NULL); 
         // emulated_net(NULL);
     } else {
-        xTaskCreate(&wifi_task,"wifi_task",2048, NULL, 5, NULL);
+        xTaskCreate(&wifi_task,"wifi_task",2*2048, NULL, 5, NULL);
     }
     dump_regs(NULL);
     //ethernet_main();
