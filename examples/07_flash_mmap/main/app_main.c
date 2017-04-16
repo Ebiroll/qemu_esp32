@@ -53,14 +53,14 @@ void mmu_table_dump()
     int i;    
     for (i = 0; i < REGIONS_COUNT * PAGES_PER_REGION; ++i) {
         test=DPORT_PRO_FLASH_MMU_TABLE[i];
-        if (test!=0) {
+        if (test!=0 && test!=0x100 ) {
             printf("pro page %d: paddr=%08X\n",i, test);
         }
     }
     // DPORT_APP_FLASH_MMU_TABLE
     for (i = 0; i < REGIONS_COUNT * PAGES_PER_REGION; ++i) {
         test=DPORT_APP_FLASH_MMU_TABLE[i];
-        if (test!=0) {
+        if (test!=0 && test!=0x100) {
             printf("app page %d: paddr=%08X\n",i, test);
         }
     }
