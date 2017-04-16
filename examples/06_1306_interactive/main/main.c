@@ -214,6 +214,11 @@ static void uartLoopTask(void *inpar)
 
     while (true)
     {
+        line[0]=0;
+        int to_send=printMenu(line,2*1024);
+        uart_tx_chars(UART_NUM_1, (const char *)line, to_send);
+
+
         data = readLine(uart_num, line, 256);
 		/* break if the recved message = "quit" */
 		if (!strncmp(line, "quit", 4))
@@ -306,17 +311,16 @@ void blink_task(void *pvParameters)
 
 void app_main(void)
 {
-    //int *quemu_test=(int *)  0x3ff005f0;
-    nvs_flash_init();
+    int *quemu_test=(int *)  0x3ff005f0;
+    //nvs_flash_init();
     i2c_init(0,0x3C);
     ssd1306_128x64_noname_init();
     //printf("t=0x%x\n",*quemu_test);
-    initialise_wifi();
+    //initialise_wifi();
 
-    xTaskCreatePinnedToCore(&blink_task, "blink", 4096, NULL, 20, NULL, 0);
+    //xTaskCreatePinnedToCore(&blink_task, "blink", 4096, NULL, 20, NULL, 0);
 
 
-#if 0
     if (*quemu_test==0x42) {
         printf("Running in qemu\n");
        // Uart
@@ -325,7 +329,7 @@ void app_main(void)
     } else {
         initialise_wifi();
     }
-#endif
+
 
     // wifi socket with 
 
