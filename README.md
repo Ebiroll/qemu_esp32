@@ -118,6 +118,14 @@ export IDF_PATH=~/esp/esp-idf
 Now  esp_crosscore_int_send_yield is implemented.
 You can again use head of esp-idf.
 
+There is some issues when using nvs_flash_init()
+If you get problems, try removing this call.
+
+It seems like the emulation has some problems with do_global_ctors().
+ should be available at this location... 0x3f409fb8
+__init_array_start , however nvs reuses 0x3f40000 as I have not gotten it to recognize that this is already mmapped by the bootloader.
+
+
 Or you can try version 2.0
 ```
  git checkout v2.0
@@ -338,7 +346,8 @@ hw/xtensa/tmpbme280.c
 hw/display/ssd1306.c
 ```
 The idea was to emulate a 1306 display over i2c.
-Not quite there yet, but fun with visual feedback
+Almost there but need improved emulation to get 06_duino example running.
+This example uses more ssd1306 commands than the other examples.
 [[https://github.com/Ebiroll/qemu_esp32/blob/master/img/1306.jpg] ]
 
 # Results
@@ -800,7 +809,7 @@ I (97142) cpu_start: Starting scheduler on PRO CPU.
 I (68253) cpu_start: Starting scheduler on APP CPU.
 
 There used to be some problem with the scheduling and probably some other error as well.
-When calling nvs_flash_init() qemu always hangs here,
+When calling nvs_flash_init()qemu always hangs here,
 
 (gdb) info threads
   Id   Target Id         Frame 
