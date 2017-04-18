@@ -20,8 +20,16 @@
 #include "esp_spi_flash.h"
 #include "esp_int_wdt.h"
 #include "esp_task_wdt.h"
+//#include "cache_err_int.h"
 #include "soc/timer_group_reg.h"
 #include "soc/rtc_cntl_reg.h"
+#include "esp_ipc.h"
+#include "esp_heap_alloc_caps.h"
+
+
+//extern void heap_alloc_caps_init();
+extern void esp_cache_err_int_init();
+extern volatile int port_xSchedulerRunning[2];
 
 #define STRINGIFY(a) #a
 
@@ -35,6 +43,7 @@ extern void (*__init_array_start)(void);
 extern void (*__init_array_end)(void);
 extern void app_main(void);
 
+static bool app_cpu_started = false;
 
 //-----------------------------------------------------------------------------
 // Read CCOUNT register.
@@ -105,31 +114,37 @@ void IRAM_ATTR start_cpu1(void)
     //    ;
     //}
     // Wait for FreeRTOS initialization to finish on PRO CPU
-    //while (port_xSchedulerRunning[0] == 0) {
-    //    ;
-    //}
+    app_cpu_started=1;
+
+
+    while (port_xSchedulerRunning[0] == 0) {
+        ;
+    }
     //Take care putting stuff here: if asked, FreeRTOS will happily tell you the scheduler
     //has started, but it isn't active *on this CPU* yet.
+    // Dont think we need this
     esp_crosscore_int_init();
 
       if (xPortGetCoreID()==1) {
-	printf("Running on APP CPU!!!!!!!!\n");
+	       //printf("Running on APP CPU!!!!!!!!\n");
       }
 
-    ESP_EARLY_LOGI(tag, "Starting scheduler on APP CPU.");
+    //ESP_EARLY_LOGI(tag, "Starting scheduler on APP CPU.");
     cpu1_scheduler_started=true;
     // S 
     //xPortStartScheduler();
-    // Run your code here, dont use operating system calls.
+
+    // Run your code here, dont use any operating system calls.
     uint32_t start=get_ccount();
 
     uint32_t test;
     for(;;) {
        test=get_ccount();
        if (test<start) {
-	 printf("cpu1 wrap ccount\n");
-	 test=start;
+	        //printf("cpu1 wrap ccount\n");
+	        //test=start;
        }
+       start=test;
     }
 }
 
@@ -143,11 +158,11 @@ void IRAM_ATTR call_start_cpu1()
 
     cpu_configure_region_protection();
 
-    uartAttach();
-    ets_install_uart_printf();
-    uart_tx_switch(CONFIG_CONSOLE_UART_NUM);
+    //uartAttach();
+    //ets_install_uart_printf();
+    //uart_tx_switch(CONFIG_CONSOLE_UART_NUM);
 
-    ESP_EARLY_LOGI(tag, "Undercover app cpu up.");
+    //ESP_EARLY_LOGI(tag, "Undercover app cpu up.");
     start_cpu1();
 }
 
@@ -175,49 +190,54 @@ void IRAM_ATTR start_cpu0(void)
 
    // UNSTALL cpu1 (app cpu)
    // This would normally be done for multicore only
-    ESP_EARLY_LOGI(tag, "Starting app cpu, entry point is %p", call_start_cpu1);
+    //ESP_EARLY_LOGI(tag, "Starting app cpu, entry point is %p", call_start_cpu1);
     //Flush and enable icache for APP CPU
     Cache_Flush(1);
     Cache_Read_Enable(1);
     esp_cpu_unstall(1);
     //Enable clock gating and reset the app cpu.
+    ets_set_appcpu_boot_addr((uint32_t)call_start_cpu1);
     SET_PERI_REG_MASK(DPORT_APPCPU_CTRL_B_REG, DPORT_APPCPU_CLKGATE_EN);
     CLEAR_PERI_REG_MASK(DPORT_APPCPU_CTRL_C_REG, DPORT_APPCPU_RUNSTALL);
     SET_PERI_REG_MASK(DPORT_APPCPU_CTRL_A_REG, DPORT_APPCPU_RESETTING);
     CLEAR_PERI_REG_MASK(DPORT_APPCPU_CTRL_A_REG, DPORT_APPCPU_RESETTING);
-    ets_set_appcpu_boot_addr((uint32_t)call_start_cpu1);
 
-    //while (!app_cpu_started) {
-    //    ets_delay_us(100);
-    //}
+    while (!app_cpu_started) {
+        ets_delay_us(100);
+    }
+    // TODO!! Already done but needs to be redone after cpu1 is proprly setup.
+    // heap_alloc_caps_init();
+
 
         esp_setup_syscall_table();
         esp_set_cpu_freq();     // set CPU frequency configured in menuconfig  
         
         uart_div_modify(CONFIG_CONSOLE_UART_NUM, (APB_CLK_FREQ << 4) / CONFIG_CONSOLE_UART_BAUDRATE);          
 	//esp_brownout_init();
-        rtc_gpio_unhold_all();
-        esp_setup_time_syscalls();
-        esp_vfs_dev_uart_register();
-        esp_reent_init(_GLOBAL_REENT);
+       rtc_gpio_force_hold_dis_all();
+       esp_setup_time_syscalls();
+       esp_vfs_dev_uart_register();
+       esp_reent_init(_GLOBAL_REENT);
+
+
         const char* default_uart_dev = "/dev/uart/" STRINGIFY(CONFIG_CONSOLE_UART_NUM);
         _GLOBAL_REENT->_stdin  = fopen(default_uart_dev, "r");
         _GLOBAL_REENT->_stdout = fopen(default_uart_dev, "w");
         _GLOBAL_REENT->_stderr = fopen(default_uart_dev, "w");
 
        do_global_ctors();
+       esp_cache_err_int_init();
        esp_crosscore_int_init();
-
-       //esp_ipc_init();
+       esp_ipc_init();
        spi_flash_init();
-
-       //spi_flash_guard_set(&g_flash_guard_default_ops);
+       /* init default OS-aware flash access critical section */
+       spi_flash_guard_set(&g_flash_guard_default_ops);
 
 
        xTaskCreatePinnedToCore(&main_task, "main",
 			       ESP_TASK_MAIN_STACK, NULL,
 			       ESP_TASK_MAIN_PRIO, NULL, 0);
-       ESP_LOGI(tag, "Starting scheduler on PRO CPU.");
+       //ESP_LOGI(tag, "Starting scheduler on PRO CPU.");
        vTaskStartScheduler();
 }
 
@@ -318,7 +338,7 @@ void app_main()
     // flash uses ipc between cores.
     g_my_app_init_done=true;
     vTaskDelay(500 / portTICK_PERIOD_MS);
-    nvs_flash_init();
+    //nvs_flash_init();
 
     
     printf("starting\n");
