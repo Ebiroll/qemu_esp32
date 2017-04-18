@@ -202,7 +202,7 @@ static void uartLoopTask(void *inpar)
     ESP_ERROR_CHECK(uart_driver_install(uart_num, 512 * 2, 512 * 2, 10, &uart_queue, 0));
     sprintf(line,"Select 1,2,3,4 or 5\n");
     ssd1306_128x64_noname_powersave_off();
-    display_three_numbers(display_number,0);
+    //display_three_numbers(display_number,0);
 
 
     printMenu(line,2*1024);
@@ -312,7 +312,14 @@ void blink_task(void *pvParameters)
 
 void app_main(void)
 {
-    int *quemu_test=(int *)  0x3ff005f0;
+    // Before calling nvs_flash:init(),
+    //(gdb) p/x GPIO_PIN_MUX_REG[0]
+    //$3 = 0x3ff49044
+    //(gdb) p/x GPIO_PIN_MUX_REG[21]
+    //$4 = 0x3ff4907c
+    //(gdb) p/x &GPIO_PIN_MUX_REG[21]
+    //$5 = 0x3f408448
+
     //nvs_flash_init();
     i2c_init(0,0x3C);
     ssd1306_128x64_noname_init();
