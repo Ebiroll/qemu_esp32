@@ -764,7 +764,7 @@ int ethoc_open(struct netif *dev)
 
     // Poll for input
 	// Interrupts work now, Should not need to do polling 
-    xTaskCreate(&poll_task,"poll_task",2048, NULL, 15, &pollHandle);
+    xTaskCreate(&poll_task,"poll_task",2048, NULL, 20, &pollHandle);
 
 
 	//if (netif_queue_stopped(dev)) {
@@ -854,7 +854,7 @@ static int ethoc_start_xmit( struct pbuf *skb, struct netif *dev)
 	ethoc_write_bd(priv, entry, &bd);
 
 	if (priv->cur_tx == (priv->dty_tx + priv->num_tx)) {
-		printf("stopping queue\n");
+	        //printf("stopping queue\n");
 		//netif_stop_queue(dev);
 	}
 
