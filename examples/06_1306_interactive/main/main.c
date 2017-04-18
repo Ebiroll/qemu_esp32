@@ -38,6 +38,7 @@ SOFTWARE.
 #include "1306.h"
 #include "esp32_i2c.h"
 #include "menu.h"
+#include "emul_ip.h"
 
 #include <string.h>
 
@@ -321,10 +322,18 @@ void app_main(void)
     //xTaskCreatePinnedToCore(&blink_task, "blink", 4096, NULL, 20, NULL, 0);
 
 
-    if (*quemu_test==0x42) {
+    if (is_running_qemu()) {
         printf("Running in qemu\n");
+
+       // Initialize event loop
+       ESP_ERROR_CHECK( esp_event_loop_init(esp32_wifi_eventHandler, NULL) );
+
+
        // Uart
+       xTaskCreatePinnedToCore(task_lwip_init, "loop", 4096, NULL, 14, NULL, 0);
        xTaskCreatePinnedToCore(&uartLoopTask, "loop", 4096, NULL, 20, NULL, 0);
+
+
 
     } else {
         initialise_wifi();
