@@ -1351,21 +1351,21 @@ static void low_level_init(struct netif * netif)
     netif->flags = NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP | NETIF_FLAG_LINK_UP;
   		
 		  // 24:0a:c4:00:c8:70
-		  /*
+		  
     netif->hwaddr[0]=0x24;
     netif->hwaddr[1]=0x0a;
     netif->hwaddr[2]=0xc4;
     netif->hwaddr[3]=0x00;
     netif->hwaddr[4]=0xc8;
     netif->hwaddr[5]=0x70;
-           */
+/*
     netif->hwaddr[0]=0x70;
     netif->hwaddr[1]=0xc8;
     netif->hwaddr[2]=0x00;
     netif->hwaddr[3]=0xc4;
     netif->hwaddr[4]=0x0a;
     netif->hwaddr[5]=0x24;
-
+*/
 	// ---------- start -------------
 	ethoc_set_ringparam(netif);
 	ethoc_open(netif);              
