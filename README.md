@@ -71,11 +71,15 @@ This however reqires that you match the EFUSE mac adresses with the ones dumped 
 Starting wifi works sometimes but its better to do like this, if you want to be able to flash and run 
 the same app in qemu.
 
-    int *quemu_test=(int *)  0x3ff005f0;
+    #include "emul_ip.h"
 
-    if (*quemu_test==0x42) {
+    if (is_running_qemu()) {
         printf("Running in qemu\n");
-        emulated_net(NULL);
+        ESP_ERROR_CHECK( esp_event_loop_init(esp32_wifi_eventHandler, NULL) );
+
+        task_lwip_init(NULL);
+        /* better to do  xTaskCreatePinnedToCore(task_lwip_init, "loop", 4096, NULL, 14, NULL, 0); */
+
     }
     else {
       wifi_task(NULL);
@@ -827,7 +831,7 @@ https://github.com/espressif/esp-idf/commit/47b8f78cb0e15fa43647788a808dac353167
 You should be able to run on two cores.
 
 
-This could probably also be emulated better,
+This is now emulated better,
 ```
      void esp_crosscore_int_send_yield(int coreId) {                                                                  
              assert(coreId<portNUM_PROCESSORS);                                                                       
@@ -890,12 +894,10 @@ However the work is not yet finished.
     cd build-qemu-xtensa
     ../qemu-xtensa/configure --disable-werror --prefix=`pwd`/root --target-list=xtensa-softmmu
 
-#Networking support
+#  Networking support
      There exists networking support of an emulated opencore network device,
-     main/lwip_ethoc.c is the driver.
+     components/emul_ip/lwip_ethoc.c is the driver.
      All files in the net/ direcory is just for reference, they are currently not used.
-     With the 2.0 version of esp-idf emulated networking is broken. Need to investigate whats changed.
-     probably something about the tcpip_task_hdlxxx : 3ffc4e50, prio:18,stack:2048
 
 ```  
      Dont try running   emulated_net(); on actual hardware. 

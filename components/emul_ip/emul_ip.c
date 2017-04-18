@@ -21,13 +21,28 @@
 #include "lwip/netif.h"
 #include "netif/etharp.h"
 #include "lwip/tcpip.h"
-
+#include "lwip/init.h"
+#include "esp_event.h"
+#include "esp_event_loop.h"
 
 #include "port/arch/sys_arch.h"
 // -- Generic network interface --
 
 extern err_t ethoc_init(struct netif *netif);
 
+int is_running_qemu() {
+    int *quemu_test=(int *)  0x3ff005f0;
+    int ret_val;
+
+    if (*quemu_test==0x42) {
+        printf("Running in qemu\n");
+        ret_val=1;
+    } else {
+      ret_val=0;
+    }
+
+    return ret_val;
+}
 
 
 struct netif ethoc_if;
@@ -37,12 +52,17 @@ void ethernet_hardreset(void);	//These reset codes are built for C6711 DSP
 void tcpip_init_done_ok(void * arg);
 
 
-void Task_lwip_init(void * pParam)
+void task_lwip_init(void * pParam)
 {
   ip4_addr_t ipaddr, netmask, gw;
   sys_sem_t sem;
-  
+
+  // From esp-idf
+  lwip_init();
+
+
   //ethernet_hardreset();//hard reset of EthernetDaughterCard
+  // This should be done in lwip_init
 # if 0  
   #if LWIP_STATS
   stats_init();
@@ -66,8 +86,8 @@ void Task_lwip_init(void * pParam)
 	    tcpip_input);
   */
   //add interface
-  IP4_ADDR(&gw, 192,168,1,1);
-  IP4_ADDR(&ipaddr, 192,168,1,3);
+  IP4_ADDR(&gw, 192,168,4,1);
+  IP4_ADDR(&ipaddr, 192,168,4,3);
   IP4_ADDR(&netmask, 255,255,255,0);
 
   netif_add(&ethoc_if, &ipaddr, &netmask, &gw, NULL, ethoc_init, tcpip_input);
@@ -85,8 +105,28 @@ void Task_lwip_init(void * pParam)
   sys_sem_free(sem);
   printf("TCP/IP initialized.\n");
 
+// Fake got_ip event
+
+ if (esp_event_loop_get_queue()!=NULL) {
+   system_event_t evt;
+
+   //ip4_addr_set(&ip_info->ip, ip_2_ip4(&netif->ip_addr));
+   //ip4_addr_set(&ip_info->netmask, ip_2_ip4(&netif->netmask));
+   //ip4_addr_set(&ip_info->gw, ip_2_ip4(&netif->gw));
+
+   //notify event
+   evt.event_id = SYSTEM_EVENT_STA_GOT_IP;
+
+   //memcpy(&evt.event_info.got_ip.ip_info, ip_info, sizeof(tcpip_adapter_ip_info_t));
+
+   esp_event_send(&evt);
+ }
+
+
 
   printf("Applications started.\n");
+
+  vTaskDelete(NULL);
   
   //---------------------------------------------------------------------
   //All thread(task) of lwIP must have their PRI between 10 and 14.
@@ -104,7 +144,7 @@ void Task_lwip_init(void * pParam)
   /* Block for ever. */
   //sem = sys_sem_new(0);
   //sys_sem_wait(sem);
-  printf("Finished\n");
+  //printf("Finished\n");
 }
 
 //---------------------------------------------------------

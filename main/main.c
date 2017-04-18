@@ -27,6 +27,7 @@
 #include "lwip/netif.h"
 #include "netif/etharp.h"
 #include "freertos/heap_regions.h"
+#include "emul_ip.h"
 
 #include "esp_eth.h"
 #include "rom/ets_sys.h"
@@ -331,7 +332,7 @@ void wifi_task(void *pvParameter) {
     }
 }
 
-extern void Task_lwip_init(void * pParam);
+
 
 void emulated_net(void *pvParameter) {
 
@@ -361,7 +362,7 @@ void emulated_net(void *pvParameter) {
 #endif
 
 
-    Task_lwip_init(NULL);
+    task_lwip_init(NULL);
 
     //gpio_set_direction(GPIO_NUM_4, GPIO_MODE_OUTPUT);
     int level = 0;
@@ -582,10 +583,6 @@ extern void sys_init();
 
 void app_main()
 {
-    //int *unpatch=(int *)  0x3ff005f0;
-    //*unpatch=0x42;
-    int *quemu_test=(int *)  0x3ff005f0;
-
 
     sys_init();
     esp_log_level_set("*", ESP_LOG_INFO);
@@ -599,7 +596,7 @@ void app_main()
     //emulated_net(NULL);
 
     //dump_i2c_regs();
-    if (*quemu_test==0x42) {
+    if (is_running_qemu()) {
         printf("Running in qemu\n");
         xTaskCreate(&emulated_net, "emulated_net",2*4096, NULL, 20, NULL); 
         // emulated_net(NULL);
