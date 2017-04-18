@@ -117,7 +117,7 @@ void task_lwip_init(void * pParam)
    //notify event
    evt.event_id = SYSTEM_EVENT_STA_GOT_IP;
 
-   //memcpy(&evt.event_info.got_ip.ip_info, ip_info, sizeof(tcpip_adapter_ip_info_t));
+   memcpy(&evt.event_info.got_ip.ip_info, &ipaddr, sizeof(tcpip_adapter_ip_info_t));
 
    esp_event_send(&evt);
  }
