@@ -42,4 +42,11 @@ I (38) example: ... allocated socket
 stopping queue
 '''
 
-Need to improve network emulation to get this to work in qemu
+Need to improve network emulation to get this to work in 
+
+
+It can work, sometimes if you serve the web requests like this,
+
+  nc -l 80 < README.md
+
+  qemu xtensa-softmmu/qemu-system-xtensa -d guest_errors,unimp -net nic,model=vlan0 -net user,ipver4=on,net=192.168.4.0/24,host=192.168.4.1,hostfwd=tcp::10090-192.168.4.3:10090 -net dump,file=/tmp/vm0.pcap  -cpu esp32 -M esp32 -m 4M  -kernel ~/esp/qemu_esp32/examples/13_http_request/build/http-request.elf -s    > io.txt 

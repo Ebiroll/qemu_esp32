@@ -58,8 +58,8 @@ void task_lwip_init(void * pParam)
   sys_sem_t sem;
 
   // From esp-idf
-  lwip_init();
-
+  //lwip_init();
+  sys_init();
 
   //ethernet_hardreset();//hard reset of EthernetDaughterCard
   // This should be done in lwip_init
@@ -92,7 +92,6 @@ void task_lwip_init(void * pParam)
 
   netif_add(&ethoc_if, &ipaddr, &netmask, &gw, NULL, ethoc_init, tcpip_input);
   netif_set_default(&ethoc_if);
-  netif_set_up(&ethoc_if); 
   
 
   printf("TCP/IP initializing...\n");  
@@ -105,7 +104,9 @@ void task_lwip_init(void * pParam)
   sys_sem_free(sem);
   printf("TCP/IP initialized.\n");
 
-// Fake got_ip event
+  netif_set_up(&ethoc_if); 
+
+ // Fake got_ip event
 
  if (esp_event_loop_get_queue()!=NULL) {
    system_event_t evt;

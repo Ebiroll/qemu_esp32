@@ -68,7 +68,7 @@ struct netif *ethoc_if_netif;
 static void low_level_init(struct netif * netif);
 static void arp_timer(void *arg);
 
-static err_t low_level_output(struct netif * netif,struct pbuf *p);
+static err_t ethoc_low_level_output(struct netif * netif,struct pbuf *p);
 static struct pbuf * low_level_input(struct netif *netif);
 
 static portMUX_TYPE lock_xmit_spinlock = portMUX_INITIALIZER_UNLOCKED;
@@ -789,7 +789,7 @@ int ethoc_open(struct netif *dev)
 
 
 
-unsigned char packet[ETHOC_BUFSIZ];
+unsigned char packet[ETHOC_BUFSIZ+40];
 
 static int ethoc_start_xmit( struct pbuf *skb, struct netif *dev)
 {
@@ -814,6 +814,8 @@ static int ethoc_start_xmit( struct pbuf *skb, struct netif *dev)
 		u16_t crc=lwip_standard_chksum(packet,skb->len);
 		// TODO, qemu does not use the TX_BD_PAD bit..
 		//printf("<%x>",crc); , does not work.
+
+		// Dont write 
 		packet[skb->len+1]= crc & 0xff;
 		packet[skb->len+2]= (crc & 0xff00) << 8 ;
 
@@ -1307,7 +1309,7 @@ err_t ethoc_init(struct netif *netif)
   netif->name[0] = IFNAME0;
   netif->name[1] = IFNAME1;
   netif->output = ethoc_output;
-  netif->linkoutput = low_level_output;
+  netif->linkoutput = ethoc_low_level_output;
 
   sprintf(hostname, "esp_qemu");
   netif->hostname = hostname;
@@ -1348,13 +1350,21 @@ static void low_level_init(struct netif * netif)
   	//netif->flags = NETIF_FLAG_BROADCAST;
     netif->flags = NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP | NETIF_FLAG_LINK_UP;
   		
-    netif->hwaddr[0]=0x12;
-    netif->hwaddr[1]=0x34;
-    netif->hwaddr[2]=0x56;
-    netif->hwaddr[3]=0x78;
-    netif->hwaddr[4]=0x9a;
-    netif->hwaddr[5]=0xe0;
-
+		  // 24:0a:c4:00:c8:70
+		  /*
+    netif->hwaddr[0]=0x24;
+    netif->hwaddr[1]=0x0a;
+    netif->hwaddr[2]=0xc4;
+    netif->hwaddr[3]=0x00;
+    netif->hwaddr[4]=0xc8;
+    netif->hwaddr[5]=0x70;
+           */
+    netif->hwaddr[0]=0x70;
+    netif->hwaddr[1]=0xc8;
+    netif->hwaddr[2]=0x00;
+    netif->hwaddr[3]=0xc4;
+    netif->hwaddr[4]=0x0a;
+    netif->hwaddr[5]=0x24;
 
 	// ---------- start -------------
 	ethoc_set_ringparam(netif);
@@ -1387,24 +1397,27 @@ static void low_level_init(struct netif * netif)
   ----------------------------------------------------------------------------------------*/
 
 /*
- * low_level_output():
+ * ethoc_low_level_output():
  *
  * Should do the actual transmission of the packet. The packet is
  * contained in the pbuf that is passed to the function. This pbuf
  * might be chained.
  *
  */
-static err_t low_level_output(struct netif * netif, struct pbuf *p)
+
+struct pbuf *q;
+u16_t Count;  // packetLength
+u8_t *buf;
+u16_t pbuf_x_len = 0;
+struct pbuf *tmp;
+
+static err_t ethoc_low_level_output(struct netif * netif, struct pbuf *p)
 {
-	struct pbuf *q;
-	u16_t Count;  // packetLength
-	u8_t *buf;
 	
 	//packetLength = p->tot_len - ETH_PAD_SIZE; //05 01 millin    
 	//if ((packetLength) < 64) packetLength = 64; //add pad by the AX88796 automatically
 
-	//printf("low_level_output %d\n",p->tot_len);
-	
+	//printf("ethoc_low_level_output %d\n",p->tot_len);
 	/*
 	 * Write packet to ring buffers.
 	 */
@@ -1412,13 +1425,12 @@ static err_t low_level_output(struct netif * netif, struct pbuf *p)
    // Note that LWIP_NETIF_TX_SINGLE_PBUF is set to 1..
    // @todo: TCP and IP-frag do not work with this, yet 
     q = p;
-    u16_t pbuf_x_len = 0;
     pbuf_x_len = q->len;
     if(q->next !=NULL)
     {
-		printf("Assembling packet, this should not happen if LWIP_NETIF_TX_SINGLE_PBUF is set");
+		//printf("Assembling packet, this should not happen if LWIP_NETIF_TX_SINGLE_PBUF is set");
         //char cnt = 0;
-        struct pbuf *tmp = q->next;
+        tmp = q->next;
         while(tmp != NULL)
         {
             memcpy( (u8_t *)( (u8_t *)(q->payload) + pbuf_x_len), (u8_t *)tmp->payload , tmp->len );
