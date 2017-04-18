@@ -158,9 +158,9 @@ void IRAM_ATTR call_start_cpu1()
 
     cpu_configure_region_protection();
 
-    //uartAttach();
-    //ets_install_uart_printf();
-    //uart_tx_switch(CONFIG_CONSOLE_UART_NUM);
+    uartAttach();
+    ets_install_uart_printf();
+    uart_tx_switch(CONFIG_CONSOLE_UART_NUM);
 
     //ESP_EARLY_LOGI(tag, "Undercover app cpu up.");
     start_cpu1();
