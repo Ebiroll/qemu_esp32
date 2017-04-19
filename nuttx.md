@@ -22,5 +22,11 @@ make[1]: Leaving directory `/home/olas/nuttx/configs'
 make: the `-C' option requires a non-empty string argument
 Usage: make [options] [target] ...
 
-
 See configs/esp32-core/README.txt for further instructions
+
+cd ..
+git clone https://bitbucket.org/nuttx/apps.git
+cd nuttx
+Added,
+CONFIG_APPS_DIR = ../apps
+to Makefile.unix
