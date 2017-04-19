@@ -33,6 +33,7 @@
 #include "driver/i2c.h"
 
 #include "esp32_i2c.h"
+#include "soc/io_mux_reg.h"
 
 // Use same inputs as sparkfun, arduino
 
@@ -50,6 +51,28 @@
 #define ACK_VAL    0x0         /*!< I2C ack value */
 #define NACK_VAL   0x1         /*!< I2C nack value */
 
+#define STR_HELPER(x) #x
+#define STR(x) STR_HELPER(x)
+
+
+#define DUMP_MACRO(macro, ...) \
+    do { \
+        puts ( \
+            "'" \
+            # macro STR(DUMP_MACRO_ARGS_ ## __VA_ARGS__) \
+            "' expands to '" \
+            STR(CALL(macro, DUMP_MACRO_ARGS_ ## __VA_ARGS__)) \
+            "'" \
+        ); \
+    } while (0)
+
+
+/* helpers for DUMP_MACRO, add more if required */
+#define DUMP_MACRO_ARGS_
+#define DUMP_MACRO_ARGS_0 ()
+#define DUMP_MACRO_ARGS_1 (<1>)
+#define DUMP_MACRO_ARGS_2 (<1>, <2>)
+#define DUMP_MACRO_ARGS_3 (<1>, <2>, <3>)
 
 
 /**
@@ -88,6 +111,9 @@ esp_err_t i2c_master_check_slave(i2c_port_t i2c_num,uint8_t addr)
 
 i2c_port_t g_1306_port = 0;
 uint8_t g_addr=0x3C;
+i2c_config_t conf;
+
+
 /**
  * @brief i2c master initialization
  */
@@ -95,13 +121,23 @@ void i2c_init(i2c_port_t i2c_num,uint8_t addr)
 {
     g_1306_port =i2c_num;
     g_addr=addr;
-    i2c_config_t conf;
     conf.mode = I2C_MODE_MASTER;
     conf.sda_io_num = I2C_MASTER_SDA_IO;
     conf.sda_pullup_en = GPIO_PULLUP_ENABLE;
     conf.scl_io_num = I2C_MASTER_SCL_IO;
     conf.scl_pullup_en = GPIO_PULLUP_ENABLE;
     conf.master.clk_speed = I2C_MASTER_FREQ_HZ;
+
+
+    //#pragma message("content of AAA: " STR(AAA))
+
+    // This one is different depending on 
+    //GPIO_PIN_MUX_REG[21]
+
+    //Due to crash in  i2c_set_pin
+    DUMP_MACRO(PIN_FUNC_SELECT(GPIO_BUF[21],21));
+    DUMP_MACRO(PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[21], PIN_FUNC_GPIO));
+
     i2c_param_config(i2c_num, &conf);
     i2c_driver_install(i2c_num, conf.mode, I2C_MASTER_RX_BUF_DISABLE, I2C_MASTER_TX_BUF_DISABLE, 0);
 }

@@ -56,6 +56,7 @@ extern char *pollLine(uart_port_t uart,char *line,int len);
 
 char echoLine[512];
 
+extern unsigned short echo_port;
 
 /**
  * An ESP32 WiFi event handler.
@@ -101,16 +102,26 @@ static esp_err_t esp32_wifi_eventHandler(void *ctx, system_event_t *event) {
                 ssd1306_128x64_noname_powersave_off();
 
                 unsigned char a=(*my_ip >> 24) & 0xff;
-                display_three_numbers(a,12);
+                display_three_numbers(a,12,0);
                 a=(*my_ip >> 16) & 0xff;
                 display_dot(3);
-                display_three_numbers(a,8);
+                display_three_numbers(a,8,0);
                 a=(*my_ip >> 8) & 0xff;
                 display_dot(7);
-                display_three_numbers(a,4);
+                display_three_numbers(a,4,0);
                 a=(*my_ip) & 0xff;
                 display_dot(11);
-                display_three_numbers(a,0);                
+                display_three_numbers(a,0,0);                
+
+		Set_Page_Address(4);
+		Set_Column_Address(2);
+
+		unsigned char port_hi=echo_port/1000;
+		unsigned char port_lo=echo_port%100;
+
+                display_three_numbers(port_hi,0,3);                
+                display_three_numbers(port_lo,3,3);                
+
             }
 
             xTaskCreate(&menu_application_thread, "menu thread", 2048, NULL, 5, NULL);
@@ -136,8 +147,8 @@ static void initialise_wifi(void)
     ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
     wifi_config_t wifi_config = {
         .sta = {
-	     //#include "secret.i"
-	     .ssid = "ssid",
+	        //#include "secret.i"
+	        .ssid = "ssid",
             .password = "password",
         },
     };
@@ -274,7 +285,7 @@ static void uartLoopTask(void *inpar)
 		if (!strncmp(line, "7", 1))
 		{
 			display_number++;
-			display_three_numbers(display_number,0);
+			display_three_numbers(display_number,0,0);
 		}
 
 		if (!strncmp(line, "8", 1))
@@ -334,18 +345,15 @@ void app_main(void)
 
        // Initialize event loop
        ESP_ERROR_CHECK( esp_event_loop_init(esp32_wifi_eventHandler, NULL) );
-
-
-       // Uart
        xTaskCreatePinnedToCore(task_lwip_init, "loop", 4096, NULL, 14, NULL, 0);
-       xTaskCreatePinnedToCore(&uartLoopTask, "loop", 4096, NULL, 20, NULL, 0);
-
 
 
     } else {
         initialise_wifi();
     }
 
+    // Uart
+    xTaskCreatePinnedToCore(&uartLoopTask, "loop", 4096, NULL, 20, NULL, 0);
 
     // wifi socket with 
 

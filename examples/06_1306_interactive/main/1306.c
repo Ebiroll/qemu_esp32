@@ -10,7 +10,7 @@ unsigned char Contrast_level=0x8F;
 #define Slave_Address 0x3C
 
 #define Start_column	0x00
-#define Start_page		0x00
+#define Start_page	0x00
 #define	StartLine_set	0x00
 
 #include <stdio.h>
@@ -144,7 +144,7 @@ void Set_Contrast_Control_Register(unsigned char mod)
 
 
 
-void Write_number(unsigned char *n,unsigned char k,unsigned char station_dot)
+void Write_number(unsigned char *n,unsigned char k,unsigned char station_dot,unsigned char page)
 {
     unsigned char i; 
     unsigned char data[8];
@@ -154,7 +154,7 @@ void Write_number(unsigned char *n,unsigned char k,unsigned char station_dot)
     }
     i2c_1306_write_data(data,8);
    				
-	Set_Page_Address(Start_page+1)	;
+    Set_Page_Address(page+1)	;
     Set_Column_Address(Start_column+station_dot*8);	
     for(i=8;i<16;i++)
     {
@@ -167,21 +167,21 @@ void display_dot(unsigned char start_col)
 {
 	Set_Column_Address(Start_column+start_col*8);
 	Set_Page_Address(Start_page);
-    i2c_1306_write_data(dot,8);    
+        i2c_1306_write_data(dot,8);    
 }
 
-void display_three_numbers(unsigned char number,unsigned char start_col)
+ void display_three_numbers(unsigned char number,unsigned char start_col,unsigned char page)
 {	unsigned char number1,number2,number3;
 	number1=number/100;number2=number%100/10;number3=number%100%10;
 	Set_Column_Address(Start_column+0*8+start_col*8);
-	Set_Page_Address(Start_page);
-    Write_number(num,number1,0+start_col);
+	Set_Page_Address(page);
+    Write_number(num,number1,0+start_col,page);
 	Set_Column_Address(Start_column+1*8+start_col*8);
-	Set_Page_Address(Start_page);
-	Write_number(num,number2,1+start_col);
+	Set_Page_Address(page);
+	Write_number(num,number2,1+start_col,page);
 	Set_Column_Address(Start_column+2*8+start_col*8);
-	Set_Page_Address(Start_page);
-	Write_number(num,number3,2+start_col);
+	Set_Page_Address(page);
+	Write_number(num,number3,2+start_col,page);
 }
 
 #if 0
