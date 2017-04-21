@@ -16,6 +16,14 @@
 
 #include "driver/gpio.h"
 #include "sdkconfig.h"
+#include "esp_log.h"
+
+
+static const char *TAG = "wakeup";
+
+
+RTC_DATA_ATTR static int boot_count = 0;
+
 
 #define BLINK_GPIO 5
 
@@ -34,8 +42,11 @@ void study_task(void *pvParameters)
         gpio_set_level(BLINK_GPIO, 1);
         vTaskDelay(1000 / portTICK_RATE_MS);
 
+        // To keep power on fot RTC memory, otherwise bootcount may be lost
+        esp_deep_sleep_pd_config(ESP_PD_DOMAIN_RTC_SLOW_MEM, ESP_PD_OPTION_ON);
+
 		/* wakeup from deep sleep after 8 seconds */
-		system_deep_sleep(1000*1000*8);
+		esp_deep_sleep(1000*1000*8);
 	}
 }
 
@@ -43,6 +54,10 @@ void app_main()
 {
 	printf("Welcome to Noduino Quantum\r\n");
 	printf("Try to investigate the ULP/RTC of ESP32 ... \r\n");
+
+    ESP_LOGI(TAG, "Boot count: %d", boot_count);
+    boot_count++;
+
 
 	xTaskCreatePinnedToCore(&study_task, "study_task", 1024, NULL, 5,
 				NULL, 0);
