@@ -160,7 +160,7 @@ void process_menu_request(void *p)
 		if (!strncmp(recv_buf, "7", 1))
 		{
 			display_number++;
-			display_three_numbers(display_number,0);
+			display_three_numbers(display_number,0,0);
 		}
 
 		if (!strncmp(recv_buf, "8", 1))

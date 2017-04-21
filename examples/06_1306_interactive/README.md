@@ -19,9 +19,17 @@ To start emulation do,
 
 To see the i2c traffic, try -d guest_errors,unimp
 
-To connect to the menu socket, try 
+To connect to the menu socket, in qemu try 
 
     nc 127.0.0.1 10023
+
+To connect to uart-1 try,
+    nc 127.0.0.1 8881
+Press return to get menu, not all characters are displayed due to bug. TODO , fix
+
+To connect to the menu when running on hw try look at display for ip and try,
+
+    nc 192.168.x.y 10023
 
 
 To run the debugger, do

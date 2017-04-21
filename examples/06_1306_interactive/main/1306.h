@@ -17,7 +17,7 @@ void ssd1306_128x64_noname_powersave_on();
 
 void display_dot(unsigned char start_col);
 
-void display_three_numbers(unsigned char number,unsigned char start_col);
+  void display_three_numbers(unsigned char number,unsigned char start_col,unsigned char page);
 
 void Display_Chess(unsigned char value);
 
