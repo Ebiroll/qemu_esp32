@@ -39,6 +39,8 @@ SOFTWARE.
 #include <lwip/sys.h>
 #include <lwip/netdb.h>
 #include <lwip/dns.h>
+#include "emul_ip.h"
+
 
 #define EXAMPLE_WIFI_PORT CONFIG_WIFI_PORT
 #define EXAMPLE_WIFI_SSID CONFIG_WIFI_SSID
@@ -51,13 +53,12 @@ static EventGroupHandle_t wifi_event_group;
 const int CONNECTED_BIT = BIT0;
 const int STARTED_BIT = BIT1;
 
-// #include "emul_ip.h"
 
 #define RECEIVER_PORT_NUM 6001
 
 
 #define SENDER_PORT_NUM 6000
-#define SENDER_IP_ADDR "192.168.4.1"
+#define SENDER_IP_ADDR "192.168.4.3"
 #define RECEIVER_IP_ADDR "255.255.255.255"
 
 
@@ -114,6 +115,9 @@ void send_thread(void *pvParameters)
       close(socket_fd);
       exit(1);
     }
+    printf("Bind to Port Number %d ,IP address %s SUCCESS!!!\n",SENDER_PORT_NUM,SENDER_IP_ADDR);
+
+
 
     memset(&ra, 0, sizeof(struct sockaddr_in));
     ra.sin_family = AF_INET;
@@ -234,7 +238,6 @@ static esp_err_t esp32_wifi_eventHandler(void *ctx, system_event_t *event) {
 		// If we connected as a station then we are done and we can stop being a
 		// web server.
 		case SYSTEM_EVENT_STA_GOT_IP: 
-            xTaskCreate(&send_thread, "send_thread", 2048, NULL, 5, NULL);
 			ESP_LOGD(TAG, "********************************************");
 			ESP_LOGD(TAG, "* We are now connected to AP")
 			ESP_LOGD(TAG, "* - Our IP address is: " IPSTR, IP2STR(&event->event_info.got_ip.ip_info.ip));
@@ -283,17 +286,12 @@ void app_main()
 
     //tcpip_adapter_init();
 
-#if 0
     if (is_running_qemu()) {
-     wifi_event_group = xEventGroupCreate();
-     ESP_ERROR_CHECK( esp_event_loop_init(event_handler, NULL) );
-     xTaskCreate(&task_lwip_init, "task_lwip_init",2*4096, NULL, 20, NULL); 
+      xTaskCreate(&task_lwip_init, "task_lwip_init",2*4096, NULL, 20, NULL); 
     }
     else
     {
       initialise_wifi();
     }
-#endif
-    initialise_wifi();
 
 }
