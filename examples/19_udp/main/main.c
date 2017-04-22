@@ -58,7 +58,7 @@ const int STARTED_BIT = BIT1;
 
 
 #define SENDER_PORT_NUM 6000
-#define SENDER_IP_ADDR "192.168.4.3"
+#define SENDER_IP_ADDR "192.168.1.131"
 #define RECEIVER_IP_ADDR "255.255.255.255"
 
 
@@ -245,7 +245,7 @@ static esp_err_t esp32_wifi_eventHandler(void *ctx, system_event_t *event) {
             {
                 //u32_t *my_ip=(u32_t *)&event->event_info.got_ip.ip_info.ip;
             }
-
+            //printf("Startinng send\n");
             xTaskCreate(&send_thread, "send_thread", 2048, NULL, 5, NULL);
 
 			break;
@@ -266,25 +266,27 @@ static void initialise_wifi(void)
     ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
     wifi_config_t wifi_config = {
         .sta = {
-            .ssid = EXAMPLE_WIFI_SSID,
-            .password = EXAMPLE_WIFI_PASS,
+	           .ssid = EXAMPLE_WIFI_SSID,
+               .password = EXAMPLE_WIFI_PASS,
         },
     };
     ESP_LOGI(TAG, "Setting WiFi configuration SSID %s...", wifi_config.sta.ssid);
     ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_STA) );
     ESP_ERROR_CHECK( esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config) );
     ESP_ERROR_CHECK( esp_wifi_start() );
+    ESP_ERROR_CHECK( esp_wifi_connect() );
+
 }
 
 void app_main()
 {
     ESP_ERROR_CHECK( nvs_flash_init() );
-    // Is this required for udp?
 
     wifi_event_group = xEventGroupCreate();
     ESP_ERROR_CHECK( esp_event_loop_init(esp32_wifi_eventHandler, NULL) );
 
-    //tcpip_adapter_init();
+    // Is this required for udp?
+    tcpip_adapter_init();
 
     if (is_running_qemu()) {
       xTaskCreate(&task_lwip_init, "task_lwip_init",2*4096, NULL, 20, NULL); 
