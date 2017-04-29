@@ -4,6 +4,22 @@ This example uses the [pppos patches](https://github.com/amuzyka-grinn/esp-idf) 
 
 Until those patches are not pulled to esp-idf, you must patch your **esp-idf**.
 
+Now I think these patches are applied.
+
+
+
+TCP/IP Task Stack Size (TCPIP_TASK_STACK_SIZE) [2048] (NEW) 
+*
+* Enable PPP support (new/experimental)
+*
+Enable PPP support (new/experimental) (PPP_SUPPORT) [N/y/?] (NEW) y
+  Enable PAP support (PPP_PAP_SUPPORT) [N/y/?] (NEW) y
+  Enable CHAP support (PPP_CHAP_SUPPORT) [N/y/?] (NEW) y
+  Enable MSCHAP support (PPP_MSCHAP_SUPPORT) [N/y/?] (NEW) y
+  Enable MPPE support (PPP_MPPE_SUPPORT) [N/y/?] (NEW) y
+  Enable PPP debug log output (PPP_DEBUG_ON) [N/y/?] (NEW) y
+
+
 #### This is the required procedure:
 
 1. copy all files from patches directory to the root of your esp-idf
