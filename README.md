@@ -127,11 +127,16 @@ export IDF_PATH=~/esp/esp-idf
 #  Recomended version of esp-idf for qemu.
 
 Now  esp_crosscore_int_send_yield is implemented.
-I recomend using, April 25 version
+Also rtc_clk_xtal_freq_get works.
+
+
 ```
+You can probably use head of esp-idf
+
+This version works anyways,
 git checkout b540322dc10ee2a0ce773086da42627468897325
 
-If you use latest version  changes in clock calibration will cause divide by zero.
+For a short time there was a divide by zero.
 
 #5  __udivdi3 (n=128, d=4611190139757918081) at /home/ivan/e/crosstool-NG/.build/src/gcc-5.2.0/libgcc/libgcc2.c:1288
 #6  0x400df781 in __udivmoddi4 (rp=0x0, d=4611190964391638913, n=0) at /home/ivan/e/crosstool-NG/.build/src/gcc-5.2.0/libgcc/libgcc2.c:1088
