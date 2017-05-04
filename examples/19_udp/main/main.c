@@ -58,7 +58,11 @@ const int STARTED_BIT = BIT1;
 
 
 #define SENDER_PORT_NUM 6000
-#define SENDER_IP_ADDR "192.168.1.131"
+// TODO, GET THIS FROM GOT_IP
+//#define SENDER_IP_ADDR "192.168.4.3"
+//u32_t *my_ip=(u32_t *)&event->event_info.got_ip.ip_info.ip;
+char my_ip[32];
+
 #define RECEIVER_IP_ADDR "255.255.255.255"
 
 
@@ -100,7 +104,7 @@ void send_thread(void *pvParameters)
 
     memset(&sa, 0, sizeof(struct sockaddr_in));
     sa.sin_family = AF_INET;
-    sa.sin_addr.s_addr = inet_addr(SENDER_IP_ADDR);
+    sa.sin_addr.s_addr = inet_addr(my_ip);
     sa.sin_port = htons(SENDER_PORT_NUM);
 
 
@@ -111,11 +115,11 @@ void send_thread(void *pvParameters)
     */
     if (bind(socket_fd, (struct sockaddr *)&sa, sizeof(struct sockaddr_in)) == -1)
     {
-      printf("Bind to Port Number %d ,IP address %s failed\n",SENDER_PORT_NUM,SENDER_IP_ADDR);
+      printf("Bind to Port Number %d ,IP address %s failed\n",SENDER_PORT_NUM,my_ip /*SENDER_IP_ADDR*/);
       close(socket_fd);
       exit(1);
     }
-    printf("Bind to Port Number %d ,IP address %s SUCCESS!!!\n",SENDER_PORT_NUM,SENDER_IP_ADDR);
+    printf("Bind to Port Number %d ,IP address %s SUCCESS!!!\n",SENDER_PORT_NUM,my_ip);
 
 
 
@@ -244,6 +248,7 @@ static esp_err_t esp32_wifi_eventHandler(void *ctx, system_event_t *event) {
 			ESP_LOGD(TAG, "********************************************");
             {
                 //u32_t *my_ip=(u32_t *)&event->event_info.got_ip.ip_info.ip;
+	        sprintf(my_ip,IPSTR, IP2STR(&event->event_info.got_ip.ip_info.ip));
             }
             //printf("Startinng send\n");
             xTaskCreate(&send_thread, "send_thread", 2048, NULL, 5, NULL);
