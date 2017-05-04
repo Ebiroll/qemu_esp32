@@ -17,6 +17,8 @@
 #include "esp_vfs_fat.h"
 #include "esp_system.h"
 
+#include <rom/spi_flash.h>
+
 static const char *TAG = "example";
 
 // Handle of the wear levelling library instance
@@ -25,8 +27,26 @@ static wl_handle_t s_wl_handle = WL_INVALID_HANDLE;
 // Mount path for the partition
 const char *base_path = "/spiflash";
 
+#if 0
+typedef struct {
+    uint32_t device_id;
+    uint32_t chip_size;    // chip size in bytes
+    uint32_t block_size;
+    uint32_t sector_size;
+    uint32_t page_size;
+    uint32_t status_mask;
+} esp_rom_spiflash_chip_t;
+#endif
+
+
 void app_main(void)
 {
+
+    // workaround: configure SPI flash size manually (2nd argument)
+    //SPIParamCfg(0x1540ef, 4*1024*1024, 64*1024, 4096, 256, 0xffff);
+    // Workaround for qemu, esp-tool detects this and writes it automatically
+    g_rom_flashchip.chip_size=4*1024*1024; //0x3E8000;   // 4M?
+
     ESP_LOGI(TAG, "Mounting FAT filesystem");
     // To mount device we need name of device partition, define base_path
     // and allow format partition in case if it is new one and was not formated before
