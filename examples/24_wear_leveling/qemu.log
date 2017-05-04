@@ -1,0 +1,60 @@
+TRYING to MAP esp32flash.binMAPPED esp32flash.bin(qemu)  00000000 to memory, 3F400000
+[0;32mI (0) cpu_start: App cpu up.[0m
+[0;32mI (2) heap_alloc_caps: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (2) heap_alloc_caps: At 3FFAE2A0 len 00001D60 (7 KiB): DRAM[0m
+[0;32mI (2) heap_alloc_caps: At 3FFB6948 len 000296B8 (165 KiB): DRAM[0m
+[0;32mI (3) heap_alloc_caps: At 3FFE0440 len 00003BC0 (14 KiB): D/IRAM[0m
+[0;32mI (3) heap_alloc_caps: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (3) heap_alloc_caps: At 40092FD8 len 0000D028 (52 KiB): IRAM[0m
+[0;32mI (3) cpu_start: Pro cpu start user code[0m
+D (15) clk: RTC_SLOW_CLK calibration value: 0[0m
+V (23) intr_alloc: esp_intr_alloc_intrstatus (cpu 0): checking args[0m
+V (23) intr_alloc: esp_intr_alloc_intrstatus (cpu 0): Args okay. Resulting flags 0xE[0m
+D (24) intr_alloc: Connected src 56 to int 2 (cpu 0)[0m
+V (24) intr_alloc: esp_intr_alloc_intrstatus (cpu 0): checking args[0m
+V (24) intr_alloc: esp_intr_alloc_intrstatus (cpu 0): Args okay. Resulting flags 0xE[0m
+D (24) intr_alloc: Connected src 16 to int 3 (cpu 0)[0m
+V (24) intr_alloc: esp_intr_alloc_intrstatus (cpu 0): checking args[0m
+V (25) intr_alloc: esp_intr_alloc_intrstatus (cpu 0): Args okay. Resulting flags 0x40E[0m
+D (25) intr_alloc: Connected src 24 to int 12 (cpu 0)[0m
+HOST RER TBD
+[0;32mI (25) cpu_start: Starting scheduler on PRO CPU.[0m
+[0;32mI (26) example: Mounting FAT filesystem[0m
+V (26) intr_alloc: esp_intr_alloc_intrstatus (cpu 1): checking args[0m
+V (26) intr_alloc: esp_intr_alloc_intrstatus (cpu 1): Args okay. Resulting flags 0x40E[0m
+D (26) intr_alloc: Connected src 25 to int 2 (cpu 1)[0m
+[0;32mI (26) cpu_start: Starting scheduler on APP CPU.[0m
+(qemu)  00009000 to memory, 3F409000
+(qemu)  00000000 to memory, 3F410000
+V (46) wl_flash: config start_addr=0x00000000, full_mem_size=0x00100000, page_size=0x00001000, sector_size=0x00001000, updaterate=0x00000010, wr_size=0x00000010, version=0x00000001, temp_buff_size=0x00000020[0m
+V (46) wl_flash: config - this->addr_state1=0x000fb000[0m
+V (46) wl_flash: config - this->addr_state2=0x000fd000[0m
+D (66) wl_flash: init - config ID=1, stored ID=-1, access_count=-1, block_size=-1, max_count=-1, pos=-1, move_count=-1[0m
+D (66) wl_flash: init starts: crc1=-9655541, crc2 = 900720524, this->state.crc=-1, state_copy->crc=1268093575[0m
+V (86) wl_partition: erase_range - start_address=0x000fb000, size=0x00002000, result=0x00000000[0m
+V (106) wl_partition: erase_range - start_address=0x000fd000, size=0x00002000, result=0x00000000[0m
+V (116) wl_partition: erase_range - start_address=0x000ff000, size=0x00001000, result=0x00000000[0m
+D (116) wl_flash: initSections - this->state->max_count=00000010, this->state->max_pos=000000fb[0m
+D (116) wl_flash: initSections - result=00000000[0m
+D (126) wl_flash: recoverPos - this->state.pos=0x00000000, result=00000000[0m
+D (126) vfs_fat_spiflash: pdrv=0
+[0m
+V (126) ff_diskio_spiflash: ff_wl_ioctl: cmd=2
+[0m
+V (126) ff_diskio_spiflash: ff_wl_read - pdrv=0, sector=0, count=1
+[0m
+V (126) wl_flash: read - src_addr=0x00000000, size=0x00001000[0m
+V (126) wl_flash: calcAddr - addr=0x00000000 -> result=0x00001000[0m
+[0;33mW (126) vfs_fat_spiflash: f_mount failed (13)[0m
+[0;32mI (126) vfs_fat_spiflash: Formatting FATFS partition[0m
+V (126) ff_diskio_spiflash: ff_wl_ioctl: cmd=3
+[0m
+V (136) ff_diskio_spiflash: ff_wl_ioctl: cmd=2
+[0m
+V (136) ff_diskio_spiflash: ff_wl_read - pdrv=0, sector=0, count=1
+[0m
+V (136) wl_flash: read - src_addr=0x00000000, size=0x00001000[0m
+V (136) wl_flash: calcAddr - addr=0x00000000 -> result=0x00001000[0m
+[0;31mE (146) vfs_fat_spiflash: f_mkfs failed (14)[0m
+[0;31mE (146) example: Failed to mount FATFS (0xffffffff)[0m
+qemu-system-xtensa: terminating on signal 2

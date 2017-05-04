@@ -75,7 +75,7 @@ int main(int argc,char *argv[])
 {
 
     // Overwrites esp32flash.bin file
-    //system("dd if=/dev/zero bs=1M count=4  | tr \"\\000\" \"\\377\" >  esp32flash.bin");
+    system("dd if=/dev/zero bs=1M count=4  | tr \"\\000\" \"\\377\" >  esp32flash.bin");
 
     // Add bootloader
     merge_flash("build/bootloader/bootloader.bin","esp32flash.bin",0x1000);

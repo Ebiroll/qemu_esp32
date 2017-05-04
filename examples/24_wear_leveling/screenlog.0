@@ -1,0 +1,91 @@
+ets Jun  8 2016 00:22:57
+
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+ets Jun  8 2016 00:22:57
+
+rst:0x10 (RTCWDT_RTC_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0x00
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0008,len:8
+load:0x3fff0010,len:4396
+ho 0 tail 12 room 4
+load:0x40078000,len:11092
+load:0x40080000,len:252
+entry 0x40080034
+[0;32mI (48) boot: ESP-IDF v2.0-rc1-735-g8f9707f 2nd stage bootloader[0m
+[0;32mI (48) boot: compile time 21:39:44[0m
+[0;32mI (54) boot: Enabling RNG early entropy source...[0m
+[0;32mI (66) boot: SPI Speed      : 40MHz[0m
+[0;32mI (78) boot: SPI Mode       : DIO[0m
+[0;32mI (91) boot: SPI Flash Size : 4MB[0m
+[0;32mI (103) boot: Partition Table:[0m
+[0;32mI (115) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (137) boot:  0 nvs              WiFi data        01 02 00009000 00006000[0m
+[0;32mI (160) boot:  1 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (184) boot:  2 factory          factory app      00 00 00010000 00100000[0m
+[0;32mI (207) boot:  3 storage          Unknown data     01 81 00110000 00100000[0m
+[0;32mI (230) boot: End of partition table[0m
+[0;32mI (243) boot: Disabling RNG early entropy source...[0m
+[0;32mI (260) boot: Loading app partition at offset 00010000[0m
+[0;32mI (820) boot: segment 0: paddr=0x00010018 vaddr=0x00000000 size=0x0ffe8 ( 65512) [0m
+[0;32mI (821) boot: segment 1: paddr=0x00020008 vaddr=0x3f400010 size=0x08b58 ( 35672) map[0m
+[0;32mI (837) boot: segment 2: paddr=0x00028b68 vaddr=0x3ffb0000 size=0x02b18 ( 11032) load[0m
+[0;32mI (867) boot: segment 3: paddr=0x0002b688 vaddr=0x40080000 size=0x00400 (  1024) load[0m
+[0;32mI (890) boot: segment 4: paddr=0x0002ba90 vaddr=0x40080400 size=0x12bd8 ( 76760) load[0m
+[0;32mI (952) boot: segment 5: paddr=0x0003e670 vaddr=0x400c0000 size=0x00000 (     0) load[0m
+[0;32mI (953) boot: segment 6: paddr=0x0003e678 vaddr=0x00000000 size=0x01990 (  6544) [0m
+[0;32mI (973) boot: segment 7: paddr=0x00040010 vaddr=0x400d0018 size=0x2e8f4 (190708) map[0m
+[0;32mI (999) cpu_start: Pro cpu up.[0m
+[0;32mI (1010) cpu_start: Starting app cpu, entry point is 0x40080dcc[0m
+[0;32mI (0) cpu_start: App cpu up.[0m
+[0;32mI (1043) heap_alloc_caps: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (1066) heap_alloc_caps: At 3FFAE2A0 len 00001D60 (7 KiB): DRAM[0m
+[0;32mI (1086) heap_alloc_caps: At 3FFB6948 len 000296B8 (165 KiB): DRAM[0m
+[0;32mI (1107) heap_alloc_caps: At 3FFE0440 len 00003BC0 (14 KiB): D/IRAM[0m
+[0;32mI (1129) heap_alloc_caps: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (1150) heap_alloc_caps: At 40092FD8 len 0000D028 (52 KiB): IRAM[0m
+[0;32mI (1171) cpu_start: Pro cpu start user code[0m
+D (1209) clk: RTC_SLOW_CLK calibration value: 3505779[0m
+V (1238) intr_alloc: esp_intr_alloc_intrstatus (cpu 0): checking args[0m
+V (1239) intr_alloc: esp_intr_alloc_intrstatus (cpu 0): Args okay. Resulting flags 0xE[0m
+D (1271) intr_alloc: Connected src 56 to int 2 (cpu 0)[0m
+V (1304) intr_alloc: esp_intr_alloc_intrstatus (cpu 0): checking args[0m
+V (1342) intr_alloc: esp_intr_alloc_intrstatus (cpu 0): Args okay. Resulting flags 0xE[0m
+D (1391) intr_alloc: Connected src 16 to int 3 (cpu 0)[0m
+V (1423) intr_alloc: esp_intr_alloc_intrstatus (cpu 0): checking args[0m
+V (1463) intr_alloc: esp_intr_alloc_intrstatus (cpu 0): Args okay. Resulting flags 0x40E[0m
+D (1514) intr_alloc: Connected src 24 to int 12 (cpu 0)[0m
+[0;32mI (1547) cpu_start: Starting scheduler on PRO CPU.[0m
+V (550) intr_alloc: esp_intr_alloc_intrstatus (cpu 1): checking args[0m
+V (550) intr_alloc: esp_intr_alloc_intrstatus (cpu 1): Args okay. Resulting flags 0x40E[0m
+D (560) intr_alloc: Connected src 25 to int 2 (cpu 1)[0m
+[0;32mI (560) cpu_start: Starting scheduler on APP CPU.[0m
+[0;32mI (550) example: Mounting FAT filesystem[0m
+V (580) wl_flash: config start_addr=0x00000000, full_mem_size=0x00100000, page_size=0x00001000, sector_size=0x00001000, updaterate=0x00000010, wr_size=0x00000010, version=0x00000001, temp_buff_size=0x00000020[0m
+V (590) wl_flash: config - this->addr_state1=0x000fb000[0m
+V (600) wl_flash: config - this->addr_state2=0x000fd000[0m
+D (600) wl_flash: init - config ID=1, stored ID=1, access_count=0, block_size=4096, max_count=16, pos=0, move_count=0[0m
+D (610) wl_flash: init starts: crc1=1280242342, crc2 = 1280242342, this->state.crc=1280242342, state_copy->crc=1280242342[0m
+D (630) wl_flash: init: crc1=1280242342, crc2 = 1280242342, result=0[0m
+D (630) wl_flash: recoverPos - this->state.pos=0x00000000, result=00000000[0m
+D (640) vfs_fat_spiflash: pdrv=0
+[0m
+V (640) ff_diskio_spiflash: ff_wl_ioctl: cmd=2
+[0m
+V (650) ff_diskio_spiflash: ff_wl_read - pdrv=0, sector=0, count=1
+[0m
+V (650) wl_flash: read - src_addr=0x00000000, size=0x00001000[0m
+V (660) wl_flash: calcAddr - addr=0x00000000 -> result=0x00001000[0m
+[0;33mW (670) vfs_fat_spiflash: f_mount failed (13)[0m
+[0;32mI (670) vfs_fat_spiflash: Formatting FATFS partition[0m
+V (680) ff_diskio_spiflash: ff_wl_ioctl: cmd=3
+[0m
+V (680) ff_diskio_spiflash: ff_wl_ioctl: cmd=2
+[0m
+V (690) ff_diskio_spiflash: ff_wl_read - pdrv=0, sector=0, count=1
+[0m
+V (690) wl_flash: read - src_addr=0x00000000, size=0x00001000[0m
+V (700) wl_flash: calcAddr - addr=0x00000000 -> result=0x00001000[0m
+[0;31mE (700) vfs_fat_spiflash: f_mkfs failed (14)[0m
+[0;31mE (710) example: Failed to mount FATFS (0xffffffff)[0m
