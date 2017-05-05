@@ -20,10 +20,17 @@ I (239) wear_level: Reading file
 Read from file: 'Hello User! I'm happy to see you!1'
 W (239) wear_levelling: wl_unmount Delete driver
 ```
+# To run example in qemu,
 
 To run in qemu, you must prepare flash
 
 gcc  toflash.c  -o toflash
 ./toflash build/wear_levelling_example.bin
 
-Still does not work, must format wear level partition
+Now it runs
+
+# qemu
+
+    xtensa-softmmu/qemu-system-xtensa  -cpu esp32 -M esp32 -m 4M  -kernel  ~/esp/qemu_esp32/examples/24_wear_leveling/build/wear_levelling_example.elf   -s  > io.txt
+    xtensa-esp32-elf-gdb.qemu  build/wear_levelling_example.elf -ex 'target remote:1234'
+    

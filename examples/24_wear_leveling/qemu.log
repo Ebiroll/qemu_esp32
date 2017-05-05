@@ -1,122 +1,22 @@
 TRYING to MAP esp32flash.binMAPPED esp32flash.bin(qemu)  00000000 to memory, 3F400000
 [0;32mI (0) cpu_start: App cpu up.[0m
-[0;32mI (13) heap_alloc_caps: Initializing. RAM available for dynamic allocation:[0m
-[0;32mI (14) heap_alloc_caps: At 3FFAE2A0 len 00001D60 (7 KiB): DRAM[0m
-[0;32mI (14) heap_alloc_caps: At 3FFB6130 len 00029ED0 (167 KiB): DRAM[0m
-[0;32mI (14) heap_alloc_caps: At 3FFE0440 len 00003BC0 (14 KiB): D/IRAM[0m
-[0;32mI (14) heap_alloc_caps: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
-[0;32mI (14) heap_alloc_caps: At 40092EEC len 0000D114 (52 KiB): IRAM[0m
-[0;32mI (15) cpu_start: Pro cpu start user code[0m
-D (26) clk: RTC_SLOW_CLK calibration value: 0[0m
-V (35) intr_alloc: esp_intr_alloc_intrstatus (cpu 0): checking args[0m
-V (35) intr_alloc: esp_intr_alloc_intrstatus (cpu 0): Args okay. Resulting flags 0xE[0m
-D (35) intr_alloc: Connected src 56 to int 2 (cpu 0)[0m
-V (35) intr_alloc: esp_intr_alloc_intrstatus (cpu 0): checking args[0m
-V (35) intr_alloc: esp_intr_alloc_intrstatus (cpu 0): Args okay. Resulting flags 0xE[0m
-D (36) intr_alloc: Connected src 16 to int 3 (cpu 0)[0m
-V (36) intr_alloc: esp_intr_alloc_intrstatus (cpu 0): checking args[0m
-V (36) intr_alloc: esp_intr_alloc_intrstatus (cpu 0): Args okay. Resulting flags 0x40E[0m
-D (36) intr_alloc: Connected src 24 to int 12 (cpu 0)[0m
+[0;32mI (2) heap_alloc_caps: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (2) heap_alloc_caps: At 3FFAE2A0 len 00001D60 (7 KiB): DRAM[0m
+[0;32mI (3) heap_alloc_caps: At 3FFB6138 len 00029EC8 (167 KiB): DRAM[0m
+[0;32mI (3) heap_alloc_caps: At 3FFE0440 len 00003BC0 (14 KiB): D/IRAM[0m
+[0;32mI (3) heap_alloc_caps: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (3) heap_alloc_caps: At 40092EEC len 0000D114 (52 KiB): IRAM[0m
+[0;32mI (3) cpu_start: Pro cpu start user code[0m
 HOST RER TBD
-[0;32mI (37) cpu_start: Starting scheduler on PRO CPU.[0m
-V (38) intr_alloc: esp_intr_alloc_intrstatus (cpu 1): checking args[0m
-V (38) intr_alloc: esp_intr_alloc_intrstatus (cpu 1): Args okay. Resulting flags 0x40E[0m
-D (38) intr_alloc: Connected src 25 to int 2 (cpu 1)[0m
-[0;32mI (38) cpu_start: Starting scheduler on APP CPU.[0m
-[0;32mI (38) example: Mounting FAT filesystem[0m
+[0;32mI (24) cpu_start: Starting scheduler on PRO CPU.[0m
+[0;32mI (25) example: Mounting FAT filesystem[0m
+[0;32mI (25) cpu_start: Starting scheduler on APP CPU.[0m
 (qemu)  00009000 to memory, 3F409000
 (qemu)  00000000 to memory, 3F410000
-V (48) wl_flash: config start_addr=0x00000000, full_mem_size=0x00100000, page_size=0x00001000, sector_size=0x00001000, updaterate=0x00000010, wr_size=0x00000010, version=0x00000001, temp_buff_size=0x00000020[0m
-V (48) wl_flash: config - this->addr_state1=0x000fb000[0m
-V (48) wl_flash: config - this->addr_state2=0x000fd000[0m
-D (58) wl_flash: init - config ID=1, stored ID=-1, access_count=-1, block_size=-1, max_count=-1, pos=-1, move_count=-1[0m
-D (58) wl_flash: init starts: crc1=-9655541, crc2 = -9655541, this->state.crc=-1, state_copy->crc=-1[0m
-V (88) wl_partition: erase_range - start_address=0x000fb000, size=0x00002000, result=0x00000000[0m
-V (108) wl_partition: erase_range - start_address=0x000fd000, size=0x00002000, result=0x00000000[0m
-V (128) wl_partition: erase_range - start_address=0x000ff000, size=0x00001000, result=0x00000000[0m
-D (138) wl_flash: initSections - this->state->max_count=00000010, this->state->max_pos=000000fb[0m
-D (138) wl_flash: initSections - result=00000000[0m
-D (148) wl_flash: recoverPos - this->state.pos=0x00000000, result=00000000[0m
-D (148) vfs_fat_spiflash: using pdrv=0[0m
-V (148) ff_diskio_spiflash: ff_wl_ioctl: cmd=2
-[0m
-V (148) ff_diskio_spiflash: ff_wl_read - pdrv=0, sector=0, count=1
-[0m
-V (148) wl_flash: read - src_addr=0x00000000, size=0x00001000[0m
-V (148) wl_flash: calcAddr - addr=0x00000000 -> result=0x00001000[0m
-[0;33mW (158) vfs_fat_spiflash: f_mount failed (13)[0m
-[0;32mI (158) vfs_fat_spiflash: Formatting FATFS partition[0m
-V (158) ff_diskio_spiflash: ff_wl_ioctl: cmd=3
-[0m
-V (158) ff_diskio_spiflash: ff_wl_ioctl: cmd=2
-[0m
-V (158) ff_diskio_spiflash: ff_wl_ioctl: cmd=1
-[0m
-V (158) ff_diskio_spiflash: ff_wl_write - pdrv=0, sector=0, count=1
-[0m
-V (158) wl_flash: erase_range - start_address=0x00000000, size=0x00001000[0m
-V (158) wl_flash: erase_sector - sector=0x00000000[0m
-V (158) wl_flash: calcAddr - addr=0x00000000 -> result=0x00001000[0m
-V (158) wl_partition: erase_range - start_address=0x00001000, size=0x00001000, result=0x00000000[0m
-V (158) wl_flash: erase_range - result=00000000[0m
-V (158) wl_flash: write - dest_addr=0x00000000, size=0x00001000[0m
-V (158) wl_flash: calcAddr - addr=0x00000000 -> result=0x00001000[0m
-V (168) ff_diskio_spiflash: ff_wl_write - pdrv=0, sector=1, count=1
-[0m
-V (168) wl_flash: erase_range - start_address=0x00001000, size=0x00001000[0m
-V (168) wl_flash: erase_sector - sector=0x00000001[0m
-V (168) wl_flash: calcAddr - addr=0x00001000 -> result=0x00002000[0m
-V (178) wl_partition: erase_range - start_address=0x00002000, size=0x00001000, result=0x00000000[0m
-V (178) wl_flash: erase_range - result=00000000[0m
-V (178) wl_flash: write - dest_addr=0x00001000, size=0x00001000[0m
-V (178) wl_flash: calcAddr - addr=0x00001000 -> result=0x00002000[0m
-V (188) ff_diskio_spiflash: ff_wl_write - pdrv=0, sector=2, count=1
-[0m
-V (188) wl_flash: erase_range - start_address=0x00002000, size=0x00001000[0m
-V (188) wl_flash: erase_sector - sector=0x00000002[0m
-V (188) wl_flash: calcAddr - addr=0x00002000 -> result=0x00003000[0m
-V (198) wl_partition: erase_range - start_address=0x00003000, size=0x00001000, result=0x00000000[0m
-V (198) wl_flash: erase_range - result=00000000[0m
-V (198) wl_flash: write - dest_addr=0x00002000, size=0x00001000[0m
-V (198) wl_flash: calcAddr - addr=0x00002000 -> result=0x00003000[0m
-V (208) ff_diskio_spiflash: ff_wl_write - pdrv=0, sector=3, count=1
-[0m
-V (208) wl_flash: erase_range - start_address=0x00003000, size=0x00001000[0m
-V (208) wl_flash: erase_sector - sector=0x00000003[0m
-V (208) wl_flash: calcAddr - addr=0x00003000 -> result=0x00004000[0m
-V (218) wl_partition: erase_range - start_address=0x00004000, size=0x00001000, result=0x00000000[0m
-V (218) wl_flash: erase_range - result=00000000[0m
-V (218) wl_flash: write - dest_addr=0x00003000, size=0x00001000[0m
-V (218) wl_flash: calcAddr - addr=0x00003000 -> result=0x00004000[0m
-V (228) ff_diskio_spiflash: ff_wl_write - pdrv=0, sector=4, count=1
-[0m
-V (228) wl_flash: erase_range - start_address=0x00004000, size=0x00001000[0m
-V (228) wl_flash: erase_sector - sector=0x00000004[0m
-V (228) wl_flash: calcAddr - addr=0x00004000 -> result=0x00005000[0m
-V (238) wl_partition: erase_range - start_address=0x00005000, size=0x00001000, result=0x00000000[0m
-V (238) wl_flash: erase_range - result=00000000[0m
-V (238) wl_flash: write - dest_addr=0x00004000, size=0x00001000[0m
-V (238) wl_flash: calcAddr - addr=0x00004000 -> result=0x00005000[0m
-V (238) ff_diskio_spiflash: ff_wl_write - pdrv=0, sector=5, count=1
-[0m
-V (238) wl_flash: erase_range - start_address=0x00005000, size=0x00001000[0m
-V (238) wl_flash: erase_sector - sector=0x00000005[0m
-V (238) wl_flash: calcAddr - addr=0x00005000 -> result=0x00006000[0m
-V (248) wl_partition: erase_range - start_address=0x00006000, size=0x00001000, result=0x00000000[0m
-V (248) wl_flash: erase_range - result=00000000[0m
-V (248) wl_flash: write - dest_addr=0x00005000, size=0x00001000[0m
-V (248) wl_flash: calcAddr - addr=0x00005000 -> result=0x00006000[0m
-V (258) ff_diskio_spiflash: ff_wl_ioctl: cmd=0
-[0m
-[0;32mI (258) vfs_fat_spiflash: Mounting again[0m
-[0;32mI (258) example: Opening file[0m
-V (258) vfs_fat: vfs_fat_open: path="/hello.txt", flags=601, mode=1b6[0m
-V (258) ff_diskio_spiflash: ff_wl_ioctl: cmd=2
-[0m
-V (258) ff_diskio_spiflash: ff_wl_read - pdrv=0, sector=0, count=1
-[0m
-V (258) wl_flash: read - src_addr=0x00000000, size=0x00001000[0m
-V (258) wl_flash: calcAddr - addr=0x00000000 -> result=0x00001000[0m
-D (258) vfs_fat: vfs_fat_open: fresult=13[0m
-[0;31mE (258) example: Failed to open file for writing[0m
+[0;32mI (95) example: Opening file[0m
+[0;32mI (235) example: File written[0m
+[0;32mI (235) example: Reading file[0m
+[0;32mI (245) example: Read from file: 'written using ESP-IDF v2.0-rc1-761-g65acd99c'[0m
+[0;32mI (245) example: Unmounting FAT filesystem[0m
+[0;32mI (2295) example: Done[0m
 qemu-system-xtensa: terminating on signal 2
