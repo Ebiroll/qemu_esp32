@@ -4,7 +4,12 @@ http://hackaday.com/2016/10/27/basic-interpreter-hidden-in-esp32-silicon/
 
 pull GPIO 12 high and hit reset. Connect to the ESP32 over serial, and hit enter to stop it from continually rebooting. 
 
-Have not been able to get it to run
+Have not been able to get it to run on qemu.
+On the esp32 it just prints a > for each character
+>
+>
+>
+
 
   wifi read 1c 
 
