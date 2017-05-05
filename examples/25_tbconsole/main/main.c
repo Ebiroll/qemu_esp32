@@ -15,6 +15,11 @@
 
 static const char *TAG = "basic";
 
+void IRAM_ATTR start_cpu0(void)
+{
+      start_tb_console();
+}
+
 
 
 void app_main(void)
