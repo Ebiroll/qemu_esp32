@@ -1,39 +1,14 @@
 ### PPP over Serial (PPPoS) client example
 
-This example uses the [pppos patches](https://github.com/amuzyka-grinn/esp-idf) proposed by amuzyka-grinn.
+Originally from here
+https://github.com/loboris/ESP32-PPPOS-EXAMPLE
 
-Until those patches are not pulled to esp-idf, you must patch your **esp-idf**.
+**As of Apr 24. 2017 PPPoS support is included in esp-idf**
 
-Now I think these patches are applied.
-
-
-
-TCP/IP Task Stack Size (TCPIP_TASK_STACK_SIZE) [2048] (NEW) 
-*
-* Enable PPP support (new/experimental)
-*
-Enable PPP support (new/experimental) (PPP_SUPPORT) [N/y/?] (NEW) y
-  Enable PAP support (PPP_PAP_SUPPORT) [N/y/?] (NEW) y
-  Enable CHAP support (PPP_CHAP_SUPPORT) [N/y/?] (NEW) y
-  Enable MSCHAP support (PPP_MSCHAP_SUPPORT) [N/y/?] (NEW) y
-  Enable MPPE support (PPP_MPPE_SUPPORT) [N/y/?] (NEW) y
-  Enable PPP debug log output (PPP_DEBUG_ON) [N/y/?] (NEW) y
+No patches are necessary.
 
 
-#### This is the required procedure:
-
-1. copy all files from patches directory to the root of your esp-idf
-2. go to esp-idf directory and execute *apply_ppp_patch.sh*
-3. go back to this example directory
-4. as with other ESP32 examples, set IDF-PATH variable and add 'xtensa-esp32-elf/bin' to your path
-5. execute **make menuconfig**, enable **PPP support** (Component config → LWIP → Enable PPP support) and **configure your APN** (Component config → GSM configuration)
-6. execute **make all** to build the example
-7. execute **make flash** to flash the example
-
-#### You can execute 'revert_ppp_patch.sh' in esp-idf to revert the changes before updating you esp-idf with 'git pull'
-
-
-Before you run this example, make sure your GSM is powered on, in command mode, registered to network and connected to your ESP32 UART on pins #16 & #17 (hw flow controll is not used). 
+Before you run this example, make sure your GSM is powered on, in command mode, registered to network and connected to your ESP32 UART on pins defined in source file (hw flow controll is not used). 
 
 The example runs as follows:
 

@@ -28,6 +28,7 @@
 #include "lwip/dns.h"
 #include "lwip/pppapi.h"
 
+
 #include "mbedtls/platform.h"
 #include "mbedtls/net.h"
 #include "mbedtls/esp_debug.h"
@@ -41,22 +42,32 @@
 #include "cJSON.h"
 
 
-uint8_t conn_ok = 0;
+static uint8_t conn_ok = 0;
+QueueHandle_t http_mutex;
+#define HTTP_SEMAPHORE_WAIT 120000
 
 /* The examples use simple GSM configuration that you can set via
    'make menuconfig'.
  */
 #define BUF_SIZE (1024)
+// *** If not using hw flow control, set it to 38400
+#define UART_BDRATE 115200
+#define GSM_OK_Str "OK"
+
+
 const char *PPP_User = CONFIG_GSM_INTERNET_USER;
 const char *PPP_Pass = CONFIG_GSM_INTERNET_PASSWORD;
 
-/* UART */
-int uart_num = UART_NUM_1;
+// UART
+#define UART_GPIO_TX 21
+#define UART_GPIO_RX 32
 
-/* The PPP control block */
+static int uart_num = UART_NUM_1;
+
+// The PPP control block
 ppp_pcb *ppp;
 
-/* The PPP IP interface */
+// The PPP IP interface
 struct netif ppp_netif;
 
 static const char *TAG = "[PPPOS CLIENT]";
@@ -68,40 +79,69 @@ typedef struct
 	uint16_t cmdSize;
 	char *cmdResponseOnOk;
 	uint32_t timeoutMs;
+	uint32_t delayMs;
 }GSM_Cmd;
 
-#define GSM_OK_Str "OK"
-
+//--------------------------
 GSM_Cmd GSM_MGR_InitCmds[] =
 {
 		{
-				.cmd = "AT\r",
-				.cmdSize = sizeof("AT\r")-1,
+				.cmd = "AT\r\n",
+				.cmdSize = sizeof("AT\r\n")-1,
 				.cmdResponseOnOk = GSM_OK_Str,
 				.timeoutMs = 3000,
 		},
 		{
-				.cmd = "ATE0\r",
-				.cmdSize = sizeof("ATE0\r")-1,
+				.cmd = "ATZ\r\n",
+				.cmdSize = sizeof("ATZ\r\n")-1,
 				.cmdResponseOnOk = GSM_OK_Str,
 				.timeoutMs = 3000,
 		},
 		{
-				.cmd = "AT+CPIN?\r",
-				.cmdSize = sizeof("AT+CPIN?\r")-1,
+				.cmd = "AT+CFUN=4\r\n",
+				.cmdSize = sizeof("ATCFUN=4\r\n")-1,
+				.cmdResponseOnOk = GSM_OK_Str,
+				.timeoutMs = 3000,
+		},
+		{
+				.cmd = "AT+CFUN=1\r\n",
+				.cmdSize = sizeof("ATCFUN=4,0\r\n")-1,
+				.cmdResponseOnOk = GSM_OK_Str,
+				.timeoutMs = 3000,
+		},
+		{
+				.cmd = "ATE0\r\n",
+				.cmdSize = sizeof("ATE0\r\n")-1,
+				.cmdResponseOnOk = GSM_OK_Str,
+				.timeoutMs = 3000,
+		},
+		{
+				.cmd = "AT+CPIN?\r\n",
+				.cmdSize = sizeof("AT+CPIN?\r\n")-1,
 				.cmdResponseOnOk = "CPIN: READY",
 				.timeoutMs = 3000,
 		},
 		{
-				//AT+CGDCONT=1,"IP","apn"
-				.cmd = "AT+CGDCONT=1,\"IP\",\"myapn\"\r",
-				.cmdSize = sizeof("AT+CGDCONT=1,\"IP\",\"myapn\"\r")-1,
-				.cmdResponseOnOk = GSM_OK_Str,
+				.cmd = "AT+CREG?\r\n",
+				.cmdSize = sizeof("AT+CREG?\r\n")-1,
+				.cmdResponseOnOk = "CREG: 0,1",
 				.timeoutMs = 3000,
 		},
 		{
-				.cmd = "ATDT*99***1#\r",
-				.cmdSize = sizeof("ATDT*99***1#\r")-1,
+				.cmd = "AT+CGDCONT=1,\"IP\",\"myapn\"\r",
+				.cmdSize = sizeof("AT+CGDCONT=1,\"IP\",\"myapn\"\r")-1,
+				.cmdResponseOnOk = GSM_OK_Str,
+				.timeoutMs = 8000,
+		},
+		/*{
+				.cmd = "ATDT*99***1#\r\n",
+				.cmdSize = sizeof("ATDT*99***1#\r\n")-1,
+				.cmdResponseOnOk = "CONNECT",
+				.timeoutMs = 30000,
+		}*/
+		{
+				.cmd = "AT+CGDATA=\"PPP\",1\r\n",
+				.cmdSize = sizeof("AT+CGDATA=\"PPP\",1\r\n")-1,
 				.cmdResponseOnOk = "CONNECT",
 				.timeoutMs = 30000,
 		}
@@ -110,7 +150,8 @@ GSM_Cmd GSM_MGR_InitCmds[] =
 #define GSM_MGR_InitCmdsSize  (sizeof(GSM_MGR_InitCmds)/sizeof(GSM_Cmd))
 
 
-/* PPP status callback example */
+// PPP status callback
+//----------------------------------------------------------------
 static void ppp_status_cb(ppp_pcb *pcb, int err_code, void *ctx) {
 	struct netif *pppif = ppp_netif(pcb);
 	LWIP_UNUSED_ARG(ctx);
@@ -119,14 +160,15 @@ static void ppp_status_cb(ppp_pcb *pcb, int err_code, void *ctx) {
 	case PPPERR_NONE: {
 		ESP_LOGI(TAG,"status_cb: Connected\n");
 #if PPP_IPV4_SUPPORT
-		ESP_LOGI(TAG,"   our_ipaddr  = %s\n", ipaddr_ntoa(&pppif->ip_addr));
-		ESP_LOGI(TAG,"   his_ipaddr  = %s\n", ipaddr_ntoa(&pppif->gw));
-		ESP_LOGI(TAG,"   netmask     = %s\n", ipaddr_ntoa(&pppif->netmask));
-#endif /* PPP_IPV4_SUPPORT */
+		ESP_LOGI(TAG,"   ipaddr    = %s\n", ipaddr_ntoa(&pppif->ip_addr));
+		ESP_LOGI(TAG,"   gateway   = %s\n", ipaddr_ntoa(&pppif->gw));
+		ESP_LOGI(TAG,"   netmask   = %s\n", ipaddr_ntoa(&pppif->netmask));
+#endif
+
 #if PPP_IPV6_SUPPORT
-		ESP_LOGI(TAG,"   our6_ipaddr = %s\n", ip6addr_ntoa(netif_ip6_addr(pppif, 0)));
-#endif /* PPP_IPV6_SUPPORT */
-		conn_ok++;
+		ESP_LOGI(TAG,"   ip6addr   = %s\n", ip6addr_ntoa(netif_ip6_addr(pppif, 0)));
+#endif
+		conn_ok = 1;
 		break;
 	}
 	case PPPERR_PARAM: {
@@ -198,28 +240,32 @@ static void ppp_status_cb(ppp_pcb *pcb, int err_code, void *ctx) {
 		/* ppp_free(); -- can be called here */
 		return;
 	}
-
-
-	/*
-	 * Try to reconnect in 30 seconds, if you need a modem chatscript you have
-	 * to do a much better signaling here ;-)
-	 */
-	//ppp_connect(pcb, 30);
-	/* OR ppp_listen(pcb); */
 }
 
+//--------------------------------------------------------------------------------
 static u32_t ppp_output_callback(ppp_pcb *pcb, u8_t *data, u32_t len, void *ctx) {
-	//ESP_LOGI(TAG, "PPP tx len %d",len);
-	return uart_write_bytes(uart_num, (const char*)data, len);
+	// *** Handle sending to GSM modem ***
+	uint32_t ret = uart_write_bytes(uart_num, (const char*)data, len);
+    uart_wait_tx_done(uart_num, 10 / portTICK_RATE_MS);
+    return ret;
 }
 
+//-----------------------------
 static void pppos_client_task()
 {
-	char* data = (char*) malloc(BUF_SIZE);
+	uint8_t init_ok = 1;
+	int pass = 0;
+	char sresp[256] = {'\0'};
+
+	gpio_set_direction(21, GPIO_MODE_OUTPUT);
+    gpio_set_direction(32, GPIO_MODE_INPUT);
+    gpio_set_pull_mode(32, GPIO_PULLUP_ONLY);
+
+    char* data = (char*) malloc(BUF_SIZE);
 	char PPP_ApnATReq[sizeof(CONFIG_GSM_APN)+8];
 	
 	uart_config_t uart_config = {
-			.baud_rate = 115200,
+			.baud_rate = UART_BDRATE,
 			.data_bits = UART_DATA_8_BITS,
 			.parity = UART_PARITY_DISABLE,
 			.stop_bits = UART_STOP_BITS_1,
@@ -227,140 +273,162 @@ static void pppos_client_task()
 	};
 	//Configure UART1 parameters
 	uart_param_config(uart_num, &uart_config);
-	//Set UART1 pins(TX: I17, RX: I16, RTS: IO18, CTS: IO23)
-	uart_set_pin(uart_num, 17, 16, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+	//Set UART1 pins(TX, RX, RTS, CTS)
+	uart_set_pin(uart_num, UART_GPIO_TX, UART_GPIO_RX, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
 	uart_driver_install(uart_num, BUF_SIZE * 2, BUF_SIZE * 2, 0, NULL, 0);
 
-	sprintf(PPP_ApnATReq, "AT+CGDCONT=1,\"IP\",\"%s\"\r", CONFIG_GSM_APN);
-	GSM_MGR_InitCmds[3].cmd = PPP_ApnATReq;
-	GSM_MGR_InitCmds[3].cmdSize = strlen(PPP_ApnATReq);
+	// Set APN from config
+	sprintf(PPP_ApnATReq, "AT+CGDCONT=1,\"IP\",\"%s\"\r\n", CONFIG_GSM_APN);
+	GSM_MGR_InitCmds[7].cmd = PPP_ApnATReq;
+	GSM_MGR_InitCmds[7].cmdSize = strlen(PPP_ApnATReq);
 
-	uint8_t init_ok = 1;
+	ESP_LOGI(TAG,"Gsm init start");
+	// *** Disconnect if connected ***
+	vTaskDelay(1000 / portTICK_PERIOD_MS);
+	while (uart_read_bytes(uart_num, (uint8_t*)data, BUF_SIZE, 100 / portTICK_RATE_MS)) {
+		vTaskDelay(100 / portTICK_PERIOD_MS);
+	}
+	uart_write_bytes(uart_num, "+++", 3);
+    uart_wait_tx_done(uart_num, 10 / portTICK_RATE_MS);
+	vTaskDelay(1000 / portTICK_PERIOD_MS);
+
+	conn_ok = 98;
 	while(1)
 	{
-		//init gsm
+		init_ok = 1;
+		// Init gsm
 		int gsmCmdIter = 0;
 		while(1)
 		{
-			ESP_LOGI(TAG, "%s",GSM_MGR_InitCmds[gsmCmdIter].cmd);
+			// ** Send command to GSM
+			memset(sresp, 0, 256);
+			for (int i=0; i<255;i++) {
+				if ((GSM_MGR_InitCmds[gsmCmdIter].cmd[i] >= 0x20) && (GSM_MGR_InitCmds[gsmCmdIter].cmd[i] < 0x80)) {
+					sresp[i] = GSM_MGR_InitCmds[gsmCmdIter].cmd[i];
+					sresp[i+1] = 0;
+				}
+				if (GSM_MGR_InitCmds[gsmCmdIter].cmd[i] == 0) break;
+			}
+			printf("[GSM INIT] >Cmd: [%s]\r\n", sresp);
+			vTaskDelay(100 / portTICK_PERIOD_MS);
+			while (uart_read_bytes(uart_num, (uint8_t*)data, BUF_SIZE, 100 / portTICK_RATE_MS)) {
+				vTaskDelay(100 / portTICK_PERIOD_MS);
+			}
 			uart_write_bytes(uart_num, (const char*)GSM_MGR_InitCmds[gsmCmdIter].cmd,
 					GSM_MGR_InitCmds[gsmCmdIter].cmdSize);
+            uart_wait_tx_done(uart_num, 10 / portTICK_RATE_MS);
 
-			int timeoutCnt = 0;
+            // ** Wait for and check the response
+            int timeoutCnt = 0;
+			memset(sresp, 0, 256);
+			int idx = 0;
+			int tot = 0;
 			while(1)
 			{
 				memset(data, 0, BUF_SIZE);
-				int len = uart_read_bytes(uart_num, (uint8_t*)data, BUF_SIZE, 500 / portTICK_RATE_MS);
-				if(len > 0)
-					ESP_LOGI(TAG, "%s", data);
+				int len = 0;
+				len = uart_read_bytes(uart_num, (uint8_t*)data, BUF_SIZE, 10 / portTICK_RATE_MS);
+				if (len > 0) {
+					for (int i=0; i<len;i++) {
+						if (idx < 255) {
+							if ((data[i] >= 0x20) && (data[i] < 0x80)) {
+								sresp[idx++] = data[i];
+							}
+							else sresp[idx++] = 0x2e;
+							sresp[idx] = 0;
+						}
+					}
+					tot += len;
+				}
+				else {
+					if (tot > 0) {
+						printf("[GSM INIT] <Resp: [%s], %d\r\n", sresp, tot);
+						if (strstr(sresp, GSM_MGR_InitCmds[gsmCmdIter].cmdResponseOnOk) != NULL) {
+							break;
+						}
+						else {
+							printf("           Wrong response, expected [%s]\r\n", GSM_MGR_InitCmds[gsmCmdIter].cmdResponseOnOk);
+							init_ok = 0;
+							break;
+						}
+					}
+				}
+				timeoutCnt += 10;
 
-				timeoutCnt += 500;
-				if(strstr(data, GSM_MGR_InitCmds[gsmCmdIter].cmdResponseOnOk) != NULL)
-					break;
-
-				if(timeoutCnt > GSM_MGR_InitCmds[gsmCmdIter].timeoutMs)
+				if (timeoutCnt > GSM_MGR_InitCmds[gsmCmdIter].timeoutMs)
 				{
-					ESP_LOGE(TAG, "Gsm Init Error");
-					//return;
+					printf("[GSM INIT] No response, Gsm Init Error\r\n");
 					init_ok = 0;
 					break;
 				}
 			}
 			if (init_ok == 0) {
+				// No response or not as expected
 				vTaskDelay(5000 / portTICK_PERIOD_MS);
-				ESP_LOGE(TAG, "Trying again...");
 				init_ok = 1;
 				gsmCmdIter = 0;
 				continue;
 			}
-			gsmCmdIter++;
 
-			if(gsmCmdIter >= GSM_MGR_InitCmdsSize)
-				break;
+			if (gsmCmdIter == 2) vTaskDelay(500 / portTICK_PERIOD_MS);
+			if (gsmCmdIter == 3) vTaskDelay(1500 / portTICK_PERIOD_MS);
+			gsmCmdIter++;
+			if (gsmCmdIter >= GSM_MGR_InitCmdsSize) break; // All init commands sent
+			if ((pass) && (gsmCmdIter == 2)) gsmCmdIter = 4;
+			if (gsmCmdIter == 6) pass++;
 		}
 
 		ESP_LOGI(TAG,"Gsm init end");
 
-		ppp = pppapi_pppos_create(&ppp_netif,
-				ppp_output_callback, ppp_status_cb, NULL);
+		if (conn_ok == 98) {
+			// After first successful initialization
+			ppp = pppapi_pppos_create(&ppp_netif,
+					ppp_output_callback, ppp_status_cb, NULL);
 
-		ESP_LOGI(TAG,"After pppapi_pppos_create");
+			ESP_LOGI(TAG,"After pppapi_pppos_create");
 
-		if(ppp == NULL)
-		{
-			ESP_LOGE(TAG, "Error init pppos");
-			return;
+			if(ppp == NULL)	{
+				ESP_LOGE(TAG, "Error init pppos");
+				return;
+			}
 		}
-
+		conn_ok = 99;
 		pppapi_set_default(ppp);
-
-		ESP_LOGI(TAG,"After pppapi_set_default");
-
 		pppapi_set_auth(ppp, PPPAUTHTYPE_PAP, PPP_User, PPP_Pass);
-
-		ESP_LOGI(TAG,"After pppapi_set_auth");
-
+		//pppapi_set_auth(ppp, PPPAUTHTYPE_NONE, PPP_User, PPP_Pass);
 		pppapi_connect(ppp, 0);
 
-		ESP_LOGI(TAG,"After pppapi_connect, waiting");
-
-		while(1)
-		{
+		// *** Handle GSM modem responses ***
+		while(1) {
 			memset(data, 0, BUF_SIZE);
-			int len = uart_read_bytes(uart_num, (uint8_t*)data, BUF_SIZE, 10 / portTICK_RATE_MS);
-			if(len > 0)
-			{
-				//ESP_LOGI(TAG, "PPP rx len %d",len);
+			int len = uart_read_bytes(uart_num, (uint8_t*)data, BUF_SIZE, 30 / portTICK_RATE_MS);
+			if(len > 0)	{
 				pppos_input_tcpip(ppp, (u8_t*)data, len);
 			}
-		}
-
-	}
-}
-
-// ==== Http/Https get request ===================================================================
-
-static void parse_object(cJSON *item)
-{
-	cJSON *subitem=item->child;
-	while (subitem)
-	{
-		printf("%s = ", subitem->string);
-		if (subitem->type == cJSON_String) printf("%s\r\n", subitem->valuestring); 
-		else if (subitem->type == cJSON_Number) printf("%d\r\n", subitem->valueint); 
-		else if (subitem->type == cJSON_False) printf("False\r\n"); 
-		else if (subitem->type == cJSON_True) printf("True\r\n"); 
-		else if (subitem->type == cJSON_NULL) printf("NULL\r\n"); 
-		else if (subitem->type == cJSON_Object) printf("{Object}\r\n"); 
-		else if (subitem->type == cJSON_Array) {
-			int arr_count = cJSON_GetArraySize(subitem);
-			printf("[Array] of %d items\r\n", arr_count);
-			int n;
-			for (n = 0; n < 3; n++) {
-				// Get the JSON element and then get the values as before
-				cJSON *arritem = cJSON_GetArrayItem(subitem, n);
-				if ((arritem) && (arritem->valuestring)) printf("   %s\n", arritem->valuestring);
-				else break;
+			// Check if disconnected
+			if (conn_ok == 0) {
+				ESP_LOGE(TAG, "Disconnected, trying again...");
+				pppapi_close(ppp, 0);
+				gsmCmdIter = 0;
+				conn_ok = 89;
+				vTaskDelay(1000 / portTICK_PERIOD_MS);
+				break;
 			}
-			if (arr_count > 3 ) printf("   + %d more...\r\n", arr_count-3); 
 		}
-		else printf("[?]\r\n"); 
-		// handle subitem
-		if (subitem->child) parse_object(subitem->child);
-		
-		subitem=subitem->next;
 	}
 }
 
+// ===============================================================================================
+// ==== Http/Https get request ===================================================================
+// ===============================================================================================
 
-QueueHandle_t http_mutex;
-
-#define HTTP_SEMAPHORE_WAIT 120000
-
-/* Constants that aren't configurable in menuconfig */
+// Constants that aren't configurable in menuconfig
 #define WEB_SERVER "loboris.eu"
 #define WEB_PORT 80
 #define WEB_URL "http://loboris.eu/ESP32/info.txt"
+#define SSL_WEB_SERVER "www.howsmyssl.com"
+#define SSL_WEB_PORT "443"
+#define SSL_WEB_URL "https://www.howsmyssl.com/a/check"
 
 static const char *HTTP_TAG = "[HTTP]";
 static const char *HTTPS_TAG = "[HTTPS]";
@@ -369,11 +437,6 @@ static const char *REQUEST = "GET " WEB_URL " HTTP/1.1\n"
     "Host: "WEB_SERVER"\n"
     "User-Agent: esp-idf/1.0 esp32\n"
     "\n";
-
-/* Constants that aren't configurable in menuconfig */
-#define SSL_WEB_SERVER "www.howsmyssl.com"
-#define SSL_WEB_PORT "443"
-#define SSL_WEB_URL "https://www.howsmyssl.com/a/check"
 
 static const char *SSL_REQUEST = "GET " SSL_WEB_URL " HTTP/1.1\n"
     "Host: "SSL_WEB_SERVER"\n"
@@ -393,9 +456,46 @@ static const char *SSL_REQUEST = "GET " SSL_WEB_URL " HTTP/1.1\n"
 extern const uint8_t server_root_cert_pem_start[] asm("_binary_server_root_cert_pem_start");
 extern const uint8_t server_root_cert_pem_end[]   asm("_binary_server_root_cert_pem_end");
 
+
+//-----------------------------------
+static void parse_object(cJSON *item)
+{
+	cJSON *subitem=item->child;
+	while (subitem)
+	{
+		printf("%s = ", subitem->string);
+		if (subitem->type == cJSON_String) printf("%s\r\n", subitem->valuestring);
+		else if (subitem->type == cJSON_Number) printf("%d\r\n", subitem->valueint);
+		else if (subitem->type == cJSON_False) printf("False\r\n");
+		else if (subitem->type == cJSON_True) printf("True\r\n");
+		else if (subitem->type == cJSON_NULL) printf("NULL\r\n");
+		else if (subitem->type == cJSON_Object) printf("{Object}\r\n");
+		else if (subitem->type == cJSON_Array) {
+			int arr_count = cJSON_GetArraySize(subitem);
+			printf("[Array] of %d items\r\n", arr_count);
+			int n;
+			for (n = 0; n < 3; n++) {
+				// Get the JSON element and then get the values as before
+				cJSON *arritem = cJSON_GetArrayItem(subitem, n);
+				if ((arritem) && (arritem->valuestring)) printf("   %s\n", arritem->valuestring);
+				else break;
+			}
+			if (arr_count > 3 ) printf("   + %d more...\r\n", arr_count-3);
+		}
+		else printf("[?]\r\n");
+		// handle subitem
+		if (subitem->child) parse_object(subitem->child);
+
+		subitem=subitem->next;
+	}
+}
+
 //--------------------------------------------
 static void https_get_task(void *pvParameters)
 {
+	while (conn_ok != 1) {
+        vTaskDelay(100 / portTICK_PERIOD_MS);
+    }
     char buf[512];
     char *buffer;
     int ret, flags, len, rlen=0, totlen=0;
@@ -450,7 +550,7 @@ static void https_get_task(void *pvParameters)
 
     ESP_LOGI(HTTPS_TAG, "Setting hostname for TLS session...");
 
-     /* Hostname set here should match CN in server certificate */
+    // Hostname set here should match CN in server certificate
     if((ret = mbedtls_ssl_set_hostname(&ssl, WEB_SERVER)) != 0)
     {
         ESP_LOGE(HTTPS_TAG, "mbedtls_ssl_set_hostname returned -0x%x", -ret);
@@ -468,11 +568,9 @@ static void https_get_task(void *pvParameters)
         goto exit;
     }
 
-    /* MBEDTLS_SSL_VERIFY_OPTIONAL is bad for security, in this example it will print
-       a warning if CA verification fails but it will continue to connect.
-
-       You should consider using MBEDTLS_SSL_VERIFY_REQUIRED in your own code.
-    */
+    // MBEDTLS_SSL_VERIFY_OPTIONAL is bad for security, in this example it will print
+    //   a warning if CA verification fails but it will continue to connect.
+    //   You should consider using MBEDTLS_SSL_VERIFY_REQUIRED in your own code.
     mbedtls_ssl_conf_authmode(&conf, MBEDTLS_SSL_VERIFY_OPTIONAL);
     mbedtls_ssl_conf_ca_chain(&conf, &cacert, NULL);
     mbedtls_ssl_conf_rng(&conf, mbedtls_ctr_drbg_random, &ctr_drbg);
@@ -489,6 +587,10 @@ static void https_get_task(void *pvParameters)
     vTaskDelay(1000 / portTICK_PERIOD_MS);
 
     while(1) {
+		while (conn_ok != 1) {
+            vTaskDelay(500 / portTICK_PERIOD_MS);
+        }
+
 		if (!(xSemaphoreTake(http_mutex, HTTP_SEMAPHORE_WAIT))) {
 			ESP_LOGI(HTTPS_TAG, "===== ERROR: CANNOT GET MUTEX ===================================\n");
             vTaskDelay(30000 / portTICK_PERIOD_MS);
@@ -527,7 +629,7 @@ static void https_get_task(void *pvParameters)
 
         if ((flags = mbedtls_ssl_get_verify_result(&ssl)) != 0)
         {
-            /* In real life, we probably want to close connection if ret != 0 */
+            // In real life, we probably want to close connection if ret != 0
             ESP_LOGW(HTTPS_TAG, "Failed to verify peer certificate!");
             bzero(buf, sizeof(buf));
             mbedtls_x509_crt_verify_info(buf, sizeof(buf), "  ! ", flags);
@@ -633,7 +735,11 @@ static void https_get_task(void *pvParameters)
 //-------------------------------------------
 static void http_get_task(void *pvParameters)
 {
-    const struct addrinfo hints = {
+	while (conn_ok != 1) {
+		vTaskDelay(100 / portTICK_RATE_MS);
+	}
+
+	const struct addrinfo hints = {
         .ai_family = AF_INET,
         .ai_socktype = SOCK_STREAM,
     };
@@ -653,7 +759,11 @@ static void http_get_task(void *pvParameters)
 	}
 
     while(1) {
-		if (!(xSemaphoreTake(http_mutex, HTTP_SEMAPHORE_WAIT))) {
+		while (conn_ok != 1) {
+            vTaskDelay(500 / portTICK_PERIOD_MS);
+        }
+
+        if (!(xSemaphoreTake(http_mutex, HTTP_SEMAPHORE_WAIT))) {
 			ESP_LOGI(HTTP_TAG, "===== ERROR: CANNOT GET MUTEX ==================================\n");
             vTaskDelay(30000 / portTICK_PERIOD_MS);
 			continue;
@@ -665,6 +775,7 @@ static void http_get_task(void *pvParameters)
 
         if(err != 0 || res == NULL) {
             ESP_LOGE(HTTP_TAG, "DNS lookup failed err=%d res=%p", err, res);
+            xSemaphoreGive(http_mutex);
             vTaskDelay(1000 / portTICK_PERIOD_MS);
             continue;
         }
@@ -679,6 +790,7 @@ static void http_get_task(void *pvParameters)
         if(s < 0) {
             ESP_LOGE(HTTP_TAG, "... Failed to allocate socket.");
             freeaddrinfo(res);
+            xSemaphoreGive(http_mutex);
             vTaskDelay(1000 / portTICK_PERIOD_MS);
             continue;
         }
@@ -688,6 +800,7 @@ static void http_get_task(void *pvParameters)
             ESP_LOGE(HTTP_TAG, "... socket connect failed errno=%d", errno);
             close(s);
             freeaddrinfo(res);
+            xSemaphoreGive(http_mutex);
             vTaskDelay(4000 / portTICK_PERIOD_MS);
             continue;
         }
@@ -698,6 +811,7 @@ static void http_get_task(void *pvParameters)
         if (write(s, REQUEST, strlen(REQUEST)) < 0) {
             ESP_LOGE(HTTP_TAG, "... socket send failed");
             close(s);
+            xSemaphoreGive(http_mutex);
             vTaskDelay(4000 / portTICK_PERIOD_MS);
             continue;
         }
@@ -718,7 +832,7 @@ static void http_get_task(void *pvParameters)
 				rlen += r;
 			}
 			if (first_block) {
-				int ret = lwip_setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, &opt, sizeof(int));
+				lwip_setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, &opt, sizeof(int));
 			}
         } while(r > 0);
 
@@ -755,43 +869,50 @@ void app_main()
 	http_mutex = xSemaphoreCreateMutex();
 
 	tcpip_adapter_init();
-	xTaskCreate(&pppos_client_task, "pppos_client_task", 2048, NULL, 5, NULL);
+	xTaskCreate(&pppos_client_task, "pppos_client_task", 4096, NULL, 10, NULL);
 
-	//xTaskCreate(&obtain_time, "pppos_time_task", 2048, NULL, 6, NULL);
-
-	while (conn_ok == 0) {
+	while (conn_ok != 1) {
 		vTaskDelay(10 / portTICK_RATE_MS);
 	}
-	while (conn_ok < 10) {
-		vTaskDelay(100 / portTICK_RATE_MS);
-		conn_ok++;
-	}
-	ESP_LOGI(TIME_TAG,"OBTAINING TIME");
-    initialize_sntp();
-	ESP_LOGI(TIME_TAG,"SNTP INITIALIZED");
+	while (1) {
+        ESP_LOGI(TIME_TAG,"OBTAINING TIME");
+        initialize_sntp();
+        ESP_LOGI(TIME_TAG,"SNTP INITIALIZED");
 
-    // wait for time to be set
-    time_t now = 0;
-    struct tm timeinfo = { 0 };
-    int retry = 0;
-    const int retry_count = 10;
-    while(timeinfo.tm_year < (2016 - 1900) && ++retry < retry_count) {
-        ESP_LOGI(TIME_TAG, "Waiting for system time to be set... (%d/%d)", retry, retry_count);
-        vTaskDelay(2000 / portTICK_PERIOD_MS);
-        time(&now);
-        localtime_r(&now, &timeinfo);
+        // wait for time to be set
+        time_t now = 0;
+        struct tm timeinfo = { 0 };
+        int retry = 0;
+        const int retry_count = 10;
+        while(timeinfo.tm_year < (2016 - 1900) && ++retry < retry_count) {
+            ESP_LOGI(TIME_TAG, "Waiting for system time to be set... (%d/%d)", retry, retry_count);
+            vTaskDelay(2000 / portTICK_PERIOD_MS);
+            time(&now);
+            localtime_r(&now, &timeinfo);
+        	if (conn_ok != 1) break;
+        }
+    	if (conn_ok != 1) {
+            sntp_stop();
+    		while (conn_ok != 1) {
+    			vTaskDelay(10 / portTICK_RATE_MS);
+    		}
+    		continue;
+    	}
+
+        if (retry < retry_count) {
+            ESP_LOGI(TIME_TAG, "TIME SET TO %s", asctime(&timeinfo));
+            break;
+        }
+        else {
+            ESP_LOGI(TIME_TAG, "ERROR OBTAINING TIME\n");
+        }
+        sntp_stop();
+        vTaskDelay(30000 / portTICK_PERIOD_MS);
     }
 
-    if (retry < retry_count) {
-		ESP_LOGI(TIME_TAG, "TIME SET TO %s", asctime(&timeinfo));
-	}
-	else {
-		ESP_LOGI(TIME_TAG, "ERROR OBTAINING TIME\n");
-	}
-	
-    xTaskCreate(&http_get_task, "http_get_task", 2048, NULL, 3, NULL);
+    xTaskCreate(&http_get_task, "http_get_task", 4096, NULL, 5, NULL);
 	vTaskDelay(5000 / portTICK_RATE_MS);
-    xTaskCreate(&https_get_task, "https_get_task", 8192, NULL, 2, NULL);
+    xTaskCreate(&https_get_task, "https_get_task", 16384, NULL, 3, NULL);
 
 	while(1)
 	{
