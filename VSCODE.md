@@ -1,6 +1,6 @@
 
 
-#Setting up visual studio code 
+#  Setting up visual studio code 
 ```
 https://code.visualstudio.com/download
 
@@ -49,11 +49,24 @@ type tasks, select configure task runner, select other, This is for compiling qe
                     "message": 5
                 }
             }
+        },
+        {
+            "taskName": "clean app",
+            "args": ["make app-clean"]
+        },
+        {
+            "taskName": "monitor",
+            "args": ["make monitor"]
+        },
+        {
+            "taskName": "flash app",
+            "args": ["make app-flash"]
         }
+
     ]
 }
 ```
-#Header files 
+#  Header files 
 .vscode/c_cpp_properties.json 
 ```
 {
@@ -79,12 +92,30 @@ Now go to File->Preferences->Keyboard Shortcuts and add the following key bindin
 ]
 ```
 
-#More info
+# More info
 
 https://github.com/espressif/esp-idf/issues/303
 
-#Debugging
+# Debugging
 Look at the .vscode/launch.json file.
+```
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug",
+            "gdbpath": "~/esp/xtensa-esp32-elf/bin/xtensa-esp32-elf-gdb",
+            "type": "gdb",
+            "request": "attach",
+            "executable" : "${workspaceRoot}/build/app-template.elf",
+            "target": ":1234",
+            "remote": true,
+            "cwd": "${workspaceRoot}"
+        }
+    ]
+}
+```
+
 When running the debugger, start qemu before launching the debugger then do
 ```
 > interrupt
