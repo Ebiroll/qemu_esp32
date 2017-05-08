@@ -83,9 +83,9 @@ type tasks, select configure task runner, select other, This is for compiling qe
 }
 ```
 
-
 Now go to File->Preferences->Keyboard Shortcuts and add the following key binding for the build task:
 
+```
 // Place your key bindings in this file to overwrite the defaults
 [
     { "key": "f8",          "command": "workbench.action.tasks.build" }
