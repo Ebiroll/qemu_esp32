@@ -128,7 +128,13 @@ export IDF_PATH=~/esp/esp-idf
 
 Now  esp_crosscore_int_send_yield is implemented.
 Also rtc_clk_xtal_freq_get works.
-
+However one thread seems to get stuck waiting for s_flash_op_complete,
+Workaround until qemu problem is fixed,
+```
+(gdb) thread 2
+(gdb) set s_flash_op_complete=1
+(gdb) c
+```
 
 ```
 You can probably use head of esp-idf
