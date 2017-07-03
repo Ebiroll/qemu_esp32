@@ -15,7 +15,7 @@
 #include <FreeRTOS.h>
 #include <Task.h>
 #include <WebServer.h>
-//#include <TFTP.h>
+#include <TFTP.h>
 #include <JSON.h>
 #include <WiFi.h>
 #include <stdio.h>
@@ -184,7 +184,7 @@ class WebServerTask : public Task {
    }
 };
 
-/*
+
 class TFTPTask : public Task {
    void run(void *data) {
   	 TFTP tftp;
@@ -192,7 +192,7 @@ class TFTPTask : public Task {
   	 tftp.start();
    }
 };
-*/
+
 
 ESP32_Explorer::ESP32_Explorer() {
 }
@@ -211,9 +211,9 @@ void ESP32_Explorer::start() {
 	webServerTask->setStackSize(20000);
 	webServerTask->start();
 
-	//TFTPTask *pTFTPTask = new TFTPTask();
-	//pTFTPTask->setStackSize(8000);
-	//pTFTPTask->start();
+	TFTPTask *pTFTPTask = new TFTPTask();
+	pTFTPTask->setStackSize(8000);
+	pTFTPTask->start();
 	ESP32CPP::GPIO::setOutput(GPIO_NUM_25);
 	ESP32CPP::GPIO::setOutput(GPIO_NUM_26);
 	ESP32CPP::GPIO::high(GPIO_NUM_25);
