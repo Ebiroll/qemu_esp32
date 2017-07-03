@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>ESP32 Explorer</title>
+<script src="jquery/jquery-3.2.1.min.js"></script>
+<link rel="stylesheet" href="jqueryui/jquery-ui.min.css">
+<script src="jqueryui/jquery-ui.min.js"></script>
+<script src="ESP32Explorer.js"></script>
+<style>
+.flexHoriz {
+	display: flex;
+}
+
+.flexHorizCenter {
+	display: flex;
+	justify-content: center;
+}
+
+.tableBorders {
+	border: 1px solid black;
+	border-collapse: collapse;
+}
+
+.tableBorders td {
+	border: 1px solid black;
+	padding: 8px;
+}
+
+.infoImageX {
+	content: url(images/info.png);
+}
+
+.infoImage {
+	width: 16px;
+	height: 16px;
+	background-image: url('images/info.png');
+	margin: 0;
+	padding: 0;
+	cursor: pointer;
+}
+
+.inputImage {
+	width: 32px;
+	height: 32px;
+	background-image: url('images/in.png');
+	margin: 0;
+	padding: 0;
+}
+
+.outputImage {
+	width: 32px;
+	height: 32px;
+	background-image: url('images/out.png');
+	margin: 0;
+	padding: 0;
+}
+</style>
+</head>
+<body>
+	<h1>ESP32 Explorer</h1>
+	<div id="myTabs">
+		<ul>
+			<li><a href="#systemTab">System</a></li>
+			<li><a href="#wifiTab">WiFi</a></li>
+			<li><a href="#gpioTab">GPIO</a></li>
+			<li><a href="#i2sTab">I2S</a></li>
+			<li><a href="#fileSystemTab">File System</a></li>
+		</ul>
+
+
+		<!-- --------- -->
+		<!-- systemTab -->
+		<!-- --------- -->
+		<div id="systemTab">
+			<div id="systemTabs">
+				<ul>
+					<li><a href="#systemGeneralTab">General</a></li>
+					<li><a href="#systemFreeRTOSTab">FreeRTOS</a></li>
+					<li><a href="#systemPartitionTab">Partitions</a></li>
+					<li><a href="#systemLoggingTab">Logging</a></li>
+					<li><a href="#systemJSONTab">JSON</a></li>
+				</ul>
+				<div id="systemGeneralTab">
+					<div>
+						<span>Free heap memory:</span> <span id="freeHeapSystemGeneralTab"></span>
+					</div>
+					<div>
+						<span>Time:</span> <span id="timeSystemGeneralTab"></span>
+					</div>
+				</div>
+				<div id="systemFreeRTOSTab">
+					<div>
+						<span>Task count:</span> <span id="taskCountFreeRTOSTab"></span>
+					</div>
+				</div>
+				<div id="systemPartitionTab">
+					<h3>Partitions:</h3>
+					<table id="partitionTable" border="1" cellspacing="0"
+						cellpadding="4">
+						<thead>
+							<tr>
+								<th>Type</th>
+								<th>Sub Type</th>
+								<th>Size</th>
+								<th>Address</th>
+								<th>Encrypted</th>
+								<th>Label</th>
+							</tr>
+						</thead>
+					</table>
+				</div>
+				<div id="systemLoggingTab">
+					<fieldset style="margin-top: 8px;">
+						<legend>Logging</legend>
+						<label for="systemLoggingNone">None</label>
+						<!--  -->
+						<input type="radio" name="systemLogging" id="systemLoggingNone"
+							data-logLevel="0">
+						<!--  -->
+						<label for="systemLoggingError">Error</label>
+						<!-- -->
+						<input type="radio" name="systemLogging" id="systemLoggingError"
+							data-logLevel="1">
+						<!--  -->
+						<label for="systemLoggingWarn">Warn</label>
+						<!-- -->
+						<input type="radio" name="systemLogging" id="systemLoggingWarn"
+							data-logLevel="2">
+						<!--  -->
+						<label for="systemLoggingInfo">Info</label>
+						<!-- -->
+						<input type="radio" name="systemLogging" id="systemLoggingInfo"
+							data-logLevel="3">
+						<!--  -->
+						<label for="systemLoggingDebug">Debug</label>
+						<!-- -->
+						<input type="radio" name="systemLogging" id="systemLoggingDebug"
+							data-logLevel="4">
+						<!--  -->
+						<label for="systemLoggingVerbose">Verbose</label>
+						<!-- -->
+						<input type="radio" name="systemLogging" id="systemLoggingVerbose"
+							data-logLevel="5">
+					</fieldset>
+				</div>
+				<div id="systemJSONTab" class="flexHoriz">
+					<textarea id="systemJsonText"
+						style="width: 100%; height: 500px; font-family: monospace;"></textarea>
+				</div>
+			</div>
+
+			<div>
+				<button id="systemRefreshButton">Refresh</button>
+			</div>
+		</div>
+
+		<!-- ------- -->
+		<!-- wifiTab -->
+		<!-- ------- -->
+		<div id="wifiTab">
+			<div id="wifiTabs">
+				<ul>
+					<li><a href="#wifiTabsGeneralTab">General</a></li>
+					<li><a href="#wifiTabsJSONTab">JSON</a></li>
+				</ul>
+				<div id="wifiTabsGeneralTab">
+					<h3>WiFi</h3>
+					<table>
+						<tr>
+							<td>Mode</td>
+							<td id="modeWifi"></td>
+						</tr>
+						<tr>
+							<td>Station Mac</td>
+							<td id="staMacWifi"></td>
+						</tr>
+						<tr>
+							<td>AP Mac</td>
+							<td id="apMacWifi"></td>
+						</tr>
+						<tr>
+							<td>Station SSID</td>
+							<td id="staSSIDWifi"></td>
+						</tr>
+						<tr>
+							<td>AP SSID</td>
+							<td id="apSSIDWifi"></td>
+						</tr>
+						<tr>
+							<td>AP IP</td>
+							<td id="apIpWifi"></td>
+						</tr>
+						<tr>
+							<td>AP Gateway</td>
+							<td id="apGwWifi"></td>
+						</tr>
+						<tr>
+							<td>AP Netmask</td>
+							<td id="apNetmaskWifi"></td>
+						</tr>
+						<tr>
+							<td>Station IP</td>
+							<td id="staIpWifi"></td>
+						</tr>
+						<tr>
+							<td>Station Gateway</td>
+							<td id="staGwWifi"></td>
+						</tr>
+						<tr>
+							<td>Station Netmask</td>
+							<td id="staNetmaskWifi"></td>
+						</tr>
+					</table>
+				</div>
+				<div id="wifiTabsJSONTab">
+					<div class="flexHoriz">
+						<textarea id="wifiJsonText"
+							style="width: 100%; height: 500px; font-family: monospace;"></textarea>
+					</div>
+				</div>
+			</div>
+			<!-- End of wifiTabs -->
+			<div>
+				<button id="wifiRefreshButton">Refresh</button>
+			</div>
+		</div>
+		<!-- End of wifiTab -->
+
+		<!-- ------- -->
+		<!-- gpioTab -->
+		<!-- ------- -->
+		<div id="gpioTab">
+			<div id="gpioTabs">
+				<ul>
+					<li><a href="#gpioTabsGeneralTab">General</a></li>
+					<li><a href="#gpioTabsJSONTab">JSON</a></li>
+				</ul>
+				<div id="gpioTabsGeneralTab">
+					<h3>GPIOs</h3>
+					<table id="gpioTable" class="tableBorders"></table>
+
+				</div>
+				<div id="gpioTabsJSONTab">
+					<div>
+						<div class="flexHoriz">
+							<textarea id="gpioJsonText"
+								style="width: 100%; height: 500px; font-family: monospace;"></textarea>
+						</div>
+					</div>
+				</div>
+			</div>
+			<button id="gpioRefreshButton">Refresh</button>
+		</div>
+
+		<!-- ------ -->
+		<!-- i2sTab -->
+		<!-- ------ -->
+		<div id="i2sTab">
+			<div class="flexHoriz">
+				<textarea id="i2sJsonText"
+					style="width: 100%; height: 500px; font-family: monospace;"></textarea>
+			</div>
+			<div>
+				<button id="i2sRefreshButton">Refresh</button>
+			</div>
+		</div>
+
+		<!-- ------------- -->
+		<!-- fileSystemTab -->
+		<!-- ------------- -->
+		<div id="fileSystemTab">
+			<div class="ui-widget">
+				<span>Root Path:</span>
+				<input id="rootPathText" type="text">
+			</div>
+			<div style="margin-top: 8px;">
+				<button id="fileSystemRefreshButton">Refresh</button>
+			</div>
+		</div>
+	</div>
+
+	<!-- ------- -->
+	<!-- DIALOGS -->
+	<!-- ------- -->
+	<div id="gpioDialog">
+		<h3>GPIO details</h3>
+		<table>
+			<tr>
+				<td>GPIO_OUT_REG</td>
+				<td id="gpioDialog_OUT_REG"></td>
+			</tr>
+			<tr>
+				<td>GPIO_IN_REG</td>
+				<td id="gpioDialog_IN_REG"></td>
+			</tr>
+			<tr>
+				<td>GPIO_ENABLE_REG</td>
+				<td id="gpioDialog_ENABLE_REG"></td>
+			</tr>
+			<tr>
+				<td>GPIO_STATUS_REG</td>
+				<td id="gpioDialog_STATUS_REG"></td>
+			</tr>
+		</table>
+		<fieldset style="margin-top: 8px;">
+			<legend>GPIO Direction:</legend>
+			<label for="inputGpioDialog">Input</label>
+			<!--  -->
+			<input type="radio" name="radioIO" id="inputGpioDialog">
+			<!--  -->
+			<label for="outputGpioDialog">Output</label>
+			<!-- -->
+			<input type="radio" name="radioIO" id="outputGpioDialog">
+		</fieldset>
+	</div>
+</body>
+</html>
