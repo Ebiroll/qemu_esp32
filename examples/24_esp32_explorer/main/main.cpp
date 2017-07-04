@@ -11,7 +11,9 @@
 #include <stdio.h>
 #include <string>
 #include "ESP32Explorer.h"
-
+extern "C" {
+#include "emul_ip.h"
+}
 
 static char tag[] = "ESP32_Explorer_MAIN";
 
@@ -34,12 +36,22 @@ class TargetWiFiEventHandler: public WiFiEventHandler {
 
 class WiFiTask: public Task {
 	void run(void *data) override {
+		if (is_running_qemu()) {
+			printf("Running in qemu\n");
+			xTaskCreatePinnedToCore(task_lwip_init, "loop", 4096, NULL, 14, NULL, 0);
+			//task_lwip_init(NULL);
+			ESP32_ExplorerTask *pESP32_ExplorerTask = new ESP32_ExplorerTask();
+			pESP32_ExplorerTask->setStackSize(8000);
+			pESP32_ExplorerTask->start();
 
-		WiFi wifi;
-		TargetWiFiEventHandler *eventHandler = new TargetWiFiEventHandler();
-		wifi.setWifiEventHandler(eventHandler);
-		wifi.setIPInfo("192.168.1.99", "192.168.1.1", "255.255.255.0");
-		wifi.connectAP("sweetie", "l16wint!");
+		}
+		else {
+			WiFi wifi;
+			TargetWiFiEventHandler *eventHandler = new TargetWiFiEventHandler();
+			wifi.setWifiEventHandler(eventHandler);
+			wifi.setIPInfo("192.168.1.99", "192.168.1.1", "255.255.255.0");
+			wifi.connectAP("ssid", "password");
+		}
 	} // End run
 };
 
