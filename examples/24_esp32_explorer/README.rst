@@ -3,7 +3,8 @@ Clone from here  https://github.com/nkolban/ESP32_Explorer
 
 The goal is to make this run in qemu. However currently it does not.
 
-'''
+
+```
 First generate flash
 gcc toflash.c -o qemu_flash
 
@@ -12,12 +13,13 @@ gcc toflash.c -o qemu_flash
 
    xtensa-softmmu/qemu-system-xtensa -d unimp  -cpu esp32 -M esp32 -m 4M -net nic,model=vlan0 -net user,id=simnet,ipver4=on,net=192.168.4.0/24,host=192.168.4.40,hostfwd=tcp::10080-192.168.4.3:80  -net dump,file=/tmp/vm0.pcap  -kernel  ~/esp/qemu_esp32/examples/24_esp32_explorer/build/app-template.elf  -s  > io.tx
 
-'''
+```
+
 
 To debug,
 
 
-'''
+```
 xtensa-esp32-elf-gdb.qemu  build/app-template.elf -ex 'target remote:1234'
 
 (gdb) b WL_Flash::WL_Flash();
@@ -27,7 +29,8 @@ Here we see that the vtable is initiated to 0x3f415118
 (gdb) info symbol 0x3f415118
 vtable for WL_Flash + 8 in section .flash.rodata
 It seems to contain all 0xfffff
-Hmm, either .flash.roadata not properly mapped by elf loader or more likely overwritten by MMU emulation.
+It seems like .flash.roadata gets overwritten by MMU emulation.
+It would be wise to investigate how the bootloader sets upp the MMU registers to prevent this from happening.
 
 (gdb)  p/x (int *) *(0x3f415118+0)
 
@@ -44,6 +47,14 @@ WL_Flash::config(WL_Config_s*, Flash_Access*) in section .flash.text
 It seems like, qemu overwrites .flash.roadata
 Need to be fixed.
 =================
+
+The location where roadata is overwritten is in esp_partition_find_first
+(gdb) b esp_partition_find_first
+
+If not running in qemu the bootloader sets up the mapping between flash and memory.
+.flash.roadata
+Un
+
 
 
 (gdb) b ESP32_Explorer::start
@@ -82,7 +93,7 @@ $17 = 0x3f415118
 $18 = 0xffffffff
 
 This causes a crash, the vtable for WL_Flash(); contains all 0xfffffff (-1)
-'''
+```
 
 
 
