@@ -285,7 +285,7 @@ static void initialise_wifi(void)
 
 void app_main()
 {
-    ESP_ERROR_CHECK( nvs_flash_init() );
+  // ESP_ERROR_CHECK( nvs_flash_init() );
 
     wifi_event_group = xEventGroupCreate();
     ESP_ERROR_CHECK( esp_event_loop_init(esp32_wifi_eventHandler, NULL) );
