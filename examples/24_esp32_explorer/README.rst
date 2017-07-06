@@ -1,23 +1,28 @@
 Clone from here  https://github.com/nkolban/ESP32_Explorer
 ====================
 
-The goal is to make this run in qemu. However currently it does not.
+##  The goal is to make this run in qemu.
+it does work if you use the esp32.c.bootloader file as descibed earlier.
 
 
 ```
-First generate flash
-gcc toflash.c -o qemu_flash
+  First generate flash
+  gcc toflash.c -o qemu_flash
 
   ./qemu_flash build/app-template.bin
-
 
    xtensa-softmmu/qemu-system-xtensa -d unimp  -cpu esp32 -M esp32 -m 4M -net nic,model=vlan0 -net user,id=simnet,ipver4=on,net=192.168.4.0/24,host=192.168.4.40,hostfwd=tcp::10080-192.168.4.3:80  -net dump,file=/tmp/vm0.pcap  -kernel  ~/esp/qemu_esp32/examples/24_esp32_explorer/build/app-template.elf  -s  > io.tx
 
 ```
 
 
-To debug,
+To upload files use tftp. i.e.
 
+atftp -p -l index.html -r /index.html 192.168.1.99 69
+
+
+
+This is some information used earlier to debug a crash where flash.rodata was overwritten
 
 ```
 xtensa-esp32-elf-gdb.qemu  build/app-template.elf -ex 'target remote:1234'
@@ -29,23 +34,22 @@ Here we see that the vtable is initiated to 0x3f415118
 (gdb) info symbol 0x3f415118
 vtable for WL_Flash + 8 in section .flash.rodata
 It seems to contain all 0xfffff
-It seems like .flash.roadata gets overwritten by MMU emulation.
+It seems like .flash.rodata gets overwritten by MMU emulation.
 It would be wise to investigate how the bootloader sets upp the MMU registers to prevent this from happening.
 
-(gdb)  p/x (int *) *(0x3f415118+0)
+  (gdb)  p/x (int *) *(0x3f415118+0)
 
 
-When restarting and looking at data before executing we see,
- p/x (int *) *(0x3f415118+0)
-$1 = 0x4015d7e8
+  When restarting and looking at data before executing we see,
+  p/x (int *) *(0x3f415118+0)
+  $1 = 0x4015d7e8
 
-(gdb)  p/x (int *) *(0x3f415118+36)
-$4 = 0x40154e6c
-(gdb) info symbol 0x40154e6c
-WL_Flash::config(WL_Config_s*, Flash_Access*) in section .flash.text
+  (gdb)  p/x (int *) *(0x3f415118+36)
+  $4 = 0x40154e6c
+  (gdb) info symbol 0x40154e6c
+  WL_Flash::config(WL_Config_s*, Flash_Access*) in section .flash.text
 
 It seems like, qemu overwrites .flash.roadata
-Need to be fixed.
 =================
 
 The location where roadata is overwritten is in esp_partition_find_first
@@ -92,23 +96,9 @@ $17 = 0x3f415118
 (gdb) p/x $a2
 $18 = 0xffffffff
 
-This causes a crash, the vtable for WL_Flash(); contains all 0xfffffff (-1)
+  This causes a crash, the vtable for WL_Flash(); contains all 0xfffffff (-1)
+
 ```
 
-
-
-
-To upload files use tftp. i.e.
-
-atftp -p -l index.html -r /index.html 192.168.1.99 69
-
- 
-This is a template application to be used with `Espressif IoT Development Framework`_ (ESP-IDF). 
-
-Please check ESP-IDF docs for getting started instructions.
-
-Code in this repository is Copyright (C) 2016 Espressif Systems, licensed under the Apache License 2.0 as described in the file LICENSE.
-
-.. _Espressif IoT Development Framework: https://github.com/espressif/esp-idf
 
 

@@ -299,7 +299,7 @@ gcc toflash.c -o qemu_flashgcc toflash.c -o qemu_flash
 
 Currently mmap function are not correctly implemented. 
 The reason for this is that the bootloader will initiate the FLASH_MMU_TABLE
-to something. page 0 must be mapped correctly as it contains the .flash.roadata from the elf file.
+to something. page 0 must be mapped correctly as it contains the .flash.rodata from the elf file.
 but qemu will not run the bootloader as it loads the elf file directly.
 0x3f400010 size 5794 bytes.
 
@@ -1182,7 +1182,10 @@ It is a good idea to save the original  xtensa-esp32-elf-gdb as the one in the b
 
 I noticed that memory got overwritten as priv_ethoc suddenly contained faulty iobase.
 Memory access breakpoints comes very handy for these tyoes of errors.
-```      
+```
+To find a variable based on location in memory
+(gdb) info symbol 0x40154e6c
+
 To track memory writes
 (gdb) watch priv_ethoc.io_base
 To track memory reads
