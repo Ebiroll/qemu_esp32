@@ -43,7 +43,9 @@
 
 #include "WebSocket_Task.h"
 
-extern void Task_lwip_init(void * pParam);
+extern void task_lwip_init(void * pParam);
+
+
 
 //WebSocket frame receive queue
 QueueHandle_t WebSocket_rx_queue;
@@ -87,7 +89,8 @@ void app_main(void)
 
     if (*quemu_test==0x42) {
         printf("Running in qemu\n");
-        Task_lwip_init(NULL);  
+        //Task_lwip_init(NULL);
+	xTaskCreate(&task_lwip_init, "task_lwip", 2048*2, NULL, 12, NULL);
     }
     else {
         tcpip_adapter_init();
