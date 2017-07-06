@@ -23,6 +23,7 @@
 #include "bootwifi.h"
 #include "sdkconfig.h"
 #include "selectAP.h"
+#include "emul_ip.h"
 
 // If the structure of a record saved for a subsequent reboot changes
 // then consider using semver to change the version number or else
@@ -404,15 +405,19 @@ static void becomeStation(connection_info_t *pConnectionInfo) {
 	} else {
 		tcpip_adapter_dhcpc_start(TCPIP_ADAPTER_IF_STA);
 	}
-
-  ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_STA));
-  wifi_config_t sta_config;
-  sta_config.sta.bssid_set = 0;
-  memcpy(sta_config.sta.ssid, pConnectionInfo->ssid, SSID_SIZE);
-  memcpy(sta_config.sta.password, pConnectionInfo->password, PASSWORD_SIZE);
-  ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &sta_config));
-  ESP_ERROR_CHECK(esp_wifi_start());
-  ESP_ERROR_CHECK(esp_wifi_connect());
+       if (is_running_qemu()) {
+       }
+       else
+       {
+	   ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_STA));
+	   wifi_config_t sta_config;
+	   sta_config.sta.bssid_set = 0;
+	   memcpy(sta_config.sta.ssid, pConnectionInfo->ssid, SSID_SIZE);
+	   memcpy(sta_config.sta.password, pConnectionInfo->password, PASSWORD_SIZE);
+	   ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &sta_config));
+	   ESP_ERROR_CHECK(esp_wifi_start());
+	   ESP_ERROR_CHECK(esp_wifi_connect());
+       }
 } // becomeStation
 
 
@@ -422,21 +427,27 @@ static void becomeStation(connection_info_t *pConnectionInfo) {
 static void becomeAccessPoint() {
 	ESP_LOGD(tag, "- Starting being an access point ...");
 	// We don't have connection info so be an access point!
-	ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
-	wifi_config_t apConfig = {
-		.ap = {
-			.ssid="ESP32 Duktape",
-			.ssid_len=0,
-			.password="Duktape",
-			.channel=0,
-			.authmode=WIFI_AUTH_OPEN,
-			.ssid_hidden=0,
-			.max_connection=4,
-			.beacon_interval=100
-		}
-	};
-	ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &apConfig));
-	ESP_ERROR_CHECK(esp_wifi_start());
+       if (is_running_qemu()) {
+	 // Not much
+       }
+       else
+       {
+	 ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
+	 wifi_config_t apConfig = {
+	   .ap = {
+	     .ssid="ESP32 Duktape",
+	     .ssid_len=0,
+	     .password="Duktape",
+	     .channel=0,
+	     .authmode=WIFI_AUTH_OPEN,
+	     .ssid_hidden=0,
+	     .max_connection=4,
+	     .beacon_interval=100
+	   }
+	 };
+	 ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &apConfig));
+	 ESP_ERROR_CHECK(esp_wifi_start());
+       }
 } // becomeAccessPoint
 
 
@@ -501,10 +512,14 @@ void bootWiFi(bootwifi_callback_t callback) {
 	nvs_flash_init();
 	tcpip_adapter_init();
 	ESP_ERROR_CHECK(esp_event_loop_init(esp32_wifi_eventHandler, NULL));
-	wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-	ESP_ERROR_CHECK(esp_wifi_init(&cfg));
-	ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
-
+	if (is_running_qemu()) {
+	  printf("Running in qemu\n");
+	  xTaskCreatePinnedToCore(task_lwip_init, "loop", 4096, NULL, 14, NULL, 0);
+	} else {
+	  wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+	  ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+	  ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
+	}
 	bootWiFi2();
 
 	ESP_LOGD(tag, "<< bootWiFi");
