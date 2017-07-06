@@ -10,6 +10,7 @@ It is a good way to learn about qemu ,esp32 and the esp32 rom.
 [Works pretty well in linux now](./VSCODE.md)
 
 
+
 By following the instructions here, I added esp32 to qemu.
 http://wiki.linux-xtensa.org/index.php/Xtensa_on_QEMU
 
@@ -54,7 +55,7 @@ Main XTAL frequency (40 MHz)  --->
  
   [ ] Make exception and panic handlers JTAG/OCD aware 
 
-This is no longer required
+This is no longer required but recomended.
 [*] Run FreeRTOS only on first core,    
 [ ] Initialize PHY in startup code
 [ ] Make exception and panic handlers JTAG/OCD aware       
@@ -94,6 +95,83 @@ the same app in qemu.
 
 
 ```
+## Latest update, July 2017
+
+Booting from emulated flash! This is very cool.
+No -kernel argument requred when starting qemu, but a proper flash image.
+```
+Do a cp qemu-xtensa-esp32/hw/xtensa/esp32.c.bootloader  qemu-xtensa-esp32/hw/xtensa/esp32.c
+Then rebuild qemu.
+gcc toflash.c -o qemu_flashgcc toflash.c -o qemu_flash
+This emulation reqires that you generate a proper flash file first. 
+Serial flasher config  --->  Flash size (4 MB)
+
+Then run the ./qemu_flash program. 
+./qemu_flash build/app-template.bin
+
+Note that you have to use the .bin file as argument. This will generate a flash image with bootloader, partition information and flash file that the bootloder can use boot the proper application from.
+
+
+xtensa-softmmu/qemu-system-xtensa  -cpu esp32 -M esp32  -s   > io.txt
+TRYING to MAP esp32flash.binMAPPED esp32flash.binI (14) boot: ESP-IDF v3.0-dev-20-g9b955f4c 2nd stage bootloader
+I (14) boot: compile time 12:24:53
+I (14) boot: Enabling RNG early entropy source...
+I (14) boot: SPI Speed      : 40MHz
+I (14) boot: SPI Mode       : DIO
+I (14) boot: SPI Flash Size : 2MB
+I (14) boot: Partition Table:
+I (14) boot: ## Label            Usage          Type ST Offset   Length
+I (15) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+I (15) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+I (15) boot:  2 factory          factory app      00 00 00010000 00100000
+I (15) boot: End of partition table
+I (15) boot: Disabling RNG early entropy source...
+I (16) boot: Loading app partition at offset 00010000
+I (328) boot: segment 0: paddr=0x00010018 vaddr=0x00000000 size=0x0ffe8 ( 65512) 
+I (328) boot: segment 1: paddr=0x00020008 vaddr=0x3f400010 size=0x1077c ( 67452) map
+I (328) boot: segment 2: paddr=0x0003078c vaddr=0x3ffb0000 size=0x023d8 (  9176) load
+I (329) boot: segment 3: paddr=0x00032b6c vaddr=0x40080000 size=0x00400 (  1024) load
+I (329) boot: segment 4: paddr=0x00032f74 vaddr=0x40080400 size=0x12fb0 ( 77744) load
+I (332) boot: segment 5: paddr=0x00045f2c vaddr=0x400c0000 size=0x00000 (     0) load
+I (332) boot: segment 6: paddr=0x00045f34 vaddr=0x00000000 size=0x0a0d4 ( 41172) 
+I (333) boot: segment 7: paddr=0x00050010 vaddr=0x400d0018 size=0x4c9a4 (313764) map
+I (333) cpu_start: Pro cpu up.
+I (333) cpu_start: Single core mode
+I (334) heap_alloc_caps: Initializing. RAM available for dynamic allocation:
+I (334) heap_alloc_caps: At 3FFAE2A0 len 00001D60 (7 KiB): DRAM
+I (334) heap_alloc_caps: At 3FFB7C40 len 000283C0 (160 KiB): DRAM
+I (334) heap_alloc_caps: At 3FFE0440 len 00003BC0 (14 KiB): D/IRAM
+I (335) heap_alloc_caps: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM
+I (335) heap_alloc_caps: At 400933B0 len 0000CC50 (51 KiB): IRAM
+I (335) cpu_start: Pro cpu start user code
+I (478) cpu_start: Starting scheduler on PRO CPU.
+Running in qemu
+Running in qemu
+ethoc: num_tx: 8 num_rx: 8
+TCP/IP initializing...
+TCP/IP initialized.
+E (487) wifi: esp_wifi_internal_set_sta_ip 1281 wifi is not init
+E (487) event: system_event_sta_got_ip_default 162 esp_wifi_internal_set_sta_ip ret=12289
+Applications started.
+I (1507) 1306: Setting UART configuration number 1...
+I (1507) 1306: Setting UART configuration number 1...
+I (1517) uart: queue free spaces: 10
+1. clear display.
+2. Set page and col to 0.
+3. Set page to 4.
+4. Set column to 4.
+5. Send 8*0xff.
+6. Send 8*0x0f.
+7. Incremet nuUart Menu
+1. clear display.
+2. Set page and col to 0.
+3. Set page to 4.
+4. Set column to 4.
+5. Send 8*0xff.
+6. Send 8*0x0f.
+```
+
+
 UART emulation is not so good as output is only on stderr. Also interrupts are not emulated.
 esp32.c creates a 3 threads with socket on port 8880-8882 tto allow connect to the serial port over a socket. 
 In the starting terminal you can see output from all uarts mixed. However if you want to see output from only one uart,
@@ -205,6 +283,34 @@ The reason for this is that the bootloader will initiate the FLASH_MMU_TABLE
 to something. page 0 must be mapped correctly as it contains the .flash.roadata from the elf file.
 but qemu will not run the bootloader as it loads the elf file directly.
 0x3f400010 size 5794 bytes.
+
+
+BOOTLOADER UPDATE
+==================
+To get more correct mmap behaviour you can use the bootloader to start the application.
+
+Do a cp qemu-xtensa-esp32/hw/xtensa/esp32.c.bootloader  qemu-xtensa-esp32/hw/xtensa/esp32.c
+Then rebuild qemu.
+This emulation reqires that you generate a proper flash file first. 
+Serial flasher config  --->  Flash size (4 MB)
+
+Then run the ./qemu_flash program. (described earlier)
+./qemu_flash build/app-template.bin
+
+Note that you have to use the .bin file as argument. This will generate a flash image with bootloader, partition information and flash file that the bootloder can use boot the proper application from.
+
+Now start the bootloder.
+xtensa-softmmu/qemu-system-xtensa -d unimp -cpu esp32 -M esp32 -m 4M  -kernel ~/esp/qemu_esp32/examples/06_1306_interactive/build/bootloader/bootloader.elf  -s    > io.txt
+
+To debug you can use,
+xtensa-esp32-elf-gdb.qemu   build/app-template.elf -ex 'target remote:1234'
+(gdb) b app_main
+
+Or to debug the bootloader,
+xtensa-esp32-elf-gdb.qemu   build/bootloader/bootloader.elf -ex 'target remote:1234'
+(gdb) b bootloader_main
+(gdb) b bootloader_mmap
+
 ```
 #define DPORT_PRO_FLASH_MMU_TABLE ((volatile uint32_t) 0x3FF10000)
 PAGE 0 is the content of 0x3FF10000 the virtual adress ranged mapped would be adress 0x3f400000 - 0x3f410000
