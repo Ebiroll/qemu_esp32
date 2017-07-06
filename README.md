@@ -111,6 +111,19 @@ Then run the ./qemu_flash program.
 
 Note that you have to use the .bin file as argument. This will generate a flash image with bootloader, partition information and flash file that the bootloder can use boot the proper application from.
 
+Note however that we can get this behaviour...
+I (124) cpu_start: Pro cpu start user code
+ File 'esp32flash.bin' is truncated or corrupt.
+ File 'esp32flash.bin' is truncated or corrupt.
+ File 'esp32flash.bin' is truncated or corrupt.
+ File 'esp32flash.bin' is truncated or corrupt.
+ File 'esp32flash.bin' is truncated or corrupt.
+So it does not work perfectly yet. 
+More debugging is needed. :-(
+
+However sometimes it works better. 
+Maybe because of uninitilazed regsiters.
+
 
 xtensa-softmmu/qemu-system-xtensa  -cpu esp32 -M esp32  -s   > io.txt
 TRYING to MAP esp32flash.binMAPPED esp32flash.binI (14) boot: ESP-IDF v3.0-dev-20-g9b955f4c 2nd stage bootloader
