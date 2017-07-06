@@ -43,11 +43,11 @@ const int CONNECTED_BIT = BIT0;
 /* Constants that aren't configurable in menuconfig */
 //#define WEB_SERVER "example.com"
 //#define WEB_SERVER "93.184.216.34"
-#define WEB_SERVER "192.168.4.1"
+#define WEB_SERVER "192.168.4.40"
 #define WEB_PORT 10080
 //#define WEB_URL "http://example.com/"
 //#define WEB_URL "http://93.184.216.34/"
-#define WEB_URL "http://192.168.4.1/"
+#define WEB_URL "http://192.168.4.40/"
 
 
 static const char *TAG = "example";
@@ -98,6 +98,9 @@ static void initialise_wifi(void)
     ESP_ERROR_CHECK( esp_wifi_start() );
 }
 
+char recv_buf[64];
+
+
 static void http_get_task(void *pvParameters)
 {
     const struct addrinfo hints = {
@@ -107,7 +110,6 @@ static void http_get_task(void *pvParameters)
     struct addrinfo *res;
     struct in_addr *addr;
     int s, r;
-    char recv_buf[64];
 
     while(1) {
         /* Wait for the callback to set the CONNECTED_BIT in the
