@@ -43,7 +43,7 @@ static int socket_id = -1;
 static char http_request[64] = {0};
 
 
-extern void Task_lwip_init(void *pvParameter);  
+extern void task_lwip_init(void *pvParameter);  
   
 /* FreeRTOS event group to signal when we are connected & ready to make a request */
 static EventGroupHandle_t wifi_event_group;
@@ -286,7 +286,8 @@ void app_main()
     nvs_flash_init();
     if (*quemu_test==0x42) {
         printf("Running in qemu\n");
-        Task_lwip_init(NULL);  
+	xTaskCreate(&task_lwip_init, "lwip_init", 8192, NULL, 5, NULL);
+	xTaskCreate(&main_task, "main_task", 8192, NULL, 5, NULL);	
     }
     else {
          initialise_wifi();
