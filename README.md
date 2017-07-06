@@ -118,11 +118,17 @@ I (124) cpu_start: Pro cpu start user code
  File 'esp32flash.bin' is truncated or corrupt.
  File 'esp32flash.bin' is truncated or corrupt.
  File 'esp32flash.bin' is truncated or corrupt.
+
+If you get this error try giving the application as kernel parameter.
+  -kernel /home/olas/esp/qemu_esp32/examples/07_flash_mmap/build/mmap_test.elf
+
+
 So it does not work perfectly yet. 
 More debugging is needed. :-(
 
-However sometimes it works better. 
-Maybe because of uninitilazed regsiters.
+Seems that the mmapping has a bug. Will maybe fixed on a rainy day.
+(gdb) b start_cpu0_default
+Also lots of cleanup is needed.
 
 
 xtensa-softmmu/qemu-system-xtensa  -cpu esp32 -M esp32  -s   > io.txt
