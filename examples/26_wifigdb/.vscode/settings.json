@@ -1,0 +1,13 @@
+{
+    "files.associations": {
+        "task.h": "c",
+        "portmacro.h": "c",
+        "corebits.h": "c",
+        "queue.h": "c",
+        "def.h": "c",
+        "stdlib.h": "c",
+        "esp_gdbstub.h": "c",
+        "projdefs.h": "c",
+        "stdint.h": "c"
+    }
+}

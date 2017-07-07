@@ -1,0 +1,20 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "~/esp/esp-idf/components/",
+                "./components/emul_ip/include"
+            ],
+            "browse": {
+                "limitSymbolsToIncludedHeaders": true,
+                "databaseFilename": "",
+                "path": [
+                    "~/esp/esp-idf/components/",
+                    "./components/emul_ip/include"
+                ]
+            },
+            "intelliSenseMode": "clang-x64"
+        }
+    ]
+}
