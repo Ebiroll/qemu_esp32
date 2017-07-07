@@ -25,7 +25,19 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */ 
 
+#if 0
+ULP memory
+0x50000000  8kb
 
+
+esp_err_t ulp_run(uint32_t entry_point)
+{
+    SET_PERI_REG_MASK(SARADC_SAR_START_FORCE_REG, SARADC_ULP_CP_FORCE_START_TOP_M);
+    SET_PERI_REG_BITS(SARADC_SAR_START_FORCE_REG, SARADC_PC_INIT_V, entry_point, SARADC_PC_INIT_S);
+    SET_PERI_REG_MASK(SARADC_SAR_START_FORCE_REG, SARADC_ULP_CP_START_TOP_M);
+    return ESP_OK;
+}
+#endif
 
 #include "qemu/osdep.h"
 #include "qapi/error.h"
@@ -42,7 +54,8 @@
 #include "hw/sysbus.h"
 #include "hw/block/flash.h"
 #include "sysemu/block-backend.h"
-#include "sysemu/char.h"
+//#include "sysemu/char.h"
+#include "chardev/char.h"
 #include "sysemu/device_tree.h"
 #include "qemu/error-report.h"
 #include "bootparam.h"
@@ -59,6 +72,9 @@ extern const unsigned char* get_flashMemory();
 
 typedef struct Esp32 {
     XtensaCPU *cpu[2];
+    unsigned int gpio_reg[600/4]; 
+    qemu_irq pro_to_app_yield_irq;
+    qemu_irq app_to_pro_yield_irq;
 } Esp32;
 
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -70,6 +86,7 @@ typedef struct connect_data {
 } connect_data;
 
 qemu_irq uart0_irq;
+qemu_irq uart1_irq;
 
 void *connection_handler(void *connect);
 void *gdb_socket_thread(void *dummy);
@@ -171,15 +188,20 @@ static bool esp32_serial_can_receive(void *opaque)
     return esp32_serial_rx_fifo_size(s) < (ESP32_UART_FIFO_SIZE - 1);
 }
 
+
+// b uart_rx_intr_handler_default
 static void esp32_serial_irq_update(Esp32SerialState *s)
 {
     s->reg[ESP32_UART_INT_ST] |= s->reg[ESP32_UART_INT_RAW];
     //fprintf(stderr,"CHECKING IRQ\n");
 
-    if (s->uart_num==0 || (s->reg[ESP32_UART_INT_ST] & s->reg[ESP32_UART_INT_ENA])) {
+    if (s->uart_num==0 || s->uart_num==1 || (s->reg[ESP32_UART_INT_ST] & s->reg[ESP32_UART_INT_ENA])) {
         //fprintf(stderr,"RAISING IRQ\n");
         if (s->uart_num==0) {
            qemu_irq_raise(uart0_irq);
+        }
+        else if (s->uart_num==1) {
+           qemu_irq_raise(uart1_irq);
         }
         else
         {
@@ -189,11 +211,18 @@ static void esp32_serial_irq_update(Esp32SerialState *s)
         if (s->uart_num==0) {
            qemu_irq_lower(uart0_irq);
         }
+        else if (s->uart_num==1) {
+           qemu_irq_lower(uart1_irq);
+        }
+
         else
         {
            qemu_irq_lower(s->irq);
         }
     }
+
+    // Clear timeout
+    s->reg[ESP32_UART_INT_RAW] = s->reg[ESP32_UART_INT_RAW]  & ~BIT(8);
 }
 
 static void esp32_serial_rx_irq_update(Esp32SerialState *s)
@@ -328,6 +357,49 @@ static void esp32_serial_set_conf0(Esp32SerialState *s, hwaddr addr,
     }
 }
 
+#if 0
+static void esp_serial_timeout_cb(void *opaque)
+{
+  Esp32SerialState *s = opaque;
+  int64_t now=qemu_clock_get_ns(QEMU_CLOCK_REALTIME);
+  DEBUG_LOG("%s: SERIAL_TIMEOUT  +0x%PRIx6402x:  \n", __func__, now);
+
+  if (now-s->start_timeout > 1000000) {
+      // 1 second timeout irq
+      DEBUG_LOG("%s: SERIAL_TIMEOUT  +0x%PRIx6402x:  \n", __func__, now);
+      s->reg[ESP32_UART_INT_RAW] |= BIT(8);
+      esp32_serial_rx_irq_update(s);
+      s->start_timeout=now;
+  }
+  //timer_mod_ns(s->timeout_timer,1000000000000);
+
+}
+
+
+static void esp32_serial_set_conf1(Esp32SerialState *s, hwaddr addr,
+                                     uint64_t val, unsigned size)
+{
+     DEBUG_LOG("%s: +0x%02x:  \n", __func__, (uint32_t)val);
+
+    s->reg[ESP32_UART_CONF1] = val & 0xffffff;
+    if (s->reg[ESP32_UART_CONF1] && BIT(31)==BIT(31)) {
+
+        DEBUG_LOG("%s: TIMEOUT +0x%02x:  \n", __func__, (uint32_t)val);
+
+       s->start_timeout=qemu_clock_get_ns(QEMU_CLOCK_REALTIME);
+       s->timeout_timer=timer_new_ns(QEMU_CLOCK_REALTIME, &esp_serial_timeout_cb, s);
+       timer_mod_ns(s->timeout_timer,1000000000);
+        
+    }
+
+    //if (ESP32_UART_GET(s, CONF1, RXFIFO_RST)) {
+    //    s->rx_first = s->rx_last = 0;
+    //    esp32_serial_rx_irq_update(s);
+    //}
+}
+
+#endif
+
 static void esp32_serial_write(void *opaque, hwaddr addr,
                                  uint64_t val, unsigned size)
 {
@@ -359,6 +431,7 @@ static void esp32_serial_write(void *opaque, hwaddr addr,
         [ESP32_UART_INT_CLR] = esp32_serial_int_clr,
         [ESP32_UART_STATUS] = esp32_serial_ro,
         [ESP32_UART_CONF0] = esp32_serial_set_conf0,
+        //[ESP32_UART_CONF1] = esp32_serial_set_conf1,
         [ESP32_UART_LOWPULSE] = esp32_serial_ro,
         [ESP32_UART_HIGHPULSE] = esp32_serial_ro,
         [ESP32_UART_RXD_CNT] = esp32_serial_ro,
@@ -605,7 +678,7 @@ enum {
 };
 
 enum {
-    ESP32_SPI_FLASH_BITS(ADDR, ADDR_VALUE, 0, 24),
+    ESP32_SPI_FLASH_BITS(ADDR, ADDR_VALUE, 0, 31),
     ESP32_SPI_FLASH_BITS(ADDR, ADDR_RESERVED, 24,8),
 };
 
@@ -979,7 +1052,10 @@ void *connection_handler(void *connect)
 
         if (gdb_serial[uart_num]) {
             if (read_size>0)  {
-                esp32_serial_receive(gdb_serial[0],(unsigned char *)client_message,read_size);
+                // Fake a timeout
+                gdb_serial[uart_num]->reg[ESP32_UART_INT_RAW] |= BIT(8);
+
+                esp32_serial_receive(gdb_serial[uart_num],(unsigned char *)client_message,read_size);
                 printf("%s",client_message);
             }
         }
@@ -1337,6 +1413,7 @@ static uint64_t esp_io_read(void *opaque, hwaddr addr,
         unsigned size)
 {
 
+    Esp32 *esp32=(Esp32 *) opaque;
 
     if ((addr!=0x04001c) && (addr!=0x38)) printf("io read %" PRIx64 " ",addr);
 
@@ -1476,6 +1553,11 @@ static uint64_t esp_io_read(void *opaque, hwaddr addr,
            printf("SENS_SAR_MEAS_START1_REG,3ff48854 =ffffffff\n");        
            return 0xffffffff;
            break;
+            // rtc_clk_xtal_freq_get TODO investigate further
+       case 0x480b0:
+           printf("RTC_XTAL_FREQ_REG 3ff480b0=%08X\n",0xf04ff04ff);
+           return 0x04ff04ff;
+           break;
 
        case 0x480b4:
            printf("RTC_CNTL_STORE5_REG 3ff480b4=%08X\n",sim_RTC_CNTL_STORE5_REG);
@@ -1548,7 +1630,24 @@ static uint64_t esp_io_read(void *opaque, hwaddr addr,
         case 0x6a014:
             printf("EMAC_GMACGMIIDATA_REG");
             return 0x2000;
+           break;      
+
+           // See       esp_dport_access_stall_other_cpu_start           
+        case 0xb5408:
+            printf("dport_access_start[0]");
+            return 0x1;
            break;                       
+
+        case 0xb540c:
+            printf("dport_access_start[1]");
+            return 0x1;
+           break;                       
+
+        case 0xb5410:
+            printf("dport_access_start[2]");
+            return 0x1;
+           break;                       
+
 
        default:
           {
@@ -1577,6 +1676,21 @@ static void esp_io_write(void *opaque, hwaddr addr,
         uint64_t val, unsigned size)
 {
 
+Esp32 *esp32=(Esp32 *) opaque;
+
+    // To handle i2c_set_pin
+    if (addr>=0x44000 && addr<0x445cc) {
+        unsigned int gpio_num=(addr-0x44000)/4;
+        if (addr==0x44038) {
+            printf("WRITE GPIO_STRAP_REG 3ff44038=0x13\n");
+            // boot_sel_chip[5:0]: MTDI, GPIO0, GPIO2, GPIO4, MTDO, GPIO5
+            //                             1                    1     1
+        }
+       esp32->gpio_reg[gpio_num]=val;
+
+    }
+
+
 /* Flash MMU table for PRO CPU */
 //#define DPORT_PRO_FLASH_MMU_TABLE ((volatile uint32_t*) 0x3FF10000)
 
@@ -1601,11 +1715,14 @@ if (addr>=0x10000 && addr<0x11ffc) {
 
 
   if (addr==0x10134 || addr==0x10138 || addr==0x1013c || addr==0x10140 || 
-      addr==0x10144 || addr==0x10148 || addr==0x1014c || addr==0x10150 ) {
+      addr==0x10144 || addr==0x10148 || addr==0x1014c || addr==0x10150 || 
+      addr==0x10154 || addr==0x10158 || addr==0x1015c || addr==0x10160 ||  
+      addr==0x10164 || addr==0x10168 || addr==0x1016c || addr==0x10170 
+) {
     // Bootloader, loads instruction cache
     if (sim_DPORT_PRO_CACHE_CTRL1_REG==0x8ff) {
         // TO TEST BOOTLOADER UNCOMMENT THIS ---->
-        //mapFlashToMem(val*0x10000, 0x400d0000+(val-5)*0x10000,0x10000);            
+        mapFlashToMem(val*0x10000, 0x400d0000+(val-5)*0x10000,0x10000);            
     }
   }
 
@@ -1615,7 +1732,7 @@ if (addr>=0x10000 && addr<0x11ffc) {
             // Partition table
             // 0x8000
             // TO TEST BOOTLOADER ----> Ignore  nv_init_called when testing bootloader         
-            if (nv_init_called) {
+         if (true /*nv_init_called*/) {
                 // Data is located and used at 0x3f400000  0x3f404000 ???
                 // Try this for bootloader
                 // TO TEST BOOTLOADER UNCOMMENT THIS ---->
@@ -1628,7 +1745,10 @@ if (addr>=0x10000 && addr<0x11ffc) {
       }
    }
    // TO TEST BOOTLOADER comment test for nv_init_called ---->
-   if (nv_init_called) {
+  if (true /*nv_init_called*/) {
+        if (addr==0x10000) {
+                mapFlashToMem(val*0x10000, 0x3f400000,0x10000);
+        }
         if (addr==0x10004) {
                 mapFlashToMem(val*0x10000, 0x3f410000,0x10000);
         }
@@ -1647,7 +1767,32 @@ if (addr>=0x10000 && addr<0x11ffc) {
         if (addr==0x10018) {
                 mapFlashToMem(val*0x10000, 0x3f460000,0x10000);
         }
-
+        if (addr==0x1001c) {
+                mapFlashToMem(val*0x10000, 0x3f470000,0x10000);
+        }
+        if (addr==0x10020) {
+                mapFlashToMem(val*0x10000, 0x3f480000,0x10000);
+        }
+        if (addr==0x10024) {
+                mapFlashToMem(val*0x10000, 0x3f490000,0x10000);
+        }
+/*
+        if (addr==0x10028) {
+                mapFlashToMem(val*0x10000, 0x3f4a0000,0x10000);
+        }
+        if (addr==0x1002c) {
+                mapFlashToMem(val*0x10000, 0x3f4b0000,0x10000);
+        }
+        if (addr==0x10030) {
+                mapFlashToMem(val*0x10000, 0x3f4c0000,0x10000);
+        }
+        if (addr==0x10034) {
+                mapFlashToMem(val*0x10000, 0x3f4d0000,0x10000);
+        }
+        if (addr==0x10038) {
+                mapFlashToMem(val*0x10000, 0x3f4e0000,0x10000);
+        }
+*/
    }
 
 
@@ -1663,10 +1808,10 @@ if (addr>=0x12000 && addr<0x13ffc) {
 
 
 
-    if ( addr==0x69440 || addr==0x69454 || addr==0x6945c || addr==0x69458
+    if (  addr==0x5f060 || addr==0x5f064 || addr==0x69440 || addr==0x69454 || addr==0x6945c || addr==0x69458
      ||  (addr>=0x69440 && addr<=0x6947c) || addr==0x44008  || addr==0x4400c
     )  {
-        // Cache MMU table?
+        // Less info
     } else {
        if (addr!=0x40000) printf("io write %" PRIx64 ",%" PRIx64 " \n",addr,val);
     }
@@ -1714,6 +1859,7 @@ if (addr>=0x12000 && addr<0x13ffc) {
            }
            break;
 
+
         case 0x10000:
            {
               printf(" MMU CACHE  3ff10000  %" PRIx64 "\n" ,val);
@@ -1729,6 +1875,8 @@ if (addr>=0x12000 && addr<0x13ffc) {
            printf(" DPORT_APP_CACHE_CTRL_REG  3ff00058\n");
            sim_DPORT_APP_CACHE_CTRL_REG=val;
            break;
+
+
 
         case 0x5F0:
             // TODO!! CHECK IF UNUSED, Just unpatches the rom patches
@@ -1785,6 +1933,63 @@ if (addr>=0x12000 && addr<0x13ffc) {
            // REG_SET_BIT(EMAC_CLK_EN_REG, EMAC_CLK_EN); 
            break;
 
+
+           case 0xE0:
+              printf(" DPORT_CPU_INTR_FROM_CPU_1_REG  3ff000E0  %" PRIx64 "\n" ,val);
+              if (val==0) {
+                   qemu_irq_lower(esp32->app_to_pro_yield_irq);
+              } else {
+                 qemu_irq_raise(esp32->app_to_pro_yield_irq);
+              }
+              break;  
+
+           case 0xE4:
+              printf(" DPORT_CPU_INTR_FROM_CPU_2_REG  3ff000E4  %" PRIx64 "\n" ,val);
+              if (val==0) {
+                   qemu_irq_lower(esp32->app_to_pro_yield_irq);
+              } else {
+                 qemu_irq_raise(esp32->app_to_pro_yield_irq);
+              }
+              break;
+
+           case 0xE8:
+              printf(" DPORT_CPU_INTR_FROM_CPU_3_REG  3ff000E8  %" PRIx64 "\n" ,val);
+              if (val==0) {
+                   qemu_irq_lower(esp32->pro_to_app_yield_irq);
+              } else {
+                 qemu_irq_raise(esp32->pro_to_app_yield_irq);
+              }
+              break;  
+
+
+           case 0xDC:
+              printf(" DPORT_CPU_INTR_FROM_CPU_0_REG  3ff000DC  %" PRIx64 "\n" ,val);
+              if (val==0) {
+                   qemu_irq_lower(esp32->pro_to_app_yield_irq);
+              } else {
+                 qemu_irq_raise(esp32->pro_to_app_yield_irq);
+              }
+           break;
+
+
+      case  0x164:
+          printf("DPORT_PRO_CPU_INTR_FROM_CPU_0_MAP_REG %" PRIx64 "\n" ,val);
+          esp32->pro_to_app_yield_irq=PROcpu->env.irq_inputs[val];
+
+          break;
+
+      case  0x168:
+          printf("DPORT_PRO_CPU_INTR_FROM_CPU_1_MAP_REG %" PRIx64 "\n" ,val);
+          // ?esp32->app_to_pro_yield_irq=APPcpu->env.irq_inputs[val];
+
+          break;
+
+     case  0x27C:
+          printf("DPORT_APP_CPU_INTR_FROM_CPU_1_MAP_REG %" PRIx64 "\n" ,val);
+          esp32->app_to_pro_yield_irq=APPcpu->env.irq_inputs[val];
+          break;
+
+
        case 0x1c8:
            printf("DPORT_PRO_I2C_EXT0_INTR_MAP_REG %" PRIx64 "\n" ,val);   
            //esp32_i2c_interruptSet(PROcpu->env.irq_inputs[val]);
@@ -1793,6 +1998,11 @@ if (addr>=0x12000 && addr<0x13ffc) {
        case 0x18c:
            printf("DPORT_PRO_UART_INTR_MAP_REG %" PRIx64 "\n" ,val);  
            uart0_irq=PROcpu->env.irq_inputs[(int)val];
+           break;
+
+       case 0x190:
+           printf("DPORT_PRO_UART1_INTR_MAP_REG %" PRIx64 "\n" ,val);  
+           uart1_irq=PROcpu->env.irq_inputs[(int)val];
            break;
 
         case 0x48000:
@@ -2158,6 +2368,29 @@ static const MemoryRegionOps esp_wifi_ops = {
 };
 
 
+static uint64_t esp_iomux_read(void *opaque, hwaddr addr,
+        unsigned size)
+{
+       printf("iomux read %" PRIx64 " \n",addr);
+
+}
+
+
+static void esp_iomux_write(void *opaque, hwaddr addr,
+        uint64_t val, unsigned size)
+{
+       printf("iomux write %" PRIx64 " \n",addr);
+
+
+} 
+
+static const MemoryRegionOps esp_iomux_ops = {
+    .read = esp_iomux_read,
+    .write = esp_iomux_write,
+    .endianness = DEVICE_NATIVE_ENDIAN,
+};
+
+
 
 // MMU not setup? Or maybe cpu_get_phys_page_debug returns wrong adress.
 // We try this mapping instead to get us started
@@ -2182,9 +2415,9 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
     DeviceState *dev;
     I2CBus *i2c;
 
+    MemoryRegion *iomux;
 
-
-    MemoryRegion *ram,*ram1, *rom, *system_io, *ulp_slowmem;
+    MemoryRegion *gpio,*ram,*ram1, *rom, *system_io, *ulp_slowmem;
     static MemoryRegion *wifi_io;
 
     DriveInfo *dinfo;
@@ -2251,10 +2484,10 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
     // This requires a valid flash image
     //mapFlashToMem(0x0000, 0x3f400000,0x10000);
 
-    pro_MMU_REG[77]=4;
-    app_MMU_REG[77]=4;
-    pro_MMU_REG[78]=5;
-    app_MMU_REG[78]=5;
+    //pro_MMU_REG[77]=4;
+    //app_MMU_REG[77]=4;
+    //pro_MMU_REG[78]=5;
+    //app_MMU_REG[78]=5;
     //app_MMU_REG[79]=6;
     //pro_MMU_REG[79]=6;
 
@@ -2312,7 +2545,7 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
     // dram0 3ffc0000 
 
     system_io = g_malloc(sizeof(*system_io));
-    memory_region_init_io(system_io, NULL, &esp_io_ops, NULL, "esp32.io",
+    memory_region_init_io(system_io, NULL, &esp_io_ops, esp32, "esp32.io",
                           0x80000);
 
     memory_region_add_subregion(system_memory, 0x3ff00000, system_io);
@@ -2611,7 +2844,9 @@ spi = esp32_spi_init(0,system_io, 0x42000, "esp32.spi1",
             }
 
 
-#if 1
+
+
+#if 0
 
             // Patching rom function. ets_unpack_flash_code
             //      j forward 0x13 
@@ -2684,6 +2919,46 @@ spi = esp32_spi_init(0,system_io, 0x42000, "esp32.spi1",
 #endif
         }
     } else {
+
+
+
+
+
+            // Add rom from file
+            FILE *f_rom=fopen("rom.bin", "r");
+            
+            if (f_rom == NULL) {
+               printf("   Can't open 'rom.bin' for reading.\n");
+	        } else {
+                unsigned int *rom_data=(unsigned int *)malloc(0xC2000*sizeof(unsigned int));
+                if (fread(rom_data,0xC1FFF*sizeof(unsigned char),1,f_rom)<1) {
+                   printf(" File 'rom.bin' is truncated or corrupt.\n");                
+                }
+                cpu_physical_memory_write(0x40000000, rom_data, 0xC1FFF*sizeof(unsigned char));
+                fclose(f_rom);
+            }
+
+            FILE *f_rom1=fopen("rom1.bin", "r");
+            
+            if (f_rom1 == NULL) {
+               printf("   Can't open 'rom1.bin' for reading.\n");
+	        } else {
+                unsigned int *rom1_data=(unsigned int *)malloc(0x10000*sizeof(unsigned int));
+                if (fread(rom1_data,0x10000*sizeof(unsigned char),1,f_rom1)<1) {
+                   printf(" File 'rom1.bin' is truncated or corrupt.\n");                
+                }
+                cpu_physical_memory_write(0x3FF90000, rom1_data, 0xFFFF*sizeof(unsigned char));
+                fclose(f_rom1);
+            }
+
+
+
+
+
+
+
+
+
         // No elf, try booting from flash...
         if (flash) {
 #if 0
