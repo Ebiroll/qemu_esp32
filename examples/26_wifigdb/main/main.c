@@ -24,7 +24,7 @@
 #include "freertos/queue.h"
 
 extern void set_all_exception_handlers(void);
-extern void wifi_gdb_handler();
+extern void wifi_gdb_handler(int socket);
 
 unsigned short gdb_port = 2345;
 
@@ -66,18 +66,36 @@ void process_gdb_request(void *p)
 	int RECV_BUF_SIZE = 50;
 	char recv_buf[RECV_BUF_SIZE];
 	int n;
-    //  nwrote;
-	//xTaskHandle taskHello;
-	//xTaskHandle taskBye;
+    int received=0;
+
+    int32_t lReceivedValue;
+    BaseType_t xStatus=pdFAIL;
+
+    int32_t lValueToSend; 
+    const TickType_t xTicksToWait = pdMS_TO_TICKS(1100);
+
+
 
 	while (1) {
 		/* read a max of RECV_BUF_SIZE bytes from socket */
 		if ((n = read(sd, recv_buf, RECV_BUF_SIZE)) < 0) {
 			printf("%s: error reading from socket %d, closing socket\r\n", __FUNCTION__, sd);
 			break;
-			//close(sd);
-			//return;
- 		}
+        }
+        received=0;
+        while (received<n) {
+            lValueToSend=recv_buf[received];
+            xStatus = xQueueSendToBack(receive_queue, &lValueToSend, 0);
+            if( xStatus != pdPASS )
+            {
+                printf("Could not send to the queue.");
+            }
+            received++;
+        }
+
+        //close(sd);
+        //return;
+ 		
 		printf("read %d bytes\n",n);
 
 		/* break if the recved message = "quit" */
@@ -89,7 +107,46 @@ void process_gdb_request(void *p)
 			break;
 
 		/* handle request */
+
+#if 0
+        // Wait fore reply
+        while( uxQueueMessagesWaiting( send_queue ) == 0 ) {
+           vTaskDelay(pdMS_TO_TICKS(500));
+        }
+        printf("send:");
+
+        while( uxQueueMessagesWaiting( send_queue ) > 0 ) {
+            xStatus = xQueueReceive ( send_queue, &lReceivedValue, xTicksToWait );
+
+            if( xStatus == pdPASS ) {
+                printf("%c",lReceivedValue);
+                if ((nwrote = write(sd, &lReceivedValue, 1)) < 0) {
+                    printf("%s: ERROR responding to gdb request. received = %d, written = %d\r\n",__FUNCTION__, n, nwrote);
+                    printf("Closing socket %d\r\n", sd);
+                    return;
+                }
+            }
+            //if (nwrote<0) {
+			//  close(sd);
+            //}
+		}
+#endif
+
+        
+
+
+
         #if 0
+
+
+        xStatus = xQueueReceive ( my_queue, &lReceivedValue, xTicksToWait );
+        if( xStatus == pdPASS ) {
+            ESP_LOGI(TAG, "Received = %d", lReceivedValue);
+        } else {
+            ESP_LOGI(TAG,  "Could not receive from the queue.");
+        }
+        //////////////////
+
 		if ((nwrote = write(sd, recv_buf, n)) < 0) {
 			printf("%s: ERROR responding to client echo request. received = %d, written = %d\r\n",__FUNCTION__, n, nwrote);
 			printf("Closing socket %d\r\n", sd);
@@ -180,7 +237,7 @@ void gdb_application_thread(void *pvParameters)
 			printf("accepted new gdb connection\n");
             gdb_param1->new_sd = new_sd;
 			xTaskCreate(&process_gdb_request, "gdb_connection",2*4096, (void*)gdb_param1, 20, NULL);
-            wifi_gdb_handler();  
+            wifi_gdb_handler(new_sd);  
 		}
 	}
 }
@@ -286,10 +343,11 @@ void app_main()
       initialise_wifi();
     }
 
-    receive_queue = xQueueCreate( 40, sizeof( int32_t ) );
-    send_queue = xQueueCreate( 40, sizeof( int32_t ) );
+    receive_queue = xQueueCreate( 100, sizeof( int32_t ) );
+    //send_queue = xQueueCreate( 100, sizeof( int32_t ) );
 
-    set_all_exception_handlers();
+    // Wait for this...
+    //set_all_exception_handlers();
 
     xTaskCreate(&gdb_application_thread, "gdb_thread", 4096, NULL, 5, NULL);
 }

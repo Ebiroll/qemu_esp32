@@ -25,6 +25,8 @@
 #include "driver/gpio.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
+#include "lwip/sockets.h"
+
 
 //Length of buffer used to reserve GDB commands. Has to be at least able to fit the G command, which
 //implies a minimum size of about 320 bytes.
@@ -36,10 +38,13 @@ static char chsum;						//Running checksum of the output packet
 #define ATTR_GDBFN
 
 extern QueueHandle_t receive_queue;
-extern QueueHandle_t send_queue;
+//extern QueueHandle_t send_queue;
 
 int32_t lReceivedValue;
 BaseType_t xStatus;
+
+int gdb_socket=0;
+
 
 //Receive a char from the uart. Uses polling and feeds the watchdog.
 static int ATTR_GDBFN gdbRecvChar() {
@@ -64,8 +69,27 @@ static int ATTR_GDBFN gdbRecvChar() {
 
 //Send a char to the uart.
 static void ATTR_GDBFN gdbSendChar(char c) {
-  //while (((READ_PERI_REG(UART_STATUS_REG(0))>>UART_TXFIFO_CNT_S)&UART_TXFIFO_CNT)>=126) ;
-  //WRITE_PERI_REG(UART_FIFO_REG(0), c);
+   //while (((READ_PERI_REG(UART_STATUS_REG(0))>>UART_TXFIFO_CNT_S)&UART_TXFIFO_CNT)>=126) ;
+   //WRITE_PERI_REG(UART_FIFO_REG(0), c);
+    int  nwrote;
+
+	if (gdb_socket>0) {
+		if ((nwrote = write(gdb_socket, &c, 1)) < 0) {
+				printf("%s: ERROR responding to gdb request. written = %d\r\n",__FUNCTION__, nwrote);
+				//printf("Closing socket %d\r\n", sd);
+				return;
+		}
+	}
+
+#if 0
+  int32_t lValueToSend; BaseType_t xStatus;
+  lValueToSend=c;
+  xStatus = xQueueSendToBack(send_queue, &lValueToSend, 0);
+  if( xStatus != pdPASS )
+  {
+       //ESP_LOGI(TAG, "Could not send to the queue.");
+  }
+  #endif
 }
 
 //Send the start of a packet; reset checksum calculation.
@@ -366,13 +390,14 @@ static int gdbReadCommand() {
 
 // esp_gdbstub
 // This will probably not work 
-void wifi_gdb_handler() {
+void wifi_gdb_handler(int socket) {
 	// TODO!! Steal regsters from stack!
 	//dumpHwToRegfile(frame);
 	//Make sure txd/rxd are enabled
 	//gpio_pullup_dis(1);
 	//PIN_FUNC_SELECT(PERIPHS_IO_MUX_U0RXD_U, FUNC_U0RXD_U0RXD);
 	//PIN_FUNC_SELECT(PERIPHS_IO_MUX_U0TXD_U, FUNC_U0TXD_U0TXD);
+	gdb_socket=socket;
 
 	sendReason();
 	while(gdbReadCommand()!=ST_CONT);
@@ -381,7 +406,7 @@ void wifi_gdb_handler() {
 
 
 
-// This will probably not work, I assume threads will stop 
+// This will probably not work, I assume processes switchin will stop on exception 
 void wifi_panic_handler(XtExcFrame *frame) {
 	dumpHwToRegfile(frame);
 	//Make sure txd/rxd are enabled
