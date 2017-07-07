@@ -13,8 +13,8 @@
 // limitations under the License.
 
 /******************************************************************************
- * Description: A stub to make the ESP32 debuggable by GDB over the serial 
- * port, at least enough to do a backtrace on panic. This gdbstub is read-only:
+ * Description: A stub to make the ESP32 debuggable by GDB over the wifi 
+ * at least enough to do a backtrace on panic. This gdbstub is read-only:
  * it allows inspecting the ESP32 state 
  *******************************************************************************/
 
@@ -23,6 +23,8 @@
 #include "soc/io_mux_reg.h"
 #include "esp_gdbstub.h"
 #include "driver/gpio.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/queue.h"
 
 //Length of buffer used to reserve GDB commands. Has to be at least able to fit the G command, which
 //implies a minimum size of about 320 bytes.
@@ -33,12 +35,31 @@ static char chsum;						//Running checksum of the output packet
 
 #define ATTR_GDBFN
 
+extern QueueHandle_t receive_queue;
+extern QueueHandle_t send_queue;
+
+int32_t lReceivedValue;
+BaseType_t xStatus;
+
 //Receive a char from the uart. Uses polling and feeds the watchdog.
 static int ATTR_GDBFN gdbRecvChar() {
 	int i=0;
+    int32_t lReceivedValue;
+    BaseType_t xStatus=pdFAIL;
+	const TickType_t xTicksToWait = pdMS_TO_TICKS(1100);
+
+    while (xStatus!=pdPASS) {
+		xStatus = xQueueReceive ( receive_queue, &lReceivedValue, xTicksToWait );
+		if( xStatus == pdPASS ) {
+			//ESP_LOGI(TAG, "(%c)", lReceivedValue);
+			return (lReceivedValue);
+		} else {
+			//ESP_LOGI(TAG,  "Could not receive from the queue.");
+		}
+	}
 	//while (((READ_PERI_REG(UART_STATUS_REG(0))>>UART_RXFIFO_CNT_S)&UART_RXFIFO_CNT)==0) ;
 	//i=READ_PERI_REG(UART_FIFO_REG(0));
-	return i;
+	return 0;
 }
 
 //Send a char to the uart.
@@ -343,8 +364,24 @@ static int gdbReadCommand() {
 	}
 }
 
+// esp_gdbstub
+// This will probably not work 
+void wifi_gdb_handler() {
+	// TODO!! Steal regsters from stack!
+	//dumpHwToRegfile(frame);
+	//Make sure txd/rxd are enabled
+	//gpio_pullup_dis(1);
+	//PIN_FUNC_SELECT(PERIPHS_IO_MUX_U0RXD_U, FUNC_U0RXD_U0RXD);
+	//PIN_FUNC_SELECT(PERIPHS_IO_MUX_U0TXD_U, FUNC_U0TXD_U0TXD);
+
+	sendReason();
+	while(gdbReadCommand()!=ST_CONT);
+	while(1);
+}
 
 
+
+// This will probably not work, I assume threads will stop 
 void wifi_panic_handler(XtExcFrame *frame) {
 	dumpHwToRegfile(frame);
 	//Make sure txd/rxd are enabled
@@ -357,3 +394,32 @@ void wifi_panic_handler(XtExcFrame *frame) {
 	while(1);
 }
 
+
+#include <stdint.h>
+#include <freertos/xtensa_api.h>
+#include <xtensa/corebits.h>
+//#include "common/platforms/esp/src/esp_mmap.h"
+
+extern void xt_unhandled_exception(XtExcFrame *frame);
+
+
+void esp32_exception_handler(XtExcFrame *frame) {
+#if 0
+  if ((void *) frame->excvaddr >= MMAP_BASE) {
+    int off = esp_mmap_exception_handler(frame->excvaddr, (uint8_t *) frame->pc,
+                                         (long *) &frame->a2);
+    if (off > 0) {
+      frame->pc += off;
+      return;
+    }
+  }
+#endif
+  xt_unhandled_exception(frame);
+}
+
+void set_all_exception_handlers(void) {
+	int i=0;
+	for (i=0;i<64;i++) {
+       xt_set_exception_handler(i, wifi_panic_handler);
+	}
+}
