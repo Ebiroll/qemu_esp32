@@ -1,9 +1,12 @@
 # Basic interpreter
 
+https://github.com/espressif/esp-idf/blob/master/docs/api-guides/romconsole.rst
+
+
 http://hackaday.com/2016/10/27/basic-interpreter-hidden-in-esp32-silicon/
 
 
-On the esp32 it works
+On the esp32 it works, in qemu not...
 
 ```
 make monitor
