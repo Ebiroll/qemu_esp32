@@ -63,7 +63,7 @@ void process_gdb_request(void *p)
 {
     gdb_param* gdb_param1 = (gdb_param*)p;
 	int sd = (int)gdb_param1->new_sd;
-	int RECV_BUF_SIZE = 50;
+	int RECV_BUF_SIZE = 100;
 	char recv_buf[RECV_BUF_SIZE];
 	int n;
     int received=0;
@@ -85,6 +85,7 @@ void process_gdb_request(void *p)
         received=0;
         while (received<n) {
             lValueToSend=recv_buf[received];
+            printf("%c",lValueToSend);
             xStatus = xQueueSendToBack(receive_queue, &lValueToSend, 0);
             if( xStatus != pdPASS )
             {
@@ -96,7 +97,7 @@ void process_gdb_request(void *p)
         //close(sd);
         //return;
  		
-		printf("read %d bytes\n",n);
+		printf("\nread %d bytes\n",n);
 
 		/* break if the recved message = "quit" */
 		//if (!strncmp(recv_buf, "quit", 4))
@@ -349,5 +350,5 @@ void app_main()
     // Wait for this...
     //set_all_exception_handlers();
 
-    xTaskCreate(&gdb_application_thread, "gdb_thread", 4096, NULL, 5, NULL);
+    xTaskCreate(&gdb_application_thread, "gdb_thread", 4096, NULL, 20, NULL);
 }
