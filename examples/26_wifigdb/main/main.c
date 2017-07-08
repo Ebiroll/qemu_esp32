@@ -337,7 +337,7 @@ void app_main()
      tcpip_adapter_init();
      wifi_event_group = xEventGroupCreate();
      ESP_ERROR_CHECK( esp_event_loop_init(event_handler, NULL) );
-     xTaskCreate(&task_lwip_init, "task_lwip_init",2*4096, NULL, 20, NULL); 
+     xTaskCreate(&task_lwip_init, "task_lwip_init",2*4096, NULL, 22, NULL); 
     }
     else
     {
@@ -350,5 +350,5 @@ void app_main()
     // Wait for this...
     //set_all_exception_handlers();
 
-    xTaskCreate(&gdb_application_thread, "gdb_thread", 4096, NULL, 20, NULL);
+    xTaskCreate(&gdb_application_thread, "gdb_thread", 4*4096, NULL, 17, NULL);
 }

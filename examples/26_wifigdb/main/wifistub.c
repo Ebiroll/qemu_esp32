@@ -73,7 +73,7 @@ void ATTR_GDBFN gdbSendChar(char c) {
    //WRITE_PERI_REG(UART_FIFO_REG(0), c);
     int  nwrote;
 
-    printf("(%c)",c);
+    //printf("(%c)",c);
 	if (gdb_socket>0) {
 		if ((nwrote = write(gdb_socket, &c, 1)) < 0) {
 				printf("%s: ERROR responding to gdb request. written = %d\r\n",__FUNCTION__, nwrote);
@@ -371,16 +371,17 @@ static int gdbHandleCommand(unsigned char *cmd, int len) {
 		gdbPacketEnd();
 	} else if (cmd[0]=='?') {	//Reply with stop reason
 		sendReason();
-	} else if (cmd[0]=='q') {	//Look for qSupported
-		gdb_handle_command(cmd,len);
 	}
+	 else if (cmd[0]=='q') {	//Look for qSupported
+		return gdb_handle_command(cmd,len);
+		}
 	else {
 		// ??? Dont think this will work so well.. 
-		gdb_handle_command(cmd,len);
+		return gdb_handle_command(cmd,len);
 		//We don't recognize or support whatever GDB just sent us.
 		//gdbPacketStart();
 		//gdbPacketEnd();
-		//return ST_ERR;
+		return ST_ERR;
 	}
 	return ST_OK;
 }

@@ -20,7 +20,7 @@
  * statically.
  */
 #ifndef GDBSTUB_THREADS_MAX
-#define GDBSTUB_THREADS_MAX 10
+#define GDBSTUB_THREADS_MAX 50
 #endif
 
 #define ATTR_GDBINIT
