@@ -5,5 +5,7 @@
 
 PROJECT_NAME := wifigdb
 
+CFLAGS+=-DportREMOVE_STATIC_QUALIFIER -DINCLUDE_pcTaskGetTaskName=1
+
 include $(IDF_PATH)/make/project.mk
 
