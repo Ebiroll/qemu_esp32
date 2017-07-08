@@ -46,8 +46,8 @@ BaseType_t xStatus;
 int gdb_socket=0;
 
 
-//Receive a char from the uart. Uses polling and feeds the watchdog.
-static int ATTR_GDBFN gdbRecvChar() {
+//Receive a char from wifi, uses a frertos queue
+int ATTR_GDBFN gdbRecvChar() {
 	int i=0;
     int32_t lReceivedValue;
     BaseType_t xStatus=pdFAIL;
@@ -68,11 +68,12 @@ static int ATTR_GDBFN gdbRecvChar() {
 }
 
 //Send a char to the uart.
-static void ATTR_GDBFN gdbSendChar(char c) {
+void ATTR_GDBFN gdbSendChar(char c) {
    //while (((READ_PERI_REG(UART_STATUS_REG(0))>>UART_TXFIFO_CNT_S)&UART_TXFIFO_CNT)>=126) ;
    //WRITE_PERI_REG(UART_FIFO_REG(0), c);
     int  nwrote;
 
+    printf("(%c)",c);
 	if (gdb_socket>0) {
 		if ((nwrote = write(gdb_socket, &c, 1)) < 0) {
 				printf("%s: ERROR responding to gdb request. written = %d\r\n",__FUNCTION__, nwrote);
@@ -287,6 +288,44 @@ static void dumpHwToRegfile(XtExcFrame *frame) {
 }
 
 
+
+typedef struct tskTaskControlBlock {
+	volatile portSTACK_TYPE * pxTopOfStack;
+} tskTCB;
+
+extern tskTCB * volatile pxCurrentTCB;
+
+
+static void wifiDumpHwToRegfile() {
+	int i;
+	long *frameAregs=pxCurrentTCB->pxTopOfStack;
+	gdbRegFile.pc=*(unsigned int *)(pxCurrentTCB->pxTopOfStack+4);
+	for (i=0; i<16; i++) gdbRegFile.a[i]=frameAregs[i];
+	for (i=16; i<64; i++) gdbRegFile.a[i]=0xDEADBEEF;
+	gdbRegFile.lbeg=0xdeadbeef;  // frame->lbeg;
+	gdbRegFile.lend=0xdeadbeef; //frame->lend;
+	gdbRegFile.lcount=0xdeadbeef; //frame->lcount;
+	gdbRegFile.sar=0xdeadbeef; //frame->sar;
+	//All windows have been spilled to the stack by the ISR routines. The following values should indicate that.
+	gdbRegFile.sar=0xdeadbeef; //frame->sar;
+	gdbRegFile.windowbase=0; //0
+	gdbRegFile.windowstart=0x1; //1
+	gdbRegFile.configid0=0xdeadbeef; //ToDo
+	gdbRegFile.configid1=0xdeadbeef; //ToDo
+	gdbRegFile.ps=0xdeadbeef; //frame->ps-PS_EXCM_MASK;
+	gdbRegFile.threadptr=0xdeadbeef; //ToDo
+	gdbRegFile.br=0xdeadbeef; //ToDo
+	gdbRegFile.scompare1=0xdeadbeef; //ToDo
+	gdbRegFile.acclo=0xdeadbeef; //ToDo
+	gdbRegFile.acchi=0xdeadbeef; //ToDo
+	gdbRegFile.m0=0xdeadbeef; //ToDo
+	gdbRegFile.m1=0xdeadbeef; //ToDo
+	gdbRegFile.m2=0xdeadbeef; //ToDo
+	gdbRegFile.m3=0xdeadbeef; //ToDo
+	gdbRegFile.expstate=0; //frame->exccause; //ToDo
+}
+
+
 //Send the reason execution is stopped to GDB.
 static void sendReason() {
 	//exception-to-signal mapping
@@ -302,6 +341,8 @@ static void sendReason() {
 	}
 	gdbPacketEnd();
 }
+
+extern int ATTR_GDBFN gdb_handle_command(uint8_t * cmd, size_t len);
 
 //Handle a command as received from GDB.
 static int gdbHandleCommand(unsigned char *cmd, int len) {
@@ -330,11 +371,16 @@ static int gdbHandleCommand(unsigned char *cmd, int len) {
 		gdbPacketEnd();
 	} else if (cmd[0]=='?') {	//Reply with stop reason
 		sendReason();
-	} else {
+	} else if (cmd[0]=='q') {	//Look for qSupported
+		gdb_handle_command(cmd,len);
+	}
+	else {
+		// ??? Dont think this will work so well.. 
+		gdb_handle_command(cmd,len);
 		//We don't recognize or support whatever GDB just sent us.
-		gdbPacketStart();
-		gdbPacketEnd();
-		return ST_ERR;
+		//gdbPacketStart();
+		//gdbPacketEnd();
+		//return ST_ERR;
 	}
 	return ST_OK;
 }
@@ -392,7 +438,7 @@ static int gdbReadCommand() {
 // This will probably not work 
 void wifi_gdb_handler(int socket) {
 	// TODO!! Steal regsters from stack!
-	//dumpHwToRegfile(frame);
+	wifiDumpHwToRegfile();
 	//Make sure txd/rxd are enabled
 	//gpio_pullup_dis(1);
 	//PIN_FUNC_SELECT(PERIPHS_IO_MUX_U0RXD_U, FUNC_U0RXD_U0RXD);
