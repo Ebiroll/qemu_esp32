@@ -98,39 +98,54 @@ the same app in qemu.
 ## Latest update, July 2017
 
 Booting from emulated flash! This is very cool.
-No -kernel argument requred when starting qemu, but a proper flash image.
-```
-Do a cp qemu-xtensa-esp32/hw/xtensa/esp32.c.bootloader  qemu-xtensa-esp32/hw/xtensa/esp32.c
+No -kernel argument required when starting qemu, but a proper flash image.
+
+Do a
+
+> cp qemu-xtensa-esp32/hw/xtensa/esp32.c.bootloader  qemu-xtensa-esp32/hw/xtensa/esp32.c
+
 Then rebuild qemu.
-gcc toflash.c -o qemu_flashgcc toflash.c -o qemu_flash
-This emulation reqires that you generate a proper flash file first. 
-Serial flasher config  --->  Flash size (4 MB)
+
+Then build `qemu_flash` tool found in this repository.
+
+> gcc toflash.c -o qemu_flash
+
+This emulation requires that you generate a proper flash file first. 
+
+> Serial flasher config  --->  Flash size (4 MB)
 
 Then run the ./qemu_flash program. 
-./qemu_flash build/app-template.bin
+
+> ./qemu_flash build/app-template.bin
 
 Note that you have to use the .bin file as argument. This will generate a flash image with bootloader, partition information and flash file that the bootloder can use boot the proper application from.
 
 Note however that we can get this behaviour...
+
+```
 I (124) cpu_start: Pro cpu start user code
  File 'esp32flash.bin' is truncated or corrupt.
  File 'esp32flash.bin' is truncated or corrupt.
  File 'esp32flash.bin' is truncated or corrupt.
  File 'esp32flash.bin' is truncated or corrupt.
  File 'esp32flash.bin' is truncated or corrupt.
+```
 
 If you get this error try giving the application as kernel parameter.
-  -kernel /home/olas/esp/qemu_esp32/examples/07_flash_mmap/build/mmap_test.elf
+
+> -kernel /home/olas/esp/qemu_esp32/examples/07_flash_mmap/build/mmap_test.elf
 
 
 So it does not work perfectly yet. 
 More debugging is needed. :-(
 
 Seems that the mmapping has a bug. Will maybe fixed on a rainy day.
-(gdb) b start_cpu0_default
+
+> (gdb) b start_cpu0_default
+
 Also lots of cleanup is needed.
 
-
+```
 xtensa-softmmu/qemu-system-xtensa  -cpu esp32 -M esp32  -s   > io.txt
 TRYING to MAP esp32flash.binMAPPED esp32flash.binI (14) boot: ESP-IDF v3.0-dev-20-g9b955f4c 2nd stage bootloader
 I (14) boot: compile time 12:24:53
@@ -292,7 +307,7 @@ Another possibility in order to create a proper flash file is by running the fol
 ```
 Double check the toflash.c program as it copies the generated esp32flash.bin file to the directory where we start qemu
 It also assumes partitioning according to partitions_singleapp.bin
-gcc toflash.c -o qemu_flashgcc toflash.c -o qemu_flash
+gcc toflash.c -o qemu_flash
 ./qemu_flash build/app-template.bin
 ```
 
