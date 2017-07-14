@@ -12,15 +12,17 @@ It is a good way to learn about qemu ,esp32 and the esp32 rom.
 Now IT IS MANDATORY to have a proper flash file ,
  ets_unpack_flash_code is not longer patched by default
 
-ALSO, now it does not work with latest version od esp-idf
+ALSO, now it does not work with latest version of esp-idf
+
 4ec2abbf23084ac060679e4136fa222a2d0ab0e8
 :-P
 
 Needs furher investigations!
 
-Try,
- git checkout v2.0
- git submodule update --init
+Try, version 2.0 of esp-idf
+
+> git checkout v2.0
+> git submodule update --init
 
 
 Booting from emulated flash! This is very cool.
