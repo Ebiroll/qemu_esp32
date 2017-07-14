@@ -9,12 +9,21 @@ It is a good way to learn about qemu ,esp32 and the esp32 rom.
 ## IMPORTANT update, July 2017
 
 
-Now IT is mandatory to have a proper flash file ,
+Now IT IS MANDATORY to have a proper flash file ,
  ets_unpack_flash_code is not longer patched by default
+
+ALSO, now it does not work with latest version od esp-idf
+4ec2abbf23084ac060679e4136fa222a2d0ab0e8
+:-P
+
+Needs furher investigations!
+
+Try,
+ git checkout v2.0
+ git submodule update --init
 
 
 Booting from emulated flash! This is very cool.
-No -kernel argument required when starting qemu, but a proper flash image.
 
 
 Then build `qemu_flash` tool found in this repository.
@@ -31,7 +40,11 @@ Then run the ./qemu_flash program.
 
 Note that you have to use the .bin file as argument. This will generate a flash image with bootloader, partition information and flash file that the bootloder can use boot the proper application from.
 
-Note however that we can get this behaviour...
+Istill recomend that you give the  application as kernel parameter.
+> -kernel /home/olas/esp/qemu_esp32/examples/07_flash_mmap/build/mmap_test.elf
+
+
+If you  start qemu and boot from flash only and give no -kernel argument you might get this behaviour...
 
 ```
 I (124) cpu_start: Pro cpu start user code
@@ -42,15 +55,11 @@ I (124) cpu_start: Pro cpu start user code
  File 'esp32flash.bin' is truncated or corrupt.
 ```
 
-If you get this error try giving the application as kernel parameter.
-
-> -kernel /home/olas/esp/qemu_esp32/examples/07_flash_mmap/build/mmap_test.elf
-
 
 So it does not work perfectly yet. 
 More debugging is needed. :-(
 
-Seems that the mmapping has a bug. Will maybe fixed on a rainy day.
+Seems that the qemu, mmapping has a bug and or  spi_flash_read, spi_flash_write  Will maybe fixed on a rainy day.
 
 > (gdb) b start_cpu0_default
 
