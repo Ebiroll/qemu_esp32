@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "esp_spi_flash.h": "c"
+    },
+    "C_Cpp.intelliSenseEngine": "Tag Parser"
+}
