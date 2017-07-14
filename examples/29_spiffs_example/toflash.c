@@ -80,6 +80,7 @@ void merge_flash(char *binfile,char *flashfile,int flash_pos)
 int main(int argc,char *argv[])
 {
     // system("cp esp32flash.bin esp32flash.bak");
+    system("dd if=/dev/zero bs=1M count=4  | tr \"\\000\" \"\\377\" >  esp32flash.bin");
 
     // Add bootloader
     merge_flash("build/bootloader/bootloader.bin","esp32flash.bin",0x1000);
