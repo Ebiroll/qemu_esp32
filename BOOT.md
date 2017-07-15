@@ -680,6 +680,99 @@ void HELPER(entry)(CPUXtensaState *env, uint32_t pc, uint32_t s, uint32_t imm)
     {
 ```
 
+### Interesting functions,
+Could be educationaö to put breakpots here (in rom),
+
+b ets_printf
+p (char *) $a2
+p (char *) $a3
+
+
+ets_unpack_flash_code_legacy
+
+ets_set_appcpu_boot_addr
+
+
+cache_flash_mmu_set
+
+DPORT_APP_CACHE_CTRL1_REG  3ff0005C=000008FF
+io read 44 DPORT_PRO_CACHE_CTRL1_REG  3ff00044=8E6
+io write 44,8ff 
+ DPORT_PRO_CACHE_CTRL1_REG  3ff00044  8ff
+io read 10000 Flash map data to  00000000 to memory, 3F400000
+io write 10000,0 
+ MMU CACHE  3ff10000  0
+
+
+#0  bootloader_flash_read_allow_decrypt (src_addr=4096, dest=0x3ffe3d50, size=24)
+    at /home/olof/esp/esp-idf/components/bootloader_support/src/bootloader_flash.c:185
+#1  0x400791de in bootloader_flash_read (src_addr=4096, dest=0x3ffe3d50, size=24, allow_decrypt=true)
+    at /home/olof/esp/esp-idf/components/bootloader_support/src/bootloader_flash.c:206
+#2  0x400792bd in esp_image_load_header (src_addr=4096, log_errors=true, image_header=0x3ffe3d50)
+    at /home/olof/esp/esp-idf/components/bootloader_support/src/esp_image_format.c:30
+#3  0x40078ceb in bootloader_main () at /home/olof/esp/esp-idf/components/bootloader/src/main/./bootloader_start.c:279
+#4  0x400800f9 in call_start_cpu0 () at /home/olof/esp/esp-idf/components/bootloader/src/main/./bootloader_start.c:109
+
+
+59     static esp_err_t bootloader_flash_read_allow_decrypt(size_t src_addr, void *dest, size_t size)              │
+   │160     {                                                                                                           │
+   │161         uint32_t *dest_words = (uint32_t *)dest;                                                                │
+   │162                                                                                                                 │
+   │163         /* Use the 51st MMU mapping to read from flash in 64KB blocks.                                          │
+   │164            (MMU will transparently decrypt if encryption is enabled.)                                           │
+   │165         */                                                                                                      │
+   │166         for (int word = 0; word < size / 4; word++) {                                                           │
+   │167             uint32_t word_src = src_addr + word * 4;  /* Read this offset from flash */                         │
+   │168             uint32_t map_at = word_src & MMU_FLASH_MASK; /* Map this 64KB block from flash */                   │
+   │169             uint32_t *map_ptr;                                                                                  │
+   │170             if (map_at != current_read_mapping) {
+   │171                 /* Move the 64KB mmu mapping window to fit map_at */                                            │
+   │172                 Cache_Read_Disable(0);                                                                          │
+   │173                 Cache_Flush(0);                                                                                 │
+   │174                 ESP_LOGD(TAG, "mmu set block paddr=0x%08x (was 0x%08x)", map_at, current_read_mapping);         │
+   │175                 int e = cache_flash_mmu_set(0, 0, MMU_BLOCK50_VADDR, map_at, 64, 1);                            │
+   │176                 if (e != 0) {                                                                                   │
+   │177                     ESP_LOGE(TAG, "cache_flash_mmu_set failed: %d\n", e);                                       │
+   │178                     Cache_Read_Enable(0);                                                                       │
+   │179                     return ESP_FAIL;                                                                            │
+   │180                 }                                                                                               │
+   │181                 current_read_mapping = map_at;                                                                  │
+   │182                 Cache_Read_Enable(0);                                                                           │
+   │183             }                                                                                                   │
+   │184             map_ptr = (uint32_t *)(MMU_BLOCK50_VADDR + (word_src - map_at));                                    │
+  >│185             dest_words[word] = *map_ptr;                                                                        │
+   │186         }                                                                                                       │
+   │187         return ESP_OK;                                                                                          │
+   │188     }                    
+## For better flash emulation, checkout
+
+bootloader_munmap(partitions);   
+
+
+ esp_rom_spiflash_config_param(g_rom_flashchip.device_id, size * 0x100000, 0x10000, 0x1000, 0x100, 0xffff│
+ 
+o read 58  DPORT_APP_CACHE_CTRL_REG  3ff00058=00000020
+0 esp32_spi_read: +0xf8: 0x00000000
+0 esp32_spi_read: +0x50: 0x00000005       ESP32_CACHE_FCTRL,
+0 esp32_spi_write: +0x50 = 0x00000004    
+written
+
+============================================
+
+int e = cache_flash_mmu_set(0, 0, MMU_BLOCK0_VADDR, src_addr_aligned, 64, count);
+
+io read 10000 io read 10000 io read 10000 io read 10000 io read 10000 io read 10000 io read 10000 io read 10000 io read 10000 io read 10000 io read 10000 io read 10000 io read 10000 io read 10000 io read 10000 io read 10000 io read 10000 io read 10000 io read 10000 io read 10000 io read 10000 io read 10000 io read 10000 io read 10000 io read 10000 io read 10000 io read 10000 io read 10000 io read 10000 io read 10000 io read 10000 io read 10000 io read 10000 io read 10000 io read 10000 io read 10000 io read 10000 io read 10000 io read 10000 io read 10000 io read 44 DPORT_PRO_CACHE_CTRL1_REG  3ff00044=8E6
+io read 10000 io read 10000 io read 5c  DPORT_APP_CACHE_CTRL1_REG  3ff0005C=000008E6
+io read 10000 io read 10000 io read 5c  DPORT_APP_CACHE_CTRL1_REG  3ff0005C=000008E6
+io read 10000 io read 10000 io read 10000 io read 10000 io write 5c,8ff 
+ DPORT_APP_CACHE_CTRL1_REG  3ff0005C=000008FF
+io read 10000 io read 10000 io read 44 DPORT_PRO_CACHE_CTRL1_REG  3ff00044=8E6
+io read 10000 io read 10000 io read 10000 io read 10000 io read 10000 io write 44,8ff 
+ DPORT_PRO_CACHE_CTRL1_REG  3ff00044  8ff
+io read 10000 io read 10000 io read 10000 io read 10000 io read 10000 io read 10000 io read 10000 io read 10000 io read 10000 io read 10000 io read 10000 io read 10000 Flash map data to  00000000 to memory, 3F400000
+io write 10000,0 
+ MMU CACHE  3ff10000  0
+
 
 
 
