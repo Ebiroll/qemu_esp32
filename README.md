@@ -8,16 +8,30 @@ It is a good way to learn about qemu ,esp32 and the esp32 rom.
 
 ## IMPORTANT update, July 2017
 
-
+Booting from emulated flash! This is very cool.
 Now IT IS MANDATORY to have a proper flash file ,
- ets_unpack_flash_code is not longer patched by default
 
-ALSO, now it does not work with latest version of esp-idf
+ets_unpack_flash_code is not longer patched , qemu now relies on flash and MMU emulation.
 
-4ec2abbf23084ac060679e4136fa222a2d0ab0e8
-:-P
 
-Needs furher investigations!
+> Serial flasher config  --->  Flash size (4 MB)
+
+
+To create a esp32flash.bin file build `qemu_flash` tool found in this repository.
+
+> gcc toflash.c -o qemu_flash
+
+Then run the ./qemu_flash program. 
+
+> ./qemu_flash build/app-template.bin
+
+Note that you have to use the .bin file as argument. This will generate a flash image with bootloader, partition information and flash file that the bootloder can use boot the proper application from.
+
+It is still recomend that you give the  application as kernel parameter.
+> -kernel /home/olas/esp/qemu_esp32/examples/07_flash_mmap/build/mmap_test.elf
+
+
+
 ```
 If you get a crash like this,
 I (124) cpu_start: Pro cpu start user code
@@ -40,48 +54,50 @@ qemu) MMU 117f4  1
 (qemu) MMU 116c0  400d12f0
 (qemu) MMU 1170c  800855cd
 ```
+Then try starting with -s -S, this will wait for the debugger.
 
 
-Then try starting with -s -S, this qill wait for the debugger.
+This seems to happen most often with C++ applications.
 
-> (gdb) b start_cpu0
-After breakpoint,try
-> b app_main and then continue,
-> c
 
-Also double check that you have done,
+Needs furher investigations!
+```
+It seems like c++ code has more problems in qemu, maybe because the
+code is not mapped properly and because of 
+ The .flash.rodata section and
+ do_global_ctors();
+
+```
+
+## The workaround is,
+
+> (gdb) b call_start_cpu0
+> (gdb) c
+Now the bootloader sets up the system to what the application exects,
+However some bug somewhere sometimes overwrites the code,
+
+ > (gdb) load build/app-template.elf
+
+ This will reload the application and prevent the crash as the code is reloaded 
+ on the correct locations.
+
+ > (gdb) b app_main
+  > (gdb) c
+```
+Press Ctrl-X o  to open the source
+n
+Press return to reuse latest command
+```
+
+
+Seems that the qemu, mmapping has a bug and or  spi_flash_read, spi_flash_write  Will maybe fixed on a rainy day.
+
+Another reason for this problem is because you forgot to create 
 > ./qemu_flash build/app-template.bin
 
 
-Also you could try, version 2.0 of esp-idf, seems more stable
 
-> git checkout v2.0
-> git submodule update --init
-
-
-Booting from emulated flash! This is very cool.
-
-
-Then build `qemu_flash` tool found in this repository.
-
-> gcc toflash.c -o qemu_flash
-
-This emulation requires that you generate a proper flash file first. 
-
-> Serial flasher config  --->  Flash size (4 MB)
-
-Then run the ./qemu_flash program. 
-
-> ./qemu_flash build/app-template.bin
-
-Note that you have to use the .bin file as argument. This will generate a flash image with bootloader, partition information and flash file that the bootloder can use boot the proper application from.
-
-Istill recomend that you give the  application as kernel parameter.
-> -kernel /home/olas/esp/qemu_esp32/examples/07_flash_mmap/build/mmap_test.elf
-
-
-If you  start qemu and boot from flash only and give no -kernel argument you might get this behaviour...
-
+So, if you see this
 ```
 I (124) cpu_start: Pro cpu start user code
  File 'esp32flash.bin' is truncated or corrupt.
@@ -90,17 +106,12 @@ I (124) cpu_start: Pro cpu start user code
  File 'esp32flash.bin' is truncated or corrupt.
  File 'esp32flash.bin' is truncated or corrupt.
 ```
+Do
+> (gdb) b call_start_cpu0
+> (gdb) c
+> (gdb) load build/app-template.elf
 
-
-So it does not work perfectly yet. 
-More debugging is needed. :-(
-
-Seems that the qemu, mmapping has a bug and or  spi_flash_read, spi_flash_write  Will maybe fixed on a rainy day.
-
-> (gdb) b start_cpu0_default
-
-Also lots of cleanup is needed.
-
+However it is sometimes possible to run only from the generated flash, 
 ```
 xtensa-softmmu/qemu-system-xtensa  -cpu esp32 -M esp32  -s   > io.txt
 TRYING to MAP esp32flash.binMAPPED esp32flash.binI (14) boot: ESP-IDF v3.0-dev-20-g9b955f4c 2nd stage bootloader
