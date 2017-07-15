@@ -18,8 +18,42 @@ ALSO, now it does not work with latest version of esp-idf
 :-P
 
 Needs furher investigations!
+```
+If you get a crash like this,
+I (124) cpu_start: Pro cpu start user code
+ File 'esp32flash.bin' is truncated or corrupt.
+ 
+qemu) MMU 117f4  1
+(qemu) MMU 117f8  3ff12b00
+(qemu) MMU 117fc  17
+(qemu) MMU 11808  4000c2e0
+(qemu) MMU 1180c  4000c2f6
+(qemu) MMU 11814  800855cd
+(qemu) MMU 11818  3ff11a90
+(qemu) MMU 1181c  40081144
+(qemu) MMU 11800  14
+(qemu) MMU 117bc  400d12f0
+(qemu) MMU 116e0  3ff11790
+(qemu) MMU 116c4  3ff11790
+(qemu) MMU 116d8  60033
+(qemu) MMU 116d4  400d12f0
+(qemu) MMU 116c0  400d12f0
+(qemu) MMU 1170c  800855cd
+```
 
-Try, version 2.0 of esp-idf
+
+Then try starting with -s -S, this qill wait for the debugger.
+
+> (gdb) b start_cpu0
+After breakpoint,try
+> b app_main and then continue,
+> c
+
+Also double check that you have done,
+> ./qemu_flash build/app-template.bin
+
+
+Also you could try, version 2.0 of esp-idf, seems more stable
 
 > git checkout v2.0
 > git submodule update --init
