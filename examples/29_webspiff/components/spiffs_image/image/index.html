@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>W2UI Demo: grid-5</title>
+    <script src="js/jquery.min.js"></script>
+    <script type="text/javascript" src="js/w2ui.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="js/w2ui.min.css" />
+</head>
+<body>
+
+<div id="layout" style="width: 100%; height: 350px; overflow: hidden;"></div>
+
+<script type="text/javascript">
+var config = {
+top_usergrid: { 
+            name : 'mmu_address',
+            //url  : '/api/user',
+            show    : {
+                toolbar  : true,
+                toolbarAdd: false,
+                toolbarSave: true,
+                footer   : true,
+                toolbarDelete	: true
+            },
+            style: 'border: 0px',
+            sortData: [{ field: 'lname', direction: 'asc' }],
+            searches: [
+                { type: 'text', caption: 'Name', field: 'name' },
+                { type: 'lat', caption: 'Lat', field: 'lat' }
+            ],
+            columns: [
+                { field: 'INDEX0', caption: '0', size: '20%', sortable: true,  editable: { type: 'text' }},
+                { field: 'INDEX1', caption: '1', size: '20%', sortable: true,  editable: { type: 'text' }},     
+                { field: 'INDEX2', caption: '2', size: '20%', sortable: false ,  editable: { type: 'text' }},
+                { field: 'INDEX3', caption: '3', size: '25%', sortable: false ,  editable: { type: 'tesxt' }}
+            ],
+            records: [
+              { recid: 1, INDEX0: '10000', INDEX1: '10004', INDEX2: '10008', INDEX3: '1000c' },
+            ],
+            onSave: function (event) {
+              event.onComplete = function() {
+                w2ui.top_usergrid.reload();
+                // New users needs new "Users at location" list
+                // w2ui.form.refresh();
+              }
+            },
+          }
+        }
+
+
+$(function () {
+    var pstyle = 'border: 1px solid #dfdfdf; padding: 5px;';
+    $('#layout').w2layout({
+        name: 'layout',
+        panels: [
+            { type: 'top', size: 200,  resizable: true,style: pstyle, content: 'top' },
+            { type: 'left', size: 200, resizable: true, style: pstyle, content: 'left' },
+            { type: 'main', resizable: true, style: pstyle, content: 'main' }
+        ]
+    });
+    //w2ui['grid'].load('data/list.json');
+    w2ui.layout.content('top',$().w2grid(config.top_usergrid));
+});
+</script>
+
+</body>
+</html>

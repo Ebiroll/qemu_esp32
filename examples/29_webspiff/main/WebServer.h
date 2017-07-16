@@ -12,7 +12,6 @@
 #include <regex>
 #include <map>
 #include "sdkconfig.h"
-#ifdef CONFIG_MONGOOSE_PRESENT
 #include <mongoose.h>
 
 
@@ -190,5 +189,4 @@ private:
 	std::vector<PathHandler> m_pathHandlers;
 };
 
-#endif // CONFIG_MONGOOSE_PRESENT
 #endif /* CPP_UTILS_WEBSERVER_H_ */

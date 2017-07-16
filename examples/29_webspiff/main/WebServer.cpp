@@ -10,7 +10,6 @@
 #include <map>
 #include <regex>
 #include "sdkconfig.h"
-#ifdef CONFIG_MONGOOSE_PRESENT
 #define MG_ENABLE_HTTP_STREAMING_MULTIPART 1
 #define MG_ENABLE_FILESYSTEM 1
 #include "WebServer.h"
@@ -844,4 +843,3 @@ void WebServer::WebSocketHandler::close() {
 
 
 
-#endif // CONFIG_MONGOOSE_PRESENT

@@ -1,4 +1,4 @@
-
+#if 0
 
 #include "sdkconfig.h"
 
@@ -20,6 +20,7 @@
 #include "apps/sntp/sntp.h"
 
 #endif
+
 
 #include <errno.h>
 #include <sys/fcntl.h>
@@ -542,6 +543,8 @@ int app_main(void)
         time(&now);
     }
 #endif
+
+#if 0
    int test_buff[4];
 
    if (spi_flash_read(0x1800fc, (void *)test_buff, 4) != 0) { 
@@ -549,7 +552,7 @@ int app_main(void)
    }
 
    printf("%08X\n\n",(unsigned int)test_buff[0]);
-
+#endif
 
     printf("\r\n\n");
     ESP_LOGI(tag, "==== STARTING SPIFFS TEST ====\r\n");
@@ -570,7 +573,7 @@ int app_main(void)
 		mkdirTest("/spiffs/newdir");
 
 		printf("==== List content of the directory \"images\" ====\r\n\r\n");
-        list("/spiffs/images", NULL);
+        list("/spiffs/js", NULL);
 	    printf("\r\n");
     }
 
@@ -580,3 +583,4 @@ int app_main(void)
     return 0;
 }
 
+#endif
