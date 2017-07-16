@@ -14,8 +14,8 @@
 #define SPIFFS_BASE_PATH "/spiffs"
 
 
-int spiffs_is_registered;
-int spiffs_is_mounted;
+extern int spiffs_is_registered;
+extern int spiffs_is_mounted;
 
 void vfs_spiffs_register();
 int spiffs_mount();

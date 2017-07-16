@@ -65,9 +65,15 @@ static void initialise_wifi(void)
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK( esp_wifi_init(&cfg) );
     ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
+    ESP_ERROR_CHECK(::esp_wifi_set_mode(WIFI_MODE_STA));
+ 
     wifi_config_t wifi_config;
-    strcpy(( char *)wifi_config.sta.ssid,( char *)EXAMPLE_WIFI_SSID);
-    strcpy(( char *)wifi_config.sta.password , ( char *)EXAMPLE_WIFI_PASS);
+    //strcpy(( char *)wifi_config.sta.ssid,( char *)EXAMPLE_WIFI_SSID);
+    //strcpy(( char *)wifi_config.sta.password , ( char *)EXAMPLE_WIFI_PASS);
+	::memset(&wifi_config, 0, sizeof(wifi_config));
+	::memcpy(wifi_config.sta.ssid, (unsigned  char *) EXAMPLE_WIFI_SSID,strlen(EXAMPLE_WIFI_SSID));
+	::memcpy(wifi_config.sta.password, (unsigned char *)EXAMPLE_WIFI_PASS, strlen(EXAMPLE_WIFI_PASS));
+
 /*    
         .sta = {
             .ssid = EXAMPLE_WIFI_SSID,

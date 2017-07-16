@@ -1,7 +1,21 @@
 ### Example of using **SPIFFS** with ESP32 and mogose webserver
 
 Still work in progress, 
+
+When working this can show something interesting
+http://192.168.1.139/index.html
+
+>make menuconfig 
+>make makefs
+>make flash
+>make flashfs
+>make monitor
+
+-------------------------------------------------------------
+
+
 I think qemu has problems with spi_read_flash when size <16
+Yes, and it has been fixed.
 
 rc = esp_rom_spiflash_read(read_src, t, read_size); 
 (gdb) p/x read_src
