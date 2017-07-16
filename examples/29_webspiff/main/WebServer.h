@@ -52,6 +52,8 @@ public:
 			void setHeaders(std::map<std::string, std::string>  headers);
 			void sendData(std::string data);
 			void sendData(uint8_t *pData, size_t length);
+			void sendMoreData(uint8_t *pData, size_t length);
+			
 			void setRootPath(std::string path);
 		private:
 			struct mg_connection *m_nc;
@@ -181,7 +183,7 @@ public:
 	void setRootPath(std::string path);
 	void setWebSocketHandlerFactory(WebSocketHandlerFactory *pWebSocketHandlerFactory);
 	void start(unsigned short port = 80);
-	void processRequest(struct mg_connection *mgConnection, struct http_message *message);
+	bool processRequest(struct mg_connection *mgConnection, struct http_message *message);
 	HTTPMultiPartFactory *m_pMultiPartFactory;
 	WebSocketHandlerFactory *m_pWebSocketHandlerFactory;
 private:
