@@ -2,9 +2,14 @@
 <html>
 <head>
     <title>MMU contents</title>
-    <script src="js/jquery.min.js"></script>
-    <script type="text/javascript" src="js/w2ui.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="js/w2ui.min.css" />
+       <link rel="stylesheet" type="text/css" href="http://w2ui.com/src/w2ui-1.5.rc1.min.css" />
+       <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+       <script type="text/javascript" src="http://w2ui.com/src/w2ui-1.5.rc1.min.js"></script>
+       <!-- If you are offline, use local w2ui and jquery
+        <script src="js/jquery.min.js"></script>
+        <script type="text/javascript" src="js/w2ui.min.js"></script>
+        <link rel="stylesheet" type="text/css" href="js/w2ui.min.css" />
+        -->
     <meta charset="utf-8"  />
 </head>
 <body>
@@ -18,28 +23,25 @@ left_mmugrid: {
     url  : '/api/mmu/',
     //recid   : 'MEM',
     show    : {
-        toolbar  : true,
+        toolbar  : false,
         toolbarAdd: false,
-        toolbarSave: true,
+        toolbarSave: false,
         toolbarDelete: false,
         footer   : true,
         toolbarDelete	: true
     },
     style: 'border: 0px',
-    sortData: [{ field: 'lname', direction: 'asc' }],
-    searches: [
-        { type: 'text', caption: 'Name', field: 'name' },
-        { type: 'lat', caption: 'Lat', field: 'lat' }
-    ],
+    //sortData: [{ field: 'MEM', direction: 'asc' }],
     columns: [
-        { field: 'MEM', caption: 'mem', size: '20%', sortable: true,  editable: { type: 'text' }},
-        { field: 'VAL', caption: 'val', size: '20%', sortable: true,  editable: { type: 'text' }}
+        { field: 'MEM', caption: 'mem', size: '10%', sortable: true,  editable: { type: 'text' }},
+        { field: 'VAL', caption: 'val', size: '10%', sortable: true,  editable: { type: 'text' }},
+        { field: 'AVAL', caption: 'val', size:'10%', sortable: true,  editable: { type: 'text' }}
     ],
     records: [
-        { recid: 1, MEM: '0x10000', VAL: "0x00000100"},
-        { recid: 2, MEM: '0x10004', VAL: "0x2"},
-        { recid: 3, MEM: '0x10008', VAL: "0x00000100"},
-        { recid: 4, MEM: '0x1000c', VAL: "0x4"},
+        { recid: 1, MEM: '0x10000', VAL: "0x100",AVAL: "0x100" },
+        { recid: 2, MEM: '0x10004', VAL: "0x2", AVAL: "0x100"},
+        { recid: 3, MEM: '0x10008', VAL: "0x100",AVAL: "0x100"},
+        { recid: 4, MEM: '0x1000c', VAL: "0x4",AVAL: "0x100"},
     ],
     onSave: function (event) {
         event.onComplete = function() {
@@ -74,11 +76,10 @@ main_memgrid: {
     name: 'mem',
     //url  : '/api/mem',
     style: 'border: 0px',
-    sortData: [{ field: 'lname', direction: 'asc' }],
-    searches: [
-        { type: 'text', caption: 'Name', field: 'name' },
-        { type: 'lat', caption: 'Lat', field: 'lat' }
-    ],
+    show    : {
+       toolbar  : false,
+    },
+    //sortData: [{ field: 'MEM', direction: 'asc' }],
     columns: [
         { field: 'MEM', caption: 'mem', size: '20%', sortable: true, editable: { type: 'text' } },
         { field: 'VAL', caption: 'val', size: '20%', sortable: true, editable: { type: 'text' } }
@@ -93,12 +94,11 @@ main_memgrid: {
 right_flashgrid: {
     name: 'flash',
     //url  : '/api/flash',
+    show    : {
+      toolbar  : false,
+    },
     style: 'border: 0px',
-    sortData: [{ field: 'lname', direction: 'asc' }],
-    searches: [
-        { type: 'text', caption: 'Name', field: 'name' },
-        { type: 'lat', caption: 'Lat', field: 'lat' }
-    ],
+    //sortData: [{ field: 'MEM', direction: 'asc' }],
     columns: [
         { field: 'MEM', caption: 'mem', size: '20%', sortable: true, editable: { type: 'text' } },
         { field: 'VAL', caption: 'val', size: '20%', sortable: true, editable: { type: 'text' } }

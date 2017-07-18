@@ -122,6 +122,13 @@ void spiffs_fs_stat(uint32_t *total, uint32_t *used);
 #endif
 
 
+/* Flash MMU table for PRO CPU */
+#define DPORT_PRO_FLASH_MMU_TABLE ((volatile uint32_t*) 0x3FF10000)
+
+/* Flash MMU table for APP CPU */
+#define DPORT_APP_FLASH_MMU_TABLE ((volatile uint32_t*) 0x3FF12000)
+
+
 int app_main(void) {
    spi_flash_init();
    void *ptr;
@@ -133,19 +140,46 @@ int app_main(void) {
 #define ESP_PARTITION_TABLE_ADDR 0x8000
 
 
- printf("mmap partition data\n");
+#if 0
 
-  esp_err_t err = spi_flash_mmap(ESP_PARTITION_TABLE_ADDR & 0xffff0000,
-            SPI_FLASH_SEC_SIZE, SPI_FLASH_MMAP_DATA, (const void**) &ptr, &handle);
+    DPORT_PRO_FLASH_MMU_TABLE[51]=0x6;
+    DPORT_APP_FLASH_MMU_TABLE[51]=0x6;
 
-    if (err != ESP_OK) {
-      printf("mmap fail\n");
-    }
-   printf( "0x8000 mapped to %p\n", ptr);            
+// Note this is not recommended, only for test!!
+    DPORT_PRO_FLASH_MMU_TABLE[70]=0x6;
+    DPORT_APP_FLASH_MMU_TABLE[70]=0x6;
 
-   spi_flash_mmap(0x180000 & 0xffff0000,
+// Note this is not recommended, only for test!!
+    DPORT_PRO_FLASH_MMU_TABLE[88]=0x6;
+    DPORT_APP_FLASH_MMU_TABLE[88]=0x6;
+
+
+// Note this is not recommended, only for test!!
+    DPORT_PRO_FLASH_MMU_TABLE[92]=0x6;
+    DPORT_APP_FLASH_MMU_TABLE[92]=0x6;
+
+
+    DPORT_PRO_FLASH_MMU_TABLE[108]=0x7;
+    DPORT_APP_FLASH_MMU_TABLE[109]=0x7;
+
+
+    DPORT_PRO_FLASH_MMU_TABLE[109]=0x8;
+    DPORT_APP_FLASH_MMU_TABLE[109]=0x8;
+
+#endif
+
+
+
+  //printf("mmap partition data\n");
+  //esp_err_t err = spi_flash_mmap(ESP_PARTITION_TABLE_ADDR & 0xffff0000,
+  //          SPI_FLASH_SEC_SIZE, SPI_FLASH_MMAP_DATA, (const void**) &ptr, &handle);
+  //  if (err != ESP_OK) {
+  //    printf("mmap fail\n");
+  //  }
+  // printf( "0x8000 mapped to %p\n", ptr);            
+
+   esp_err_t err = spi_flash_mmap(0x180000 & 0xffff0000,
             SPI_FLASH_SEC_SIZE, SPI_FLASH_MMAP_DATA, (const void**) &ptr, &handle2);
-
 
 
     if (err != ESP_OK) {

@@ -88,6 +88,8 @@ static void handle_REST_MMU(WebServer::HTTPRequest *pRequest, WebServer::HTTPRes
 	}
 
     unsigned char*mem_location=(unsigned char*)0x3FF10000;
+
+	unsigned int*app_location=(unsigned int*)0x3FF12000;
 	unsigned int*simple_mem_location=(unsigned int*)mem_location;
     //unsigned int* end=(unsigned int*)0x3FF12000;
     unsigned int* end=(unsigned int*)mem_location+(63*4);
@@ -108,10 +110,17 @@ static void handle_REST_MMU(WebServer::HTTPRequest *pRequest, WebServer::HTTPRes
         //printf( "%p\n", simple_mem_location);
         item.setString("MEM",std::string(buff));
 
-        simple_mem_location++;
-		total++;		
         sprintf( buff , "0x%X", *simple_mem_location);
         item.setString("VAL",std::string(buff));
+
+        simple_mem_location++;
+
+        sprintf( buff , "0x%X", *app_location);
+        item.setString("AVAL",std::string(buff));
+
+        app_location++;
+		total++;		
+
         arr.addObject(item);
     }
 
@@ -147,13 +156,26 @@ static void handle_REST_MEM(WebServer::HTTPRequest *pRequest, WebServer::HTTPRes
 	}
 	int ix=atoi(parts[parts.size()-1].c_str());
 
-    unsigned char*mem_location=(unsigned char*)0x3f400000 + ((ix +1 ) * 0x10000);
+    unsigned char*mem_location=(unsigned char*)0x3f400000 + (ix * 0x10000);
 	unsigned int*simple_mem_location=(unsigned int*)mem_location;
     unsigned int* end=(unsigned int*) mem_location +64;
 	int total=0;
-	if (ix>=50) {
-		mem_location=(unsigned char*)0x3f720000 + (ix * 0x10000);
+/*
+	if (ix>=51) {
+		mem_location=(unsigned char*)0x3f720000 + ((ix-51) * 0x10000);
 		simple_mem_location=(unsigned int*)mem_location;
+		printf( "instr ix %d %p\n", ix, simple_mem_location);
+		end=(unsigned int*) mem_location +64;
+	}
+*/
+
+	// Dont think this is correct, but seems to work for ix>77 Should be MMU_BLOCK50_VADDR 0x3f720000 ??? 
+	if (ix>=51) {
+		mem_location=(unsigned char*)0x400d0000+(ix-77)*0x10000;
+		unsigned int *silly_location=(unsigned int*)0x3f720000 + ((ix-51) * 0x10000);
+		simple_mem_location=(unsigned int*)mem_location;
+		printf( "ix %d %p\n", ix, simple_mem_location);
+		printf( "silly ix %d %p\n", ix, silly_location);
 		end=(unsigned int*) mem_location +64;
 	}
 
@@ -198,10 +220,6 @@ static void handle_REST_FLASH(WebServer::HTTPRequest *pRequest, WebServer::HTTPR
 	}
 
     int val=(int)strtol(parts[parts.size()-1].c_str(), NULL, 0);
-	//if (val>0) {
-	//	val=val-1;
-	//}
-	//int val=atoi(parts[parts.size()-1].c_str());
 	val = val*0x10000;
 
 	spi_flash_read(val,buffer,64*4);
@@ -249,7 +267,8 @@ void webserverTask(void *data) {
 	pWebServer->addPathHandler("POST", "^\\/api\\/flash\\/.*",                  handle_REST_FLASH);
 	// 
 	pWebServer->addPathHandler("GET", "^\\/api\\/mmu\\/.*",                     handle_REST_MMU);
-	pWebServer->addPathHandler("GET", "^\\/api\\/flash\\/.*",                  handle_REST_FLASH);
+	pWebServer->addPathHandler("GET", "^\\/api\\/mem\\/.*",                     handle_REST_MEM);
+	pWebServer->addPathHandler("GET", "^\\/api\\/flash\\/.*",                   handle_REST_FLASH);
 
 
 	pWebServer->addPathHandler("GET",  "\\/hello\\/.*",                         handleTest);

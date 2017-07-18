@@ -558,6 +558,10 @@ bool WebServer::processRequest(struct mg_connection *mgConnection, struct http_m
 	// Because we reached here, it means that we did NOT match a handler.  Now we want to attempt
 	// to retrieve the corresponding file content.
 	std::string filePath = httpResponse.getRootPath() + uri;
+	if (uri.size()==1)
+	{
+		filePath = httpResponse.getRootPath() + std::string("/index.html");
+	}
 
 	mg_http_serve_file(mgConnection, message, filePath.c_str(),
 						mg_get_mime_type(filePath.c_str()), mg_mk_str(""));
