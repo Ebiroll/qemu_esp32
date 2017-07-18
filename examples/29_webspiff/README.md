@@ -2,9 +2,8 @@
 
 Now it works, 
 
-Left part shows MMU registers and their values, middle show memory and value, right part show values from flash read with spi_flash_read
+Left part shows MMU registers and their values, middle show memory and value, right part show values from the flash read with spi_flash_read
 
-Note that you need to ask for index.html
 
 http://192.168.1.139/index.html
 
