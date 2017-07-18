@@ -1,8 +1,11 @@
 ### Example of using **SPIFFS** with ESP32 and mogose webserver
 
-Still work in progress, 
+Now it works, 
 
-When working this can show something interesting
+Left part shows MMU registers and their values, middle show memory and value, right part show values from flash read with spi_flash_read
+
+Note that you need to ask for index.html
+
 http://192.168.1.139/index.html
 
 >make menuconfig 
@@ -10,6 +13,29 @@ http://192.168.1.139/index.html
 >make flash
 >make flashfs
 >make monitor
+
+The API used by the javascript application,
+Goves the 64 
+    http://192.168.1.139/api/mmu/
+
+
+Reads flash, sector x
+    http://192.168.1.131/api/flash/x
+
+    http://192.168.1.131/api/flash/1
+    http://192.168.1.131/api/flash/2
+
+
+ONLY POST for this, to prevent out of readable memory exceptions
+    http://192.168.1.131/api/mem/x
+Gets adress and 64 bytes for the selected mmu register (x)
+
+
+    TODO,
+    MMU_BLOCK50_VADDR 0x3f720000
+
+CODE mapping still not correct,
+Must be investigated for qemu emulation.
 
 -------------------------------------------------------------
 

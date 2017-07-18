@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>W2UI Demo: grid-5</title>
+    <title>MMU contents</title>
     <script src="js/jquery.min.js"></script>
     <script type="text/javascript" src="js/w2ui.min.js"></script>
     <link rel="stylesheet" type="text/css" href="js/w2ui.min.css" />
+    <meta charset="utf-8"  />
 </head>
 <body>
 
@@ -12,40 +13,105 @@
 
 <script type="text/javascript">
 var config = {
-top_usergrid: { 
-            name : 'mmu_address',
-            //url  : '/api/user',
-            show    : {
-                toolbar  : true,
-                toolbarAdd: false,
-                toolbarSave: true,
-                footer   : true,
-                toolbarDelete	: true
-            },
-            style: 'border: 0px',
-            sortData: [{ field: 'lname', direction: 'asc' }],
-            searches: [
-                { type: 'text', caption: 'Name', field: 'name' },
-                { type: 'lat', caption: 'Lat', field: 'lat' }
-            ],
-            columns: [
-                { field: 'INDEX0', caption: '0', size: '20%', sortable: true,  editable: { type: 'text' }},
-                { field: 'INDEX1', caption: '1', size: '20%', sortable: true,  editable: { type: 'text' }},     
-                { field: 'INDEX2', caption: '2', size: '20%', sortable: false ,  editable: { type: 'text' }},
-                { field: 'INDEX3', caption: '3', size: '25%', sortable: false ,  editable: { type: 'tesxt' }}
-            ],
-            records: [
-              { recid: 1, INDEX0: '10000', INDEX1: '10004', INDEX2: '10008', INDEX3: '1000c' },
-            ],
-            onSave: function (event) {
-              event.onComplete = function() {
-                w2ui.top_usergrid.reload();
-                // New users needs new "Users at location" list
-                // w2ui.form.refresh();
-              }
-            },
-          }
+left_mmugrid: { 
+    name : 'mmu',
+    url  : '/api/mmu/',
+    //recid   : 'MEM',
+    show    : {
+        toolbar  : true,
+        toolbarAdd: false,
+        toolbarSave: true,
+        toolbarDelete: false,
+        footer   : true,
+        toolbarDelete	: true
+    },
+    style: 'border: 0px',
+    sortData: [{ field: 'lname', direction: 'asc' }],
+    searches: [
+        { type: 'text', caption: 'Name', field: 'name' },
+        { type: 'lat', caption: 'Lat', field: 'lat' }
+    ],
+    columns: [
+        { field: 'MEM', caption: 'mem', size: '20%', sortable: true,  editable: { type: 'text' }},
+        { field: 'VAL', caption: 'val', size: '20%', sortable: true,  editable: { type: 'text' }}
+    ],
+    records: [
+        { recid: 1, MEM: '0x10000', VAL: "0x00000100"},
+        { recid: 2, MEM: '0x10004', VAL: "0x2"},
+        { recid: 3, MEM: '0x10008', VAL: "0x00000100"},
+        { recid: 4, MEM: '0x1000c', VAL: "0x4"},
+    ],
+    onSave: function (event) {
+        event.onComplete = function() {
+        w2ui.top_usergrid.reload();
+        // New users needs new "Users at location" list
+        // w2ui.form.refresh();
         }
+    },
+    onClick: function (event) {
+        event.onComplete = function () {
+            var sel = this.getSelection();
+            if (sel.length == 1) {
+                console.log(sel[0]);
+                var ix=Number(sel[0])-1;
+                var mmu = w2ui.mmu;
+                var rec=mmu.records[ix];
+                // Set url for memory and flash
+                if (!(rec.VAL=="0x100")) {
+                   w2ui.mem.url = '/api/mem/' + ix
+                   w2ui.mem.reload();
+                   w2ui.flash.url = '/api/flash/' + rec.VAL
+                   w2ui.flash.reload();
+                   console.log(mmu.get(ix+1));
+                }
+                console.log(w2ui.mem.url);
+            }
+            console.log('selection:', ix);
+        }
+    } 
+},
+main_memgrid: {
+    name: 'mem',
+    //url  : '/api/mem',
+    style: 'border: 0px',
+    sortData: [{ field: 'lname', direction: 'asc' }],
+    searches: [
+        { type: 'text', caption: 'Name', field: 'name' },
+        { type: 'lat', caption: 'Lat', field: 'lat' }
+    ],
+    columns: [
+        { field: 'MEM', caption: 'mem', size: '20%', sortable: true, editable: { type: 'text' } },
+        { field: 'VAL', caption: 'val', size: '20%', sortable: true, editable: { type: 'text' } }
+    ],
+    records: [
+        { recid: 1, MEM: '0x10000', VAL: "0x100" },
+        { recid: 2, MEM: '0x10004', VAL: "0x100" },
+        { recid: 3, MEM: '0x10008', VAL: "0x100" },
+        { recid: 4, MEM: '0x1000c', VAL: "0x100" },
+    ]
+},
+right_flashgrid: {
+    name: 'flash',
+    //url  : '/api/flash',
+    style: 'border: 0px',
+    sortData: [{ field: 'lname', direction: 'asc' }],
+    searches: [
+        { type: 'text', caption: 'Name', field: 'name' },
+        { type: 'lat', caption: 'Lat', field: 'lat' }
+    ],
+    columns: [
+        { field: 'MEM', caption: 'mem', size: '20%', sortable: true, editable: { type: 'text' } },
+        { field: 'VAL', caption: 'val', size: '20%', sortable: true, editable: { type: 'text' } }
+    ],
+    records: [
+        { recid: 1, MEM: '0x10000', VAL: "0x100" },
+        { recid: 2, MEM: '0x10004', VAL: "0x100" },
+        { recid: 3, MEM: '0x10008', VAL: "0x100" },
+        { recid: 4, MEM: '0x1000c', VAL: "0x100" },
+    ]
+}
+
+}
 
 
 $(function () {
@@ -53,13 +119,16 @@ $(function () {
     $('#layout').w2layout({
         name: 'layout',
         panels: [
-            { type: 'top', size: 200,  resizable: true,style: pstyle, content: 'top' },
-            { type: 'left', size: 200, resizable: true, style: pstyle, content: 'left' },
-            { type: 'main', resizable: true, style: pstyle, content: 'main' }
+            { type: 'left', size: 300, resizable: true, style: pstyle, content: 'left' },
+            { type: 'main', size: '40%', resizable: true, style: pstyle, content: 'main' },
+            { type: 'right',size: '40%', resizable: true, style: pstyle, content: 'right_flashgrid' }
         ]
     });
     //w2ui['grid'].load('data/list.json');
-    w2ui.layout.content('top',$().w2grid(config.top_usergrid));
+    w2ui.layout.content('left',$().w2grid(config.left_mmugrid));
+    w2ui.layout.content('main',$().w2grid(config.main_memgrid));
+    w2ui.layout.content('right',$().w2grid(config.right_flashgrid));
+
 });
 </script>
 

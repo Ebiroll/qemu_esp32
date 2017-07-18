@@ -13,7 +13,7 @@
 #include <WebServer.h>
 #include <stdio.h>
 #include "JSON.h"
-
+#include <esp_spi_flash.h>
 
 #include <esp_wifi.h>
 
@@ -48,6 +48,8 @@ static void handle_REST_SYSTEM(WebServer::HTTPRequest *pRequest, WebServer::HTTP
 
 
 static void handle_REST_LOG_SET(WebServer::HTTPRequest *pRequest, WebServer::HTTPResponse *pResponse) {
+	printf("handle_REST_LOG_SET\n");
+
 	ESP_LOGD(tag, "handle_REST_LOG_SET");
 	std::vector<std::string> parts = pRequest->pathSplit();
 	std::stringstream stream(parts[4]);
@@ -74,12 +76,182 @@ static void handle_REST_FILE_GET(WebServer::HTTPRequest *pRequest, WebServer::HT
 } // handle_REST_FILE_GET
 
 
+static void handle_REST_MMU(WebServer::HTTPRequest *pRequest, WebServer::HTTPResponse *pResponse) {
+	ESP_LOGD(tag, "handle_REST_MMU");
+	std::vector<std::string> parts = pRequest->pathSplit();
+	std::string path = "";
+	for (int i=3; i<parts.size(); i++) {
+		path += "/" + parts[i];
+	}
+	if (parts.size()>1) {
+		printf("QUERY_FOR %s\n",parts[parts.size()-1].c_str());
+	}
+
+    unsigned char*mem_location=(unsigned char*)0x3FF10000;
+	unsigned int*simple_mem_location=(unsigned int*)mem_location;
+    //unsigned int* end=(unsigned int*)0x3FF12000;
+    unsigned int* end=(unsigned int*)mem_location+(63*4);
+	int total=0;
+
+    JsonObject obj = JSON::createObject();
+    JsonArray arr = JSON::createArray();
+    obj.setString("status","success");
+    JsonObject item(NULL);
+
+    while(simple_mem_location<end) {
+		char buff[128];
+        item = JSON::createObject();
+
+		item.setInt("recid",total+1);
+
+		sprintf( buff , "%p", simple_mem_location);
+        //printf( "%p\n", simple_mem_location);
+        item.setString("MEM",std::string(buff));
+
+        simple_mem_location++;
+		total++;		
+        sprintf( buff , "0x%X", *simple_mem_location);
+        item.setString("VAL",std::string(buff));
+        arr.addObject(item);
+    }
+
+    obj.setInt("total",total);
+    obj.setArray("records",arr);
+	pResponse->sendData(obj.toString());
+	JSON::deleteObject(obj);
+} // handle_REST_MMU
+
+
+// The last part of the path is the mmu_ index selected
+
+// MMU register, 0 holds info about VADDR 0x3f400000
+// MMU register, x holds info about VADDR 0x3f400000 + (x * 0x10000) 
+// The MMU is more flexible but currently this is how esp-idf maps VADDR 
+/*
+MMU_BLOCK0_VADDR 0x3f400000    
+MMU_BLOCK1_VADDR 0x3f410000
+
+MMU_BLOCK50_VADDR 0x3f720000
+..
+MMU_BLOCK63_VADDR 0x3fA30000
+*/
+static void handle_REST_MEM(WebServer::HTTPRequest *pRequest, WebServer::HTTPResponse *pResponse) {
+	ESP_LOGD(tag, "handle_REST_MEM");
+	std::vector<std::string> parts = pRequest->pathSplit();
+	std::string path = "";
+	for (int i=3; i<parts.size(); i++) {
+		path += "/" + parts[i];
+	}
+	if (parts.size()>1) {
+		printf("MEM_QUERY_FOR %s\n",parts[parts.size()-1].c_str());
+	}
+	int ix=atoi(parts[parts.size()-1].c_str());
+
+    unsigned char*mem_location=(unsigned char*)0x3f400000 + ((ix +1 ) * 0x10000);
+	unsigned int*simple_mem_location=(unsigned int*)mem_location;
+    unsigned int* end=(unsigned int*) mem_location +64;
+	int total=0;
+	if (ix>=50) {
+		mem_location=(unsigned char*)0x3f720000 + (ix * 0x10000);
+		simple_mem_location=(unsigned int*)mem_location;
+		end=(unsigned int*) mem_location +64;
+	}
+
+    JsonObject obj = JSON::createObject();
+    JsonArray arr = JSON::createArray();
+    obj.setString("status","success");
+    JsonObject item(NULL);
+
+    while(simple_mem_location<end) {
+		char buff[128];
+        item = JSON::createObject();
+		sprintf( buff , "%p", simple_mem_location);
+        //printf( "%p\n", simple_mem_location);
+        item.setString("MEM",std::string(buff));
+
+        simple_mem_location++;
+		total++;		
+        sprintf( buff , "%08X", *simple_mem_location);
+        item.setString("VAL",std::string(buff));
+        arr.addObject(item);
+    }
+
+    obj.setInt("total",total);
+    obj.setArray("records",arr);
+	pResponse->sendData(obj.toString());
+	JSON::deleteObject(obj);
+} // handle_REST_MMU
+
+
+// The last part of the path is the mmu_ index selected
+static void handle_REST_FLASH(WebServer::HTTPRequest *pRequest, WebServer::HTTPResponse *pResponse) {
+	ESP_LOGD(tag, "handle_REST_FLASH");
+	int buffer[64];
+
+	std::vector<std::string> parts = pRequest->pathSplit();
+	std::string path = "";
+	for (int i=3; i<parts.size(); i++) {
+		path += "/" + parts[i];
+	}
+	if (parts.size()>1) {
+		printf("FLASH_QUERY_FOR %s\n",parts[parts.size()-1].c_str());
+	}
+
+    int val=(int)strtol(parts[parts.size()-1].c_str(), NULL, 0);
+	//if (val>0) {
+	//	val=val-1;
+	//}
+	//int val=atoi(parts[parts.size()-1].c_str());
+	val = val*0x10000;
+
+	spi_flash_read(val,buffer,64*4);
+
+    unsigned char*mem_location=(unsigned char*) &buffer[0];
+	unsigned int*simple_mem_location=(unsigned int*)mem_location;
+    //unsigned int* end=(unsigned int*)0x3FF12000;
+    unsigned int* end=(unsigned int*)&buffer[64];
+	int total=0;
+
+    JsonObject obj = JSON::createObject();
+    JsonArray arr = JSON::createArray();
+    obj.setString("status","success");
+    JsonObject item(NULL);
+
+    while(simple_mem_location<end) {
+		char buff[128];
+        item = JSON::createObject();
+		sprintf( buff , "%08X", val+total*4);
+        //printf( "%p\n", simple_mem_location);
+        item.setString("MEM",std::string(buff));
+
+        simple_mem_location++;
+		total++;		
+        sprintf( buff , "%08X", *simple_mem_location);
+        item.setString("VAL",std::string(buff));
+        arr.addObject(item);
+    }
+
+    obj.setInt("total",total);
+    obj.setArray("records",arr);
+	pResponse->sendData(obj.toString());
+	JSON::deleteObject(obj);
+} // handle_REST_FLASH
+
+
 void webserverTask(void *data) {
 	/*
 	* Create a WebServer and register handlers for REST requests.
 	*/
 	WebServer *pWebServer = new WebServer();
 	pWebServer->setRootPath("/spiffs");
+	pWebServer->addPathHandler("POST", "^\\/api\\/mmu\\/.*",                    handle_REST_MMU);
+	pWebServer->addPathHandler("POST", "^\\/api\\/mem\\/.*",                    handle_REST_MEM);
+	pWebServer->addPathHandler("POST", "^\\/api\\/flash\\/.*",                  handle_REST_FLASH);
+	// 
+	pWebServer->addPathHandler("GET", "^\\/api\\/mmu\\/.*",                     handle_REST_MMU);
+	pWebServer->addPathHandler("GET", "^\\/api\\/flash\\/.*",                  handle_REST_FLASH);
+
+
 	pWebServer->addPathHandler("GET",  "\\/hello\\/.*",                         handleTest);
 	pWebServer->addPathHandler("POST", "^\\/ESP32\\/LOG\\/SET",                 handle_REST_LOG_SET);
 	pWebServer->addPathHandler("GET",  "^\\/ESP32\\/FILE",                      handle_REST_FILE_GET);

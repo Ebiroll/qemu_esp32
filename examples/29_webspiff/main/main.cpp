@@ -13,6 +13,7 @@
 #include <esp_event_loop.h>
 #include <esp_log.h>
 #include <esp_err.h>
+#include "JSON.h"
 
 extern "C" {
 #include "esp_vfs.h"
@@ -122,6 +123,106 @@ void spiffs_fs_stat(uint32_t *total, uint32_t *used);
 
 
 int app_main(void) {
+   spi_flash_init();
+   void *ptr;
+   //nvs_flash_init(); 
+   spi_flash_mmap_handle_t handle;
+   spi_flash_mmap_handle_t handle2;
+   spi_flash_mmap_handle_t handle3;
+
+#define ESP_PARTITION_TABLE_ADDR 0x8000
+
+
+ printf("mmap partition data\n");
+
+  esp_err_t err = spi_flash_mmap(ESP_PARTITION_TABLE_ADDR & 0xffff0000,
+            SPI_FLASH_SEC_SIZE, SPI_FLASH_MMAP_DATA, (const void**) &ptr, &handle);
+
+    if (err != ESP_OK) {
+      printf("mmap fail\n");
+    }
+   printf( "0x8000 mapped to %p\n", ptr);            
+
+   spi_flash_mmap(0x180000 & 0xffff0000,
+            SPI_FLASH_SEC_SIZE, SPI_FLASH_MMAP_DATA, (const void**) &ptr, &handle2);
+
+
+
+    if (err != ESP_OK) {
+      printf("mmap 0x180000 fail \n");
+    }
+   printf( "0x180000 mapped to %p\n", ptr);            
+
+
+   spi_flash_mmap(0x000 & 0xffff0000,
+            SPI_FLASH_SEC_SIZE, SPI_FLASH_MMAP_DATA, (const void**) &ptr, &handle3);
+
+
+    if (err != ESP_OK) {
+      printf("mmap 0x0000 fail \n");
+    }
+   printf( "0x0000 mapped to %p\n", ptr);            
+
+
+   spi_flash_mmap(0x10000 & 0xffff0000,
+            SPI_FLASH_SEC_SIZE, SPI_FLASH_MMAP_DATA, (const void**) &ptr, &handle2);
+    if (err != ESP_OK) {
+      printf("mmap 0x10000 fail \n");
+    }
+   printf( "0x10000 mapped to %p\n", ptr);            
+
+
+   spi_flash_mmap(0x40000 & 0xffff0000,
+            SPI_FLASH_SEC_SIZE, SPI_FLASH_MMAP_DATA, (const void**) &ptr, &handle2);
+    if (err != ESP_OK) {
+      printf("mmap 0x40000 fail \n");
+    }
+   printf( "0x40000 mapped to %p\n", ptr);            
+
+
+   spi_flash_mmap(0x50000 & 0xffff0000,
+            SPI_FLASH_SEC_SIZE, SPI_FLASH_MMAP_DATA, (const void**) &ptr, &handle2);
+    if (err != ESP_OK) {
+      printf("mmap 0x50000 fail \n");
+    }
+   printf( "0x50000 mapped to %p\n", ptr);            
+
+   spi_flash_mmap(0x60000 & 0xffff0000,
+            SPI_FLASH_SEC_SIZE, SPI_FLASH_MMAP_DATA, (const void**) &ptr, &handle2);
+    if (err != ESP_OK) {
+      printf("mmap 0x60000 fail \n");
+    }
+   printf( "0x60000 mapped to %p\n", ptr);            
+
+   spi_flash_mmap(0x70000 & 0xffff0000,
+            SPI_FLASH_SEC_SIZE, SPI_FLASH_MMAP_DATA, (const void**) &ptr, &handle2);
+    if (err != ESP_OK) {
+      printf("mmap 0x70000 fail \n");
+    }
+   printf( "0x70000 mapped to %p\n", ptr);            
+
+   spi_flash_mmap(0x80000 & 0xffff0000,
+            SPI_FLASH_SEC_SIZE, SPI_FLASH_MMAP_DATA, (const void**) &ptr, &handle2);
+    if (err != ESP_OK) {
+      printf("mmap 0x80000 fail \n");
+    }
+   printf( "0x80000 mapped to %p\n", ptr);            
+
+   spi_flash_mmap(0x90000 & 0xffff0000,
+            SPI_FLASH_SEC_SIZE, SPI_FLASH_MMAP_DATA, (const void**) &ptr, &handle2);
+    if (err != ESP_OK) {
+      printf("mmap 0x90000 fail \n");
+    }
+   printf( "0x90000 mapped to %p\n", ptr);            
+
+   spi_flash_mmap(0xa0000 & 0xffff0000,
+            SPI_FLASH_SEC_SIZE, SPI_FLASH_MMAP_DATA, (const void**) &ptr, &handle2);
+    if (err != ESP_OK) {
+      printf("mmap 0xa0000 fail \n");
+    }
+   printf( "0xa0000 mapped to %p\n", ptr);            
+
+
    RequestManager *manager=new RequestManager();
 
    //int test_buff[4];
@@ -137,6 +238,10 @@ int app_main(void) {
 
    //test_buff[0]=4711;
    //printf("%08X\n\n",(unsigned int)test_buff[0]);
+
+    esp_log_level_set("*", ESP_LOG_VERBOSE);
+
+/////////
 
     printf("\r\n\n");
     ESP_LOGI(tag, "==== STARTING SPIFFS TEST ====\r\n");
