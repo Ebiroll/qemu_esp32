@@ -87,6 +87,8 @@ int main(int argc,char *argv[])
     merge_flash("build/partitions.bin","esp32flash.bin",0x8000);
     // Add application
     merge_flash(argv[1],"esp32flash.bin",0x10000);
+    // Add FAT image
+    merge_flash("fat.bin","esp32flash.bin",0x300000);
 
     system("cp esp32flash.bin ~/qemu_esp32");
 }

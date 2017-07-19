@@ -10,7 +10,6 @@
 #include <map>
 #include <regex>
 #include "sdkconfig.h"
-#ifdef CONFIG_MONGOOSE_PRESENT
 #define MG_ENABLE_HTTP_STREAMING_MULTIPART 1
 #define MG_ENABLE_FILESYSTEM 1
 #include "WebServer.h"
@@ -155,7 +154,10 @@ static void mongoose_event_handler_web_server(
 
 			struct WebServerUserData *pWebServerUserData = (struct WebServerUserData *)mgConnection->user_data;
 			WebServer *pWebServer = pWebServerUserData->pWebServer;
-			pWebServer->processRequest(mgConnection, message);
+			if (!pWebServer->processRequest(mgConnection, message))
+			{
+
+			}
 			break;
 		} // MG_EV_HTTP_REQUEST
 
@@ -466,6 +468,23 @@ void WebServer::HTTPResponse::sendData(uint8_t *pData, size_t length) {
 
 
 /**
+ * @brief Send more data to the HTTP caller.
+ * Send the data to the HTTP caller.  
+ * @param [in] pData The data to be sent to the HTTP caller.
+ * @param [in] length The length of the data to be sent.
+ * @return N/A.
+ */
+void WebServer::HTTPResponse::sendMoreData(uint8_t *pData, size_t length) {
+	m_nc->flags &= ~MG_F_SEND_AND_CLOSE;
+
+    mg_send(m_nc, pData, length);
+
+	m_nc->flags |= MG_F_SEND_AND_CLOSE;
+}
+
+
+
+/**
  * @brief Set the headers to be sent in the HTTP response.
  * @param [in] headers The complete set of headers to send to the caller.
  * @return N/A.
@@ -505,6 +524,7 @@ void WebServer::HTTPResponse::setStatus(int status) {
 	m_status = status;
 } // setStatus
 
+extern "C"  struct mg_str  mg_get_mime_type(const char *path);
 
 /**
  * @brief Process an incoming HTTP request.
@@ -516,7 +536,7 @@ void WebServer::HTTPResponse::setStatus(int status) {
  * @param [in] mgConnection The network connection on which the request was received.
  * @param [in] message The message representing the request.
  */
-void WebServer::processRequest(struct mg_connection *mgConnection, struct http_message* message) {
+bool WebServer::processRequest(struct mg_connection *mgConnection, struct http_message* message) {
 	std::string uri = mgStrToString(message->uri);
 	ESP_LOGD(tag, "WebServer::processRequest: Matching: %s", uri.c_str());
 	HTTPResponse httpResponse = HTTPResponse(mgConnection);
@@ -531,12 +551,23 @@ void WebServer::processRequest(struct mg_connection *mgConnection, struct http_m
 			HTTPRequest httpRequest(message);
 			(*it).invoke(&httpRequest, &httpResponse);
 			ESP_LOGD(tag, "Found a match!!");
-			return;
+			return true;
 		}
 	} // End of examine path handlers.
 
 	// Because we reached here, it means that we did NOT match a handler.  Now we want to attempt
 	// to retrieve the corresponding file content.
+	std::string filePath = httpResponse.getRootPath() + uri;
+	if (uri.size()==1)
+	{
+		filePath = httpResponse.getRootPath() + std::string("/index.html");
+	}
+
+	mg_http_serve_file(mgConnection, message, filePath.c_str(),
+						mg_get_mime_type(filePath.c_str()), mg_mk_str(""));
+
+
+#if 0
 	std::string filePath = httpResponse.getRootPath() + uri;
 	ESP_LOGD(tag, "Opening file: %s", filePath.c_str());
 	FILE *file = fopen(filePath.c_str(), "r");
@@ -545,15 +576,40 @@ void WebServer::processRequest(struct mg_connection *mgConnection, struct http_m
 		size_t length = ftell(file);
 		fseek(file, 0L, SEEK_SET);
 		uint8_t *pData = (uint8_t *)malloc(length);
-		fread(pData, length, 1, file);
-		fclose(file);
-		httpResponse.sendData(pData, length);
-		free(pData);
+		if (pData!=NULL) {
+			fread(pData, length, 1, file);
+			fclose(file);
+			httpResponse.sendData(pData, length);
+			free(pData);
+		} else {
+ 		    uint8_t *pData = (uint8_t *)malloc(1024);
+			 if (pData==NULL) {
+				 httpResponse.setStatus(404); // Not found, TODO Out of memory
+ 		         httpResponse.sendData("");
+			 }
+			 fread(pData, 1024, 1, file);
+			 httpResponse.sendData(pData, 1024);
+			 int remaining=length-1024;
+			 while (remaining>0) {
+				fread(pData, 1024, 1, file);
+				if (remaining>1024) {
+			       httpResponse.sendMoreData(pData,  1024);
+				} else {
+			       httpResponse.sendMoreData(pData,  remaining);					
+				}
+				remaining-=1024;
+			 }
+			 free(pData);
+		}
+
+
 	} else {
 		// Handle unable to open file
 		httpResponse.setStatus(404); // Not found
 		httpResponse.sendData("");
 	}
+#endif
+return false;
 } // processRequest
 
 
@@ -844,4 +900,3 @@ void WebServer::WebSocketHandler::close() {
 
 
 
-#endif // CONFIG_MONGOOSE_PRESENT

@@ -1,3 +1,4 @@
+#define MG_ENABLE_FILESYSTEM 1
 #include "mongoose.h"
 #ifdef MG_MODULE_LINES
 #line 1 "mongoose/src/internal.h"
