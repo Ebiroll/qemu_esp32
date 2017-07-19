@@ -2,8 +2,8 @@
 Add tensilica esp32 cpu and a board to qemu and dump the rom to learn more about esp-idf
 ###   ESP32 in QEMU.
 
-This documents how to add an esp32 cpu and a simple esp32 board to qemu in order to run an app compiled with the SDK in QEMU. Esp32 is a 240 MHz dual core Tensilica LX6 microcontroller.
-It is a good way to learn about qemu ,esp32 and the esp32 rom.
+This documents how to add an esp32 cpu and a simple esp32 board to qemu in order to run an app compiled with the SDK (esp-idf) in QEMU. Esp32 is a 240 MHz dual core Tensilica LX6 microcontroller.
+It is a good way to learn about qemu , esp32 and the esp32 rom.
 
 
 ## IMPORTANT update, July 2017
@@ -61,8 +61,9 @@ This seems to happen most often with C++ applications.
 
 
 Needs furher investigations!
-```
+
 It seems like c++ code has more problems in qemu, maybe because the
+```
 code is not mapped properly and because of 
  The .flash.rodata section and
  do_global_ctors();
@@ -71,18 +72,18 @@ code is not mapped properly and because of
 
 ## The workaround is,
 
-> (gdb) b call_start_cpu0
-> (gdb) c
+    > (gdb) b call_start_cpu0
+    > (gdb) c
 Now the bootloader sets up the system to what the application exects,
 However some bug somewhere sometimes overwrites the code,
 
- > (gdb) load build/app-template.elf
+    > (gdb) load build/app-template.elf
 
  This will reload the application and prevent the crash as the code is reloaded 
  on the correct locations.
 
- > (gdb) b app_main
-  > (gdb) c
+    > (gdb) b app_main
+    > (gdb) c
 ```
 Press Ctrl-X o  to open the source
 n
@@ -92,7 +93,7 @@ Press return to reuse latest command
 
 Seems that the qemu, mmapping has a bug and or  spi_flash_read, spi_flash_write  Will maybe fixed on a rainy day.
 
-Another reason for this problem is because you forgot to create 
+Another reason for this problem is because you forgot to create the flash file
 > ./qemu_flash build/app-template.bin
 
 
@@ -107,9 +108,9 @@ I (124) cpu_start: Pro cpu start user code
  File 'esp32flash.bin' is truncated or corrupt.
 ```
 Do
-> (gdb) b call_start_cpu0
-> (gdb) c
-> (gdb) load build/app-template.elf
+    > (gdb) b call_start_cpu0
+    > (gdb) c
+    > (gdb) load build/app-template.elf
 
 However it is sometimes possible to run only from the generated flash, 
 ```
@@ -208,7 +209,7 @@ Then run configure as,
 ../qemu-xtensa-esp32/configure --disable-werror --prefix=`pwd`/root --target-list=xtensa-softmmu,xtensaeb-softmmu
 ```
 
-# Build qemu on linux with python3, i.e. for Arch
+# Build qemu on linux with python3, i.e. on arch linux
 ```
 ../qemu-xtensa-esp32/configure --disable-werror --prefix=`pwd`/root --target-list=xtensa-softmmu,xtensaeb-softmmu --python=/usr/bin/python2
 ```
@@ -265,20 +266,27 @@ the same app in qemu.
 
 
 
-UART emulation is not so good as output is only on stderr. Also interrupts are not emulated.
+UART emulation is not so good as output is primaraly on stderr. Also interrupts are not emulated so well.
 esp32.c creates a 3 threads with socket on port 8880-8882 tto allow connect to the serial port over a socket. 
 In the starting terminal you can see output from all uarts mixed. However if you want to see output from only one uart,
 do, 
-nc 127.0.0.1 8880
+    nc 127.0.0.1 8880
+or
+    nc 127.0.0.1 8881
+for uart 0.
 
-
-When running I advise that you patch gdb as described in this document or use the gdb provided in the /bin directory (linux 64 bit). This improves the debugging exerience quite a bit.
+When running I advise that you build a patched gdb as described in this document or use the gdb provided in the /bin directory (linux 64 bit). This improves the debugging exerience quite a bit. The xtensa-esp32-elf-gdb.arch is built for arch linux.
 
 When debugging in the rom you can use,
 ```
     (gdb) add-symbol-file rom.elf 0x40000000
 ```
 This also works for the original gdb and gives you all names of the functions in rom0.
+
+You can get and compile your own elf file from rom.S found here,
+https://github.com/cesanta/mongoose-os/tree/master/common/platforms/esp32/rom
+Or build your own  from esp-idf/components/esp32/ld/esp32.rom.ld:
+//   sort -k 5 esp32.rom.ld | perl -npe 's/=/,/; s/;//'
 
 
 To setup esp-idf do, 
@@ -297,10 +305,11 @@ export IDF_PATH=~/esp/esp-idf
 
 #  Recomended version of esp-idf for qemu.
 
-Now  esp_crosscore_int_send_yield is implemented.
+You can most likely use the latest version of esp-idf, just dont start wifi and run on one core only.
+Dual core should work because  esp_crosscore_int_send_yield is implemented.
 Also rtc_clk_xtal_freq_get works.
-However one thread seems to get stuck waiting for s_flash_op_complete,
-Workaround until qemu problem is fixed,
+However one thread sometimes seems to get stuck waiting for s_flash_op_complete,
+Workaround until the problem is fixed,
 ```
 (gdb) thread 2
 (gdb) set s_flash_op_complete=1
@@ -325,13 +334,9 @@ For a short time there was a divide by zero.
 ```
 
 
-
-There can be some issues when using nvs_flash_init()
-If you get problems, try removing this call.
-
-It seems like the emulation has some problems with do_global_ctors().
+The emulation has also been some problems with do_global_ctors().
  should be available at this location... 0x3f409fb8
-__init_array_start , however nvs reuses 0x3f40000 as I have not gotten it to recognize that this is already mmapped by the bootloader.
+__init_array_start , however nvs reuses 0x3f40000 as I have not gotten it to recognize that this is already mmapped by the bootloader. However when running full bootloader 
 
 
 Or you can try version 2.0
@@ -354,6 +359,23 @@ esp-idf/components/esptool_py/esptool/esptool.py --chip esp32 -b 921600 -p /dev/
 Note that rom0 is smaller than the actual dump.
 Those two files will be loaded by qemu and must be in same directory as you start qemu.
 ```
+
+If you see this,
+```
+I (440) system_api: Base MAC address is not set, read default base MAC address from BLK0 of EFUSE
+I (1540) system_api: Base MAC address is not set, read default base MAC address from BLK0 of EFUSE
+W (2650) phy_init: failed to load RF calibration data (0x1102), falling back to full calibration
+I (3740) phy: error: pll_cal exceeds 2ms!!!
+I (4300) phy: error: pll_cal exceeds 2ms!!!
+I (4860) phy: error: pll_cal exceeds 2ms!!!
+I (5420) phy: error: pll_cal exceeds 2ms!!!
+I (5980) phy: error: pll_cal exceeds 2ms!!!
+I (6540) phy: error: pll_cal exceeds 2ms!!!
+I (7100) phy: error: pll_cal exceeds 2ms!!!
+I (7660) phy: error: pll_cal exceeds 2ms!!!
+```
+It is because you try to start wifi
+
 
 
 #  Dumping flash content.
@@ -380,29 +402,26 @@ but qemu will not run the bootloader as it loads the elf file directly.
 
 BOOTLOADER UPDATE
 ==================
-To get more correct mmap behaviour you can use the bootloader to start the application.
+To get more correct mmap behaviour now the bootloader runs first.
 
-Do a cp qemu-xtensa-esp32/hw/xtensa/esp32.c.bootloader  qemu-xtensa-esp32/hw/xtensa/esp32.c
-Then rebuild qemu.
+
 This emulation reqires that you generate a proper flash file first. 
 Serial flasher config  --->  Flash size (4 MB)
 
 Then run the ./qemu_flash program. (described earlier)
-./qemu_flash build/app-template.bin
+    ./qemu_flash build/app-template.bin
 
 Note that you have to use the .bin file as argument. This will generate a flash image with bootloader, partition information and flash file that the bootloder can use boot the proper application from.
 
-Now start the bootloder.
-xtensa-softmmu/qemu-system-xtensa -d unimp -cpu esp32 -M esp32 -m 4M  -kernel ~/esp/qemu_esp32/examples/06_1306_interactive/build/bootloader/bootloader.elf  -s    > io.txt
 
 To debug you can use,
-xtensa-esp32-elf-gdb.qemu   build/app-template.elf -ex 'target remote:1234'
-(gdb) b app_main
+    xtensa-esp32-elf-gdb.qemu   build/app-template.elf -ex 'target remote:1234'
+    (gdb) b app_main
 
 Or to debug the bootloader,
-xtensa-esp32-elf-gdb.qemu   build/bootloader/bootloader.elf -ex 'target remote:1234'
-(gdb) b bootloader_main
-(gdb) b bootloader_mmap
+    xtensa-esp32-elf-gdb.qemu   build/bootloader/bootloader.elf -ex 'target remote:1234'
+    (gdb) b bootloader_main
+    (gdb) b bootloader_mmap
 
 ```
 #define DPORT_PRO_FLASH_MMU_TABLE ((volatile uint32_t) 0x3FF10000)
@@ -1150,88 +1169,7 @@ However the work is not yet finished.
 
 ```  
 
-# Qemu backend network options:
-```  
-    -netdev user,id=str[,ipv4[=on|off]][,net=addr[/mask]][,host=addr]
-         [,ipv6[=on|off]][,ipv6-net=addr[/int]][,ipv6-host=addr]
-         [,restrict=on|off][,hostname=host][,dhcpstart=addr]
-         [,dns=addr][,ipv6-dns=addr][,dnssearch=domain][,tftp=dir]
-         [,bootfile=f][,hostfwd=rule][,guestfwd=rule][,smb=dir[,smbserver=addr]]
-                configure a user mode network backend with ID 'str',
-                its DHCP server and optional services
-    -netdev tap,id=str[,fd=h][,fds=x:y:...:z][,ifname=name][,script=file][,downscript=dfile]
-         [,helper=helper][,sndbuf=nbytes][,vnet_hdr=on|off][,vhost=on|off]
-         [,vhostfd=h][,vhostfds=x:y:...:z][,vhostforce=on|off][,queues=n]
-         [,poll-us=n]
-                configure a host TAP network backend with ID 'str'
-                use network scripts 'file' (default=/etc/qemu-ifup)
-                to configure it and 'dfile' (default=/etc/qemu-ifdown)
-                to deconfigure it
-                use '[down]script=no' to disable script execution
-                use network helper 'helper' (default=/home/olas/qemu_esp32/root/libexec/qemu-bridge-helper) to
-                configure it
-                use 'fd=h' to connect to an already opened TAP interface
-                use 'fds=x:y:...:z' to connect to already opened multiqueue capable TAP interfaces
-                use 'sndbuf=nbytes' to limit the size of the send buffer (the
-                default is disabled 'sndbuf=0' to enable flow control set 'sndbuf=1048576')
-                use vnet_hdr=off to avoid enabling the IFF_VNET_HDR tap flag
-                use vnet_hdr=on to make the lack of IFF_VNET_HDR support an error condition
-                use vhost=on to enable experimental in kernel accelerator
-                    (only has effect for virtio guests which use MSIX)
-                use vhostforce=on to force vhost on for non-MSIX virtio guests
-                use 'vhostfd=h' to connect to an already opened vhost net device
-                use 'vhostfds=x:y:...:z to connect to multiple already opened vhost net devices
-                use 'queues=n' to specify the number of queues to be created for multiqueue TAP
-                use 'poll-us=n' to speciy the maximum number of microseconds that could be
-                spent on busy polling for vhost net 
-                
-    -netdev bridge,id=str[,br=bridge][,helper=helper]
-                configure a host TAP network backend with ID 'str' that is
-                connected to a bridge (default=br0)
-                using the program 'helper (default=/home/olas/qemu_esp32/root/libexec/qemu-bridge-helper)
-
-
-
-     To debug lwip set #define LWIP_DEBUG 1 in cc.h
-     I think there is some problem with the heaps. When disabling debug of  heaps we get an error here
-     heap_alloc_caps_init()
-     vPortDefineHeapRegionsTagged.
-
-     I (32079) heap_alloc_caps: Initializing heap allocator:
-     I (32079) heap_alloc_caps: Region 19: 3FFB5640 len 0002A9C0 tag 0
-     I (32080) heap_alloc_caps: Region 25: 3FFE8000 len 00018000 tag 1
-
-     http://www.freertos.org/thread-local-storage-pointers.html
-
-     Add this for debugging in ethernet_input,ethernet.c.
-
-    printf("ethernet_input: dest:%"X8_F":%"X8_F":%"X8_F":%"X8_F":%"X8_F":%"X8_F", src:%"X8_F":%"X8_F":%"X8_F":%"X8_F":%"X8_F":%"X8_F", type:%"X16_F"\n",
-     (unsigned)ethhdr->dest.addr[0], (unsigned)ethhdr->dest.addr[1], (unsigned)ethhdr->dest.addr[2],
-     (unsigned)ethhdr->dest.addr[3], (unsigned)ethhdr->dest.addr[4], (unsigned)ethhdr->dest.addr[5],
-     (unsigned)ethhdr->src.addr[0], (unsigned)ethhdr->src.addr[1], (unsigned)ethhdr->src.addr[2],
-     (unsigned)ethhdr->src.addr[3], (unsigned)ethhdr->src.addr[4], (unsigned)ethhdr->src.addr[5],
-     (unsigned)htons(ethhdr->type));
-
-
-     // Some threads when running lwip and the echo task,
-     "tiT"   tcpip
-     "ech"
-     "mai"   main task
-     "IDL"   idle task
-
-      Yes! Got it to work with this.
-      xtensa-softmmu/qemu-system-xtensa -net nic,model=vlan0 -net user,id=simnet,ipver4=on,net=192.168.1.0/24,host=192.168.1.40,hostfwd=tcp::10077-192.168.1.3:7  -net dump,file=/tmp/vm0.pcap  -d guest_errors,unimp  -cpu esp32 -M esp32 -m 16M  -kernel  ~/esp/qemu_esp32/build/app-template.elf -s -S   > io.txt
-      nc 127.0.0.1 10077 
-
-      The options allows you to do connect to the echoserver
-      in order to test the echo server that is running on port 7
-      wireshark /tmp/vm0.pcap
-      However with latest esp-idf it is broken, needs debugging.
-
-```    
-
-
-http://blog.vmsplice.net/2011/04/how-to-capture-vm-network-traffic-using.html
+[Networking options in qemu](./QEMU_NET.md)
 
 ## Remote debugging with gdbstub.c
 It is a good idea to save the original  xtensa-esp32-elf-gdb as the one in the bin directory works best with qemu
