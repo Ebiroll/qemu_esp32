@@ -11,9 +11,13 @@ Clone from here  https://github.com/nkolban/ESP32_Explorer
 
   ./qemu_flash build/app-template.bin
 
-  Note that index.html is not in flash image
+   Note that index.html is not radable somehow
 
    xtensa-softmmu/qemu-system-xtensa -d unimp  -cpu esp32 -M esp32 -m 4M -net nic,model=vlan0 -net user,id=simnet,ipver4=on,net=192.168.4.0/24,host=192.168.4.40,hostfwd=tcp::10080-192.168.4.3:80  -net dump,file=/tmp/vm0.pcap  -kernel  ~/esp/qemu_esp32/examples/24_esp32_explorer/build/app-template.elf  -s  > io.tx
+
+
+   http://127.0.0.1:10080/ESP32/hello/test.txt
+   http://127.0.0.1:10080/index.html
 
 ```
 
