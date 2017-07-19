@@ -253,8 +253,8 @@ the same app in qemu.
         printf("Running in qemu\n");
         ESP_ERROR_CHECK( esp_event_loop_init(esp32_wifi_eventHandler, NULL) );
 
-        task_lwip_init(NULL);
-        /* better to do  xTaskCreatePinnedToCore(task_lwip_init, "loop", 4096, NULL, 14, NULL, 0); */
+        //task_lwip_init(NULL);
+        xTaskCreatePinnedToCore(task_lwip_init, "lwip_init", 2*4096, NULL, 14, NULL, 0); 
 
     }
     else {

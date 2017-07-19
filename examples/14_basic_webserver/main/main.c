@@ -15,6 +15,7 @@
 #include "lwip/api.h"
 #include "lwip/err.h"
 #include "lwip/netdb.h"
+#include "emul_ip.h"
 
 
 // HTTP headers and web pages
@@ -170,11 +171,9 @@ static void http_server(void *pvParameters) {
 // setup and start the wifi connection
 void wifi_setup() {
 	
-	event_group = xEventGroupCreate();
 		
 	tcpip_adapter_init();
 
-	ESP_ERROR_CHECK(esp_event_loop_init(event_handler, NULL));
 
 	wifi_init_config_t wifi_init_config = WIFI_INIT_CONFIG_DEFAULT();
 	ESP_ERROR_CHECK(esp_wifi_init(&wifi_init_config));
@@ -212,7 +211,18 @@ void app_main()
 	esp_log_level_set("wifi", ESP_LOG_NONE);
 
 	nvs_flash_init();
-	wifi_setup();
+	event_group = xEventGroupCreate();
+	ESP_ERROR_CHECK( esp_event_loop_init(event_handler, NULL) );
+	  
+	if (is_running_qemu()) {
+	  printf("Running in qemu\n");
+	  xTaskCreatePinnedToCore(task_lwip_init, "lwip_init", 2*4096, NULL, 14, NULL, 0); 
+
+	}
+	else {
+	  wifi_setup();
+	}
+	
 	gpio_setup();
 	
 	// wait for connection
@@ -228,12 +238,13 @@ void app_main()
 	printf("Gateway:     %s\n", ip4addr_ntoa(&ip_info.gw));	
 	
 	// run the mDNS daemon
-	mdns_server_t* mDNS = NULL;
-	ESP_ERROR_CHECK(mdns_init(TCPIP_ADAPTER_IF_STA, &mDNS));
-	ESP_ERROR_CHECK(mdns_set_hostname(mDNS, "esp32"));
-	ESP_ERROR_CHECK(mdns_set_instance(mDNS, "Basic HTTP Server"));
-	printf("mDNS started\n");
-	
+	if (!is_running_qemu()) {
+	  mdns_server_t* mDNS = NULL;
+	  ESP_ERROR_CHECK(mdns_init(TCPIP_ADAPTER_IF_STA, &mDNS));
+	  ESP_ERROR_CHECK(mdns_set_hostname(mDNS, "esp32"));
+	  ESP_ERROR_CHECK(mdns_set_instance(mDNS, "Basic HTTP Server"));
+	  printf("mDNS started\n");
+	}
 	// start the HTTP Server task
-    xTaskCreate(&http_server, "http_server", 2048, NULL, 5, NULL);
+        xTaskCreate(&http_server, "http_server", 2048, NULL, 5, NULL);
 }
