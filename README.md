@@ -27,6 +27,16 @@ ets_unpack_flash_code is not longer patched , qemu now relies on flash and MMU e
           [ ] Enable hardware SHA acceleration                                     
 
 So now the toflash.c program will overwrite the checksum with 00000
+If you insist on using an older esp-idf try commenting out this, as
+older bootloader relies on proper hash of the image
+
+    if (patch_hash==1) {
+      for (j=0;j<33;j++)
+	{
+          tmp_data[file_size-j]=0;
+	}
+    }
+
 
 ```
 
