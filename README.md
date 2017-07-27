@@ -17,11 +17,17 @@ ets_unpack_flash_code is not longer patched , qemu now relies on flash and MMU e
 > Serial flasher config  --->  Flash size (4 MB)
 
   However it seems that latest chages in the bootloader (esp-idf) breaks this,
-  flash hash caclulations dont match. This is probably due to a double error.
+  flash hash caclulations dont match.
+  This is because bootloader always use hardware acceleration to calculate the hash and
+  qemu does not emulate hardware SHA5 calculation.
 
 ```
- git checkout v2.0
- git submodule update --init
+  Component config  --->    
+       mbedTLS  --->
+          [ ] Enable hardware SHA acceleration                                     
+
+So now the toflash.c program will overwrite the checksum with 00000
+
 ```
 
 
