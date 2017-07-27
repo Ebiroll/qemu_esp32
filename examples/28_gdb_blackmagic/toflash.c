@@ -9,12 +9,12 @@
 // 0x8000 /home/olas/esp/esp-idf/examples/system/ota/build/partitions_two_ota.bin
 //
 
-void merge_flash(char *binfile,char *flashfile,int flash_pos)
+void merge_flash(char *binfile,char *flashfile,int flash_pos,int patch_hash)
 {
     FILE *fbin;
     FILE *fflash;
     unsigned char *tmp_data;
-    unsigned char *flash_data;
+    int j=0;
 
     int file_size=0;
     int flash_size=0;
@@ -60,6 +60,14 @@ void merge_flash(char *binfile,char *flashfile,int flash_pos)
 
     int len_read=fread(tmp_data,sizeof(char),file_size,fbin);
 
+    if (patch_hash==1) {
+      for (j=0;j<33;j++)
+	{
+          tmp_data[file_size-j]=0;
+	}
+    }
+
+    
     int len_write=fwrite(tmp_data,sizeof(char),file_size,fflash);
 
     if (len_read!=len_write) {
@@ -86,15 +94,11 @@ int main(int argc,char *argv[])
 
 
     // Add bootloader
-    merge_flash("build/bootloader/bootloader.bin","esp32flash.bin",0x1000);
+    merge_flash("build/bootloader/bootloader.bin","esp32flash.bin",0x1000,0);
     // Add partitions, test OTA here
-    merge_flash("build/partitions_two_ota.bin","esp32flash.bin",0x8000);
+    merge_flash("build/partitions_two_ota.bin","esp32flash.bin",0x8000,0);
     // Add application
-    merge_flash(argv[1],"esp32flash.bin",0x10000);
-
-    // Add application at OTA1
-    merge_flash(argv[1],"esp32flash.bin",0x110000);
-
+    merge_flash(argv[1],"esp32flash.bin",0x10000,1);
 
     system("cp esp32flash.bin ~/qemu_esp32");
 
