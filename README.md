@@ -16,6 +16,15 @@ ets_unpack_flash_code is not longer patched , qemu now relies on flash and MMU e
 
 > Serial flasher config  --->  Flash size (4 MB)
 
+  However it seems that latest chages in the bootloader (esp-idf) breaks this,
+  flash hash caclulations dont match. This is probably due to a double error.
+
+```
+ git checkout v2.0
+ git submodule update --init
+```
+
+
 
 To create a esp32flash.bin file build `qemu_flash` tool found in this repository.
 
