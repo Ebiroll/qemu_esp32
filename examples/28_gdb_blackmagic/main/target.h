@@ -29,6 +29,7 @@
 
 typedef struct target_s target;
 typedef uint32_t target_addr;
+typedef uint32_t mode_t;
 struct target_controller;
 
 int adiv5_swdp_scan(void);

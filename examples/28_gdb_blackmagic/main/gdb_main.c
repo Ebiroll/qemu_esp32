@@ -52,11 +52,11 @@ static char pbuf[BUF_SIZE+1];
 static target *cur_target;
 static target *last_target;
 
-static void handle_q_packet(char *packet, int len);
-static void handle_v_packet(char *packet, int len);
-static void handle_z_packet(char *packet, int len);
+ void handle_q_packet(char *packet, int len);
+ void handle_v_packet(char *packet, int len);
+ void handle_z_packet(char *packet, int len);
 
-static void gdb_target_destroy_callback(struct target_controller *tc, target *t)
+ void gdb_target_destroy_callback(struct target_controller *tc, target *t)
 {
 	(void)tc;
 	if (cur_target == t)
@@ -76,7 +76,7 @@ static void gdb_target_printf(struct target_controller *tc,
 static struct target_controller gdb_controller = {
 	.destroy_callback = gdb_target_destroy_callback,
 	.printf = gdb_target_printf,
-
+/*
 	.open = hostio_open,
 	.close = hostio_close,
 	.read = hostio_read,
@@ -89,6 +89,7 @@ static struct target_controller gdb_controller = {
 	.gettimeofday = hostio_gettimeofday,
 	.isatty = hostio_isatty,
 	.system = hostio_system,
+*/
 };
 
 int gdb_main_loop(struct target_controller *tc, bool in_syscall)
@@ -202,7 +203,7 @@ int gdb_main_loop(struct target_controller *tc, bool in_syscall)
 			}
 		case 'F':	/* Semihosting call finished */
 			if (in_syscall) {
-				return hostio_reply(tc, pbuf, size);
+				//return hostio_reply(tc, pbuf, size);
 			} else {
 				DEBUG("*** F packet when not in syscall! '%s'\n", pbuf);
 				gdb_putpacketz("");
@@ -282,7 +283,7 @@ int gdb_main_loop(struct target_controller *tc, bool in_syscall)
 	}
 }
 
-static void
+void
 handle_q_string_reply(const char *str, const char *param)
 {
 	unsigned long addr, len;
@@ -304,7 +305,7 @@ handle_q_string_reply(const char *str, const char *param)
 		gdb_putpacketz("E01");
 }
 
-static void
+void
 handle_q_packet(char *packet, int len)
 {
 	uint32_t addr, alen;
@@ -370,7 +371,7 @@ handle_q_packet(char *packet, int len)
 	}
 }
 
-static void
+void
 handle_v_packet(char *packet, int plen)
 {
 	unsigned long addr, len;
@@ -438,7 +439,7 @@ handle_v_packet(char *packet, int plen)
 	}
 }
 
-static void
+void
 handle_z_packet(char *packet, int plen)
 {
 	(void)plen;

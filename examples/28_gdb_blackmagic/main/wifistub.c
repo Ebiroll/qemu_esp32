@@ -26,7 +26,8 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 #include "lwip/sockets.h"
-
+#include "soc/cpu.h"
+#include "gdb_if.h"
 
 //Length of buffer used to reserve GDB commands. Has to be at least able to fit the G command, which
 //implies a minimum size of about 320 bytes.
@@ -130,6 +131,37 @@ static void ATTR_GDBFN gdbPacketStr(char *c) {
 		c++;
 	}
 }
+
+int gdb_if_init(void) 
+{
+	return 0;
+}
+unsigned char gdb_if_getchar(void) {
+	return gdbRecvChar();
+}
+
+unsigned char gdb_if_getchar_to(int timeout) {
+    int32_t lReceivedValue;
+    BaseType_t xStatus=pdFAIL;
+    const TickType_t xTicksToWait = pdMS_TO_TICKS(timeout);
+
+
+    while (xStatus!=pdPASS) {
+		xStatus = xQueueReceive ( receive_queue, &lReceivedValue, xTicksToWait );
+		if( xStatus == pdPASS ) {
+			//ESP_LOGI(TAG, "(%c)", lReceivedValue);
+			return (lReceivedValue);
+		} else {
+			//ESP_LOGI(TAG,  "Could not receive from the queue.");
+		}
+	}
+	return(0);
+}
+void gdb_if_putchar(unsigned char c, int flush)
+{
+	gdbPacketChar(c);
+}
+
 
 //Send a hex val as part of a packet. 'bits'/4 dictates the number of hex chars sent.
 static void ATTR_GDBFN gdbPacketHex(int val, int bits) {
@@ -240,6 +272,9 @@ typedef struct {
 	uint32_t f[16];
 	uint32_t fcr;
 	uint32_t fsr;
+
+	// More registers used by qemu
+	//uint32_t qemu[64];
 } GdbRegFile;
 
 
@@ -315,16 +350,23 @@ static void wifiDumpHwToRegfile() {
 	for (i=0; i<16; i++) gdbRegFile.a[i]=frameAregs[i];
 	for (i=16; i<64; i++) gdbRegFile.a[i]=0xDEADBEEF;
 	gdbRegFile.lbeg=0xdeadbeef;  // frame->lbeg;
+	RSR(LBEG, gdbRegFile.lbeg);
+
 	gdbRegFile.lend=0xdeadbeef; //frame->lend;
+	RSR(LEND, gdbRegFile.lend);
+
 	gdbRegFile.lcount=0xdeadbeef; //frame->lcount;
 	gdbRegFile.sar=0xdeadbeef; //frame->sar;
 	//All windows have been spilled to the stack by the ISR routines. The following values should indicate that.
 	gdbRegFile.sar=0xdeadbeef; //frame->sar;
+	RSR(SAR, gdbRegFile.sar);
+
 	gdbRegFile.windowbase=0; //0
 	gdbRegFile.windowstart=0x1; //1
 	gdbRegFile.configid0=0xdeadbeef; //ToDo
 	gdbRegFile.configid1=0xdeadbeef; //ToDo
 	gdbRegFile.ps=0xdeadbeef; //frame->ps-PS_EXCM_MASK;
+
 	gdbRegFile.threadptr=0xdeadbeef; //ToDo
 	gdbRegFile.br=0xdeadbeef; //ToDo
 	gdbRegFile.scompare1=0xdeadbeef; //ToDo

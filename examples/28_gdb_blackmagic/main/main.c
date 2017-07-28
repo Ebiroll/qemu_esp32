@@ -22,6 +22,7 @@
 #include "lwip/dns.h"
 #include "emul_ip.h"
 #include "freertos/queue.h"
+#include "gdb_main.h"
 
 extern void set_all_exception_handlers(void);
 extern void wifi_gdb_handler(int socket);
@@ -72,8 +73,7 @@ void process_gdb_request(void *p)
     BaseType_t xStatus=pdFAIL;
 
     int32_t lValueToSend; 
-    const TickType_t xTicksToWait = pdMS_TO_TICKS(1100);
-
+    //  const TickType_t xTicksToWait = pdMS_TO_TICKS(1100);
 
 
 	while (1) {
@@ -239,7 +239,8 @@ void gdb_application_thread(void *pvParameters)
 			printf("accepted new gdb connection\n");
                         gdb_param1->new_sd = new_sd;
 	                    xTaskCreate(&process_gdb_request, "gdb_connection",2*4096, (void*)gdb_param1, 20, NULL);
-                        wifi_gdb_handler(new_sd);  
+                        gdb_main();
+                        //wifi_gdb_handler(new_sd);  
 	        }
 	}
 }

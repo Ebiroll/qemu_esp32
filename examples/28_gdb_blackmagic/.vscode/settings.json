@@ -10,6 +10,11 @@
         "projdefs.h": "c",
         "stdint.h": "c",
         "io_mux_reg.h": "c",
-        "gdbstub-cfg.h": "c"
+        "gdbstub-cfg.h": "c",
+        "hal.h": "c",
+        "specreg.h": "c",
+        "cdefs.h": "c",
+        "gdbstub.c": "cpp",
+        "wifistub.c": "cpp"
     }
 }
