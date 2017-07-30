@@ -206,6 +206,8 @@ static void initialise_wifi(void)
     ESP_ERROR_CHECK( esp_wifi_start() );
 }
 
+void set_gdb_socket(int socket);
+
 
 void gdb_application_thread(void *pvParameters)
 {
@@ -235,11 +237,12 @@ void gdb_application_thread(void *pvParameters)
 	size = sizeof(remote);
 
 	while (1) {
+        xTaskCreate(&gdb_main, "gdb_main",2*4096, (void*)gdb_param1, 20, NULL);
 		if ((new_sd = accept(sock, (struct sockaddr *)&remote, (socklen_t *)&size)) > 0) {
 			printf("accepted new gdb connection\n");
                         gdb_param1->new_sd = new_sd;
 	                    xTaskCreate(&process_gdb_request, "gdb_connection",2*4096, (void*)gdb_param1, 20, NULL);
-                        gdb_main();
+                        set_gdb_socket(new_sd);
                         //wifi_gdb_handler(new_sd);  
 	        }
 	}
@@ -350,7 +353,7 @@ void app_main()
     //send_queue = xQueueCreate( 100, sizeof( int32_t ) );
 
     // Wait for this...
-    //set_all_exception_handlers();
+     set_all_exception_handlers();
 
     xTaskCreate(&gdb_application_thread, "gdb_thread", 4*4096, NULL, 17, NULL);
 }

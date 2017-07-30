@@ -32,6 +32,8 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
+#define  GDBSTUB_THREAD_AWARE 1
+
 
 extern int  gdbRecvChar();
 extern void  gdbSendChar(char c);

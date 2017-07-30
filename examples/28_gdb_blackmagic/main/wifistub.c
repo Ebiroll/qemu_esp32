@@ -159,7 +159,8 @@ unsigned char gdb_if_getchar_to(int timeout) {
 }
 void gdb_if_putchar(unsigned char c, int flush)
 {
-	gdbPacketChar(c);
+	gdbSendChar(c);
+	//gdbPacketChar(c);
 }
 
 
@@ -487,6 +488,11 @@ static int gdbReadCommand() {
 		gdbSendChar('+');
 		return gdbHandleCommand(cmd, p);
 	}
+}
+
+
+void set_gdb_socket(int socket) {
+   gdb_socket=socket;
 }
 
 // esp_gdbstub

@@ -5,7 +5,7 @@ https://github.com/blacksphere/blackmagic
 The idea is to add extended-remote and
 (gdb) load filename.bin capabilities.
 
-Some useful monitor commands would also be bice to be able to fix
+Some useful monitor commands would also be nice to be able to fix
 the annoying qemu flash emulation bug.
 
 
