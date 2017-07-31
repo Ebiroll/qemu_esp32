@@ -75,7 +75,7 @@ struct xtensa_exception_frame_t {
 
 // Floating pont registers???
 
-}
+};
 
 typedef struct  {
 	uint32_t pc;
