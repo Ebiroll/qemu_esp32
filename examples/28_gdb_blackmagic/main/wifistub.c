@@ -80,14 +80,33 @@ int ATTR_GDBFN gdbRecvChar() {
 	return 0;
 }
 
+#define OUT_BUFFER_LEN 512
+static unsigned char outbuf[OUT_BUFFER_LEN];
+static int buf_head = 0;
+
+
 //Send a char to the uart.
 void ATTR_GDBFN gdbSendChar(char c) {
    //while (((READ_PERI_REG(UART_STATUS_REG(0))>>UART_TXFIFO_CNT_S)&UART_TXFIFO_CNT)>=126) ;
    //WRITE_PERI_REG(UART_FIFO_REG(0), c);
     int  nwrote;
 
+
     //printf("(%c)",c);
 	if (gdb_socket>0) {
+
+		// Flush buffered data
+		if (buf_head>0) {
+			printf("Flush %s\r\n", outbuf);
+			if ((nwrote = write(gdb_socket, outbuf, buf_head)) < 0) {
+				printf("%s: ERROR responding to gdb request. written = %d\r\n",__FUNCTION__, nwrote);
+				//printf("Closing socket %d\r\n", sd);
+				return;
+			}
+			buf_head=0;
+		}
+
+
 		if ((nwrote = write(gdb_socket, &c, 1)) < 0) {
 				printf("%s: ERROR responding to gdb request. written = %d\r\n",__FUNCTION__, nwrote);
 				//printf("Closing socket %d\r\n", sd);
@@ -157,12 +176,31 @@ unsigned char gdb_if_getchar_to(int timeout) {
 	}
 	return(0);
 }
+
+
+
 void gdb_if_putchar(unsigned char c, int flush)
 {
-	gdbSendChar(c);
-	//gdbPacketChar(c);
+	int  nwrote;
+	if (gdb_socket>0) {
+		outbuf[buf_head++] = c;
+		if ((flush) || (buf_head==OUT_BUFFER_LEN)) {
+			//send(gdb_if_conn, (void *)outbuf, buf_head, 0);
+			outbuf[buf_head]=0;
+			printf("->%s\r\n", outbuf);
+			if ((nwrote = write(gdb_socket, outbuf, buf_head)) < 0) {
+				printf("%s: ERROR responding to gdb request. written = %d\r\n",__FUNCTION__, nwrote);
+				//printf("Closing socket %d\r\n", sd);
+				return;
+		   }
+		   buf_head=0;
+		}
+	}
 }
 
+// See also
+//gdbSendChar(c);
+//gdbPacketChar(c);
 
 //Send a hex val as part of a packet. 'bits'/4 dictates the number of hex chars sent.
 static void ATTR_GDBFN gdbPacketHex(int val, int bits) {

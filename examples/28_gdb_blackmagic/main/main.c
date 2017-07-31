@@ -237,12 +237,13 @@ void gdb_application_thread(void *pvParameters)
 	size = sizeof(remote);
 
 	while (1) {
-        xTaskCreate(&gdb_main, "gdb_main",2*4096, (void*)gdb_param1, 20, NULL);
+        //xTaskCreate(&gdb_main, "gdb_main",2*4096, (void*)gdb_param1, 20, NULL);
 		if ((new_sd = accept(sock, (struct sockaddr *)&remote, (socklen_t *)&size)) > 0) {
 			printf("accepted new gdb connection\n");
                         gdb_param1->new_sd = new_sd;
 	                    xTaskCreate(&process_gdb_request, "gdb_connection",2*4096, (void*)gdb_param1, 20, NULL);
                         set_gdb_socket(new_sd);
+                        gdb_main();
                         //wifi_gdb_handler(new_sd);  
 	        }
 	}

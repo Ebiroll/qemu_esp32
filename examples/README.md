@@ -1,6 +1,9 @@
-#  Examples to test qemu or just fun.
+#  Examples to test qemu or just for fun.
 Most of these examples has run in qemu but they can break as
 esp-idf evolves.
+
+pcbreflux, also has nice examples.
+    https://github.com/pcbreflux/espressif/tree/master/esp32/app
 
     01_max_malloc, check how much memory that is possible to allocate
     02_uart, Uart testing

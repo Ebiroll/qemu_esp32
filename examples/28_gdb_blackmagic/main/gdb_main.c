@@ -106,7 +106,7 @@ int gdb_main_loop(struct target_controller *tc, bool in_syscall)
 		switch(pbuf[0]) {
 		/* Implementation of these is mandatory! */
 		case 'g': { /* 'g': Read general registers */
-			//ERROR_IF_NO_TARGET();
+			ERROR_IF_NO_TARGET();
 			uint8_t arm_regs[target_regs_size(cur_target)];
 			target_regs_read(cur_target, arm_regs);
 			gdb_putpacket(hexify(pbuf, arm_regs, sizeof(arm_regs)),
@@ -115,7 +115,7 @@ int gdb_main_loop(struct target_controller *tc, bool in_syscall)
 			}
 		case 'm': {	/* 'm addr,len': Read len bytes from addr */
 			uint32_t addr, len;
-			//ERROR_IF_NO_TARGET();
+			ERROR_IF_NO_TARGET();
 			sscanf(pbuf, "m%" SCNx32 ",%" SCNx32, &addr, &len);
 			DEBUG("m packet: addr = %" PRIx32 ", len = %" PRIx32 "\n", addr, len);
 			uint8_t mem[len];
@@ -126,7 +126,7 @@ int gdb_main_loop(struct target_controller *tc, bool in_syscall)
 			break;
 			}
 		case 'G': {	/* 'G XX': Write general registers */
-			//ERROR_IF_NO_TARGET();
+			ERROR_IF_NO_TARGET();
 			uint8_t arm_regs[target_regs_size(cur_target)];
 			unhexify(arm_regs, &pbuf[1], sizeof(arm_regs));
 			target_regs_write(cur_target, arm_regs);
@@ -136,7 +136,7 @@ int gdb_main_loop(struct target_controller *tc, bool in_syscall)
 		case 'M': { /* 'M addr,len:XX': Write len bytes to addr */
 			uint32_t addr, len;
 			int hex;
-			//ERROR_IF_NO_TARGET();
+			ERROR_IF_NO_TARGET();
 			sscanf(pbuf, "M%" SCNx32 ",%" SCNx32 ":%n", &addr, &len, &hex);
 			DEBUG("M packet: addr = %" PRIx32 ", len = %" PRIx32 "\n", addr, len);
 			uint8_t mem[len];
@@ -251,7 +251,7 @@ int gdb_main_loop(struct target_controller *tc, bool in_syscall)
 		case 'X': { /* 'X addr,len:XX': Write binary data to addr */
 			uint32_t addr, len;
 			int bin;
-			//ERROR_IF_NO_TARGET();
+			ERROR_IF_NO_TARGET();
 			sscanf(pbuf, "X%" SCNx32 ",%" SCNx32 ":%n", &addr, &len, &bin);
 			DEBUG("X packet: addr = %" PRIx32 ", len = %" PRIx32 "\n", addr, len);
 			if (target_mem_write(cur_target, addr, pbuf+bin, len))
@@ -272,7 +272,7 @@ int gdb_main_loop(struct target_controller *tc, bool in_syscall)
 		/* These packet implement hardware break-/watchpoints */
 		case 'Z':	/* Z type,addr,len: Set breakpoint packet */
 		case 'z':	/* z type,addr,len: Clear breakpoint packet */
-			//ERROR_IF_NO_TARGET();
+			ERROR_IF_NO_TARGET();
 			handle_z_packet(pbuf, size);
 			break;
 
@@ -310,9 +310,10 @@ handle_q_packet(char *packet, int len)
 {
 	uint32_t addr, alen;
 
-	if(!strncmp(packet, "qRcmd,", 6)) {
+	if((strncmp(packet, "qRcmd,", 6)==0) || (strncmp(packet, "qTStatus,", 6)==0)) {
 		char *data;
 		int datalen;
+		printf("----------------\n");
 
 		/* calculate size and allocate buffer for command */
 		datalen = (len - 6) / 2;
@@ -331,7 +332,15 @@ handle_q_packet(char *packet, int len)
 
 	} else if (!strncmp (packet, "qSupported", 10)) {
 		/* Query supported protocol features */
-		gdb_putpacket_f("PacketSize=%X;qXfer:memory-map:read+;qXfer:features:read+", BUF_SIZE);
+		/*
+			const char * features =
+		"swbreak+;"
+		"hwbreak+;"
+		"qXfer:threads:read+;"
+		"PacketSize=255";
+*/
+		//gdb_putpacket_f("PacketSize=%X;qXfer:memory-map:read+;qXfer:features:read+", BUF_SIZE);
+        gdb_putpacket_f("PacketSize=%X;swbreak+;hwbreak+;qXfer:threads:read+", BUF_SIZE);
 
 	} else if (strncmp (packet, "qXfer:memory-map:read::", 23) == 0) {
 		/* Read target XML memory map */
@@ -468,8 +477,11 @@ handle_z_packet(char *packet, int plen)
 	}
 }
 
+
+void esp32_probe(struct target_controller *controller);
 void gdb_main(void)
 {
+	esp32_probe(&gdb_controller);
 	gdb_main_loop(&gdb_controller, false);
 }
 
