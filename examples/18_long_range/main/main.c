@@ -231,7 +231,7 @@ const char *
 wifi_sniffer_packet_type2str(wifi_promiscuous_pkt_type_t type)
 {
 	switch(type) {
-	case WIFI_PKT_CTRL: return "CTRL";
+	  //case WIFI_PKT_CTRL: return "CTRL";
 	case WIFI_PKT_MGMT: return "MGMT";
 	case WIFI_PKT_DATA: return "DATA";
 	default:	
