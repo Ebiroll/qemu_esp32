@@ -34,6 +34,8 @@
 #include "command.h"
 #include "crc32.h"
 #include "platform.h"
+#include "gdbstub-freertos.h"
+
 
 enum gdb_signal {
 	GDB_SIGINT = 2,
@@ -92,11 +94,66 @@ static struct target_controller gdb_controller = {
 */
 };
 
+#define ST_ENDPACKET	-1
+#define ST_ERR			-2
+#define ST_OK			-3
+#define ST_CONT			-4
+
+
+// Grab a hex value from the gdb packet. Ptr will get positioned on the end
+// of the hex string, as far as the routine has read into it. Bits/4 indicates
+// the max amount of hex chars it gobbles up. Bits can be -1 to eat up as much
+// hex chars as possible.
+static long gdb_get_hex_val(uint8_t **ptr, size_t bits) {
+	size_t i;
+	uint32_t no;
+	uint32_t v = 0;
+	char c;
+	no = bits / 4;
+	if (bits == -1) {
+		no = 64;
+	}
+	for (i = 0; i < no; i++) {
+		c = **ptr;
+		(*ptr)++;
+		if (c >= '0' && c <= '9') {
+			v <<= 4;
+			v |= (c - '0');
+		} else if (c >= 'A' && c <= 'F') {
+			v <<= 4;
+			v |= (c - 'A') + 10;
+		} else if (c >= 'a' && c <= 'f') {
+			v <<= 4;
+			v |= (c - 'a') + 10;
+		} else if (c == '#') {
+			if (bits == -1) {
+				(*ptr)--;
+				return v;
+			}
+			return ST_ENDPACKET;
+		} else {
+			if (bits == -1) {
+				(*ptr)--;
+				return v;
+			}
+			return ST_ERR;
+		}
+	}
+	return v;
+}
+
 int gdb_main_loop(struct target_controller *tc, bool in_syscall)
 {
 	int size;
 	bool single_step = false;
 
+#if 0
+	uint8_t arm_regs[target_regs_size(cur_target)];
+	target_regs_read(cur_target, arm_regs);
+	gdb_putpacket(hexify(pbuf, arm_regs, sizeof(arm_regs)),
+					sizeof(arm_regs) * 2);
+
+#endif
 	DEBUG("Entring GDB protocol main loop\n");
 	/* GDB protocol main loop */
 	while(1) {
@@ -275,6 +332,20 @@ int gdb_main_loop(struct target_controller *tc, bool in_syscall)
 			ERROR_IF_NO_TARGET();
 			handle_z_packet(pbuf, size);
 			break;
+		case 'T':  // Find if thread is alive
+			gdb_putpacketz("OK");
+			break;
+	    case 'H':
+		case 'h':
+			// Set thread for memory and register operations
+			if (pbuf[1] == 'g') {
+				uint8_t *data=(uint8_t *)&pbuf[2];
+				uint32_t thread = gdb_get_hex_val(data, -1);
+				gdbstub_freertos_task_select(thread);
+			}
+			gdb_putpacketz("OK");
+		break;
+
 
 		default: 	/* Packet not implemented */
 			DEBUG("*** Unsupported packet: %s\n", pbuf);
@@ -309,11 +380,23 @@ void
 handle_q_packet(char *packet, int len)
 {
 	uint32_t addr, alen;
+    const char * q_threads_read = "Xfer:threads:read";
 
-	if((strncmp(packet, "qRcmd,", 6)==0) || (strncmp(packet, "qTStatus,", 6)==0)) {
+ 	if (strncmp(packet, "qTStatus,", 8)==0) {
+		gdb_putpacketz("T0;tnotrun:0");
+	 }
+
+	if (strncmp(packet, q_threads_read, 17) == 0) {
+		printf("----------------\n");
+		gdb_putpacketz("");
+
+		// Unfortunayrly does not work
+		//gdbstub_freertos_task_list();
+	}
+
+	if((strncmp(packet, "qRcmd,", 6)==0)) {
 		char *data;
 		int datalen;
-		printf("----------------\n");
 
 		/* calculate size and allocate buffer for command */
 		datalen = (len - 6) / 2;
@@ -478,10 +561,11 @@ handle_z_packet(char *packet, int plen)
 }
 
 
-void esp32_probe(struct target_controller *controller);
+target *esp32_probe(struct target_controller *controller);
+
 void gdb_main(void)
 {
-	esp32_probe(&gdb_controller);
+	cur_target = esp32_probe(&gdb_controller);
 	gdb_main_loop(&gdb_controller, false);
 }
 

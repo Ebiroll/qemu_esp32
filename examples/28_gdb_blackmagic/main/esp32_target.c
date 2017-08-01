@@ -28,6 +28,7 @@
 #include "general.h"
 #include "target.h"
 #include "target_internal.h"
+#include "gdbstub-freertos.h"
 
 #include <unistd.h>
 
@@ -292,7 +293,7 @@ static void esp32_priv_free(void *priv)
 	free(priv);
 }
 
-bool esp32_probe(struct target_controller *controller)
+target *esp32_probe(struct target_controller *controller)
 {
 	target *t;
 
@@ -319,7 +320,7 @@ bool esp32_probe(struct target_controller *controller)
 	t->halt_request = esp32_halt_request;
 	t->halt_poll = esp32_halt_poll;
 	t->halt_resume = esp32_halt_resume;
-	t->regs_size = 104*4;
+	t->regs_size = sizeof(GdbRegFile);
 
 	t->breakwatch_set = esp32_breakwatch_set;
 	t->breakwatch_clear = esp32_breakwatch_clear;
@@ -331,7 +332,7 @@ bool esp32_probe(struct target_controller *controller)
 
     target_attach(t,controller);
 
-	return true;
+	return t;
 }
 
 bool esp32_attach(target *t)
@@ -363,6 +364,7 @@ bool esp32_attach(target *t)
 
 void esp32_detach(target *t)
 {
+	printf("esp32_detach\n");
 }
 
 enum { DB_DHCSR, DB_DCRSR, DB_DCRDR, DB_DEMCR };
@@ -371,11 +373,20 @@ static void esp32_regs_read(target *t, void *data)
 {
 	printf("esp32_regs_read\n");
 
+	if (!gdbstub_freertos_task_selected()) {
+  	  gdbstub_freertos_regs_read();
+	  return;
+	}
+	//gdbRegFile;
+	int *p=(int*)&gdbRegFile;
+	memcpy(p,data,sizeof(gdbRegFile));
 }
 
 static void esp32_regs_write(target *t, const void *data)
 {
 		printf("esp32_regs_write\n");
+		int *p=(int*)&gdbRegFile;
+		memcpy(data,p,sizeof(gdbRegFile));
 }
 
 static uint32_t esp32_pc_read(target *t)
@@ -400,10 +411,15 @@ static void esp32_reset(target *t)
 
 static void esp32_halt_request(target *t)
 {
+	  printf("esp32_halt_request\n");
+
+	  
 }
 
 static enum target_halt_reason esp32_halt_poll(target *t, target_addr *watch)
 {
+	printf("esp32_halt_poll\n");
+
 	return TARGET_HALT_BREAKPOINT;
 }
 

@@ -19,6 +19,8 @@
 
 static size_t task_count = 0;
 static size_t task_selected = 0;
+static int task_array_filled=0;
+
 static struct {
 	uint32_t * stack;
 	TaskHandle_t handle;
@@ -104,6 +106,8 @@ static void fill_task_array() {
 #if INCLUDE_vTaskSuspend
 	process_task_list(&xSuspendedTaskList);
 #endif
+
+  task_array_filled=1;
 }
 
 
@@ -125,7 +129,7 @@ void gdbstub_freertos_task_list() {
 	 */
 
 	//for (size_t i = 0; i < task_count - 1; i++) {
-	for (size_t i = 0; i < 6 - 1; i++) {
+	for (size_t i = 0; i < 2 - 1; i++) {
 		gdbstub_send_task(i + 1, (char *) pcTaskGetTaskName(task_list[i].handle));
 	}
 
@@ -146,6 +150,10 @@ bool gdbstub_freertos_task_selected() {
 }
 
 void gdbstub_freertos_regs_read() {
+	if (task_array_filled==0) {
+		fill_task_array();
+	}
+
 	// task_selected was checked before
 	gdb_packet_start();
 

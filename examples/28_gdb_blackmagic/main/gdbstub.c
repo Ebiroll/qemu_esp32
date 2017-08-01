@@ -18,6 +18,8 @@
 #include "gdbstub-cfg.h"
 #include "gdbstub-freertos.h"
 #include "gdbstub-internal.h"
+#include "gdb_if.h"
+
 
 #include <sys/reent.h>
 #include <stdlib.h>
@@ -171,7 +173,7 @@ void gdb_packet_char(char c) {
 // Send a string as part of a packet
 void gdb_packet_str(const char * c) {
 	while (*c != 0) {
-		gdb_packet_char(*c);
+		gdb_if_putchar(*c,false);
 		c++;
 	}
 }
@@ -181,7 +183,7 @@ void gdb_packet_hex(int val, int bits) {
 	char hexChars[] = "0123456789abcdef";
 	int i;
 	for (i = bits; i > 0; i -= 4) {
-		gdb_packet_char(hexChars[(val >> (i - 4)) & 0xf]);
+		gdb_if_putchar(hexChars[(val >> (i - 4)) & 0xf],false);
 	}
 }
 

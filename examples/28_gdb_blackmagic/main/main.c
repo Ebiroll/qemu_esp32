@@ -353,8 +353,8 @@ void app_main()
     receive_queue = xQueueCreate( 100, sizeof( int32_t ) );
     //send_queue = xQueueCreate( 100, sizeof( int32_t ) );
 
-    // Wait for this...
-     set_all_exception_handlers();
+    // Dont yet do this...
+    // set_all_exception_handlers();
 
     xTaskCreate(&gdb_application_thread, "gdb_thread", 4*4096, NULL, 17, NULL);
 }
