@@ -382,6 +382,28 @@ handle_q_packet(char *packet, int len)
 	uint32_t addr, alen;
     const char * q_threads_read = "Xfer:threads:read";
 
+
+    // Breakpoint marker
+ 	if (strncmp(packet, "qTfV", 4)==0) {
+		gdb_putpacketz("");
+	 }
+
+ 	if (strncmp(packet, "qTsV", 4)==0) {
+		gdb_putpacketz("");
+	}
+
+
+
+ 	if (strncmp(packet, "qfThreadInfo", 11)==0) {
+		gdb_putpacketz("m 1");
+	 }
+
+ 	if (strncmp(packet, "qsThreadInfo", 11)==0) {
+		gdb_putpacketz("m l");
+	 }
+
+	 
+
  	if (strncmp(packet, "qTStatus,", 8)==0) {
 		gdb_putpacketz("T0;tnotrun:0");
 	 }
@@ -423,7 +445,7 @@ handle_q_packet(char *packet, int len)
 		"PacketSize=255";
 */
 		//gdb_putpacket_f("PacketSize=%X;qXfer:memory-map:read+;qXfer:features:read+", BUF_SIZE);
-        gdb_putpacket_f("PacketSize=%X;swbreak+;hwbreak+;qXfer:threads:read+", BUF_SIZE);
+        gdb_putpacket_f("PacketSize=%X;swbreak+;hwbreak+", BUF_SIZE); // ;qXfer:threads:read+
 
 	} else if (strncmp (packet, "qXfer:memory-map:read::", 23) == 0) {
 		/* Read target XML memory map */
@@ -459,7 +481,7 @@ handle_q_packet(char *packet, int len)
 
 	} else {
 		DEBUG("*** Unsupported packet: %s\n", packet);
-		gdb_putpacket("", 0);
+		gdb_putpacketz("");
 	}
 }
 
