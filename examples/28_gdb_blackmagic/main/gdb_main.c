@@ -340,7 +340,7 @@ int gdb_main_loop(struct target_controller *tc, bool in_syscall)
 			// Set thread for memory and register operations
 			if (pbuf[1] == 'g') {
 				uint8_t *data=(uint8_t *)&pbuf[2];
-				uint32_t thread = gdb_get_hex_val(data, -1);
+				uint32_t thread = gdb_get_hex_val(&data, -1);
 				gdbstub_freertos_task_select(thread);
 			}
 			gdb_putpacketz("OK");
