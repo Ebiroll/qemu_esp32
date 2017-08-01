@@ -98,19 +98,19 @@ void ATTR_GDBFN gdbSendChar(char c) {
 		// Flush buffered data
 		if (buf_head>0) {
 			printf("Flush %s\r\n", outbuf);
+			outbuf[buf_head++] = c;
 			if ((nwrote = write(gdb_socket, outbuf, buf_head)) < 0) {
 				printf("%s: ERROR responding to gdb request. written = %d\r\n",__FUNCTION__, nwrote);
 				//printf("Closing socket %d\r\n", sd);
 				return;
 			}
 			buf_head=0;
-		}
-
-
-		if ((nwrote = write(gdb_socket, &c, 1)) < 0) {
-				printf("%s: ERROR responding to gdb request. written = %d\r\n",__FUNCTION__, nwrote);
-				//printf("Closing socket %d\r\n", sd);
-				return;
+		} else {
+			if ((nwrote = write(gdb_socket, &c, 1)) < 0) {
+					printf("%s: ERROR responding to gdb request. written = %d\r\n",__FUNCTION__, nwrote);
+					//printf("Closing socket %d\r\n", sd);
+					return;
+			}
 		}
 	}
 
@@ -192,8 +192,8 @@ void gdb_if_putchar(unsigned char c, int flush)
 				printf("%s: ERROR responding to gdb request. written = %d\r\n",__FUNCTION__, nwrote);
 				//printf("Closing socket %d\r\n", sd);
 				return;
-		   }
-		   buf_head=0;
+		    }
+		    buf_head=0;
 		}
 	}
 }
