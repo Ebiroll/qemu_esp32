@@ -156,7 +156,7 @@ int gdb_main_loop(struct target_controller *tc, bool in_syscall)
 #endif
 	DEBUG_BM("Entring GDB protocol main loop\n");
 	/* GDB protocol main loop */
-	while(1) {
+	while(gdb_if_is_running()==1) {
 		SET_IDLE_STATE(1);
 		size = gdb_getpacket(pbuf, BUF_SIZE);
 		SET_IDLE_STATE(0);
@@ -164,10 +164,11 @@ int gdb_main_loop(struct target_controller *tc, bool in_syscall)
 		/* Implementation of these is mandatory! */
 		case 'g': { /* 'g': Read general registers */
 			ERROR_IF_NO_TARGET();
-			uint8_t arm_regs[target_regs_size(cur_target)];
+			uint8_t* arm_regs=(uint8_t*) malloc(sizeof(GdbRegFile));
 			target_regs_read(cur_target, arm_regs);
-			gdb_putpacket(hexify(pbuf, arm_regs, sizeof(arm_regs)),
-			              sizeof(arm_regs) * 2);
+			gdb_putpacket(hexify(pbuf, arm_regs, sizeof(GdbRegFile)),
+			              2*sizeof(GdbRegFile));   // target_regs_size(cur_target)
+			free(arm_regs);
 			break;
 			}
 		case 'm': {	/* 'm addr,len': Read len bytes from addr */
@@ -184,10 +185,14 @@ int gdb_main_loop(struct target_controller *tc, bool in_syscall)
 			}
 		case 'G': {	/* 'G XX': Write general registers */
 			ERROR_IF_NO_TARGET();
-			uint8_t arm_regs[target_regs_size(cur_target)];
-			unhexify(arm_regs, &pbuf[1], sizeof(arm_regs));
-			target_regs_write(cur_target, arm_regs);
-			gdb_putpacketz("OK");
+			{
+				uint8_t *arm_regs=(uint8_t*) malloc(target_regs_size(cur_target));
+				unhexify(arm_regs, &pbuf[1], target_regs_size(cur_target));
+				target_regs_write(cur_target, arm_regs);
+
+				gdb_putpacketz("OK");
+				free(arm_regs);
+			}
 			break;
 			}
 		case 'M': { /* 'M addr,len:XX': Write len bytes to addr */
@@ -239,6 +244,7 @@ int gdb_main_loop(struct target_controller *tc, bool in_syscall)
 			SET_RUN_STATE(0);
 
 			/* Translate reason to GDB signal */
+			/* taken care of in target_halt_poll
 			switch (reason) {
 			case TARGET_HALT_ERROR:
 				gdb_putpacket_f("X%02X", GDB_SIGLOST);
@@ -256,7 +262,8 @@ int gdb_main_loop(struct target_controller *tc, bool in_syscall)
 			default:
 				gdb_putpacket_f("T%02X", GDB_SIGTRAP);
 			}
-			
+			*/
+
 			gdbstub_freertos_report_thread();
 			break;
 			}
@@ -354,6 +361,7 @@ int gdb_main_loop(struct target_controller *tc, bool in_syscall)
 			gdb_putpacketz("");
 		}
 	}
+	return 0;
 }
 
 void

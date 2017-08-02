@@ -152,49 +152,6 @@ static void gdbstub_single_step() {
 }
 
 
-// Send the start of a packet; reset checksum calculation.
-void gdb_packet_start() {
-	gdbstub_packet_crc = 0;
-	gdbSendChar('$');
-}
-
-// Send a char as part of a packet
-void gdb_packet_char(char c) {
-	if (c=='#' || c=='$' || c=='}' || c=='*') {
-		gdbSendChar('}');
-		gdbSendChar(c ^ 0x20);
-		gdbstub_packet_crc += (c ^ 0x20) + '}';
-	} else {
-		gdbSendChar(c);
-		gdbstub_packet_crc += c;
-	}
-}
-
-// Send a string as part of a packet
-void gdb_packet_str(const char * c) {
-	while (*c != 0) {
-		gdb_packet_char(*c);
-		c++;
-	}
-}
-
-// Send a hex val as part of a packet. 'bits'/4 dictates the number of hex chars sent.
-void gdb_packet_hex(int val, int bits) {
-	char hexChars[] = "0123456789abcdef";
-	int i;
-	for (i = bits; i > 0; i -= 4) {
-		gdb_if_putchar(hexChars[(val >> (i - 4)) & 0xf],false);
-	}
-}
-
-void gdbPacketFlush();
-
-// Finish sending a packet.
-void gdb_packet_end() {
-	gdbSendChar('#');
-	gdb_packet_hex(gdbstub_packet_crc, 8);
-	gdbPacketFlush();
-}
 
 // Grab a hex value from the gdb packet. Ptr will get positioned on the end
 // of the hex string, as far as the routine has read into it. Bits/4 indicates

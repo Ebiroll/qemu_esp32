@@ -29,15 +29,32 @@
 #include "target.h"
 #include "target_internal.h"
 #include "gdbstub-freertos.h"
+#include "gdb_if.h"
+#include "rom/ets_sys.h"
+#include "freertos/FreeRTOS.h"
+#include <xtensa/config/specreg.h>
+#include <xtensa/config/core-isa.h>
+#include <xtensa/corebits.h>
+#include <soc/cpu.h>
+#include "gdb_main.h"
+#include <freertos/xtensa_api.h>
 
 #include <unistd.h>
+
+typedef struct tskTaskControlBlock {
+	volatile portSTACK_TYPE * pxTopOfStack;
+} tskTCB;
+
+extern tskTCB * volatile pxCurrentTCB;
 
 static const char esp32_driver_str[] = "esp32";
 
 static bool esp32_vector_catch(target *t, int argc, char *argv[]);
+static bool esp32_scan_i2c(target *t, int argc, char *argv[]);
 
 const struct command_s esp32_cmd_list[] = {
 	{"vector_catch", (cmd_handler)esp32_vector_catch, "Catch exception vectors"},
+	{"scan_i2c", (cmd_handler)esp32_scan_i2c, "Scan i2c test"},
 	{NULL, NULL, NULL}
 };
 
@@ -58,74 +75,73 @@ bool esp32_attach(target *t);
 void esp32_detach(target *t);
 void esp32_halt_resume(target *t, bool step);
 
-
-struct xtensa_exception_frame_t {
-	uint32_t pc;
-	uint32_t ps;
-	uint32_t sar;
-	uint32_t vpri;
-	uint32_t a0;
-	uint32_t a[14]; //a2..a15
-	// These are added manually by the exception code; the HAL doesn't set these on an exception.
-	uint32_t exccause;
-
-//  HAVE_LOOPS
-	//uint32_t lcount;
-	//uint32_t lbeg;
-	//uint32_t lend;
-
-// Floating pont registers???
-
-};
-
-typedef struct  {
-	uint32_t pc;
-	uint32_t a[64];
-	uint32_t lbeg;
-	uint32_t lend;
-	uint32_t lcount;
-	uint32_t sar;
-	uint32_t windowbase;
-	uint32_t windowstart;
-	uint32_t configid0;
-	uint32_t configid1;
-	uint32_t ps;
-	uint32_t threadptr;
-	uint32_t br;
-	uint32_t scompare1;
-	uint32_t acclo;
-	uint32_t acchi;
-	uint32_t m0;
-	uint32_t m1;
-	uint32_t m2;
-	uint32_t m3;
-	uint32_t expstate;  //I'm going to assume this is exccause...
-	uint32_t f64r_lo;
-	uint32_t f64r_hi;
-	uint32_t f64s;
-	uint32_t f[16];
-	uint32_t fcr;
-	uint32_t fsr;
-	
-#if 0
-	uint32_t pc;
-	uint32_t ps;
-	uint32_t sar;
-	uint32_t vpri;
-	uint32_t a0;
-	uint32_t a[14]; //a2..a15
-	// These are added manually by the exception code; the HAL doesn't set these on an exception.
-	uint32_t litbase;
-	uint32_t sr176;
-	uint32_t sr208;
-	uint32_t a1;
-	// 'reason' is abused for both the debug and the exception vector: if bit 7 is set,
-	// this contains an exception reason, otherwise it contains a debug vector bitmap.
-	uint32_t reason;
-#endif
-} GdbRegFile;
-
 GdbRegFile gdbRegFile;
+
+
+static void dumpHwToRegfile() {
+	int i;
+	long *frameAregs=pxCurrentTCB->pxTopOfStack;
+	gdbRegFile.pc=*(unsigned int *)(pxCurrentTCB->pxTopOfStack+4);
+	for (i=0; i<16; i++) gdbRegFile.a[i]=frameAregs[i];
+	for (i=16; i<64; i++) gdbRegFile.a[i]=0xDEADBEEF;
+	gdbRegFile.a[4]=0x44444444;
+	gdbRegFile.a[5]=0x55555555;
+
+	gdbRegFile.a[7]=0x77777777;
+	gdbRegFile.a[8]=0x88888888;
+
+	//gdbRegFile.lbeg=0xdeadbeef;  // frame->lbeg;
+	//RSR(LBEG, gdbRegFile.lbeg);
+	gdbRegFile.lbeg=0x66666666;
+
+	gdbRegFile.lend=0xdeadbeef; //frame->lend;
+	RSR(LEND, gdbRegFile.lend);
+
+	gdbRegFile.lcount=0xdeadbeef; //frame->lcount;
+	gdbRegFile.sar=0xdeadbeef; //frame->sar;
+	//All windows have been spilled to the stack by the ISR routines. The following values should indicate that.
+	gdbRegFile.sar=0xdeadbeef; //frame->sar;
+	RSR(SAR, gdbRegFile.sar);
+
+	gdbRegFile.windowbase=0; //0
+	RSR(WINDOWBASE, gdbRegFile.windowbase);
+
+	gdbRegFile.windowstart=0x1; //1
+	RSR(WINDOWSTART, gdbRegFile.windowstart);
+
+	gdbRegFile.configid0=0xdeadbeef; //ToDo
+	gdbRegFile.configid1=0xdeadbeef; //ToDo
+	gdbRegFile.ps=0xdaadbeef; //frame->ps-PS_EXCM_MASK;
+	//RSR(PS, gdbRegFile.ps);
+
+	gdbRegFile.threadptr=0xdeadbeef; //ToDo
+	gdbRegFile.br=0xdeadbeef; //ToDo
+	gdbRegFile.scompare1=0xdeadbeef; //ToDo
+	gdbRegFile.acclo=0xdeadbeef; //ToDo
+	gdbRegFile.acchi=0xdeadbeef; //ToDo
+	gdbRegFile.m0=0xdeadbeef; //ToDo
+	gdbRegFile.m1=0xdeadbeef; //ToDo
+	gdbRegFile.m2=0xdeadbeef; //ToDo
+	gdbRegFile.m3=0xdeadbeef; //ToDo
+	gdbRegFile.expstate=0; //frame->exccause; //ToDo
+}
+
+
+//Send the reason execution is stopped to GDB.
+static void sendReason() {
+	//exception-to-signal mapping
+	char exceptionSignal[]={4,31,11,11,2,6,8,0,6,7,0,0,7,7,7,7};
+	int i=0;
+	gdbPacketStart();
+	gdbPacketChar('T');
+	i=gdbRegFile.expstate&0x7f;
+	if (i<sizeof(exceptionSignal)) {
+		gdbPacketHex(exceptionSignal[i], 8); 
+	} else {
+		gdbPacketHex(11, 8);
+	}
+	gdbPacketEnd();
+}
 
 
 #define ESP32_MAX_WATCHPOINTS	2	
@@ -357,6 +373,7 @@ bool esp32_attach(target *t)
 	priv->hw_watchpoint_max = ESP32_MAX_WATCHPOINTS;
 
 
+    dumpHwToRegfile();
 
 	return true;
 }
@@ -364,6 +381,7 @@ bool esp32_attach(target *t)
 void esp32_detach(target *t)
 {
 	printf("esp32_detach\n");
+	gdb_if_close();
 }
 
 enum { DB_DHCSR, DB_DCRSR, DB_DCRDR, DB_DEMCR };
@@ -372,21 +390,23 @@ static void esp32_regs_read(target *t, void *data)
 {
 	printf("esp32_regs_read\n");
 
-	if (!gdbstub_freertos_task_selected()) {
-	printf("task\n");
-  	  gdbstub_freertos_regs_read();
-	  return;
-	}
+
+    dumpHwToRegfile();
+	//if (!gdbstub_freertos_task_selected()) {
+	//  printf("task\n");
+  	//  gdbstub_freertos_regs_read();
+	//  return;
+	//}
 	//gdbRegFile;
-	int *p=(int*)&gdbRegFile;
+	int *p=(int*)&gdbRegFile.pc;
 	memcpy(p,data,sizeof(gdbRegFile));
 }
 
 static void esp32_regs_write(target *t, const void *data)
 {
 		printf("esp32_regs_write\n");
-		int *p=(int*)&gdbRegFile;
-		memcpy(data,p,sizeof(gdbRegFile));
+		//int *p=(int*)&gdbRegFile;
+		//memcpy(data,p,sizeof(gdbRegFile));
 }
 
 static uint32_t esp32_pc_read(target *t)
@@ -420,21 +440,26 @@ static enum target_halt_reason esp32_halt_poll(target *t, target_addr *watch)
 {
 	printf("esp32_halt_poll\n");
 
+	sendReason();
+
 	return TARGET_HALT_BREAKPOINT;
 }
 
 void esp32_halt_resume(target *t, bool step)
 {
+	printf("esp32_halt_resume\n");
 }
 
 static int esp32_fault_unwind(target *t)
 {
+	printf("esp32_fault_unwind\n");	
 	return 0;
 }
 
 int esp32_run_stub(target *t, uint32_t loadaddr,
                      uint32_t r0, uint32_t r1, uint32_t r2, uint32_t r3)
 {
+	printf("esp32_run_stub\n");	
 
 	return 0;
 }
@@ -445,11 +470,13 @@ int esp32_run_stub(target *t, uint32_t loadaddr,
 
 static uint32_t dwt_mask(size_t len)
 {
+	printf("esp32_dwt_mask\n");	
 	return 0;
 }
 
 static uint32_t dwt_func(target *t, enum target_breakwatch type)
 {
+	printf("esp32_dwt_func\n");	
 	return 0;
 }
 
@@ -458,6 +485,9 @@ static int esp32_breakwatch_set(target *t, struct breakwatch *bw)
 	struct esp32_priv *priv = t->priv;
 	unsigned i;
 	uint32_t val = bw->addr;
+
+	printf("esp32_breakwatch_set\n");	
+
 
 	switch (bw->type) {
 	case TARGET_BREAK_HARD:
@@ -474,6 +504,8 @@ static int esp32_breakwatch_set(target *t, struct breakwatch *bw)
 
 static int esp32_breakwatch_clear(target *t, struct breakwatch *bw)
 {
+	printf("esp32_breakwatch_clear\n");	
+
 	struct esp32_priv *priv = t->priv;
 	unsigned i = bw->reserved[0];
 	switch (bw->type) {
@@ -493,22 +525,97 @@ static int esp32_breakwatch_clear(target *t, struct breakwatch *bw)
 target_addr esp32_check_watch(target *t)
 {
 
+	printf("esp32_breakwatch_clear\n");	
+
 	return 0;
 }
+
+static void dumpExceptionToRegfile(XtExcFrame *frame) {
+	int i;
+	long *frameAregs=&frame->a0;
+	gdbRegFile.pc=frame->pc;
+	for (i=0; i<16; i++) gdbRegFile.a[i]=frameAregs[i];
+	for (i=16; i<64; i++) gdbRegFile.a[i]=0xDEADBEEF;
+	gdbRegFile.lbeg=frame->lbeg;
+	gdbRegFile.lend=frame->lend;
+	gdbRegFile.lcount=frame->lcount;
+	gdbRegFile.sar=frame->sar;
+	//All windows have been spilled to the stack by the ISR routines. The following values should indicate that.
+	gdbRegFile.sar=frame->sar;
+	gdbRegFile.windowbase=0; //0
+	gdbRegFile.windowstart=0x1; //1
+	gdbRegFile.configid0=0xdeadbeef; //ToDo
+	gdbRegFile.configid1=0xdeadbeef; //ToDo
+	gdbRegFile.ps=frame->ps-PS_EXCM_MASK;
+	gdbRegFile.threadptr=0xdeadbeef; //ToDo
+	gdbRegFile.br=0xdeadbeef; //ToDo
+	gdbRegFile.scompare1=0xdeadbeef; //ToDo
+	gdbRegFile.acclo=0xdeadbeef; //ToDo
+	gdbRegFile.acchi=0xdeadbeef; //ToDo
+	gdbRegFile.m0=0xdeadbeef; //ToDo
+	gdbRegFile.m1=0xdeadbeef; //ToDo
+	gdbRegFile.m2=0xdeadbeef; //ToDo
+	gdbRegFile.m3=0xdeadbeef; //ToDo
+	gdbRegFile.expstate=frame->exccause; //ToDo
+}
+
+
+// This will probably not work, I assume processes switchin will stop on exception 
+void wifi_panic_handler(XtExcFrame *frame) {
+	dumpExceptionToRegfile(frame);
+	//Make sure txd/rxd are enabled
+	//gpio_pullup_dis(1);
+	//PIN_FUNC_SELECT(PERIPHS_IO_MUX_U0RXD_U, FUNC_U0RXD_U0RXD);
+	//PIN_FUNC_SELECT(PERIPHS_IO_MUX_U0TXD_U, FUNC_U0TXD_U0TXD);
+
+	sendReason();
+	while(1) {
+		gdb_main();
+	}
+}
+
+void set_exception_handler(int i) {
+       xt_set_exception_handler(i, wifi_panic_handler);	
+}
+
+
+void set_all_exception_handlers(void) {
+	printf("set_all_exception_handlers\n");	
+
+	int i=0;
+	for (i=0;i<64;i++) {
+       xt_set_exception_handler(i, wifi_panic_handler);
+	}
+}
+
+
 
 static bool esp32_vector_catch(target *t, int argc, char *argv[])
 {
 	struct esp32_priv *priv = t->priv;
-	const char *vectors[] = {"reset", NULL, NULL, NULL, "mm", "nocp",
+	const char *vectors[] = {"EXCCAUSE_ILLEGAL", NULL, "EXCCAUSE_INSTR_ERROR", "EXCCAUSE_LOAD_STORE_ERROR", "mm", "nocp",
 				"chk", "stat", "bus", "int", "hard"};
+
+	//const int *values[] = {EXCCAUSE_ILLEGAL,0,EXCCAUSE_INSTR_ERROR } 
 	uint32_t tmp = 0;
 	unsigned i;
 
 	if ((argc < 3) || ((argv[1][0] != 'e') && (argv[1][0] != 'd'))) {
-		tc_printf(t, "usage: monitor vector_catch (enable|disable) "
-			     "(hard|int|bus|stat|chk|nocp|mm|reset)\n");
+		tc_printf(t, "usage: monitor vector_catch"
+			     "(all|illegal)\n");
 	} else {
-		// ATTACH
+		for (int j = 0; j < argc; j++) {
+			if (!strcmp("all", argv[j])) {
+			     set_all_exception_handlers();
+		    }
+
+			for (i = 0; i < sizeof(vectors) / sizeof(char*); i++) {
+				if (vectors[i] && !strcmp(vectors[i], argv[j]))
+				{
+					set_exception_handler(i);
+				}	
+			}
+		}
 	}
 
 	tc_printf(t, "Catching vectors: ");
@@ -521,6 +628,43 @@ static bool esp32_vector_catch(target *t, int argc, char *argv[])
 	tc_printf(t, "\n");
 	return true;
 }
+
+static bool esp32_scan_i2c(target *t, int argc, char *argv[])
+{
+	struct esp32_priv *priv = t->priv;
+	const char *vectors[] = {"reset", NULL, NULL, NULL, "mm", "nocp",
+				"chk", "stat", "bus", "int", "hard"};
+	uint32_t tmp = 0;
+	unsigned i;
+
+	if ((argc < 2) || ((argv[1][0] != 'e') && (argv[1][0] != 'd'))) {
+		tc_printf(t, "usage: monitor scan_i2c (null|div) "
+			     "\n");
+	} else {
+		// ATTACH
+	}
+
+	tc_printf(t, "Start scanning  i2c: ");
+	for (int j = 0; j < argc; j++) {
+		for (i = 0; i < sizeof(vectors) / sizeof(char*); i++) {
+			if (!strcmp("null", argv[j])) {
+				int *ptr=0;
+				*ptr=0xff;
+			}
+			if (!strcmp("div", argv[j])) {
+				int test=0;
+				int kalle=12;
+				int nisse;
+				nisse=kalle/test;
+			}
+		}
+    }
+
+	tc_printf(t, "\n");
+	return true;
+}
+
+
 
 /* Windows defines this with some other meaning... */
 #ifdef SYS_OPEN

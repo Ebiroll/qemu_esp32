@@ -34,9 +34,9 @@ int gdb_getpacket(char *packet, int size)
 	unsigned char c;
 	unsigned char csum;
 	char recv_csum[3];
-	int i;
+	int i=0;
 
-	while(1) {
+	while(gdb_if_is_running()==1) {
 		/* Wait for packet start */
 		while((packet[0] = gdb_if_getchar()) != '$')
 			if(packet[0] == 0x04) return 1;

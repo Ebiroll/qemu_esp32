@@ -99,13 +99,13 @@ void ATTR_GDBFN gdbSendChar(char c) {
 }
 
 //Send the start of a packet; reset checksum calculation.
-static void ATTR_GDBFN gdbPacketStart() {
+void ATTR_GDBFN gdbPacketStart() {
 	chsum=0;
 	gdbSendChar('$');
 }
 
 //Send a char as part of a packet
-static void ATTR_GDBFN gdbPacketChar(char c) {
+void ATTR_GDBFN gdbPacketChar(char c) {
 	if (c=='#' || c=='$' || c=='}' || c=='*') {
 		gdbSendChar('}');
 		gdbSendChar(c^0x20);
@@ -117,7 +117,7 @@ static void ATTR_GDBFN gdbPacketChar(char c) {
 }
 
 //Send a string as part of a packet
-static void ATTR_GDBFN gdbPacketStr(char *c) {
+void ATTR_GDBFN gdbPacketStr(char *c) {
 	while (*c!=0) {
 		gdbPacketChar(*c);
 		c++;
@@ -187,7 +187,7 @@ void gdb_if_putchar(unsigned char c, int flush)
 //gdbPacketChar(c);
 
 //Send a hex val as part of a packet. 'bits'/4 dictates the number of hex chars sent.
-static void ATTR_GDBFN gdbPacketHex(int val, int bits) {
+void ATTR_GDBFN gdbPacketHex(int val, int bits) {
 	char hexChars[]="0123456789abcdef";
 	int i;
 	for (i=bits; i>0; i-=4) {
@@ -216,7 +216,7 @@ void gdbPacketFlush() {
 }
 
 //Finish sending a packet.
-static void ATTR_GDBFN gdbPacketEnd() {
+void ATTR_GDBFN gdbPacketEnd() {
 	gdbSendChar('#');
 	gdbPacketHex(chsum, 8);
 	gdbPacketFlush();
@@ -248,11 +248,6 @@ STRUCT_END(XtExcFrame)
 */
 
 
-typedef struct tskTaskControlBlock {
-	volatile portSTACK_TYPE * pxTopOfStack;
-} tskTCB;
-
-extern tskTCB * volatile pxCurrentTCB;
 
 
 
@@ -268,3 +263,9 @@ int gdb_if_is_running(void) {
 	}
 	return 0;
 }
+
+void gdb_if_close(void) {
+	close(gdb_socket);
+	gdb_socket=0;
+}
+

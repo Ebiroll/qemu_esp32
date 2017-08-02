@@ -22,9 +22,22 @@
 #define __GDB_IF_H
 
 
+
 int gdb_if_init(void);
 unsigned char gdb_if_getchar(void);
 unsigned char gdb_if_getchar_to(int timeout);
 void gdb_if_putchar(unsigned char c, int flush);
+
+int gdb_if_is_running(void);
+void gdb_if_close(void);
+
+// esp-idf gdbstub packet if
+void gdbPacketStart();
+void gdbPacketEnd();
+void gdbPacketFlush();
+void gdbPacketHex(int val, int bits);
+void gdbPacketChar(char c);
+void gdbPacketStr(char *c);
+
 
 #endif

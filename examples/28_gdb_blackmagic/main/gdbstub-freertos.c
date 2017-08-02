@@ -217,6 +217,7 @@ void gdbstub_freertos_regs_read() {
 		fill_task_array();
 	}
 
+    printf("**********************************\n");
 /*
 	uint32_t pc;
 	uint32_t ps;
