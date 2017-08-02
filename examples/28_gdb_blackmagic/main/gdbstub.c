@@ -173,7 +173,7 @@ void gdb_packet_char(char c) {
 // Send a string as part of a packet
 void gdb_packet_str(const char * c) {
 	while (*c != 0) {
-		gdb_if_putchar(*c,false);
+		gdb_packet_char(*c);
 		c++;
 	}
 }
@@ -187,10 +187,13 @@ void gdb_packet_hex(int val, int bits) {
 	}
 }
 
+void gdbPacketFlush();
+
 // Finish sending a packet.
 void gdb_packet_end() {
 	gdbSendChar('#');
 	gdb_packet_hex(gdbstub_packet_crc, 8);
+	gdbPacketFlush();
 }
 
 // Grab a hex value from the gdb packet. Ptr will get positioned on the end
@@ -387,7 +390,7 @@ bool gdbstub_process_query(uint8_t* cmd) {
 	}
 #if GDBSTUB_THREAD_AWARE
 	else if (strncmp(query, q_threads_read, 17) == 0) {
-		gdbstub_freertos_task_list();
+		gdbstub_freertos_task_list(query);
 	}
 #endif
 	else {

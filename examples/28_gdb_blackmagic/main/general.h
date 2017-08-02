@@ -32,7 +32,7 @@
 
 #ifndef DEBUG
 #include <stdio.h>
-#define DEBUG	printf
+#define DEBUG_BM    printf
 #endif
 
 #define ALIGN(x, n) (((x) + (n) - 1) & ~((n) - 1))

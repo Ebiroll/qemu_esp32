@@ -45,84 +45,63 @@ int32_t lReceivedValue;
 BaseType_t xStatus;
 
 int gdb_socket=0;
+#define IN_BUFFER_LEN 512
+static unsigned char inbuf[IN_BUFFER_LEN];
+static int in_buf_head = 0;
+static int in_buf_received = 0;
+
 
 
 //Receive a char from wifi, uses a frertos queue
 int ATTR_GDBFN gdbRecvChar() {
 	int i=0;
 
-	#if 0
-    char recv_buf[10];
-	if ((i = read(gdb_socket, recv_buf, 1)) < 0) {
-			printf("%s: error reading from socket %d, closing socket\r\n", __FUNCTION__, gdb_socket);
-			return 0;
-		}
-	return (recv_buf[0]);
-    #endif
-
-
-    int32_t lReceivedValue;
-    BaseType_t xStatus=pdFAIL;
-    const TickType_t xTicksToWait = pdMS_TO_TICKS(1100);
-
-
-    while (xStatus!=pdPASS) {
-		xStatus = xQueueReceive ( receive_queue, &lReceivedValue, xTicksToWait );
-		if( xStatus == pdPASS ) {
-			//ESP_LOGI(TAG, "(%c)", lReceivedValue);
-			return (lReceivedValue);
-		} else {
-			//ESP_LOGI(TAG,  "Could not receive from the queue.");
-		}
+    if (in_buf_received==0) 
+	{
+		if ((i = read(gdb_socket, inbuf, IN_BUFFER_LEN)) < 0) {
+				printf("%s: error reading from socket %d, closing socket\r\n", __FUNCTION__, gdb_socket);
+				return 0;
+			}
+			inbuf[i]=0;
+			printf("<-%s\n",inbuf);
+		in_buf_received=i;
 	}
-	//while (((READ_PERI_REG(UART_STATUS_REG(0))>>UART_RXFIFO_CNT_S)&UART_RXFIFO_CNT)==0) ;
-	//i=READ_PERI_REG(UART_FIFO_REG(0));
+
+	if (in_buf_head<in_buf_received) {
+		int ret=inbuf[in_buf_head];
+		in_buf_head++;
+		if (in_buf_head==in_buf_received) {
+			in_buf_received=0;
+			in_buf_head=0;			
+		}
+		return(ret);
+	}
+
 	return 0;
 }
 
-#define OUT_BUFFER_LEN 512
+#define OUT_BUFFER_LEN 800
 static unsigned char outbuf[OUT_BUFFER_LEN];
 static int buf_head = 0;
 
 
+
 //Send a char to the uart.
 void ATTR_GDBFN gdbSendChar(char c) {
-   //while (((READ_PERI_REG(UART_STATUS_REG(0))>>UART_TXFIFO_CNT_S)&UART_TXFIFO_CNT)>=126) ;
-   //WRITE_PERI_REG(UART_FIFO_REG(0), c);
-    int  nwrote;
+    //while (((READ_PERI_REG(UART_STATUS_REG(0))>>UART_TXFIFO_CNT_S)&UART_TXFIFO_CNT)>=126) ;
+    //WRITE_PERI_REG(UART_FIFO_REG(0), c);
+    int nwrote=0;
 
-
-    //printf("(%c)",c);
-	if (gdb_socket>0) {
-
-		// Flush buffered data
-		if (buf_head>0) {
-			printf("Flush %s\r\n", outbuf);
-			outbuf[buf_head++] = c;
-			if ((nwrote = write(gdb_socket, outbuf, buf_head)) < 0) {
-				printf("%s: ERROR responding to gdb request. written = %d\r\n",__FUNCTION__, nwrote);
-				//printf("Closing socket %d\r\n", sd);
-				return;
-			}
-			buf_head=0;
-		} else {
-			if ((nwrote = write(gdb_socket, &c, 1)) < 0) {
-					printf("%s: ERROR responding to gdb request. written = %d\r\n",__FUNCTION__, nwrote);
-					//printf("Closing socket %d\r\n", sd);
-					return;
-			}
+    outbuf[buf_head]=c;
+    buf_head++;
+	if (c=='\n' || (c=='+') || (c=='-')  || buf_head==OUT_BUFFER_LEN) {
+		if ((nwrote = write(gdb_socket, outbuf, buf_head)) < 0) {
+			printf("%s: ERROR responding to gdb request. written = %d\r\n",__FUNCTION__, nwrote);
+			//printf("Closing socket %d\r\n", sd);
+			return;
 		}
-	}
-
-#if 0
-  int32_t lValueToSend; BaseType_t xStatus;
-  lValueToSend=c;
-  xStatus = xQueueSendToBack(send_queue, &lValueToSend, 0);
-  if( xStatus != pdPASS )
-  {
-       //ESP_LOGI(TAG, "Could not send to the queue.");
-  }
-  #endif
+		buf_head=0;
+	}   
 }
 
 //Send the start of a packet; reset checksum calculation.
@@ -160,21 +139,29 @@ unsigned char gdb_if_getchar(void) {
 }
 
 unsigned char gdb_if_getchar_to(int timeout) {
-    int32_t lReceivedValue;
-    BaseType_t xStatus=pdFAIL;
+	fd_set readset;
+    int ret=1;
+
     const TickType_t xTicksToWait = pdMS_TO_TICKS(timeout);
+	struct timeval tv;
+	FD_ZERO(&readset);
 
+    tv.tv_sec = timeout/1000;
+	tv.tv_usec = 1000*(timeout-tv.tv_sec*1000);
 
-    while (xStatus!=pdPASS) {
-		xStatus = xQueueReceive ( receive_queue, &lReceivedValue, xTicksToWait );
-		if( xStatus == pdPASS ) {
-			//ESP_LOGI(TAG, "(%c)", lReceivedValue);
-			return (lReceivedValue);
-		} else {
-			//ESP_LOGI(TAG,  "Could not receive from the queue.");
-		}
+    FD_SET(gdb_socket, &readset);
+
+	// Only wait if no char in buffer
+    if (in_buf_received==0) {
+  	   ret = lwip_select(gdb_socket + 1, &readset, NULL, NULL, &tv);
 	}
-	return(0);
+
+	if (ret==1) {
+ 	   return gdbRecvChar();
+	}
+	else {
+		return 0;
+	}
 }
 
 
@@ -193,6 +180,9 @@ void gdb_if_putchar(unsigned char c, int flush)
 				//printf("Closing socket %d\r\n", sd);
 				return;
 		    }
+			if (nwrote!=buf_head) {
+				printf("%s: ERROR responding to gdb request. written = %d\r\n",__FUNCTION__, nwrote);				
+			}
 		    buf_head=0;
 		}
 	}
@@ -211,10 +201,31 @@ static void ATTR_GDBFN gdbPacketHex(int val, int bits) {
 	}
 }
 
+void gdbPacketFlush() {
+    int  nwrote;
+
+    //printf("(%c)",c);
+	if (gdb_socket>0) {
+		// Flush buffered data
+		if (buf_head>0) {
+			outbuf[buf_head]=0;
+			printf("-> %s\r\n", outbuf);
+			if ((nwrote = write(gdb_socket, outbuf, buf_head)) < 0) {
+				printf("%s: ERROR responding to gdb request. written = %d\r\n",__FUNCTION__, nwrote);
+				//printf("Closing socket %d\r\n", sd);
+				return;
+			}
+			buf_head=0;
+		}
+	}
+
+}
+
 //Finish sending a packet.
 static void ATTR_GDBFN gdbPacketEnd() {
 	gdbSendChar('#');
 	gdbPacketHex(chsum, 8);
+	gdbPacketFlush();
 }
 
 //Error states used by the routines that grab stuff from the incoming gdb packet

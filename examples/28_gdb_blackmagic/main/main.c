@@ -23,6 +23,7 @@
 #include "emul_ip.h"
 #include "freertos/queue.h"
 #include "gdb_main.h"
+#include "gdbstub-freertos.h"
 
 extern void set_all_exception_handlers(void);
 extern void wifi_gdb_handler(int socket);
@@ -50,119 +51,9 @@ static EventGroupHandle_t wifi_event_group;
 const int CONNECTED_BIT = BIT0;
 
 
-static const char *TAG = "gdp_ota";
-
-typedef struct
-{
-    int new_sd;
-    SemaphoreHandle_t StatSem;
-} gdb_param;
+static const char *TAG = "blackmagic";
 
 
-/* thread spawned for each connection */
-void process_gdb_request(void *p)
-{
-    gdb_param* gdb_param1 = (gdb_param*)p;
-	int sd = (int)gdb_param1->new_sd;
-	int RECV_BUF_SIZE = 100;
-	char recv_buf[RECV_BUF_SIZE];
-	int n;
-    int received=0;
-
-    int32_t lReceivedValue;
-    BaseType_t xStatus=pdFAIL;
-
-    int32_t lValueToSend; 
-    //  const TickType_t xTicksToWait = pdMS_TO_TICKS(1100);
-
-
-	while (1) {
-		/* read a max of RECV_BUF_SIZE bytes from socket */
-		if ((n = read(sd, recv_buf, RECV_BUF_SIZE)) < 0) {
-			printf("%s: error reading from socket %d, closing socket\r\n", __FUNCTION__, sd);
-            close(sd);
-			break;
-        }
-        received=0;
-        while (received<n) {
-            lValueToSend=recv_buf[received];
-            printf("%c",lValueToSend);
-            xStatus = xQueueSendToBack(receive_queue, &lValueToSend, 0);
-            if( xStatus != pdPASS )
-            {
-                printf("Could not send to the queue.");
-            }
-            received++;
-        }
-
-        //close(sd);
-        //return;
- 		
-		printf("\nread %d bytes\n",n);
-
-		/* break if the recved message = "quit" */
-		//if (!strncmp(recv_buf, "quit", 4))
-		//	break;
-
-		/* break if client closed connection */
-		if (n <= 0)
-			break;
-
-		/* handle request */
-
-#if 0
-        // Wait fore reply
-        while( uxQueueMessagesWaiting( send_queue ) == 0 ) {
-           vTaskDelay(pdMS_TO_TICKS(500));
-        }
-        printf("send:");
-
-        while( uxQueueMessagesWaiting( send_queue ) > 0 ) {
-            xStatus = xQueueReceive ( send_queue, &lReceivedValue, xTicksToWait );
-
-            if( xStatus == pdPASS ) {
-                printf("%c",lReceivedValue);
-                if ((nwrote = write(sd, &lReceivedValue, 1)) < 0) {
-                    printf("%s: ERROR responding to gdb request. received = %d, written = %d\r\n",__FUNCTION__, n, nwrote);
-                    printf("Closing socket %d\r\n", sd);
-                    return;
-                }
-            }
-            //if (nwrote<0) {
-			//  close(sd);
-            //}
-		}
-#endif
-
-        
-
-
-
-        #if 0
-
-
-        xStatus = xQueueReceive ( my_queue, &lReceivedValue, xTicksToWait );
-        if( xStatus == pdPASS ) {
-            ESP_LOGI(TAG, "Received = %d", lReceivedValue);
-        } else {
-            ESP_LOGI(TAG,  "Could not receive from the queue.");
-        }
-        //////////////////
-
-		if ((nwrote = write(sd, recv_buf, n)) < 0) {
-			printf("%s: ERROR responding to client echo request. received = %d, written = %d\r\n",__FUNCTION__, n, nwrote);
-			printf("Closing socket %d\r\n", sd);
-			break;
-			//close(sd);
-			//return;
-		}
-        #endif
-	}
-
-	/* close connection */
-	close(sd);
-	vTaskDelete(NULL);
-}
 
 
 static esp_err_t event_handler(void *ctx, system_event_t *event)
@@ -214,7 +105,6 @@ void gdb_application_thread(void *pvParameters)
 	int sock, new_sd;
 	struct sockaddr_in address, remote;
 	int size;
-    gdb_param* gdb_param1 = malloc(sizeof(gdb_param));
 
         xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT,
                             false, true, portMAX_DELAY);
@@ -237,107 +127,21 @@ void gdb_application_thread(void *pvParameters)
 	size = sizeof(remote);
 
 	while (1) {
-        //xTaskCreate(&gdb_main, "gdb_main",2*4096, (void*)gdb_param1, 20, NULL);
 		if ((new_sd = accept(sock, (struct sockaddr *)&remote, (socklen_t *)&size)) > 0) {
 			printf("accepted new gdb connection\n");
-                        gdb_param1->new_sd = new_sd;
-	                    xTaskCreate(&process_gdb_request, "gdb_connection",2*4096, (void*)gdb_param1, 20, NULL);
                         set_gdb_socket(new_sd);
                         gdb_main();
-                        //wifi_gdb_handler(new_sd);  
 	        }
 	}
 }
-
-#if 0
-char recv_buf[64];
-
-
-static void http_get_task(void *pvParameters)
-{
-    const struct addrinfo hints = {
-        .ai_family = AF_INET,
-        .ai_socktype = SOCK_STREAM,
-    };
-    struct addrinfo *res;
-    struct in_addr *addr;
-    int s, r;
-
-    while(1) {
-        /* Wait for the callback to set the CONNECTED_BIT in the
-           event group.
-        */
-        xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT,
-                            false, true, portMAX_DELAY);
-        ESP_LOGI(TAG, "Connected to AP");
-
-        int err = getaddrinfo(WEB_SERVER, "80", &hints, &res);
-
-        if(err != 0 || res == NULL) {
-            ESP_LOGE(TAG, "DNS lookup failed err=%d res=%p", err, res);
-            vTaskDelay(1000 / portTICK_PERIOD_MS);
-            continue;
-        }
-
-        /* Code to print the resolved IP.
-
-           Note: inet_ntoa is non-reentrant, look at ipaddr_ntoa_r for "real" code */
-        addr = &((struct sockaddr_in *)res->ai_addr)->sin_addr;
-        ESP_LOGI(TAG, "DNS lookup succeeded. IP=%s", inet_ntoa(*addr));
-
-        s = socket(res->ai_family, res->ai_socktype, 0);
-        if(s < 0) {
-            ESP_LOGE(TAG, "... Failed to allocate socket.");
-            freeaddrinfo(res);
-            vTaskDelay(1000 / portTICK_PERIOD_MS);
-            continue;
-        }
-        ESP_LOGI(TAG, "... allocated socket\r\n");
-
-        if(connect(s, res->ai_addr, res->ai_addrlen) != 0) {
-            ESP_LOGE(TAG, "... socket connect failed errno=%d", errno);
-            close(s);
-            freeaddrinfo(res);
-            vTaskDelay(4000 / portTICK_PERIOD_MS);
-            continue;
-        }
-
-        ESP_LOGI(TAG, "... connected");
-        freeaddrinfo(res);
-
-        if (write(s, REQUEST, strlen(REQUEST)) < 0) {
-            ESP_LOGE(TAG, "... socket send failed");
-            close(s);
-            vTaskDelay(4000 / portTICK_PERIOD_MS);
-            continue;
-        }
-        ESP_LOGI(TAG, "... socket send success");
-
-        /* Read HTTP response */
-        do {
-            bzero(recv_buf, sizeof(recv_buf));
-            r = read(s, recv_buf, sizeof(recv_buf)-1);
-            for(int i = 0; i < r; i++) {
-                putchar(recv_buf[i]);
-            }
-        } while(r > 0);
-
-        ESP_LOGI(TAG, "... done reading from socket. Last read return=%d errno=%d\r\n", r, errno);
-        close(s);
-        for(int countdown = 10; countdown >= 0; countdown--) {
-            ESP_LOGI(TAG, "%d... ", countdown);
-            vTaskDelay(1000 / portTICK_PERIOD_MS);
-        }
-        ESP_LOGI(TAG, "Starting again!");
-    }
-}
-#endif
 
 
 
 void app_main()
 {
     ESP_ERROR_CHECK( nvs_flash_init() );
+
+    //gdbstub_freertos_task_list("qXfer:threads:read::0,18");
 
     if (is_running_qemu()) {
      tcpip_adapter_init();

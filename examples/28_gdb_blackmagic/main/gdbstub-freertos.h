@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-void gdbstub_freertos_task_list();
+void gdbstub_freertos_task_list(char *query);
 void gdbstub_freertos_task_select(size_t gdb_task_index);
 bool gdbstub_freertos_task_selected();
 void gdbstub_freertos_regs_read();
