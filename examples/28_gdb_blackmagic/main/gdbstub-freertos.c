@@ -5,7 +5,7 @@
  *      Author: vlad
  */
 
-#include "gdbstub.h"
+//#include "gdbstub.h"
 #include "gdbstub-cfg.h"
 #include "gdbstub-internal.h"
 
@@ -38,6 +38,9 @@ typedef struct tskTaskControlBlock {
 	volatile portSTACK_TYPE * pxTopOfStack;
 } tskTCB;
 
+static char gdbstub_packet_crc;			// Checksum of the output packet
+
+
 /*
  * Private FreeRTOS stuff shared using portREMOVE_STATIC_QUALIFIER
  */
@@ -56,6 +59,54 @@ extern List_t xSuspendedTaskList;
 extern tskTCB * volatile pxCurrentTCB;
 
 char thread_entry[250] = { 0 };
+
+void ATTR_GDBFN gdbSendChar(char c);
+
+// Send the start of a packet; reset checksum calculation.
+void gdb_packet_start() {
+	gdbstub_packet_crc = 0;
+	gdbSendChar('$');
+}
+
+// Send a char as part of a packet
+void gdb_packet_char(char c) {
+	if (c=='#' || c=='$' || c=='}' || c=='*') {
+		gdbSendChar('}');
+		gdbSendChar(c ^ 0x20);
+		gdbstub_packet_crc += (c ^ 0x20) + '}';
+	} else {
+		gdbSendChar(c);
+		gdbstub_packet_crc += c;
+	}
+}
+
+// Send a string as part of a packet
+void gdb_packet_str(const char * c) {
+	while (*c != 0) {
+		gdb_packet_char(*c);
+		c++;
+	}
+}
+
+// Send a hex val as part of a packet. 'bits'/4 dictates the number of hex chars sent.
+void gdb_packet_hex(int val, int bits) {
+	char hexChars[] = "0123456789abcdef";
+	int i;
+	for (i = bits; i > 0; i -= 4) {
+		gdbSendChar(hexChars[(val >> (i - 4)) & 0xf]);
+	}
+}
+
+void gdbPacketFlush();
+
+// Finish sending a packet.
+void gdb_packet_end() {
+	gdbSendChar('#');
+	gdb_packet_hex(gdbstub_packet_crc, 8);
+	gdbPacketFlush();
+}
+
+
 
 static void gdbstub_send_task(size_t id, char * name) {
 
@@ -183,7 +234,7 @@ void gdbstub_freertos_regs_read() {
 	uint32_t * task_regs = task_list[task_selected].stack;
 
 	// pc
-	gdb_packet_hex(bswap32(task_regs[0]), 32);
+	gdb_packet_hex(bswap32(task_regs[1]), 32);
 
 	for (size_t i = 4; i <= 18; i++) {
 		gdb_packet_hex(bswap32(task_regs[i]), 32);
