@@ -38,6 +38,9 @@ xtensa-softmmu/qemu-system-xtensa -d unimp,guest_errors -cpu esp32 -M esp32 -m 4
 
 (gdb) set remotetimeout 
 (gdb) set debug xtensa 1
+(gdb) set debug remote 1
+(gdb) info registers
+(gdb) info threads
 (gdb) target remote:2345
 
 

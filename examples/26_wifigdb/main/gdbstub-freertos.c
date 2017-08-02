@@ -52,13 +52,13 @@ extern List_t xSuspendedTaskList;
 #endif
 
 extern tskTCB * volatile pxCurrentTCB;
+char thread_entry[250] = { 0 };
 
 static void gdbstub_send_task(size_t id, char * name) {
-	char thread_entry[150] = { 0 };
-	const char * thread_template = "<thread id=\"%x\" core=\"0\" name=\"%s\"></thread>";
+	const char * thread_template = "<thread id=\"%x\" core=\"0\" name=\"%s\">%s</thread>";
 
 	if (name) {
-	  snprintf(thread_entry, sizeof(thread_entry), thread_template, id, name);
+	  snprintf(thread_entry, sizeof(thread_entry), thread_template, id, name,name);
 	  gdb_packet_str(thread_entry);
 	}
 }
@@ -110,6 +110,8 @@ static void fill_task_array() {
 
 
 void gdbstub_freertos_task_list() {
+	fill_task_array();
+	
 	gdb_packet_start();
 	gdb_packet_str("l");
 	gdb_packet_str("<?xml version=\"1.0\" ?>");
@@ -124,8 +126,7 @@ void gdbstub_freertos_task_list() {
 	 * protocol and so is avoided.
 	 */
 
-	//for (size_t i = 0; i < task_count - 1; i++) {
-	for (size_t i = 0; i < 6 - 1; i++) {
+	for (size_t i = 0; i < task_count - 1; i++) {
 		gdbstub_send_task(i + 1, (char *) pcTaskGetTaskName(task_list[i].handle));
 	}
 
@@ -175,8 +176,7 @@ void gdbstub_freertos_report_thread() {
 
 	size_t task_index = 0;
 
-	//for (size_t i = 0; i < task_count - 1; i++) {
-	for (size_t i = 0; i < 6 - 1; i++) {
+	for (size_t i = 0; i < task_count - 1; i++) {
 		if (task_list[i].handle == (TaskHandle_t) pxCurrentTCB) {
 			task_index = i;
 			break;

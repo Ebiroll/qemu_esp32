@@ -362,7 +362,7 @@ bool gdbstub_process_query(uint8_t* cmd) {
 		"swbreak+;"
 		"hwbreak+;"
 		"qXfer:threads:read+;"
-		"PacketSize=255";
+		"PacketSize=800";
 #else
 	const char * features =
 		"swbreak+;"

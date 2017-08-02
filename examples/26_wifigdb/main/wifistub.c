@@ -371,10 +371,10 @@ static int gdbHandleCommand(unsigned char *cmd, int len) {
 		gdbPacketEnd();
 	} else if (cmd[0]=='?') {	//Reply with stop reason
 		sendReason();
-	}/*
+	}
 	 else if (cmd[0]=='q') {	//Look for qSupported
 		return gdb_handle_command(cmd,len);
-		}*/
+	}
 	else {
 		// ??? Dont think this will work so well.. 
 		//return gdb_handle_command(cmd,len);
