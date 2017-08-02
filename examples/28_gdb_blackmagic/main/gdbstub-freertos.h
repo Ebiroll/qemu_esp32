@@ -11,30 +11,35 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+void fill_task_array();
 void gdbstub_freertos_task_list(char *query);
 void gdbstub_freertos_task_select(size_t gdb_task_index);
 bool gdbstub_freertos_task_selected();
 void gdbstub_freertos_regs_read();
 void gdbstub_freertos_report_thread();
 
-struct xtensa_exception_frame_t {
+typedef struct  {
+    uint32_t exit;
 	uint32_t pc;
 	uint32_t ps;
-	uint32_t sar;
-	uint32_t vpri;
-	uint32_t a0;
-	uint32_t a[14]; //a2..a15
+	uint32_t a[16]; //a0..a15
 	// These are added manually by the exception code; the HAL doesn't set these on an exception.
+    uint32_t sar;
 	uint32_t exccause;
+    uint32_t excvaddr;
 
-//  HAVE_LOOPS
-	//uint32_t lcount;
-	//uint32_t lbeg;
-	//uint32_t lend;
+	uint32_t lbeg;
+	uint32_t lend;
+	uint32_t lcount;
+
+    // coprocessor?
+	uint32_t tmp0;
+	uint32_t tmp1;
+	uint32_t tmp2;
 
 // Floating pont registers???
 
-};
+} xtensa_exception_frame_t;
 
 #pragma pack(push, 4)
 typedef struct  {
@@ -87,6 +92,7 @@ typedef struct  {
 
 #pragma pack(pop) 
 
+void gdbstub_freertos_set_reg_data(GdbRegFile *data);
 
 
 #endif /* GDBSTUB_FREERTOS_H_ */

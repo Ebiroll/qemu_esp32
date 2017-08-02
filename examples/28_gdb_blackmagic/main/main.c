@@ -24,6 +24,9 @@
 #include "freertos/queue.h"
 #include "gdb_main.h"
 #include "gdbstub-freertos.h"
+#include <xtensa/corebits.h>
+#include <soc/cpu.h>
+
 
 extern void set_all_exception_handlers(void);
 extern void wifi_gdb_handler(int socket);
@@ -99,6 +102,42 @@ static void initialise_wifi(void)
 
 void set_gdb_socket(int socket);
 
+#define MYRSR(reg, curval)  asm volatile ("rsr %0, " #reg : "=r" (curval));
+
+void silly_stack_test(int input)
+{
+    int count=0;
+    MYRSR(SAR,count);
+    printf("--- SAR ---0x%X\n",(unsigned int)count);
+
+    MYRSR(LCOUNT,count);
+    printf("--- LCOUNT ---0x%X\n",(unsigned int)count);
+
+    MYRSR(PS,count);
+    printf("--- PS ---0x%X\n",(unsigned int)count);
+
+    MYRSR(LBEG,count);
+    printf("--- LBEG ---0x%X\n",(unsigned int)count);
+
+
+    while(1) {
+        for (;;) {
+            vTaskDelay(9000);
+            count++;
+        }   
+    }
+}
+
+void demo_thread(void *pvParameters)
+{
+    char test[10];
+    int stack;
+
+    printf("--- test --0x%X\n",(unsigned int)test);
+    strcpy(test,"hello");
+    silly_stack_test(2);
+}
+
 
 void gdb_application_thread(void *pvParameters)
 {
@@ -160,5 +199,17 @@ void app_main()
     // Dont yet do this...
     // set_all_exception_handlers();
 
+    xTaskCreate(&demo_thread, "demo", 4*1024, NULL, 10, NULL);
+
     xTaskCreate(&gdb_application_thread, "gdb_thread", 4*4096, NULL, 17, NULL);
+
+    // qemu testing
+#if 0
+    fill_task_array();
+    gdbstub_freertos_task_select(3);
+    gdbstub_freertos_regs_read();
+
+    int *ptr=0;
+	*ptr=0xff;
+#endif
 }

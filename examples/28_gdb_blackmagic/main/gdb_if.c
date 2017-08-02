@@ -56,8 +56,8 @@ int ATTR_GDBFN gdbRecvChar() {
 				return 0;
 			}
 			inbuf[i]=0;
-			printf("<-%s\n",inbuf);
-		in_buf_received=i;
+			//printf("<-%s\n",inbuf);
+		    in_buf_received=i;
 	}
 
 	if (in_buf_head<in_buf_received) {
@@ -168,7 +168,7 @@ void gdb_if_putchar(unsigned char c, int flush)
 		if ((flush) || (buf_head==OUT_BUFFER_LEN)) {
 			//send(gdb_if_conn, (void *)outbuf, buf_head, 0);
 			outbuf[buf_head]=0;
-			printf("->%s\r\n", outbuf);
+			//printf("->%s\r\n", outbuf);
 			if ((nwrote = write(gdb_socket, outbuf, buf_head)) < 0) {
 				printf("%s: ERROR responding to gdb request. written = %d\r\n",__FUNCTION__, nwrote);
 				//printf("Closing socket %d\r\n", sd);

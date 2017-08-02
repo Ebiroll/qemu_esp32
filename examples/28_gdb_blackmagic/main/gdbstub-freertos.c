@@ -13,6 +13,7 @@
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
+#include "gdbstub-freertos.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -24,6 +25,7 @@ static int task_array_filled=0;
 static struct {
 	uint32_t * stack;
 	TaskHandle_t handle;
+	xtensa_exception_frame_t* test;
 } task_list[GDBSTUB_THREADS_MAX] = {{ 0 }};
 
 /*
@@ -106,6 +108,41 @@ void gdb_packet_end() {
 	gdbPacketFlush();
 }
 
+static void putEntry(uint32_t pc, uint32_t sp)
+{
+    if (pc & 0x80000000) {
+        pc = (pc & 0x3fffffff) | 0x40000000;
+    }
+    printf(" 0x%X",pc);
+    printf(":0x%X",sp);
+}
+
+bool esp_stack_ptr_is_sane(uint32_t sp)
+{
+	return !(sp < 0x3ffae010UL || sp > 0x3ffffff0UL || ((sp & 0xf) != 0));
+}
+
+static void doBacktrace(uint32_t s_pc,uint32_t s_a0,uint32_t s_a1)
+{
+    uint32_t i = 0, pc = s_pc, sp =s_a1;
+    printf("\r\nBacktrace:");
+    /* Do not check sanity on first entry, PC could be smashed. */
+    putEntry(pc, sp);
+    pc = s_a0;
+    while (i++ < 100) {
+        uint32_t psp = sp;
+        if (!esp_stack_ptr_is_sane(sp) || i++ > 100) {
+            break;
+        }
+        sp = *((uint32_t *) (sp - 0x10 + 4));
+        putEntry(pc - 3, sp); // stack frame addresses are return addresses, so subtract 3 to get the CALL address
+        pc = *((uint32_t *) (psp - 0x10));
+        if (pc < 0x40000000) {
+            break;
+        }
+    }
+    printf("\r\n\r\n");
+}
 
 
 static void gdbstub_send_task(size_t id, char * name) {
@@ -133,6 +170,7 @@ static void process_task_list(List_t * list) {
 			listGET_OWNER_OF_NEXT_ENTRY(next_tcb, list);
 
 			task_list[task_count].stack = (uint32_t *) next_tcb->pxTopOfStack;
+			task_list[task_count].test = (xtensa_exception_frame_t *) next_tcb->pxTopOfStack;
 			task_list[task_count].handle = (TaskHandle_t) next_tcb;
 
 			task_count++;
@@ -140,7 +178,7 @@ static void process_task_list(List_t * list) {
 	}
 }
 
-static void fill_task_array() {
+void fill_task_array() {
 	int32_t queue = configMAX_PRIORITIES;
 
 	task_count = 0;
@@ -164,8 +202,6 @@ static void fill_task_array() {
   task_array_filled=1;
 }
 
-
-void gdbPacketFlush();
 
 
 void gdbstub_freertos_task_list(char *query) {
@@ -206,7 +242,7 @@ void gdbstub_freertos_task_select(size_t gdb_task_index) {
 
 bool gdbstub_freertos_task_selected() {
 	if (task_selected > task_count - 1) {
-		return true;
+		return false;
 	}
 
 	return task_list[task_selected].handle == (TaskHandle_t) pxCurrentTCB;
@@ -252,6 +288,45 @@ void gdbstub_freertos_regs_read() {
 
 	gdb_packet_end();
 }
+
+void gdbstub_freertos_set_reg_data(GdbRegFile *data) {
+	if (task_array_filled==0) {
+		fill_task_array();
+	}
+
+    printf("**********************************\n");
+/*
+    uint32_t exit;
+	uint32_t pc;
+	uint32_t ps;
+	uint32_t a[16]; //a0..a15
+	uint32_t sar;
+	uint32_t exccause;
+    uint32_t excvaddr;
+
+*/
+
+	// task_selected was checked before
+
+	uint32_t * task_regs = task_list[task_selected].stack;
+
+	// pc
+	data->pc=task_regs[1];
+	data->ps=task_regs[2];
+	data->a[0]=task_regs[3];
+
+	for (size_t i = 4; i < 16+4; i++) {
+		//gdb_packet_hex(bswap32(task_regs[i]), 32);
+		data->a[i-3]=task_regs[i];
+	}
+
+    data->sar=task_regs[20];
+	data->expstate=task_regs[21];
+
+	doBacktrace(data->pc,data->a[0],data->a[1]);
+
+}
+
 
 void gdbstub_freertos_report_thread() {
 	fill_task_array();

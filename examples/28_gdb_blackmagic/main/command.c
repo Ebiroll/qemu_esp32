@@ -103,6 +103,7 @@ int command_process(target *t, char *cmd)
 
 bool cmd_version(void)
 {
+	gdb_out("Try monitor help \n");
 	gdb_out("License GPLv3+: GNU GPL version 3 or later "
 		"<http://gnu.org/licenses/gpl.html>\n\n");
 
@@ -151,7 +152,6 @@ bool cmd_targets(void)
 
 	return true;
 }
-
 
 
 

@@ -9,13 +9,6 @@ Some useful monitor commands would also be nice to be able to fix
 the annoying qemu flash emulation bug.
 
 TODO,
-1. These modules are all very similar and collected from 3 different projects,
-Only get one way of sending data and serving the main gdb loop.
-gdbstub.c
-wifistub.c
-gdb_main.c
-
-2. Exit the mai_loop if the socket closes
 
 
 

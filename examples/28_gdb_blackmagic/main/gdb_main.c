@@ -405,7 +405,6 @@ handle_q_packet(char *packet, int len)
 	}
 
 
-
  	if (strncmp(packet, "qfThreadInfo", 11)==0) {
 		gdb_putpacketz("m 01,02,03,04,l");
 		return;
@@ -426,7 +425,6 @@ handle_q_packet(char *packet, int len)
 		printf("----------------\n");
 		//gdb_putpacketz("");
 
-		// Unfortunayrly does not work
 		gdbstub_freertos_task_list(packet);
 		return;
 	}

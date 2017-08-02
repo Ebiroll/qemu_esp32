@@ -390,14 +390,15 @@ static void esp32_regs_read(target *t, void *data)
 {
 	printf("esp32_regs_read\n");
 
-
     dumpHwToRegfile();
-	//if (!gdbstub_freertos_task_selected()) {
-	//  printf("task\n");
-  	//  gdbstub_freertos_regs_read();
-	//  return;
-	//}
+	if (gdbstub_freertos_task_selected()) {
+	  printf("task\n");
+  	  gdbstub_freertos_set_reg_data(&gdbRegFile);
+	}
 	//gdbRegFile;
+	if (gdbRegFile.pc & 0x80000000) {
+        gdbRegFile.pc = (gdbRegFile.pc & 0x3fffffff) | 0x40000000;
+    }
 	int *p=(int*)&gdbRegFile.pc;
 	memcpy(p,data,sizeof(gdbRegFile));
 }
@@ -405,8 +406,8 @@ static void esp32_regs_read(target *t, void *data)
 static void esp32_regs_write(target *t, const void *data)
 {
 		printf("esp32_regs_write\n");
-		//int *p=(int*)&gdbRegFile;
-		//memcpy(data,p,sizeof(gdbRegFile));
+		int *p=(int*)&gdbRegFile;
+		memcpy(data,p,sizeof(gdbRegFile));
 }
 
 static uint32_t esp32_pc_read(target *t)
@@ -471,6 +472,17 @@ int esp32_run_stub(target *t, uint32_t loadaddr,
 static uint32_t dwt_mask(size_t len)
 {
 	printf("esp32_dwt_mask\n");	
+#if 0
+
+   // This disables all the watchdogs 
+
+	TIMERG0.wdt_wprotect = TIMG_WDT_WKEY_VALUE;
+    TIMERG0.wdt_config0.en = 0;
+    TIMERG0.wdt_wprotect = 0;
+    TIMERG1.wdt_wprotect = TIMG_WDT_WKEY_VALUE;
+    TIMERG1.wdt_config0.en = 0;
+    TIMERG1.wdt_wprotect = 0;
+#endif
 	return 0;
 }
 
@@ -479,6 +491,18 @@ static uint32_t dwt_func(target *t, enum target_breakwatch type)
 	printf("esp32_dwt_func\n");	
 	return 0;
 }
+
+static void setFirstBreakpoint(uint32_t pc)
+{
+    asm(
+        "wsr.ibreaka0 %0\n" \
+        "rsr.ibreakenable a3\n" \
+        "movi a4,1\n" \
+        "or a4, a4, a3\n" \
+        "wsr.ibreakenable a4\n" \
+        ::"r"(pc):"a3", "a4");
+}
+
 
 static int esp32_breakwatch_set(target *t, struct breakwatch *bw)
 {
@@ -491,6 +515,7 @@ static int esp32_breakwatch_set(target *t, struct breakwatch *bw)
 
 	switch (bw->type) {
 	case TARGET_BREAK_HARD:
+ 	    setFirstBreakpoint(bw->addr);
 		return 0;
 
 	case TARGET_WATCH_WRITE:
@@ -521,6 +546,9 @@ static int esp32_breakwatch_clear(target *t, struct breakwatch *bw)
 		return 1;
 	}
 }
+
+
+
 
 target_addr esp32_check_watch(target *t)
 {
@@ -563,11 +591,6 @@ static void dumpExceptionToRegfile(XtExcFrame *frame) {
 // This will probably not work, I assume processes switchin will stop on exception 
 void wifi_panic_handler(XtExcFrame *frame) {
 	dumpExceptionToRegfile(frame);
-	//Make sure txd/rxd are enabled
-	//gpio_pullup_dis(1);
-	//PIN_FUNC_SELECT(PERIPHS_IO_MUX_U0RXD_U, FUNC_U0RXD_U0RXD);
-	//PIN_FUNC_SELECT(PERIPHS_IO_MUX_U0TXD_U, FUNC_U0TXD_U0TXD);
-
 	sendReason();
 	while(1) {
 		gdb_main();
@@ -593,16 +616,30 @@ void set_all_exception_handlers(void) {
 static bool esp32_vector_catch(target *t, int argc, char *argv[])
 {
 	struct esp32_priv *priv = t->priv;
-	const char *vectors[] = {"EXCCAUSE_ILLEGAL", NULL, "EXCCAUSE_INSTR_ERROR", "EXCCAUSE_LOAD_STORE_ERROR", "mm", "nocp",
-				"chk", "stat", "bus", "int", "hard"};
+	const char *vectors[] = {"IllegalInstruction", "Syscall", "InstructionFetchError", "LoadStoreError",
+    "Level1Interrupt", "Alloca", "IntegerDivideByZero", "PCValue",
+    "Privileged", "LoadStoreAlignment", "res", "res",
+    "InstrPDAddrError", "LoadStorePIFDataError", "InstrPIFAddrError", "LoadStorePIFAddrError",
+    "InstTLBMiss", "InstTLBMultiHit", "InstFetchPrivilege", "res",
+    "InstrFetchProhibited", "res", "res", "res",
+    "LoadStoreTLBMiss", "LoadStoreTLBMultihit", "LoadStorePrivilege", "res",
+    "LoadProhibited", "StoreProhibited", "res", "res",
+    "Cp0Dis", "Cp1Dis", "Cp2Dis", "Cp3Dis",
+    "Cp4Dis", "Cp5Dis", "Cp6Dis", "Cp7Dis"};
 
-	//const int *values[] = {EXCCAUSE_ILLEGAL,0,EXCCAUSE_INSTR_ERROR } 
 	uint32_t tmp = 0;
 	unsigned i;
 
-	if ((argc < 3) || ((argv[1][0] != 'e') && (argv[1][0] != 'd'))) {
+    //  || ((argv[1][0] != 'e') && (argv[1][0] != 'd'))
+	if ((argc < 2)) {
 		tc_printf(t, "usage: monitor vector_catch"
-			     "(all|illegal)\n");
+			     "(all|");
+
+			for (i = 0; i < sizeof(vectors) / sizeof(char*); i++) {
+				tc_printf(t,"|%s",vectors[i]);
+			}
+
+			tc_printf(t,")\n");
 	} else {
 		for (int j = 0; j < argc; j++) {
 			if (!strcmp("all", argv[j])) {
