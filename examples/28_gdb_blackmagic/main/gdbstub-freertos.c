@@ -59,11 +59,11 @@ char thread_entry[250] = { 0 };
 
 static void gdbstub_send_task(size_t id, char * name) {
 
-	const char * thread_template = "<thread id=\"%x\" core=\"0\" name=\"%s\"></thread>";
+	const char * thread_template = "<thread id=\"%x\" core=\"0\" name=\"%s\">%s</thread>";
 	thread_entry[0]=0;
 
 	if (name) {
-	  snprintf(thread_entry, sizeof(thread_entry), thread_template, id, name);
+	  snprintf(thread_entry, sizeof(thread_entry), thread_template, id, name,name);
 	  gdb_packet_str(thread_entry);
 	}
 }
@@ -166,17 +166,28 @@ void gdbstub_freertos_regs_read() {
 		fill_task_array();
 	}
 
+/*
+	uint32_t pc;
+	uint32_t ps;
+	uint32_t sar;
+	uint32_t vpri;
+	uint32_t a0;
+	uint32_t a[14]; //a2..a15
+	// These are added manually by the exception code; the HAL doesn't set these on an exception.
+	uint32_t exccause;
+*/
+
 	// task_selected was checked before
 	gdb_packet_start();
 
 	uint32_t * task_regs = task_list[task_selected].stack;
 
-	for (size_t i = 3; i <= 18; i++) {
+	// pc
+	gdb_packet_hex(bswap32(task_regs[0]), 32);
+
+	for (size_t i = 4; i <= 18; i++) {
 		gdb_packet_hex(bswap32(task_regs[i]), 32);
 	}
-
-	// pc
-	gdb_packet_hex(bswap32(task_regs[1]), 32);
 
 	// Skip special registers
 	gdb_packet_hex(0, 32);

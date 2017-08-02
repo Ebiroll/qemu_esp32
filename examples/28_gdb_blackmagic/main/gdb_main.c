@@ -256,6 +256,8 @@ int gdb_main_loop(struct target_controller *tc, bool in_syscall)
 			default:
 				gdb_putpacket_f("T%02X", GDB_SIGTRAP);
 			}
+			
+			gdbstub_freertos_report_thread();
 			break;
 			}
 		case 'F':	/* Semihosting call finished */

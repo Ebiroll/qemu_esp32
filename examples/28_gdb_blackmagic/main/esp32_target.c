@@ -266,16 +266,15 @@ static const char tdesc_esp32[] =
 static void esp32_mem_read(target *t, void *dest, target_addr src, size_t len)
 {
 	printf("esp32_mem_read %d\n",len);
-#if 0
-	int * i = (int *) (p & (~3));
+	int * i = (int *) (src & (~3));
 
 	// TODO: better address range check?
-	if (p < 0x20000000 || p >= 0x60000000) {
-		return -1;
+	if (src < 0x20000000 || src >= 0x60000000) {
+		return;
 	}
 
-	return * i >> ((p & 3) * 8);
-#endif
+	int *to=(int *)dest;
+	 *to= * i >> ((src & 3) * 8);
 }
 
 static void esp32_mem_write(target *t, target_addr dest, const void *src, size_t len)
@@ -374,6 +373,7 @@ static void esp32_regs_read(target *t, void *data)
 	printf("esp32_regs_read\n");
 
 	if (!gdbstub_freertos_task_selected()) {
+	printf("task\n");
   	  gdbstub_freertos_regs_read();
 	  return;
 	}

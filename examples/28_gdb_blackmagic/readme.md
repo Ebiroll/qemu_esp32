@@ -8,6 +8,16 @@ The idea is to add extended-remote and
 Some useful monitor commands would also be nice to be able to fix
 the annoying qemu flash emulation bug.
 
+TODO,
+1. These modules are all very similar and collected from 3 different projects,
+Only get one way of sending data and serving the main gdb loop.
+gdbstub.c
+wifistub.c
+gdb_main.c
+
+2. Exit the mai_loop if the socket closes
+
+
 
 xtensa-esp32-elf-gdb build/wifigdb.elf   -ex 'target remote 192.168.4.3:2345'
 
@@ -25,6 +35,9 @@ https://www-zeuthen.desy.de/dv/documentation/unixguide/infohtml/gdb/Thread-List-
 
 As all other code here, its for learning.
 
+The only cool thing about this example now is,
+(gdb) info threads
+
 
 In qemu
 ======
@@ -36,9 +49,9 @@ xtensa-softmmu/qemu-system-xtensa -d unimp,guest_errors -cpu esp32 -M esp32 -m 4
 (gdb) set remotetimeout 30 
 (gdb) set debug xtensa 1
 (gdb) target remote:2345
-
+(gdb) target remote 192.168.1.139:2345
+(gdb) info threads
 
 Also try 
 (gdb) target extended-remote:2345
-
 
