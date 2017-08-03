@@ -542,7 +542,16 @@ This because qemu will create an empty file esp32flash.bin and there is no parti
 
   (gdb) x/10i $pc
   (gdb) x/10i 0x40000400
+  (gdb) p/x $a0
+
+  Call0 will set a0 with return adress, this will list the instructions at the call
+  (gdb) x/10i $a0-3
+  (gdb) info symbol 0x400d0eb1
+  (gdb) layout next
+  (gdb) b app_main
   (gdb) continue
+  (gdb) list *$pc
+Ctrl-X and the O opens the source
 ```
 
 To disassemble a specific function you can set pc from gdb,
@@ -1211,7 +1220,17 @@ It is a good idea to save the original  xtensa-esp32-elf-gdb as the one in the b
     xtensa-esp32-elf-gdb.sav  build/app-template.elf  -ex 'target remote:8880'
     Another solution if you are running qemu-gdb is to set a breakpoint in the stub.
     (gdb)b esp_gdbstub_panic_handler 
+    or if you use default settings
+    (gdb)b commonErrorHandler
+    (gdb) where (or up) will show you what the problem is
+
+
+    (gdb)b _xt_panic
+
 ```
+## Analysis of an exception
+[Mostly assembly dumps](./EXCEPTION.md)
+
     This gdbstub panic handler is also nice to have when running on target.
     xtensa-esp32-elf-gdb   build/app-template.elf   -b 115200 -ex 'target remote /dev/ttyUSB0'
    
