@@ -48,9 +48,9 @@ Analysis of an exception
     0x40081cba <_xt_user_exc+90>    rsr.exccause   a2
     0x40081cbd <_xt_user_exc+93>    rsr.exccause   a2 
     0x40081cc0 <_xt_user_exc+96>    l32r   a3, 0x400805a4                  
-    0x40081cc3 <_xt_user_exc+99>    addx4  a4, a2, a3                                             0x40081cc6 <_xt_user_exc+102>   l32i.n a4, a4, 0    
-    0x40081cc6 <_xt_user_exc+102>   l32i.n a4, a4, 0 
-    0x40081cc8 <_xt_user_exc+104>   mov.n  a6, a1                                                  0x40081cca <_xt_user_exc+106>   callx4 a4          // xt_unhandled_exception
+    0x40081cc3 <_xt_user_exc+99>    addx4  a4, a2, a3                                             0x40081cc6 <_xt_user_exc+102>   l32i.n a4, a4, 0   
+    0x40081cc8 <_xt_user_exc+104>   mov.n  a6, a1
+    0x40081cca <_xt_user_exc+106>   callx4 a4          // xt_unhandled_exception
     0x40081ccd <_xt_user_exc+109>   call0  0x40085ca8 <_xt_context_restore>
 
 void xt_unhandled_exception(XtExcFrame *frame)  {
