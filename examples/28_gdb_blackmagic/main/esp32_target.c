@@ -503,6 +503,55 @@ static void setFirstBreakpoint(uint32_t pc)
         ::"r"(pc):"a3", "a4");
 }
 
+#define ESP_OK 0
+#define ESP_FAIL        -1
+#define ESP_ERR_NO_MEM          0x101
+#define ESP_ERR_INVALID_ARG     0x102
+
+int esp_original_set_watchpoint(int no, void *adr, int size, int flags)
+{
+    int x;
+    if (no<0 || no>1) return ESP_ERR_INVALID_ARG;
+    if (flags&(~0xC0000000)) return ESP_ERR_INVALID_ARG;
+    int dbreakc=0x3F;
+    //We support watching 2^n byte values, from 1 to 64. Calculate the mask for that.
+    for (x=0; x<7; x++) {
+        if (size==(1<<x)) break;
+        dbreakc<<=1;
+    }
+    if (x==7) return ESP_ERR_INVALID_ARG;
+    //Mask mask and add in flags.
+    dbreakc=(dbreakc&0x3f)|flags;
+
+    if (no==0) {
+        asm volatile(
+            "wsr.dbreaka0 %0\n" \
+            "wsr.dbreakc0 %1\n" \
+            ::"r"(adr),"r"(dbreakc));
+    } else {
+        asm volatile(
+            "wsr.dbreaka1 %0\n" \
+            "wsr.dbreakc1 %1\n" \
+            ::"r"(adr),"r"(dbreakc));
+    }
+    return ESP_OK;
+}
+
+void esp_original_clear_watchpoint(int no)
+{
+    //Setting a dbreakc register to 0 makes it trigger on neither load nor store, effectively disabling it.
+    int dbreakc=0;
+    if (no==0) {
+        asm volatile(
+            "wsr.dbreakc0 %0\n" \
+            ::"r"(dbreakc));
+    } else {
+        asm volatile(
+            "wsr.dbreakc1 %0\n" \
+            ::"r"(dbreakc));
+    }
+}
+
 
 static int esp32_breakwatch_set(target *t, struct breakwatch *bw)
 {
@@ -597,8 +646,24 @@ void wifi_panic_handler(XtExcFrame *frame) {
 	}
 }
 
+void no_panic_handler(XtExcFrame *frame) {
+	printf("DONT PANIC\n");
+	// This does not work, we must also clear PS.EX...
+	// The idea was to be able to catch memory reads from faulty adresses
+
+    //asm volatile("movi    a0, PS_INTLEVEL(5) | PS_UM | PS_WOE");
+	//asm volatile("movi    a0,0x60020");
+	 // Illegal instruction
+    //asm volatile("wsr     a0, PS");
+
+	//asm volatile("rsr     a0, ps");
+	//asm volatile("rsr     a0, excsave1");
+	//asm volatile("addi.n	a0, a0, 3");
+	//asm volatile("rfe");
+}
+
 void set_exception_handler(int i) {
-       xt_set_exception_handler(i, wifi_panic_handler);	
+       xt_set_exception_handler(i, no_panic_handler);	
 }
 
 
@@ -676,7 +741,7 @@ static bool esp32_scan_i2c(target *t, int argc, char *argv[])
 
 	if ((argc < 2) || ((argv[1][0] != 'e') && (argv[1][0] != 'd'))) {
 		tc_printf(t, "usage: monitor scan_i2c (null|div) "
-			     "\n");
+			     "null gives you a StoreProhibited exception \n");
 	} else {
 		// ATTACH
 	}

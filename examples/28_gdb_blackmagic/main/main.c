@@ -174,7 +174,7 @@ void gdb_application_thread(void *pvParameters)
 	}
 }
 
-
+void set_exception_handler(int i);
 
 void app_main()
 {
@@ -204,12 +204,13 @@ void app_main()
     xTaskCreate(&gdb_application_thread, "gdb_thread", 4*4096, NULL, 17, NULL);
 
     // qemu testing
-#if 0
+    #if 0
     fill_task_array();
     gdbstub_freertos_task_select(3);
     gdbstub_freertos_regs_read();
 
+    set_exception_handler(29);
     int *ptr=0;
 	*ptr=0xff;
-#endif
+    #endif
 }
