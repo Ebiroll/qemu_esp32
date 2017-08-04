@@ -59,6 +59,8 @@ Interesting gdb commands
 (gdb) info threads
 (gdb) monitor help
 
+Not so useful
+(gdb) set debug target 1
 ``` 
 
 

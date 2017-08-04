@@ -70,7 +70,21 @@ static void esp32_add_flash(target *t, size_t length)
 bool esp32_otaflash_probe(target *t)
 {
 	t->driver = esp32_driver_str;
-	target_add_ram(t, IRAM_BASE, 0x8000);
+	//target_add_ram(t, IRAM_BASE, IRAM_SIZE);
+	//target_add_ram(t, DRAM_BASE, 0x20000);
+
+	//target_add_ram(t, 0x40070000, 0x8000);
+	 
+	target_add_ram(t,0x40070000, 1+0x4007FFFF-0x40070000);
+	target_add_ram(t,0x40080000, 1+0x4009FFFF-0x40080000);
+	target_add_ram(t,0x3FFE0000, 1+0x3FFFFFFF-0x3FFE0000); //    Static MPU
+	target_add_ram(t,0x400A0000, 1+0x400BFFFF-0x400A0000); //    Static MPU
+	target_add_ram(t,0x3FFAE000, 1+0x3FFBFFFF-0x3FFAE000); //    Static MPU
+	target_add_ram(t,0x3FFC0000, 1+0x3FFDFFFF-0x3FFC0000); //   SRAM2 MMU
+	target_add_ram(t,0x3FF80000, 1+0x3FF81FFF-0x3FF80000); //   RTC FAST MPU
+	target_add_ram(t,0x400C0000, 1+0x400C1FFF-0x400C0000); //   RTC FAST MPU
+	target_add_ram(t,0x50000000, 1+0x50001FFF-0x50000000); //   RTC SLOW MPU
+
 	esp32_add_flash(t, 0x400000);
 
 	return true;

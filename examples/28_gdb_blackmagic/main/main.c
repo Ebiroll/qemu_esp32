@@ -33,8 +33,6 @@ extern void wifi_gdb_handler(int socket);
 
 unsigned short gdb_port = 2345;
 
-QueueHandle_t receive_queue;
-QueueHandle_t send_queue;
 
 /* The examples use simple WiFi configuration that you can set via
    'make menuconfig'.
@@ -193,8 +191,6 @@ void app_main()
       initialise_wifi();
     }
 
-    receive_queue = xQueueCreate( 100, sizeof( int32_t ) );
-    //send_queue = xQueueCreate( 100, sizeof( int32_t ) );
 
     // Dont yet do this...
     // set_all_exception_handlers();
@@ -204,7 +200,7 @@ void app_main()
     xTaskCreate(&gdb_application_thread, "gdb_thread", 4*4096, NULL, 17, NULL);
 
     // qemu testing
-    #if 1
+    #if 0
     fill_task_array();
     gdbstub_freertos_task_select(3);
     gdbstub_freertos_regs_read();
@@ -212,5 +208,10 @@ void app_main()
     set_exception_handler(29);
     int *ptr=0;
 	*ptr=0xff;
+
+    // Execusion stops here,
+    // Could be useful when testing memory
+
+    gdb_port=1234;
     #endif
 }
