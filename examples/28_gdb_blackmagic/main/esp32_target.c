@@ -91,13 +91,15 @@ static void dumpHwToRegfile() {
 	gdbRegFile.a[8]=0x88888888;
 
 	//gdbRegFile.lbeg=0xdeadbeef;  // frame->lbeg;
-	//RSR(LBEG, gdbRegFile.lbeg);
-	gdbRegFile.lbeg=0x66666666;
+	RSR(LBEG, gdbRegFile.lbeg);
+	//gdbRegFile.lbeg=0x66666666;
 
 	gdbRegFile.lend=0xdeadbeef; //frame->lend;
 	RSR(LEND, gdbRegFile.lend);
 
 	gdbRegFile.lcount=0xdeadbeef; //frame->lcount;
+	RSR(SAR, gdbRegFile.lcount);
+
 	gdbRegFile.sar=0xdeadbeef; //frame->sar;
 	//All windows have been spilled to the stack by the ISR routines. The following values should indicate that.
 	gdbRegFile.sar=0xdeadbeef; //frame->sar;
@@ -308,6 +310,9 @@ static void esp32_priv_free(void *priv)
 	free(priv);
 }
 
+// Flash
+bool esp32_otaflash_probe(target *t);
+
 target *esp32_probe(struct target_controller *controller)
 {
 	target *t;
@@ -346,6 +351,8 @@ target *esp32_probe(struct target_controller *controller)
 
 
     target_attach(t,controller);
+
+	esp32_otaflash_probe(t);
 
 	return t;
 }
@@ -399,15 +406,19 @@ static void esp32_regs_read(target *t, void *data)
 	if (gdbRegFile.pc & 0x80000000) {
         gdbRegFile.pc = (gdbRegFile.pc & 0x3fffffff) | 0x40000000;
     }
+	if (gdbRegFile.a[0] & 0x80000000) {
+        gdbRegFile.a[0] = (gdbRegFile.a[0] & 0x3fffffff) | 0x40000000;
+    }
+
 	int *p=(int*)&gdbRegFile.pc;
-	memcpy(p,data,sizeof(gdbRegFile));
+	memcpy(data,p,sizeof(gdbRegFile));
 }
 
 static void esp32_regs_write(target *t, const void *data)
 {
 		printf("esp32_regs_write\n");
 		int *p=(int*)&gdbRegFile;
-		memcpy(data,p,sizeof(gdbRegFile));
+		memcpy(p,data,sizeof(gdbRegFile));
 }
 
 static uint32_t esp32_pc_read(target *t)
@@ -648,18 +659,17 @@ void wifi_panic_handler(XtExcFrame *frame) {
 
 void no_panic_handler(XtExcFrame *frame) {
 	printf("DONT PANIC\n");
-	// This does not work, we must also clear PS.EX...
+	// This can work if thread is terminating
 	// The idea was to be able to catch memory reads from faulty adresses
 
-    //asm volatile("movi    a0, PS_INTLEVEL(5) | PS_UM | PS_WOE");
-	//asm volatile("movi    a0,0x60020");
-	 // Illegal instruction
-    //asm volatile("wsr     a0, PS");
-
 	//asm volatile("rsr     a0, ps");
-	//asm volatile("rsr     a0, excsave1");
-	//asm volatile("addi.n	a0, a0, 3");
 	//asm volatile("rfe");
+    //asm volatile("movi    a0, PS_INTLEVEL(5) | PS_UM | PS_WOE");
+    //asm volatile("addi.n  a0, a0, 3");
+
+	asm volatile("movi    a0,0x60020");
+    asm volatile("wsr     a0, ps");
+	asm volatile("rsr     a0, excsave1");
 }
 
 void set_exception_handler(int i) {

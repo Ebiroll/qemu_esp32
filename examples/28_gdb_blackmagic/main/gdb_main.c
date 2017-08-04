@@ -147,13 +147,11 @@ int gdb_main_loop(struct target_controller *tc, bool in_syscall)
 	int size;
 	bool single_step = false;
 
-#if 0
 	uint8_t arm_regs[target_regs_size(cur_target)];
 	target_regs_read(cur_target, arm_regs);
 	gdb_putpacket(hexify(pbuf, arm_regs, sizeof(arm_regs)),
 					sizeof(arm_regs) * 2);
 
-#endif
 	DEBUG_BM("Entring GDB protocol main loop\n");
 	/* GDB protocol main loop */
 	while(gdb_if_is_running()==1) {

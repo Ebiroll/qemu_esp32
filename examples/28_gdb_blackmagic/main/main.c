@@ -204,7 +204,7 @@ void app_main()
     xTaskCreate(&gdb_application_thread, "gdb_thread", 4*4096, NULL, 17, NULL);
 
     // qemu testing
-    #if 0
+    #if 1
     fill_task_array();
     gdbstub_freertos_task_select(3);
     gdbstub_freertos_regs_read();
