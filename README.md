@@ -6,6 +6,27 @@ This documents how to add an esp32 cpu and a simple esp32 board to qemu in order
 It is a good way to learn about qemu , esp32 and the esp32 rom.
 
 
+Latest version of esp-idf requires this setting.
+```
+Ahome/olas/esp/qemu_esp32/examples/06_ssd1306-esp-idf-i2c/sdkconfig - Espressif IoT Development Framework Confi
+g> Component config > ESP32-specific --------------------------------------------------------------------------
+
+
+
+
+
+                       +------------ Timers used for gettimeofday function ------------+
+                       |  Use the arrow keys to navigate this window or press the      |  
+                       |  hotkey of the item you wish to select followed by the <SPACE |  
+                       |  BAR>. Press <?> for additional information about this        |  
+                       | +-----------------------------------------------------------+ |  
+                       | |                     ( ) RTC                               | |  
+                       | |                     ( ) RTC and FRC1                      | |  
+                       | |                     ( ) FRC1                              | |  
+                       | |                     (X) None                              | |  
+                       | |                                                  
+```
+
 ## IMPORTANT update, July 2017
 
 Booting from emulated flash! This is very cool.
@@ -20,6 +41,7 @@ ets_unpack_flash_code is not longer patched , qemu now relies on flash and MMU e
   flash hash caclulations dont match.
   This is because bootloader always use hardware acceleration to calculate the hash and
   qemu does not emulate hardware SHA5 calculation.
+
 
 ```
   Component config  --->    
