@@ -1,6 +1,12 @@
 ### Example of using **SPIFFS** with ESP32 and mogose webserver
 
-Now it works, 
+Now it works in qemu, 
+xtensa-softmmu/qemu-system-xtensa -d guest_errors,unimp  -cpu esp32 -M esp32 -m 4M -net nic,model=vlan0 -net user,id=simnet,ipver4=on,net=192.168.4.0/24,host=192.168.4.40,hostfwd=tcp::10080-192.168.4.3:80  -net dump,file=/tmp/vm0.pcap    -s   > io.txt
+
+Open browser,
+http://127.0.0.1:10080/
+
+
 
 Left part shows MMU registers and their values, middle show memory and value, right part show values from the flash read with spi_flash_read
 

@@ -6,11 +6,10 @@ This documents how to add an esp32 cpu and a simple esp32 board to qemu in order
 It is a good way to learn about qemu , esp32 and the esp32 rom.
 
 
-Latest version of esp-idf requires this setting.
+Now this is not required if you use updated qemu-esp32.
 ```
 Ahome/olas/esp/qemu_esp32/examples/06_ssd1306-esp-idf-i2c/sdkconfig - Espressif IoT Development Framework Confi
 g> Component config > ESP32-specific --------------------------------------------------------------------------
-
 
 
 
@@ -74,12 +73,14 @@ Then run the ./qemu_flash program.
 
 Note that you have to use the .bin file as argument. This will generate a flash image with bootloader, partition information and flash file that the bootloder can use boot the proper application from.
 
-It is still recomend that you give the  application as kernel parameter.
+You no longer need to give  application as kernel parameter.
 > -kernel /home/olas/esp/qemu_esp32/examples/07_flash_mmap/build/mmap_test.elf
 
-
-
 ```
+STARTING QEMU, with forward of localhost port 10080 to qemu port 80
+xtensa-softmmu/qemu-system-xtensa -d guest_errors,unimp  -cpu esp32 -M esp32 -m 4M -net nic,model=vlan0 -net user,id=simnet,ipver4=on,net=192.168.4.0/24,host=192.168.4.40,hostfwd=tcp::10080-192.168.4.3:80  -net dump,file=/tmp/vm0.pcap    -s   > io.txt
+
+
 If you get a crash like this,
 I (124) cpu_start: Pro cpu start user code
  File 'esp32flash.bin' is truncated or corrupt.
@@ -343,7 +344,7 @@ git clone --recursive https://github.com/espressif/esp-idf.git
 
 #  To keep the esp-idf updated  
   git pull & git submodule update --recursive
-
+  git  submodule update --init
 
 ```
 export PATH=$PATH:$HOME/esp/xtensa-esp32-elf/bin
