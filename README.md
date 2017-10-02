@@ -235,6 +235,11 @@ prerequisites Debian/Ubuntu:
 sudo apt-get install libpixman-1-0 libpixman-1-dev 
 ```
 
+prerequisites Redhat/Centos
+yum install glib2-devel pixman-devel
+
+
+
 
 ## qemu-esp32
 
