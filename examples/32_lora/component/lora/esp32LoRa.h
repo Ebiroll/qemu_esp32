@@ -31,7 +31,7 @@
  ******************************************************************************/
 
 #include <stdint.h>
-#include "arduPi.h"
+//#include "arduPi.h"
 
 #ifndef inttypes_h
 	#include <inttypes.h>

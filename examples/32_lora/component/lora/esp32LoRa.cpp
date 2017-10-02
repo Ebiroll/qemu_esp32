@@ -25,9 +25,10 @@
 //**********************************************************************
 // Includes
 //**********************************************************************
-#include "arduPiLoRa.h"
+#include "esp32LoRa.h"
+#include <stdio.h>
 
-#include "arduPiClasses.h"
+//#include "arduPiClasses.h"
 
 //#include "bcm2835.h"
 
