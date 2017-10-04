@@ -1,96 +1,98 @@
-/*  
- *  LoRa 868 / 915MHz SX1272 LoRa module
- *  
- *  Copyright (C) Libelium Comunicaciones Distribuidas S.L. 
- *  http://www.libelium.com 
- *  
- *  This program is free software: you can redistribute it and/or modify 
- *  it under the terms of the GNU General Public License as published by 
- *  the Free Software Foundation, either version 3 of the License, or 
- *  (at your option) any later version. 
- *  
- *  This program is distributed in the hope that it will be useful, 
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of 
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
- *  GNU General Public License for more details.
- *  
- *  You should have received a copy of the GNU General Public License 
- *  along with this program.  If not, see http://www.gnu.org/licenses/. 
- *  
- *  Version:           1.2
- *  Design:            David Gascón 
- *  Implementation:    Covadonga Albiñana, Victor Boria, Ruben Martin
- */
- 
-// Include the SX1272 and SPI library: 
-#include "esp32LoRa.h"
+// This example just provide basic LoRa function test;
+// Not the LoRa's farthest distance or strongest interference immunity.
+// For more informations, please vist www.heltec.cn or mail to support@heltec.cn
 
-int e;
+#include <SPI.h>
+#include <LoRa.h>
+#include<Arduino.h>
 
-char message1 [] = "Packet 1, wanting to see if received packet is the same as sent packet";
-char message2 [] = "Packet 2, broadcast test";
+// WIFI_LoRa_32 ports
 
-void setup()
-{
-  // Print a start message
-  printf("SX1272 module and Raspberry Pi: send packets without ACK\n");
-  
-  // Power ON the module
-  e = sx1272.ON();
-  printf("Setting power ON: state %d\n", e);
-  
-  // Set transmission mode
-  e |= sx1272.setMode(4);
-  printf("Setting Mode: state %d\n", e);
-  
-  // Set header
-  e |= sx1272.setHeaderON();
-  printf("Setting Header ON: state %d\n", e);
-  
-  // Select frequency channel
-  e |= sx1272.setChannel(CH_10_868);
-  printf("Setting Channel: state %d\n", e);
-  
-  // Set CRC
-  e |= sx1272.setCRC_ON();
-  printf("Setting CRC ON: state %d\n", e);
-  
-  // Select output power (Max, High or Low)
-  e |= sx1272.setPower('H');
-  printf("Setting Power: state %d\n", e);
-  
-  // Set the node address
-  e |= sx1272.setNodeAddress(3);
-  printf("Setting Node address: state %d\n", e);
-  
-  // Print a success message
-  if (e == 0)
-    printf("SX1272 successfully configured\n");
-  else
-    printf("SX1272 initialization failed\n");
+// Original
+// GPIO5  -- SX1278's SCK
+// GPIO19 -- SX1278's MISO
+// GPIO27 -- SX1278's MOSI
+// GPIO18 -- SX1278's CS
+// GPIO14 -- SX1278's RESET
+// GPIO26 -- SX1278's IRQ(Interrupt Request)
 
-  delay(1000);
+// OLAS SPARKFUN
+// GPIO18  --SX1278's SCK
+// GPIO19 -- SX1278's MISO
+// GPIO23 -- SX1278's MOSI
+// GPIO17  -- SX1278's CS
+// GPIO14 -- SX1278's RESET
+// GPIO26 -- SX1278's IRQ(Interrupt Request G0 / DI0??)
+
+
+
+
+#define SS      18
+#define RST     14
+#define DI0     26
+#define BAND    8661E6  // 433E6  //915E6 -- 
+
+int counter = 0;
+
+void setup() {
+  pinMode(5,OUTPUT); //Send success, LED will bright 1 second
+
+  digitalWrite(5, HIGH);   // turn the LED on (HIGH is the voltage level)
+  delay(1000);                       // wait for a second
+  digitalWrite(5, LOW);    // turn the LED off by making the voltage LOW
+  delay(500);                       // wait for a second
+  digitalWrite(5, HIGH);   // turn the LED on (HIGH is the voltage level)
+  delay(500);                       // wait for a second
+  digitalWrite(5, LOW);    // turn the LED off by making the voltage LOW
+  
+
+  Serial.begin(115200);
+  //while (!Serial); //If just the the basic function, must connect to a computer
+
+
+
+  //SPI.begin(5,19,27,18);
+  SPI.begin(18,19,23,17);
+  LoRa.setPins(SS,RST,DI0);
+//  Serial.println("LoRa Sender");
+
+  if (!LoRa.begin(BAND)) {
+    Serial.println("Starting LoRa failed!");
+    while (1) {
+      digitalWrite(5, HIGH);   // turn the LED on (HIGH is the voltage level)
+      delay(100);                       // wait for 100th of a second
+      digitalWrite(5, LOW);    // turn the LED off by making the voltage LOW    
+      delay(100);                       // wait for a 100th of second      
+    }
+  }
+
+  digitalWrite(5, HIGH);   // turn the LED on (HIGH is the voltage level)
+  delay(300);                       // wait for 100th of a second
+  digitalWrite(5, LOW);    // turn the LED off by making the voltage LOW    
+
+  Serial.println("LoRa Initial OK!");
 }
 
-void loop(void)
-{
-	// Send message1 and print the result
-    e = sx1272.sendPacketTimeout(8, message1);
-    printf("Packet sent, state %d\n",e);
-    
-    delay(4000);
- 
- 	// Send message2 broadcast and print the result
-    e = sx1272.sendPacketTimeout(0, message2);
-    printf("Packet sent, state %d\n",e);
-    
-    delay(4000);
-}
+void loop() {
+  Serial.print("Sending packet: ");
+  Serial.println(counter);
 
-int main (){
-	setup();
-	while(1){
-		loop();
-	}
-	return (0);
+
+  uint8_t version = LoRa.readRegister(0x42);
+  Serial.print("Version: ");
+  Serial.println(version);
+
+  // send packet
+  LoRa.beginPacket();
+  LoRa.print("hello ");
+  LoRa.print(counter);
+  LoRa.endPacket();
+
+  counter++;
+  digitalWrite(5, HIGH);   // turn the LED on (HIGH is the voltage level)
+  delay(1000);                       // wait for a second
+  digitalWrite(5, LOW);    // turn the LED off by making the voltage LOW
+  delay(1000);                       // wait for a second
+  
+  delay(3000);
 }

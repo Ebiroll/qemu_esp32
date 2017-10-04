@@ -3,7 +3,7 @@
 # project subdirectory.
 #
 
-PROJECT_NAME := arduino
+PROJECT_NAME := lora
 
 include $(IDF_PATH)/make/project.mk
 

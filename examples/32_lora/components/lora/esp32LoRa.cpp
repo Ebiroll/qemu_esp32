@@ -27,6 +27,7 @@
 //**********************************************************************
 #include "esp32LoRa.h"
 #include <stdio.h>
+#include <SPI.h>
 
 //#include "arduPiClasses.h"
 
@@ -52,6 +53,7 @@ uint8_t SX1272::ON()
 
   // Inital Reset Sequence
 
+  #if 0
   // 1.- power ON embebed socket
   Utils.socketON();
 
@@ -154,7 +156,7 @@ uint8_t SX1272::ON()
 	writeRegister(0x40,0x0);
 	writeRegister(0x41,0x0);
 	writeRegister(0x42,0x22);
-	
+#endif
   return state;
 }
 
