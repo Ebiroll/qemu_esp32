@@ -57,3 +57,14 @@ void loop(void)
   Serial.println("rad/s ");
   delay(500);
 }
+
+
+
+extern "C" void app_main()
+{
+  initArduino();
+  setup();
+  for(;;) {
+    loop();
+  }
+}

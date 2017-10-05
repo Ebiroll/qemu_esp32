@@ -134,7 +134,7 @@ bool Adafruit_FXAS21002C::begin(gyroRange_t rng)
                   111 = 12.5 Hz
      1  ACTIVE    Standby(0)/Active(1)                                0
      0  READY     Standby(0)/Ready(1)                                 0
-
+  */
   /* Reset then switch to active mode with 100Hz output */
   write8(GYRO_REGISTER_CTRL_REG1, 0x00);
   write8(GYRO_REGISTER_CTRL_REG1, (1<<6));
