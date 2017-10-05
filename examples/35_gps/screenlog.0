@@ -1,0 +1,224 @@
+$GPGSA,A,1,,,,,,,,,,,,,99.99,99.99,99.99*30
+$GPGSV,1,1,02,05,,,24,09,,,21*72
+$GPGLL,,,,,192049.00,V,N*4D
+$GPRMC,192050.00,V,,,,,,,051017,,,N*70
+$GPVTG,,,,,,,,,N*30
+$GPGGA,192050.00,,,,,0,00,99.99,,,,,,*69
+$GPGSA,A,1,,,,,,,,,,,,,99.99,99.99,99.99*30
+$GPGSV,1,1,02,05,,,23,09,,,22*76
+$GPGLL,,,,,192050.00,V,N*45
+$GPRMC,192051.00,V,,,,,,,051017,,,N*71
+$GPVTG,,,,,,,,,N*30
+$GPGGA,192051.00,,,,,0,00,99.99,,,,,,*68
+$GPGSA,A,1,,,,,,,,,,,,,99.99,99.99,99.99*30
+$GPGSV,1,1,02,05,,,23,09,,,22*76
+$GPGLL,,,,,192051.00,V,N*44
+ets Jun  8 2016 00:22:57
+
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+ets Jun  8 2016 00:22:57
+
+rst:0x10 (RTCWDT_RTC_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0010,len:4
+load:0x3fff0014,len:7796
+load:0x40078000,len:0
+load:0x40078000,len:13860
+entry 0x40079338
+[0;32mI (29) boot: ESP-IDF v3.0-dev-782-ge6afe28b 2nd stage bootloader[0m
+[0;32mI (29) boot: compile time 21:07:52[0m
+[0;32mI (39) boot: Enabling RNG early entropy source...[0m
+D (39) bootloader_flash: mmu set block paddr=0x00000000 (was 0xffffffff)[0m
+D (41) boot: magic e9[0m
+D (44) boot: segments 04[0m
+D (46) boot: spi_mode 02[0m
+D (49) boot: spi_speed 00[0m
+D (52) boot: spi_size 02[0m
+[0;32mI (54) boot: SPI Speed      : 40MHz[0m
+[0;32mI (58) boot: SPI Mode       : DIO[0m
+[0;32mI (62) boot: SPI Flash Size : 4MB[0m
+D (66) bootloader_flash: mmu set paddr=00000000 count=1[0m
+D (72) boot: mapped partition table 0x8000 at 0x3f408000[0m
+D (77) flash_parts: partition table verified, 3 entries[0m
+[0;32mI (82) boot: Partition Table:[0m
+[0;32mI (86) boot: ## Label            Usage          Type ST Offset   Length[0m
+D (93) boot: load partition table entry 0x3f408000[0m
+D (98) boot: type=1 subtype=2[0m
+[0;32mI (101) boot:  0 nvs              WiFi data        01 02 00009000 00006000[0m
+D (109) boot: load partition table entry 0x3f408020[0m
+D (114) boot: type=1 subtype=1[0m
+[0;32mI (117) boot:  1 phy_init         RF data          01 01 0000f000 00001000[0m
+D (124) boot: load partition table entry 0x3f408040[0m
+D (129) boot: type=0 subtype=0[0m
+[0;32mI (132) boot:  2 factory          factory app      00 00 00010000 00100000[0m
+[0;32mI (140) boot: End of partition table[0m
+D (144) boot: Trying partition index -1 offs 0x10000 size 0x100000[0m
+D (150) esp_image: reading image header @ 0x10000[0m
+D (155) bootloader_flash: mmu set block paddr=0x00010000 (was 0xffffffff)[0m
+D (162) esp_image: image header: 0xe9 0x07 0x02 0x01 40080c9c[0m
+V (168) esp_image: loading segment header 0 at offset 0x10018[0m
+V (174) esp_image: segment data length 0x603c data starts 0x10020[0m
+V (180) esp_image: segment 0 map_segment 1 segment_data_offs 0x10020 load_addr 0x3f400020[0m
+[0;32mI (188) esp_image: segment 0: paddr=0x00010020 vaddr=0x3f400020 size=0x0603c ( 24636) map[0m
+D (197) bootloader_flash: mmu set paddr=00010000 count=1[0m
+V (207) esp_image: loading segment header 1 at offset 0x1605c[0m
+D (208) bootloader_flash: mmu set block paddr=0x00010000 (was 0xffffffff)[0m
+V (215) esp_image: segment data length 0x146c data starts 0x16064[0m
+V (221) esp_image: segment 1 map_segment 0 segment_data_offs 0x16064 load_addr 0x3ffb0000[0m
+[0;32mI (229) esp_image: segment 1: paddr=0x00016064 vaddr=0x3ffb0000 size=0x0146c (  5228) load[0m
+D (238) bootloader_flash: mmu set paddr=00010000 count=1[0m
+V (245) esp_image: loading segment header 2 at offset 0x174d0[0m
+D (250) bootloader_flash: mmu set block paddr=0x00010000 (was 0xffffffff)[0m
+V (256) esp_image: segment data length 0x400 data starts 0x174d8[0m
+V (263) esp_image: segment 2 map_segment 0 segment_data_offs 0x174d8 load_addr 0x40080000[0m
+[0;32mI (271) esp_image: segment 2: paddr=0x000174d8 vaddr=0x40080000 size=0x00400 (  1024) load[0m
+D (280) bootloader_flash: mmu set paddr=00010000 count=1[0m
+V (285) esp_image: loading segment header 3 at offset 0x178d8[0m
+D (291) bootloader_flash: mmu set block paddr=0x00010000 (was 0xffffffff)[0m
+V (298) esp_image: segment data length 0x78b8 data starts 0x178e0[0m
+V (304) esp_image: segment 3 map_segment 0 segment_data_offs 0x178e0 load_addr 0x40080400[0m
+[0;32mI (312) esp_image: segment 3: paddr=0x000178e0 vaddr=0x40080400 size=0x078b8 ( 30904) load[0m
+D (321) bootloader_flash: mmu set paddr=00010000 count=1[0m
+V (333) esp_image: loading segment header 4 at offset 0x1f198[0m
+D (333) bootloader_flash: mmu set block paddr=0x00010000 (was 0xffffffff)[0m
+V (339) esp_image: segment data length 0x0 data starts 0x1f1a0[0m
+V (345) esp_image: segment 4 map_segment 0 segment_data_offs 0x1f1a0 load_addr 0x400c0000[0m
+[0;32mI (353) esp_image: segment 4: paddr=0x0001f1a0 vaddr=0x400c0000 size=0x00000 (     0) load[0m
+D (362) bootloader_flash: mmu set paddr=00010000 count=1[0m
+V (368) esp_image: loading segment header 5 at offset 0x1f1a0[0m
+D (373) bootloader_flash: mmu set block paddr=0x00010000 (was 0xffffffff)[0m
+V (380) esp_image: segment data length 0xe68 data starts 0x1f1a8[0m
+V (386) esp_image: segment 5 map_segment 0 segment_data_offs 0x1f1a8 load_addr 0x0[0m
+[0;32mI (394) esp_image: segment 5: paddr=0x0001f1a8 vaddr=0x00000000 size=0x00e68 (  3688) [0m
+D (403) bootloader_flash: mmu set paddr=00010000 count=2[0m
+V (409) esp_image: loading segment header 6 at offset 0x20010[0m
+D (414) bootloader_flash: mmu set block paddr=0x00020000 (was 0xffffffff)[0m
+V (421) esp_image: segment data length 0x133c0 data starts 0x20018[0m
+V (427) esp_image: segment 6 map_segment 1 segment_data_offs 0x20018 load_addr 0x400d0018[0m
+[0;32mI (435) esp_image: segment 6: paddr=0x00020018 vaddr=0x400d0018 size=0x133c0 ( 78784) map[0m
+D (444) bootloader_flash: mmu set paddr=00020000 count=2[0m
+V (465) esp_image: image start 0x00010000 end of last section 0x000333d8[0m
+D (465) bootloader_flash: mmu set block paddr=0x00030000 (was 0xffffffff)[0m
+D (468) esp_image: Calculated hash: cc3c3bdc[0m
+D (472) bootloader_flash: mmu set paddr=00030000 count=1[0m
+[0;32mI (479) boot: Loaded app from partition at offset 0x10000[0m
+[0;32mI (483) boot: Disabling RNG early entropy source...[0m
+D (489) boot: Mapping segment 0 as IROM[0m
+D (493) boot: Mapping segment 6 as DROM[0m
+D (497) boot: calling set_cache_and_start_app[0m
+D (501) boot: configure drom and irom and start[0m
+V (506) boot: d mmu set paddr=00020000 vaddr=400d0000 size=78784 n=2[0m
+V (512) boot: rc=0[0m
+V (514) boot: rc=0[0m
+V (516) boot: i mmu set paddr=00010000 vaddr=3f400000 size=24636 n=1[0m
+V (523) boot: rc=0[0m
+V (525) boot: rc=0[0m
+D (527) boot: start: 0x40080c9c[0m
+[0;32mI (530) cpu_start: Pro cpu up.[0m
+[0;32mI (534) cpu_start: Single core mode[0m
+[0;32mI (538) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (545) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (551) heap_init: At 3FFB1E28 len 0002E1D8 (184 KiB): DRAM[0m
+[0;32mI (558) heap_init: At 3FFE0440 len 00003BC0 (14 KiB): D/IRAM[0m
+[0;32mI (564) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (570) heap_init: At 40087CB8 len 00018348 (96 KiB): IRAM[0m
+[0;32mI (577) cpu_start: Pro cpu start user code[0m
+[0;32mI (72) cpu_start: Starting scheduler on PRO CPU.[0m
+[0;32mI (80) uart: Setting UART configuration number 1...[0m
+[0;32mI (80) uart: queue free spaces: 10[0m
+ESP32 uart echo
+±99.99*30
+$GPGSV,1,1,02,05,,,34,09,,,20*72
+$GPGLL,,,,,192053.00,V,N*46
+$GPRMC,192054.00,V,,,,,,,051017,,,N*74
+$GPVTG,,,,,,,,,N*30
+$GPGGA,192054.00,,,,,0,00,99.99,,,,,,*6D
+$GPGSA,A,1,,,,,,,,,,,,,99.99,99.99,99.99*30
+$GPGSV,1,1,02,05,,,29,09,,,19*74
+$GPGLL,,,,,192054.00,V,N*41
+$GPRMC,192055.00,V,,,,,,,051017,,,N*75
+$GPVTG,,,,,,,,,N*30
+$GPGGA,192055.00,,,,,0,00,99.99,,,,,,*6C
+$GPGSA,A,1,,,,,,,,,,,,,99.99,99.99,99.99*30
+$GPGSV,1,1,03,05,,,31,09,,,20,17,,,25*77
+$GPGLL,,,,,192055.00,V,N*40
+$GPRMC,192056.00,V,,,,,,,051017,,,N*76
+$GPVTG,,,,,,,,,N*30
+$GPGGA,192056.00,,,,,0,00,99.99,,,,,,*6F
+$GPGSA,A,1,,,,,,,,,,,,,99.99,99.99,99.99*30
+$GPGSV,1,1,02,05,,,31,09,,,21*76
+$GPGLL,,,,,192056.00,V,N*43
+$GPRMC,192057.00,V,,,,,,,051017,,,N*77
+$GPVTG,,,,,,,,,N*30
+$GPGGA,192057.00,,,,,0,00,99.99,,,,,,*6E
+$GPGSA,A,1,,,,,,,,,,,,,99.99,99.99,99.99*30
+$GPGSV,1,1,02,05,,,30,09,,,22*74
+$GPGLL,,,,,192057.00,V,N*42
+$GPRMC,192058.00,V,,,,,,,051017,,,N*78
+$GPVTG,,,,,,,,,N*30
+$GPGGA,192058.00,,,,,0,00,99.99,,,,,,*61
+$GPGSA,A,1,,,,,,,,,,,,,99.99,99.99,99.99*30
+$GPGSV,1,1,02,05,,,22,09,,,24*71
+$GPGLL,,,,,192058.00,V,N*4D
+$GPRMC,192059.00,V,,,,,,,051017,,,N*79
+$GPVTG,,,,,,,,,N*30
+$GPGGA,192059.00,,,,,0,00,99.99,,,,,,*60
+$GPGSA,A,1,,,,,,,,,,,,,99.99,99.99,99.99*30
+$GPGSV,1,1,02,05,,,21,09,,,24*72
+$GPGLL,,,,,192059.00,V,N*4C
+$GPRMC,192100.00,V,,,,,,,051017,,,N*74
+$GPVTG,,,,,,,,,N*30
+$GPGGA,192100.00,,,,,0,00,99.99,,,,,,*6D
+$GPGSA,A,1,,,,,,,,,,,,,99.99,99.99,99.99*30
+$GPGSV,1,1,02,05,,,18,09,,,23*7F
+$GPGLL,,,,,192100.00,V,N*41
+$GPRMC,192101.00,V,,,,,,,051017,,,N*75
+$GPVTG,,,,,,,,,N*30
+$GPGGA,192101.00,,,,,0,00,99.99,,,,,,*6C
+$GPGSA,A,1,,,,,,,,,,,,,99.99,99.99,99.99*30
+$GPGSV,1,1,02,05,,,17,09,,,23*70
+$GPGLL,,,,,192101.00,V,N*40
+$GPRMC,192102.00,V,,,,,,,051017,,,N*76
+$GPVTG,,,,,,,,,N*30
+$GPGGA,192102.00,,,,,0,00,99.99,,,,,,*6F
+$GPGSA,A,1,,,,,,,,,,,,,99.99,99.99,99.99*30
+$GPGSV,1,1,02,05,,,17,09,,,23*70
+$GPGLL,,,,,192102.00,V,N*43
+$GPRMC,192103.00,V,,,,,,,051017,,,N*77
+$GPVTG,,,,,,,,,N*30
+$GPGGA,192103.00,,,,,0,00,99.99,,,,,,*6E
+$GPGSA,A,1,,,,,,,,,,,,,99.99,99.99,99.99*30
+$GPGSV,1,1,02,05,,,19,09,,,23*7E
+$GPGLL,,,,,192103.00,V,N*42
+$GPRMC,192104.00,V,,,,,,,051017,,,N*70
+$GPVTG,,,,,,,,,N*30
+$GPGGA,192104.00,,,,,0,00,99.99,,,,,,*69
+$GPGSA,A,1,,,,,,,,,,,,,99.99,99.99,99.99*30
+$GPGSV,1,1,02,05,,,18,09,,,23*7F
+$GPGLL,,,,,192104.00,V,N*45
+$GPRMC,192105.00,V,,,,,,,051017,,,N*71
+$GPVTG,,,,,,,,,N*30
+$GPGGA,192105.00,,,,,0,00,99.99,,,,,,*68
+$GPGSA,A,1,,,,,,,,,,,,,99.99,99.99,99.99*30
+$GPGSV,1,1,03,05,,,17,09,,,22,19,,,07*7F
+$GPGLL,,,,,192105.00,V,N*44
+$GPRMC,192106.00,V,,,,,,,051017,,,N*72
+$GPVTG,,,,,,,,,N*30
+$GPGGA,192106.00,,,,,0,00,99.99,,,,,,*6B
+$GPGSA,A,1,,,,,,,,,,,,,99.99,99.99,99.99*30
+$GPGSV,1,1,02,05,,,16,09,,,22*70
+$GPGLL,,,,,192106.00,V,N*47
+$GPRMC,192107.00,V,,,,,,,051017,,,N*73
+$GPVTG,,,,,,,,,N*30
+$GPGGA,192107.00,,,,,0,00,99.99,,,,,,*6A
+$GPGSA,A,1,,,,,,,,,,,,,99.99,99.99,99.99*30
+$GPGSV,1,1,02,05,,,16,09,,,22*70
+$GPGLL,,,,,192107.00,V,N*46
+$GPRMC,192108.00,V,,,,,,,051017,,,N*7C
+$GPVTG,,,,,,,,,N*30
+$GPGGA,192108.00,,,,,0,00,99.99,,,,,,*65
+$GPGSA,A,1,,,,,,,,,,,,,99.99,99.99,99.99*30
+$GPGSV,1,1,02,05,,,19,09,,,22*7F
+$GPGLL,,,,,192108.00,V,N*49
