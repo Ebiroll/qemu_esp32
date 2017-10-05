@@ -1,3 +1,5 @@
+#if 0
+
 /* 
  *  Library for LoRa 868 / 915MHz SX1272 LoRa module
  *  
@@ -1236,5 +1238,7 @@ private:
 };
 
 extern SX1272	sx1272;
+
+#endif
 
 #endif

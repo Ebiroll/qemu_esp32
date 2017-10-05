@@ -1,3 +1,4 @@
+#if 0
 /*
  *  Library for LoRa 868 / 915MHz SX1272 LoRa module
  *  
@@ -5053,3 +5054,5 @@ uint8_t SX1272::getTemp()
 
 
 SX1272 sx1272 = SX1272();
+
+#endif

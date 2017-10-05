@@ -28,6 +28,8 @@
 
 #include "SX1272.h"
 #include <math.h>
+#include <Arduino.h>
+#include <SPI.h>
 
 /*  CHANGE LOGS by C. Pham
  *  June, 22th, 2017
@@ -479,7 +481,8 @@ void SX1272::writeRegister(byte address, byte data)
 void SX1272::maxWrite16()
 {
     digitalWrite(SX1272_SS,LOW);
-    SPI.transfernb(txbuf, rxbuf, 2);
+    //SPI.transfernb(txbuf, rxbuf, 2);
+    SPI.transferBytes((uint8_t*)txbuf, (uint8_t*)rxbuf, 2);
     digitalWrite(SX1272_SS,HIGH);
 }
 
@@ -543,11 +546,12 @@ uint8_t SX1272::setLORA()
         st0 = readRegister(REG_OP_MODE);
         printf("...\n");
 
-        if ((retry % 2)==0)
+        if ((retry % 2)==0) {
             if (retry==20)
                 retry=0;
             else
                 retry++;
+        }
         /*
         if (st0!=LORA_STANDBY_MODE) {
             pinMode(SX1272_RST,OUTPUT);
@@ -601,7 +605,7 @@ uint8_t SX1272::setFSK()
     printf("Starting 'setFSK'\n");
 #endif
 
-    if(	_modem = LORA )
+    if(	_modem == LORA )
     {
         writeRegister(REG_OP_MODE, LORA_STANDBY_MODE);
         writeRegister(REG_OP_MODE, LORA_SLEEP_MODE);
@@ -3796,7 +3800,7 @@ uint8_t SX1272::setACK()
     if (_limitToA) {
         if (getRemainingToA() - getToA(ACK_LENGTH) < 0) {
             printf("## not enough ToA for ACK at ");
-            printf("%d\n", millis());
+            printf("%lu\n", millis());
             return SX1272_ERROR_TOA;
         }
     }
@@ -4209,6 +4213,7 @@ uint8_t SX1272::receivePacketTimeoutACK(uint16_t wait)
     }
     return state_f; 
     */
+    return 0;
 }
 
 /*
@@ -5221,7 +5226,7 @@ uint8_t SX1272::setPacket(uint8_t dest, char *payload)
 
         if (getRemainingToA() - getToA(length16) < 0) {
             printf("## not enough ToA at ");
-            printf("%d\n", millis());
+            printf("%lu\n", millis());
             return SX1272_ERROR_TOA;
         }
     }
@@ -5361,7 +5366,7 @@ uint8_t SX1272::setPacket(uint8_t dest, uint8_t *payload)
 
         if (getRemainingToA() - getToA(length16) < 0) {
             printf("## not enough ToA at ");
-            printf("%d\n", millis());
+            printf("%lu\n", millis());
             return SX1272_ERROR_TOA;
         }
     }
@@ -6607,7 +6612,7 @@ void SX1272::CarrierSense() {
                 _endDoCad=millis();
 
                 printf("--> CAD duration ");
-                printf("%d\n", _endDoCad-_startDoCad);
+                printf("%lu\n", _endDoCad-_startDoCad);
 
                 if (!e) {
                     printf("OK1\n");
@@ -6629,7 +6634,7 @@ void SX1272::CarrierSense() {
                         _endDoCad=millis();
 
                         printf("--> CAD duration ");
-                        printf("%d\n", _endDoCad-_startDoCad);
+                        printf("%lu\n", _endDoCad-_startDoCad);
 
                         if (!e)
                             printf("OK2\n");

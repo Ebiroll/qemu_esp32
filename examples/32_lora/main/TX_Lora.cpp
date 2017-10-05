@@ -2,6 +2,8 @@
 // Not the LoRa's farthest distance or strongest interference immunity.
 // For more informations, please vist www.heltec.cn or mail to support@heltec.cn
 
+#if 0
+
 #include <SPI.h>
 #include <LoRa.h>
 #include<Arduino.h>
@@ -99,3 +101,7 @@ void loop() {
   
   delay(3000);
 }
+
+
+
+#endif

@@ -35,12 +35,15 @@
 #ifdef RASPBERRY2
 #include "arduPi_pi2.h"
 #else
-#include "arduPi.h"
+//#include "arduPi.h"
+#include <Arduino.h>
 #endif
 
-#ifndef inttypes_h
-	#include <inttypes.h>
-#endif
+#include <inttypes.h>
+
+#define byte uint8_t
+#define boolean bool
+
 
 /******************************************************************************
  * Definitions & Declarations
@@ -58,7 +61,7 @@
 
 #define SX1272_SS 10
 
-#define SX1272_debug_mode 0
+#define SX1272_debug_mode 2
 
 //! MACROS //
 #define bitRead(value, bit) (((value) >> (bit)) & 0x01)  // read a bit
