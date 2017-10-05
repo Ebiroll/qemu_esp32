@@ -39,13 +39,7 @@ char message2 [] = "Packet 2, broadcast test";
 void setup()
 {
 
-  SPI.begin(18,19,23,17);
-
-
-
-
-
-
+  
   // Print a start message
   printf("SX1272 module and Raspberry Pi: send packets without ACK\n");
   
