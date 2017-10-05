@@ -552,12 +552,10 @@ uint8_t SX1272::setLORA()
         st0 = readRegister(REG_OP_MODE);
         printf("...\n");
 
-        if ((retry % 2)==0) {
-            if (retry==20)
-                retry=0;
-            else
-                retry++;
-        }
+        if (retry==20)
+            retry=0;
+        else
+            retry++;
         /*
         if (st0!=LORA_STANDBY_MODE) {
             pinMode(SX1272_RST,OUTPUT);
@@ -567,7 +565,7 @@ uint8_t SX1272::setLORA()
         }
         */
 
-    } while (st0!=LORA_STANDBY_MODE);	// LoRa standby mode
+    } while (st0!=LORA_STANDBY_MODE && (retry<19));	// LoRa standby mode
 
     if( st0 == LORA_STANDBY_MODE )
     { // LoRa mode
