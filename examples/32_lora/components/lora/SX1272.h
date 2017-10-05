@@ -53,13 +53,26 @@
 #define W_REQUESTED_ACK
 //#define W_NET_KEY
 //#define W_INITIALIZATION
-#define SX1272_RST  7
 
+// OLAS SPARKFUN
+// GPIO18  --SX1278's SCK
+// GPIO19 -- SX1278's MISO
+// GPIO23 -- SX1278's MOSI
+// GPIO17  -- SX1278's CS
+// GPIO14 -- SX1278's RESET
+// GPIO26 -- SX1278's IRQ(Interrupt Request G0 / DI0??)
+
+
+//#define SS      18
+//#define RST     14
+//#define DI0     26
+
+#define SX1272_RST  14
 #define SX1272Chip  0
 #define SX1276Chip  1
 // end
 
-#define SX1272_SS 10
+#define SX1272_SS 18
 
 #define SX1272_debug_mode 2
 
