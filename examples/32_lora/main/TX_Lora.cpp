@@ -30,7 +30,7 @@
 #define SS      18
 #define RST     14
 #define DI0     26
-#define BAND    8661E6  // 433E6  //915E6 -- 
+#define BAND    868E6  // 433E6  //915E6 -- 
 
 int counter = 0;
 
@@ -66,6 +66,9 @@ void setup() {
     }
   }
 
+  LoRa.setFrequency(868.1);
+  LoRa.setSpreadingFactor(7);
+  
   digitalWrite(5, HIGH);   // turn the LED on (HIGH is the voltage level)
   delay(300);                       // wait for 100th of a second
   digitalWrite(5, LOW);    // turn the LED off by making the voltage LOW    
