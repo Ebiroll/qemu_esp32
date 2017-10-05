@@ -23,15 +23,29 @@
  */
  
 // Include the SX1272 and SPI library: 
-#include "arduPiLoRa.h"
+//#include "arduPiLoRa.h"
 
+#include <Arduino.h>
+#include <SPI.h>
+#include <SX1272.h>
 int e;
 
 char message1 [] = "Packet 1, wanting to see if received packet is the same as sent packet";
 char message2 [] = "Packet 2, broadcast test";
 
+//extern SX1272 sx1272;
+
+
 void setup()
 {
+
+  SPI.begin(18,19,23,17);
+
+
+
+
+
+
   // Print a start message
   printf("SX1272 module and Raspberry Pi: send packets without ACK\n");
   
