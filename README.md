@@ -26,7 +26,7 @@ export PATH=$PATH:$HOME/esp/xtensa-esp32-elf/bin
 export IDF_PATH=~/esp/esp-idf
 cd esp   
 git clone git://github.com/Ebiroll/qemu_esp32
-cd qemu_esp
+cd qemu_esp32
 make menuconfig
 > Set [*] Run FreeRTOS only on first core      
 >     [ ] Make exception and panic handlers JTAG/OCD aware 
