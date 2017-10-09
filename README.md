@@ -6,25 +6,71 @@ This documents how to add an esp32 cpu and a simple esp32 board to qemu in order
 It is a good way to learn about qemu , esp32 and the esp32 rom.
 
 
-Now this is not required if you use updated qemu-esp32.
+## Quick Start
+
 ```
-Ahome/olas/esp/qemu_esp32/examples/06_ssd1306-esp-idf-i2c/sdkconfig - Espressif IoT Development Framework Confi
-g> Component config > ESP32-specific --------------------------------------------------------------------------
+1. Build qemu
+git clone git://github.com/Ebiroll/qemu-xtensa-esp32
+mkdir qemu_esp32
+cd qemu_esp32
+../qemu-xtensa-esp32/configure --disable-werror --prefix=`pwd`/root --target-list=xtensa-softmmu,xtensaeb-softmmu
+make
 
+2. Dump rom1 and rom.bin
+~/esp/esp-idf/components/esptool_py/esptool/esptool.py --chip esp32 -b 921600 -p /dev/ttyUSB0 dump_mem 0x40000000 0x000C2000 rom.bin
+~/esp/esp-idf/components/esptool_py/esptool/esptool.py --chip esp32 -b 921600 -p /dev/ttyUSB0 dump_mem 0x3FF90000 0x00010000 rom1.bin
 
+3. Build an esp32 application
+Open a new window to build example app, and set env variables
+export PATH=$PATH:$HOME/esp/xtensa-esp32-elf/bin
+export IDF_PATH=~/esp/esp-idf
+cd esp   
+git clone git://github.com/Ebiroll/qemu_esp32
+cd qemu_esp
+make menuconfig
+> Set [*] Run FreeRTOS only on first core      
+>     [ ] Make exception and panic handlers JTAG/OCD aware 
+make
 
+4. Build the qemu_flash app to create the qemu flash image
+Dont forget to check the code in toflash.c as it uses hardcoded paths.
+gcc toflash.c -o qemu_flash
 
-                       +------------ Timers used for gettimeofday function ------------+
-                       |  Use the arrow keys to navigate this window or press the      |  
-                       |  hotkey of the item you wish to select followed by the <SPACE |  
-                       |  BAR>. Press <?> for additional information about this        |  
-                       | +-----------------------------------------------------------+ |  
-                       | |                     ( ) RTC                               | |  
-                       | |                     ( ) RTC and FRC1                      | |  
-                       | |                     ( ) FRC1                              | |  
-                       | |                     (X) None                              | |  
-                       | |                                                  
+5. Flash the esp32flash.bin file
+> ./qemu_flash build/app-template.bin
+
+6. In the first window, start qemu
+  > xtensa-softmmu/qemu-system-xtensa -d guest_errors,unimp  -cpu esp32 -M esp32 -m 4M  -s  > io.txt
+Add -S if you want halt execution until debugger is attached.
+
+7. Optional step (start debugger)
+cp qemu_esp32/bin/xtensa-esp32-elf-gdb    $HOME/esp/xtensa-esp32-elf/bin/xtensa-esp32-elf-gdb.qemu   
+  > xtensa-esp32-elf-gdb.qemu   build/app-template.elf -ex 'target remote:1234'
+    (gdb) b bootloader_main
+    (gdb) b app_main
+    (gdb) c
+When breakpoint is hit try Ctrl-X then O
+
+Or to debug the bootloader,
+    xtensa-esp32-elf-gdb.qemu   build/bootloader/bootloader.elf -ex 'target remote:1234'
+    (gdb) b bootloader_main
+Remember to start qemu with -S (capital S) this will halt qemu execusion until debugger is attached.
+
+A fun example with an emulated 1306 display
+cd examples/06_1306_interactive
+ln -s ../../components/ components
+make
+gcc ../toflash.c -o qemu_flash
+./qemu_flash build/app-template.bin
+Start qemu
+Connect to emulated UART1
+nc 127.0.0.1 8881
+Press return
 ```
+
+
+
+
 
 ## IMPORTANT update, July 2017
 
@@ -80,52 +126,6 @@ You no longer need to give  application as kernel parameter.
 STARTING QEMU, with forward of localhost port 10080 to qemu port 80
 xtensa-softmmu/qemu-system-xtensa -d guest_errors,unimp  -cpu esp32 -M esp32 -m 4M -net nic,model=vlan0 -net user,id=simnet,ipver4=on,net=192.168.4.0/24,host=192.168.4.40,hostfwd=tcp::10080-192.168.4.3:80  -net dump,file=/tmp/vm0.pcap    -s   > io.txt
 
-
-If you get a crash like this,
-I (124) cpu_start: Pro cpu start user code
- File 'esp32flash.bin' is truncated or corrupt.
- 
-qemu) MMU 117f4  1
-(qemu) MMU 117f8  3ff12b00
-(qemu) MMU 117fc  17
-(qemu) MMU 11808  4000c2e0
-(qemu) MMU 1180c  4000c2f6
-(qemu) MMU 11814  800855cd
-(qemu) MMU 11818  3ff11a90
-(qemu) MMU 1181c  40081144
-(qemu) MMU 11800  14
-(qemu) MMU 117bc  400d12f0
-(qemu) MMU 116e0  3ff11790
-(qemu) MMU 116c4  3ff11790
-(qemu) MMU 116d8  60033
-(qemu) MMU 116d4  400d12f0
-(qemu) MMU 116c0  400d12f0
-(qemu) MMU 1170c  800855cd
-```
-Then try starting with -s -S, this will wait for the debugger.
-
-
-This seems to happen most often with C++ applications.
-
-
-Needs furher investigations!
-
-It seems like c++ code has more problems in qemu, maybe because the
-```
-code is not mapped properly and because of 
- The .flash.rodata section and
- do_global_ctors();
-
-```
-
-## The workaround is,
-
-    > (gdb) b call_start_cpu0
-    > (gdb) c
-Now the bootloader sets up the system to what the application exects,
-However some bug somewhere sometimes overwrites the code,
-
-    > (gdb) load build/app-template.elf
 
  This will reload the application and prevent the crash as the code is reloaded 
  on the correct locations.
@@ -475,6 +475,7 @@ Or to debug the bootloader,
     xtensa-esp32-elf-gdb.qemu   build/bootloader/bootloader.elf -ex 'target remote:1234'
     (gdb) b bootloader_main
     (gdb) b bootloader_mmap
+
 
 ```
 #define DPORT_PRO_FLASH_MMU_TABLE ((volatile uint32_t) 0x3FF10000)

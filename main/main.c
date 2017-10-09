@@ -26,7 +26,7 @@
 #include "lwip/sys.h"
 #include "lwip/netif.h"
 #include "netif/etharp.h"
-#include "freertos/heap_regions.h"
+//#include "freertos/heap_regions.h"
 #include "emul_ip.h"
 
 #include "esp_eth.h"
