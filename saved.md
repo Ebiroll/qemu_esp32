@@ -65,3 +65,23 @@ However some bug somewhere sometimes overwrites the code,
 
     > (gdb) load build/app-template.elf
 
+Seems that the qemu, mmapping has a bug and or  spi_flash_read, spi_flash_write  Will maybe fixed on a rainy day.
+
+Another reason for this problem is because you forgot to create the flash file
+> ./qemu_flash build/app-template.bin
+
+
+
+So, if you see this
+```
+I (124) cpu_start: Pro cpu start user code
+ File 'esp32flash.bin' is truncated or corrupt.
+ File 'esp32flash.bin' is truncated or corrupt.
+ File 'esp32flash.bin' is truncated or corrupt.
+ File 'esp32flash.bin' is truncated or corrupt.
+ File 'esp32flash.bin' is truncated or corrupt.
+```
+Do
+    > (gdb) b call_start_cpu0
+    > (gdb) c
+    > (gdb) load build/app-template.elf

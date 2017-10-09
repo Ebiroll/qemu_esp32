@@ -136,31 +136,11 @@ xtensa-softmmu/qemu-system-xtensa -d guest_errors,unimp  -cpu esp32 -M esp32 -m 
 Press Ctrl-X o  to open the source
 n
 Press return to reuse latest command
-```
-
-
-Seems that the qemu, mmapping has a bug and or  spi_flash_read, spi_flash_write  Will maybe fixed on a rainy day.
-
-Another reason for this problem is because you forgot to create the flash file
-> ./qemu_flash build/app-template.bin
 
 
 
-So, if you see this
-```
-I (124) cpu_start: Pro cpu start user code
- File 'esp32flash.bin' is truncated or corrupt.
- File 'esp32flash.bin' is truncated or corrupt.
- File 'esp32flash.bin' is truncated or corrupt.
- File 'esp32flash.bin' is truncated or corrupt.
- File 'esp32flash.bin' is truncated or corrupt.
-```
-Do
-    > (gdb) b call_start_cpu0
-    > (gdb) c
-    > (gdb) load build/app-template.elf
 
-However it is sometimes possible to run only from the generated flash, 
+It is sometimes possible to run only from the generated flash, 
 ```
 xtensa-softmmu/qemu-system-xtensa  -cpu esp32 -M esp32  -s   > io.txt
 TRYING to MAP esp32flash.binMAPPED esp32flash.binI (14) boot: ESP-IDF v3.0-dev-20-g9b955f4c 2nd stage bootloader
