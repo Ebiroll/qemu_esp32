@@ -66,6 +66,56 @@ type tasks, select configure task runner, select other, This is for compiling qe
     ]
 }
 ```
+
+Newer versions of visual studio expects something like this
+
+```
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "command": "make",
+    "tasks": [
+        {
+            "type": "shell",
+            "command": "./compile.sh",
+            "taskName": "Makefile",
+            // Make this the default build command.
+            // Show the output window only if unrecognized errors occur.
+            // No args
+            "args": ["all"],
+            // Use the standard less compilation problem matcher. ${workspaceRoot}
+            "problemMatcher": {
+                "owner": "cpp",
+                "fileLocation": ["relative", "/"],
+                "pattern": {
+                    "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "severity": 4,
+                    "message": 5
+                }
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            }
+
+        }
+    ]
+}
+```
+
+
+
+
+
+
 #  Header files 
 .vscode/c_cpp_properties.json 
 ```
