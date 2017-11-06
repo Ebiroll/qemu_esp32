@@ -195,14 +195,14 @@ void app_main()
 {
     int i=0;
     // Cannot initialize flash as it uses ipc between cores.
-    nvs_flash_init();
+    //nvs_flash_init();
     g_my_app_init_done=true;
     
     printf("starting\n");
 
-    //xTaskCreate(&task_tests, "test", 2048, "test", 5, NULL);
+    xTaskCreate(&task_tests, "test", 2048, "test", 5, NULL);
     //xTaskCreate(&pinned_tests, "test", 2048, "test", 5, NULL);
-    xTaskCreate(&pinned_to_pro_tests, "test", 2048, "test", 5, NULL);
+    //xTaskCreate(&pinned_to_pro_tests, "test", 2048, "test", 5, NULL);
     //pinned_to_pro_tests(NULL);
 
     for (i=0;i<MAX_TEST;i++) {
