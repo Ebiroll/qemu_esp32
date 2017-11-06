@@ -809,7 +809,10 @@ static void esp32_spi_cmd(Esp32SpiState *s, hwaddr addr,
            DEBUG_LOG("CMD 0x35 (RDSR2) read status register\n");
        }
        if (command==0x05) {
-           DEBUG_LOG("CMD 0x05 (RDSR).\n");
+           DEBUG_LOG("CMD 0x05 (RDSR) Read status register.\n");
+           if (s->wren==1) {
+              s->reg[data_w0]=0x02; // WRITE ENABLED
+           }
        }       
        if (command==0x03 || command==0x3b) {
            DEBUG_LOG("SPI_READ 0x03. %08X\n",ESP32_SPI_GET(s, ADDR, OFFSET));
@@ -1740,6 +1743,13 @@ static uint64_t esp_io_read(void *opaque, hwaddr addr,
            break;
            //case 0xb05f0:
            //printf(" boot_time_lock 3ffb05f0=01\n");
+
+
+// TIMG_RTCCALICFG_REG(0),
+       case 0x5f068:
+           printf("TIMG_RTCCALICFG_REG(0) 3ff5f068=8000\n");
+           return 0x8000;
+           break;
 
        case 0x5f06c:
            printf("TIMG_RTCCALICFG1_REG 3ff5f06c=25\n");
