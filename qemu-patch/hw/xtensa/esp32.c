@@ -1394,6 +1394,7 @@ static uint64_t translate_phys_addr(void *opaque, uint64_t addr)
 }
 #endif
 
+#if 0
 static void esp_xtensa_ccompare_cb(void *opaque)
 {
     XtensaCPU *cpu = opaque;
@@ -1409,7 +1410,7 @@ static void esp_xtensa_ccompare_cb(void *opaque)
         }
     }
 }
-
+#endif
 
 static void esp32_reset(void *opaque)
 {
@@ -2616,8 +2617,20 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
             0xcdcd,
             0xabab,
         };
-        XtensaCPU *cpu = cpu_xtensa_init(cpu_model);
+        //XtensaCPU *cpu        = cpu_xtensa_init(cpu_model);
+        XtensaCPU *cpu = XTENSA_CPU(cpu_create(machine->cpu_type));
 
+        //static const LxBoardDesc lx60_board = {
+        //    .flash_base = 0x08000000,
+        //    .flash_size = 0x00400000,
+        //    .flash_sector_size = 0x10000,
+        //    .sram_size = 0x20000,
+        //};
+        //
+        //lx_init(&lx60_board, machine);
+
+
+        
         if (cpu == NULL) {
             error_report("unable to find CPU definition '%s'",
                          cpu_model);
@@ -3193,6 +3206,7 @@ static void xtensa_esp32_class_init(ObjectClass *oc, void *data)
     mc->desc = "esp32 DEV (esp32)";
     mc->init = xtensa_esp32_init;
     mc->max_cpus = 2;
+    mc->default_cpu_type = XTENSA_DEFAULT_CPU_TYPE;
 
 }
 
