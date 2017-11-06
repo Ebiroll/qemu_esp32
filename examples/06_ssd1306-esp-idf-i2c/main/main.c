@@ -11,8 +11,11 @@
 #include "ssd1366.h"
 #include "font8x8_basic.h"
 
-#define SDA_PIN GPIO_NUM_21
-#define SCL_PIN GPIO_NUM_22
+//#define SDA_PIN GPIO_NUM_21
+//#define SCL_PIN GPIO_NUM_22
+
+#define SDA_PIN GPIO_NUM_5
+#define SCL_PIN GPIO_NUM_4
 
 #define tag "SSD1306"
 
@@ -221,6 +224,6 @@ void app_main(void)
 	vTaskDelay(100/portTICK_PERIOD_MS);
 	xTaskCreate(&task_ssd1306_display_text, "ssd1306_display_text",  2048,
 		(void *)"Hello world!\nMulitine is OK!\nAnother line", 6, NULL);
-	xTaskCreate(&task_ssd1306_contrast, "ssid1306_contrast", 2048, NULL, 6, NULL);
+	//xTaskCreate(&task_ssd1306_contrast, "ssid1306_contrast", 2048, NULL, 6, NULL);
 	xTaskCreate(&task_ssd1306_scroll, "ssid1306_scroll", 2048, NULL, 6, NULL);
 }
