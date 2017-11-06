@@ -75,7 +75,7 @@ uint32_t core[MAX_TEST];
 bool g_my_app_init_done=false;
 bool cpu1_scheduler_started=false;
 
-
+#if 0
 void IRAM_ATTR start_cpu1(void)
 {
     int i;
@@ -101,7 +101,7 @@ void IRAM_ATTR start_cpu1(void)
     // Scheduler never returns... 
     xPortStartScheduler();
 }
-
+#endif
 
 
 typedef struct taskParam {
