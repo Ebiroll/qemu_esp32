@@ -2,7 +2,7 @@
 #include "freertos/task.h"
 #include "Arduino.h"
 
-#if CONFIG_AUTOSTART_ARDUINO
+//#if CONFIG_AUTOSTART_ARDUINO
 
 #if CONFIG_FREERTOS_UNICORE
 #define ARDUINO_RUNNING_CORE 0
@@ -25,4 +25,4 @@ extern "C" void app_main()
     xTaskCreatePinnedToCore(loopTask, "loopTask", 8192, NULL, 1, NULL, ARDUINO_RUNNING_CORE);
 }
 
-#endif
+//#endif

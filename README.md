@@ -66,6 +66,7 @@ Start qemu
 Connect to emulated UART1
 nc 127.0.0.1 8881
 Press return
+However the latest changes in esp-idf makes i2c emulation very slow, also arduino i2c emulation is not working.
 ```
 
 
@@ -75,9 +76,9 @@ Press return
 ## IMPORTANT update, July 2017
 
 Booting from emulated flash! This is very cool.
-Now IT IS MANDATORY to have a proper flash file ,
+Now IT IS MANDATORY to have a proper flash file , ets_unpack_flash_code is not longer patched , qemu now relies on flash and MMU emulation.
 
-ets_unpack_flash_code is not longer patched , qemu now relies on flash and MMU emulation.
+Not that esp-idf is constantly being updated and you must keep the qemu source updated to keep it working.
 
 
 > Serial flasher config  --->  Flash size (4 MB)
@@ -849,12 +850,15 @@ Those two files will be loaded by qemu and must be in same directory as you star
 ```
 
 #  This is head of qemu development.
-Now it also works for esp32 debugging. (2.9.0)
+Now it also works for esp32 debugging. (2.10.0)
 ```
 git clone git://git.qemu.org/qemu.git
 
 cd qemu
 This is probably no longer necessary. git submodule update --init dtc
+
+However uart emulation may cause this behaviour.
+ERROR:/home/olas/qemu-2.10.1/accel/tcg/tcg-all.c:42:tcg_handle_interrupt: assertion failed: (qemu_mutex_iothread_locked())
 ```
 
 
