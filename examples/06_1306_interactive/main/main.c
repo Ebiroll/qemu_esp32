@@ -46,7 +46,7 @@ static const char *tag = "1306";
 
 
 // 1024 bytes of image data
-static unsigned char ACROBOT[] ={
+unsigned char ACROBOT[] ={
 0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
 0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
 0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,
@@ -367,6 +367,13 @@ static void uartLoopTask(void *inpar)
 		{
 			display_dot(4);
 		}
+
+		if (!strncmp(line, "9", 1))
+		{
+			Set_Page_Address(0);
+			Set_Column_Address(0);
+			Write_data(ACROBOT,1024);
+		}
     }
     //#endif
 }
@@ -417,11 +424,11 @@ void app_main(void)
 
     if (is_running_qemu()) {
         printf("Running in qemu\n");
-
+#if 0
        // Initialize event loop
        ESP_ERROR_CHECK( esp_event_loop_init(esp32_wifi_eventHandler, NULL) );
        xTaskCreatePinnedToCore(task_lwip_init, "loop", 4096, NULL, 14, NULL, 0);
-
+#endif
 
     } else {
         initialise_wifi();

@@ -43,3 +43,8 @@ pcbreflux, also has nice examples.
     29_webspiff, Spiff filesystem with webserver demonstraring the MMU
     30_arduino, simplest possible arduino library example
     31_esp32-csid, SID audio example not yet tested.
+    32_helltec, heltec lora and OLED
+    32_lora, Semtec lora SPI example
+    33_pkt_fwd, Fututre project to test as lora gateway
+    34_9DoF, (in progress) Arduino library for NXP 9DOF breakout board
+    35_gps, (in progress) Arduino library for gps

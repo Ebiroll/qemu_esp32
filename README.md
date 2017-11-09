@@ -66,7 +66,7 @@ Start qemu
 Connect to emulated UART1
 nc 127.0.0.1 8881
 Press return
-However the latest changes in esp-idf makes i2c emulation very slow, also arduino i2c emulation is not working.
+However the latest changes in esp-idf makes i2c emulation very slow, also arduino i2c emulation is not working. There is also something about interrupts that has changed. This is still a great tool to learn about the esp32.
 ```
 
 
