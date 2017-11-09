@@ -370,9 +370,15 @@ static void uartLoopTask(void *inpar)
 
 		if (!strncmp(line, "9", 1))
 		{
+		        int dataLen=1024;
+		        unsigned char*data=ACROBOT;
 			Set_Page_Address(0);
 			Set_Column_Address(0);
-			Write_data(ACROBOT,1024);
+			while(dataLen>0) {
+			  Write_data(data,128);
+			  data+=128;
+			  dataLen-=128;
+			}
 		}
     }
     //#endif

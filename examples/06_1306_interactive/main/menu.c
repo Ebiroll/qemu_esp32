@@ -67,10 +67,6 @@ int printMenu(char *data,int maxlen) {
 9. draw image.\n\n");
 
 return (strlen(data));
-
-//    printf("3. Echo to UART 2, add crlf before send.\n");
-//    printf("4. Try connecting over gprs with A6Lib.\n");
-//    printf("5. Try send data over gprs with A6Thingspeak.\n");
 }
 
 
@@ -173,17 +169,17 @@ void process_menu_request(void *p)
 		}
 		if (!strncmp(recv_buf, "9", 1))
 		{
+		        int dataLen=1024;
+		        unsigned char*data=ACROBOT;
 			Set_Page_Address(0);
 			Set_Column_Address(0);
-			Write_data(ACROBOT,1024);
+			while(dataLen>0) {
+			  Write_data(data,128);
+			  data+=128;
+			  dataLen-=128;
+			}
 		}
 		
-/*
-    sprintf(data,"5. Send 8*0xff.\n");
-    sprintf(data,"6. Send 8*0x0f.\n");
-    sprintf(data,"7. Incremet number and draw it.\n");  display_number
-*/
-
 		/* break if client closed connection */
 		if (n <= 0)
 			break;
