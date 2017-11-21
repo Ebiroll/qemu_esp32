@@ -1,3 +1,6 @@
+
+#if 0
+
 void handleRoot() {
   server.send(200, "text/html", "<html><head><title>led-display</title></head><body><link rel=\"stylesheet\" href=\"/style.css\" />"
     "<script src=\"/ajax.js\"></script><script src=\"/default.js\"></script></body></html>");
@@ -123,3 +126,5 @@ void handleNotFound() {
   String message = "File Not Found\n\n";
   server.send ( 404, "text/plain", message );
 }
+
+#endif

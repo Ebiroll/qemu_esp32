@@ -1,3 +1,16 @@
+cd components
+git clone https://github.com/espressif/arduino-esp32.git arduino && \
+cd .. && \
+make menuconfig
+
+make menuconfig has some Arduino options
+
+    "Autostart Arduino setup and loop on boot"
+
+        If you enable this options, your main.cpp should be formated like any other sketch
+
+
+
 Ideas from, 
 
 https://github.com/googlecreativelab/anypixel
