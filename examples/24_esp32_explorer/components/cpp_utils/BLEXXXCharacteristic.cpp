@@ -32,6 +32,7 @@ BLECharacteristicXXX::~BLECharacteristicXXX() {
 }
 
 void BLECharacteristicXXX::nextCharacterisic(esp_gatt_if_t gattc_if) {
+#if 0
 	esp_err_t errRc = esp_ble_gattc_get_characteristic(
 		gattc_if,
 		m_conn_id,
@@ -42,5 +43,6 @@ void BLECharacteristicXXX::nextCharacterisic(esp_gatt_if_t gattc_if) {
 		ESP_LOGE(tag, "esp_ble_gattc_get_characteristic: rc=%d %s", errRc, espToString(errRc));
 		return;
 	}
+#endif
 }
 #endif // CONFIG_BT_ENABLED

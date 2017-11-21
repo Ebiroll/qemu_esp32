@@ -64,11 +64,11 @@ BLEService BLEDevice::findServiceByUUID(esp_bt_uuid_t uuid) {
 
 void BLEDevice::readCharacteristic(esp_gatt_srvc_id_t srvcId,
 		esp_gatt_id_t characteristicId) {
-	esp_err_t errRc = esp_ble_gattc_read_char(m_gattc_if, m_conn_id, &srvcId, &characteristicId, ESP_GATT_AUTH_REQ_NONE);
-	if (errRc != ESP_OK) {
-		ESP_LOGE(tag, "esp_ble_gattc_read_char: rc=%d %s", errRc, espToString(errRc));
-		return;
-	}
+  //	esp_err_t errRc = esp_ble_gattc_read_char(m_gattc_if, m_conn_id, &srvcId, &characteristicId, ESP_GATT_AUTH_REQ_NONE);
+  //	if (errRc != ESP_OK) {
+  //		ESP_LOGE(tag, "esp_ble_gattc_read_char: rc=%d %s", errRc, espToString(errRc));
+  //		return;
+  //	}
 }
 
 void BLEDevice::readCharacteristic(uint16_t srvcId, uint16_t characteristicId) {
@@ -322,6 +322,7 @@ void BLEDevice::parsePayload(uint8_t* payload) {
  * Retrieve the characteristics for the device service.
  */
 void BLEDevice::getCharacteristics(esp_gatt_srvc_id_t *srvc_id, esp_gatt_id_t *lastCharacteristic) {
+#if 0
 	ESP_LOGD(tag, ">> BLEDevice::getCharacteristics");
 	esp_err_t errRc = esp_ble_gattc_get_characteristic(
 		m_gattc_if,
@@ -334,6 +335,7 @@ void BLEDevice::getCharacteristics(esp_gatt_srvc_id_t *srvc_id, esp_gatt_id_t *l
 		return;
 	}
 	ESP_LOGD(tag, "<< BLEDevice::getCharacteristics");
+#endif
 } // getCharacteristics
 
 

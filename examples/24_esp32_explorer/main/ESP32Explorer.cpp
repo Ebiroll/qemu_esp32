@@ -14,17 +14,19 @@
 #include <FileSystem.h>
 #include <FreeRTOS.h>
 #include <Task.h>
+#include <HttpServer.h>
 #include <WebServer.h>
 #include <TFTP.h>
 #include <JSON.h>
 #include <WiFi.h>
 #include <stdio.h>
+#include <esp_wifi.h>
 
 #include <GeneralUtils.h>
 
-#include <esp_wifi.h>
 
 static char tag[] = "ESP32Explorer";
+static const char* LOG_TAG =tag;
 
 extern JsonObject I2S_JSON();
 extern JsonObject GPIO_JSON();
@@ -62,6 +64,8 @@ static void handle_REST_SYSTEM(WebServer::HTTPRequest *pRequest, WebServer::HTTP
 
 static void handle_REST_I2S(WebServer::HTTPRequest *pRequest, WebServer::HTTPResponse *pResponse) {
 	ESP_LOGD(tag, "handle_REST_I2S");
+
+	pResponse->addHeader("access-control-allow-origin", "*");
 	pResponse->addHeader("Content-Type", "application/json");
 	JsonObject obj = I2S_JSON();
 	pResponse->sendData(obj.toString());
@@ -160,9 +164,9 @@ static void handle_REST_FILE_GET(WebServer::HTTPRequest *pRequest, WebServer::HT
 	for (int i=3; i<parts.size(); i++) {
 		path += "/" + parts[i];
 	}
-	JsonObject obj = FILESYSTEM_GET_JSON(path.c_str());
-	pResponse->sendData(obj.toString());
-	JSON::deleteObject(obj);
+	//JsonObject obj = FILESYSTEM_GET_JSON(path.c_str());
+	//pResponse->sendData(obj.toString());
+	//JSON::deleteObject(obj);
 } // handle_REST_FILE_GET
 
 
@@ -188,12 +192,6 @@ class WebServerTask : public Task {
    }
 };
 
-class MyMultiPartFactory : public WebServer::HTTPMultiPartFactory {
-	WebServer::HTTPMultiPart* newInstance() {
-		return new MyMultiPart();
-	}
-};
-*/
 /*
 class MyWebSocketHandler : public WebServer::WebSocketHandler {
 	void onMessage(std::string message) {
@@ -219,6 +217,8 @@ class MyWebSocketHandlerFactory : public WebServer::WebSocketHandlerFactory {
 	}
 };
 */
+
+#if 0
 
 static void handle_REST_I2C_INIT(HttpRequest *pRequest, HttpResponse *pResponse) { //TODO implement slave mode
 	ESP_LOGD(LOG_TAG, ">> init_I2C");
@@ -394,6 +394,7 @@ static void handle_REST_BLE_SERVER_ADD_DESCRIPTOR(HttpRequest* pRequest, HttpRes
 	pResponse->addHeader("Content-Type", "application/json");
 	pResponse->sendData(obj.toString());
 }
+#endif
 
 static void handle_REST_BLE_SERVER_GET_DESCRIPTOR(HttpRequest* pRequest, HttpResponse* pResponse) {
 }
@@ -453,7 +454,9 @@ void ESP32_Explorer::start() {
 	 pHttpServer->addPathHandler("POST",   "/ESP32/FILE",                  handle_REST_FILE_POST);
 	 pHttpServer->addPathHandler("DELETE", "/ESP32/FILE",                  handle_REST_FILE_DELETE);
 	 pHttpServer->addPathHandler("GET",    "/ESP32/SYSTEM",                handle_REST_SYSTEM);
-	 // I2C
+	 
+#if 0
+// I2C
 	 pHttpServer->addPathHandler("POST",   "/ESP32/I2C/COMMAND/READ",      handle_REST_I2C_COMMAND_READ);
 	 pHttpServer->addPathHandler("POST",   "/ESP32/I2C/COMMAND/WRITE",     handle_REST_I2C_COMMAND_WRITE);
 	 pHttpServer->addPathHandler("POST",   "/ESP32/I2C/INIT",              handle_REST_I2C_INIT);
@@ -476,7 +479,7 @@ void ESP32_Explorer::start() {
 	 pHttpServer->addPathHandler("GET",    "/ESP32/BLE/SERVER/DESCRIPTORS",   handle_REST_BLE_SERVER_GET_SERVICES);
 	 pHttpServer->addPathHandler("GET",    "/ESP32/BLE/SERVER/START",    	handle_REST_BLE_SERVER_START_ADV);
 	 pHttpServer->addPathHandler("POST",    "/ESP32/BLE/SERVER/STOP",   		handle_REST_BLE_SERVER_STOP_ADV);
-
+#endif
 	 //pHttpServer->setWebSocketHandlerFactory(new MyWebSocketHandlerFactory());
 	 pHttpServer->start(80); // Start the WebServer listening on port 80.
 	  	ESP_LOGE(LOG_TAG, "%d, minimum ever: %d", xPortGetFreeHeapSize(), xPortGetMinimumEverFreeHeapSize());

@@ -13,4 +13,4 @@ COMPONENT_SRCDIRS:=.
 ##CXXFLAGS+=-DESP_HAVE_CURL
 
 ## Uncomment the following line to enable exception handling 
-#CXXFLAGS+=-fexceptions
+CXXFLAGS+=-fexceptions

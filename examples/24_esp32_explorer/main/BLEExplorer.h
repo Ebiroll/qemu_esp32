@@ -9,6 +9,8 @@
 #define MAIN_BLEEXPLORER_H_
 #include <freertos/FreeRTOS.h>
 #include "JSON.h"
+
+#if 0
 #include "BLEAdvertisedDevice.h"
 
 class BLEExplorer {
@@ -34,6 +36,6 @@ public:
 
 private:
 };
-
+#endif
 #endif /* MAIN_BLEEXPLORER_H_ */
 

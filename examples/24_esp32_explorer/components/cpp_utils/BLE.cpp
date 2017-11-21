@@ -232,8 +232,8 @@ static void gatt_client_event_handler(
 	 *   * bool is_primary
 	 */
 	case ESP_GATTC_SEARCH_RES_EVT: {
-		BLEDevice *pDevice = BLEUtils::findByConnId(param->search_res.conn_id);
-		pDevice->addService(param->search_res.srvc_id);
+	  //BLEDevice *pDevice = BLEUtils::findByConnId(param->search_res.conn_id);
+	  //pDevice->addService(param->search_res.srvc_id);
 		break;
 	}
 
@@ -251,6 +251,7 @@ static void gatt_client_event_handler(
 	 * * esp_gatt_id_t char_id
 	 * * esp_gatt_char_prop_t char_prop
 	 */
+#if 0
 	case ESP_GATTC_GET_CHAR_EVT: {
 		if (param->get_char.status == ESP_GATT_OK) {
 			BLEDevice *pDevice = BLEUtils::findByConnId(param->get_char.conn_id);
@@ -281,7 +282,7 @@ static void gatt_client_event_handler(
 		}
 		break;
 	}
-
+#endif
 	default:
 		break;
 	}

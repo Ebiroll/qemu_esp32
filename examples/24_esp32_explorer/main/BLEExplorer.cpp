@@ -8,10 +8,13 @@
 #include "BLEExplorer.h"
 #include "sdkconfig.h"
 #include <esp_log.h>
+#if 0
+
 #include <BLEDevice.h>
 #include "Task.h"
 #include "Memory.h"
 #include <sstream>
+
 
 #include "BLEClient.h"
 static const char* LOG_TAG = "BLEExplorer";
@@ -233,3 +236,4 @@ void BLEExplorer::stopAdvertising(){
 	pServer->getAdvertising()->stop();
 }
 
+#endif

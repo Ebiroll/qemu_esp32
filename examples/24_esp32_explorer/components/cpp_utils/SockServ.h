@@ -4,6 +4,12 @@
 #define MAIN_SOCKSERV_H_
 #include <stdint.h>
 #include <string>
+#include <set>
+#include "Socket.h"
+#include "FreeRTOS.h"
+#include <freertos/FreeRTOS.h>
+#include <freertos/queue.h>
+
 
 /**
  * @brief Provide a socket listener and the ability to send data to connected partners.
@@ -23,20 +29,33 @@
  * @endcode
  *
  */
+
 class SockServ {
 private:
-	uint16_t port;
-	int sock;
-	int clientSock;
-	static void acceptTask(void *data);
+	static void acceptTask(void*);
+	uint16_t            m_port;
+	Socket              m_serverSocket;
+	FreeRTOS::Semaphore m_clientSemaphore = FreeRTOS::Semaphore("clientSemaphore");
+	std::set<Socket>    m_clientSet;
+	QueueHandle_t       m_acceptQueue;
+	bool                m_useSSL;
+
 public:
 	SockServ(uint16_t port);
-	int connectedCount();
-	void disconnect();
-	void sendData(uint8_t *data, size_t length);
-	void sendData(std::string str);
-	void start();
-	void stop();
+	SockServ();
+	~SockServ();
+	int    connectedCount();
+	void   disconnect(Socket s);
+	bool   getSSL();
+	size_t receiveData(Socket s, void* pData, size_t maxData);
+	void   sendData(uint8_t* data, size_t length);
+	void   sendData(std::string str);
+	void   setPort(uint16_t port);
+	void   setSSL(bool use=true);
+	void   start();
+	void   stop();
+	Socket waitForData(std::set<Socket>& socketSet);
+	Socket waitForNewClient();
 };
 
 #endif /* MAIN_SOCKSERV_H_ */
