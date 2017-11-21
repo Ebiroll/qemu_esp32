@@ -6,7 +6,7 @@
 
 // Constructor for single GFX matrix
 Adafruit_HT1632LEDMatrix::Adafruit_HT1632LEDMatrix(uint8_t data, uint8_t wr,
-  uint8_t cs1) : Adafruit_GFX(24, 16), matrices(NULL), matrixNum(0) {
+  uint8_t cs1) : Adafruit_GFX(32, 8), matrices(NULL), matrixNum(0) {  // Adafruit_GFX(24, 16)
   if((matrices = (Adafruit_HT1632 *)malloc(sizeof(Adafruit_HT1632)))) {
     matrices[0] = Adafruit_HT1632(data, wr, cs1);
     matrixNum   = 1;
@@ -57,9 +57,15 @@ void Adafruit_HT1632LEDMatrix::clrPixel(uint8_t x, uint8_t y) {
   drawPixel(x, y, 0);
 }
 
+void Adafruit_HT1632LEDMatrix::simplePixel(int16_t pixel, uint16_t color) {
+  if(color) matrices[0].setPixel(pixel);
+  else      matrices[0].clrPixel(pixel);
+}
+
+
 void Adafruit_HT1632LEDMatrix::drawPixel(int16_t x, int16_t y, uint16_t color) {
   if((x < 0) || (x >= _width) || (y < 0) || (y >= _height)) return;
-
+  #if 0
   switch(rotation) { // Rotate pixel into device-specific coordinates
    case 1:
     _swap_int16_t(x, y);
@@ -74,20 +80,52 @@ void Adafruit_HT1632LEDMatrix::drawPixel(int16_t x, int16_t y, uint16_t color) {
     y = HEIGHT - 1 - y;
     break;
   }
+#endif
+  uint8_t m = x / 32; // Which matrix controller is pixel on?
+  x %= 32;            // Which column in matrix?
 
-  uint8_t m = x / 24; // Which matrix controller is pixel on?
-  x %= 24;            // Which column in matrix?
-
+#if 0
   uint16_t i;
-
   if(x < 8)       i =       7;
   else if(x < 16) i = 128 + 7;
-  else            i = 256 + 7;
+  else  if(x < 24) i = 256 + 7;
+  else  i = 256 +128 + 7;
   i -= (x & 7);
 
   if(y < 8) y *= 2;
   else      y  = (y-8) * 2 + 1;
   i += y * 8;
+#endif
+
+  //x = WIDTH  - 1 - x;
+  //y = HEIGHT - 1 - y;
+
+  x=23-x;
+
+  uint16_t tx=y;
+  uint16_t ty=x;
+  
+  uint16_t i;
+  if(x < 8)  {
+    i = y+x*8;
+  }
+  else if(x < 16) {
+    i =  y+ x*8;
+  }
+  else  if(x < 24) {
+    i =  y+x*8;
+  }
+  else  {
+    i =  y +x*8;
+  }
+  //i -= (x & 7);
+
+  //if(y < 8) y *= 2;
+  //else      y  = (y-8) * 2 + 1;
+  //i += y * 8;
+
+  // 376
+  i =  y + x*16;
 
   if(color) matrices[m].setPixel(i);
   else      matrices[m].clrPixel(i);
@@ -204,10 +242,14 @@ void Adafruit_HT1632::writeScreen() {
   writedata(ADA_HT1632_WRITE, 3);
   // send with address 0
   writedata(0, 7);
-
   for(uint16_t i=0; i<sizeof(ledmatrix); i+=2) {
     writedata(((uint16_t)ledmatrix[i] << 8) | ledmatrix[i+1], 16);
   }
+/*
+  for(uint16_t i=0; i<sizeof(ledmatrix); i++) {
+    writedata((uint16_t) ledmatrix[i], 8);
+  }
+*/
 
 #ifdef __AVR__
   *csport  |=  csmask;

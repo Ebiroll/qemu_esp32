@@ -74,7 +74,8 @@ class Adafruit_HT1632LEDMatrix : public Adafruit_GFX {
          writeScreen(),
          clrPixel(uint8_t x, uint8_t y),
          setPixel(uint8_t x, uint8_t y),
-         drawPixel(int16_t x, int16_t y, uint16_t color);
+         drawPixel(int16_t x, int16_t y, uint16_t color),
+         simplePixel(int16_t pixel, uint16_t color);
 
  protected:
   Adafruit_HT1632 *matrices;
