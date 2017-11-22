@@ -47,7 +47,7 @@ class Adafruit_HT1632 {
 
  protected:
   int8_t  _data, _cs, _wr, _rd;
-  uint8_t ledmatrix[24 * 16 / 8];
+  uint8_t ledmatrix[32 * 8 / 8];
   void    sendcommand(uint8_t c),
           writedata(uint16_t d, uint8_t bits),
           writeRAM(uint8_t addr, uint8_t data);

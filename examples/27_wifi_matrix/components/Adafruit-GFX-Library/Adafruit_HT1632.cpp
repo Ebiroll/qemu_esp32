@@ -100,7 +100,7 @@ void Adafruit_HT1632LEDMatrix::drawPixel(int16_t x, int16_t y, uint16_t color) {
   //x = WIDTH  - 1 - x;
   //y = HEIGHT - 1 - y;
 
-  x=23-x;
+  x=32-x;
 
   uint16_t tx=y;
   uint16_t ty=x;
@@ -125,7 +125,7 @@ void Adafruit_HT1632LEDMatrix::drawPixel(int16_t x, int16_t y, uint16_t color) {
   //i += y * 8;
 
   // 376
-  i =  y + x*16;
+  i =  y + x*8;
 
   if(color) matrices[m].setPixel(i);
   else      matrices[m].clrPixel(i);

@@ -13,8 +13,8 @@ Adafruit_HT1632LEDMatrix matrix = Adafruit_HT1632LEDMatrix(HT_DATA, HT_WR, HT_CS
 void setup() {
   //Serial.begin(9600);
   Serial.begin(115200);
-  matrix.begin(ADA_HT1632_COMMON_16NMOS);
-  //matrix.begin(ADA_HT1632_COMMON_8NMOS);
+  //matrix.begin(ADA_HT1632_COMMON_16NMOS);
+  matrix.begin(ADA_HT1632_COMMON_8NMOS);
 
   matrix.fillScreen();
   delay(500);
@@ -29,13 +29,13 @@ void loop() {
   for(uint8_t i=0; i<32; i++) {
     //matrix.setRotation(i);
     matrix.clearScreen();
-    matrix.setCursor(24-i, 0);
+    matrix.setCursor(32-i, 0);
     matrix.print("Hello");
     matrix.writeScreen();
     //matrix.dumpScreen();
     delay(300);
     int ix=0;
-
+#if 0
     for (ix=0; ix<256; ix++) {
         matrix.simplePixel(ix,1);
         matrix.writeScreen();
@@ -51,7 +51,7 @@ void loop() {
         matrix.writeScreen();
         
     }
-
+#endif
     // blink!
     //matrix.blink(true);
     //delay(2000);
