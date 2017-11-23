@@ -31,11 +31,11 @@ SSD1306 display(0x3c, 4, 15);
 // #define BAND 429E6 //915E6
 
 // #define BAND 434500000.00
-#define BAND 434500000.00
+#define BAND 868100000.00
 
-#define spreadingFactor 9
-// #define SignalBandwidth 62.5E3
-#define SignalBandwidth 31.25E3
+#define spreadingFactor 7
+#define SignalBandwidth 62.5E3
+//#define SignalBandwidth 31.25E3
 #define preambleLength 8
 #define codingRateDenominator 8
 
@@ -81,6 +81,7 @@ void setup() {
   LoRa.setPreambleLength(preambleLength);
   
   Serial.println("LoRa Initial OK!");
+  display.clear();
   display.drawString(5,20,"LoRa Initializing OK!");
   display.display();
   delay(2000);
