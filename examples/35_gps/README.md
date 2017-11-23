@@ -1,5 +1,8 @@
 The puropse of this example is to test the gps arduion library
 
+http://wiki.paparazziuav.org/wiki/Sensors/GPS
+
+
 
 in the project folder, create a folder called components and clone this repository inside
 
