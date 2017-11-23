@@ -6,6 +6,16 @@
 // #include "SSD1306.h"
 #include<Arduino.h>
 
+// Pin definetion of WIFI LoRa 32
+// HelTec AutoMation 2017 support@heltec.cn 
+#define SCK     5    // GPIO5  -- SX127x's SCK
+#define MISO    19   // GPIO19 -- SX127x's MISO
+#define MOSI    27   // GPIO27 -- SX127x's MOSI
+#define SS      18   // GPIO18 -- SX127x's CS
+#define RST     14   // GPIO14 -- SX127x's RESET
+#define DI0     26   // GPIO26 -- SX127x's IRQ(Interrupt Request)
+
+#define PABOOST true
 
 //OLED pins to ESP32 GPIOs via this connecthin:
 //OLED_SDA — GPIO4
@@ -60,11 +70,14 @@ void setup() {
   display.drawString(5,5,"LoRa Sender");
   display.display();
   
-  SPI.begin(5,19,27,18);
+  //SPI.begin(5,19,27,18);
+  SPI.begin(SCK,MISO,MOSI,SS);
   LoRa.setPins(SS,RST,DI0);
   Serial.println("LoRa Sender");
-  if (!LoRa.begin(BAND)) {
+  if (!LoRa.begin(BAND,PABOOST)) {
     Serial.println("Starting LoRa failed!");
+    display.drawString(5,5,"Starting LoRa failed!");
+    display.display();
     while (1);
   }
   
