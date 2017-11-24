@@ -124,7 +124,7 @@ void setup() {
   LoRa.setCodingRate4(codingRateDenominator);
   
   display.drawString(0,0,"LoRa Initializing OK!");
-  display.drawString(0, 10, "Wait for incomm data...");
+  display.drawString(20, 10, "Wait for incomm data...");
   display.display();
   delay(1000);
   //LoRa.onReceive(cbk);
