@@ -13,6 +13,11 @@ I was able to send a join requests to the things network.
 https://console.thethingsnetwork.org/
 This is from the gateway console log.
 
+This is the gateway software used
+https://github.com/bokse001/dual_chan_pkt_fwd
+
+
+
 Join Request
 
 Dev EUI
