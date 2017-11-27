@@ -23,14 +23,15 @@ U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ 15, /* data=*/ 4, /* reset=*/
 // This EUI must be in little-endian format, so least-significant-byte
 // first. When copying an EUI from ttnctl output, this means to reverse
 // the bytes. For TTN issued EUIs the last bytes should be 0xD5, 0xB3,
-// 0x70.
-static const u1_t PROGMEM APPEUI[8] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xD5, 0xB3, 0x70 };
+// 0x70.  70B3D57E D00085BE
+static const u1_t PROGMEM APPEUI[8] = { 0xBE, 0x85, 0x00, 0xD0, 0x7E, 0xD5, 0xB3, 0x70 };
 void os_getArtEui (u1_t* buf) {
   memcpy_P(buf, APPEUI, 8);
 }
 
+// 1234567812345678
 // This should also be in little endian format, see above.
-static const u1_t PROGMEM DEVEUI[8] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+static const u1_t PROGMEM DEVEUI[8] = { 0x78, 0x56, 0x34, 0x12, 0x78, 0x56, 0x34, 0x12 };
 void os_getDevEui (u1_t* buf) {
   memcpy_P(buf, DEVEUI, 8);
 }
@@ -38,8 +39,8 @@ void os_getDevEui (u1_t* buf) {
 // This key should be in big endian format (or, since it is not really a
 // number but a block of memory, endianness does not really apply). In
 // practice, a key taken from ttnctl can be copied as-is.
-// The key shown here is the semtech default key.
-static const u1_t PROGMEM APPKEY[16] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+// The key shown here is the semtech default key.  C3C3 6480 98F7 3E58 AAA7 260B 8BD5 5128
+static const u1_t PROGMEM APPKEY[16] = { 0xC3, 0xC3, 0x64, 0x80, 0x98, 0xF7, 0x3E, 0x58, 0xAA, 0xA7, 0x26, 0x0B, 0x8B, 0xD5, 0x51, 0x28 };
 void os_getDevKey (u1_t* buf) {
   memcpy_P(buf, APPKEY, 16);
 }
