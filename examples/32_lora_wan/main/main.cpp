@@ -39,8 +39,10 @@ void os_getDevEui (u1_t* buf) {
 // This key should be in big endian format (or, since it is not really a
 // number but a block of memory, endianness does not really apply). In
 // practice, a key taken from ttnctl can be copied as-is.
+// C3C364 80 98F73E58 AA A7 26 0B 8B D5 51 28
 // The key shown here is the semtech default key.  C3C3 6480 98F7 3E58 AAA7 260B 8BD5 5128
 static const u1_t PROGMEM APPKEY[16] = { 0xC3, 0xC3, 0x64, 0x80, 0x98, 0xF7, 0x3E, 0x58, 0xAA, 0xA7, 0x26, 0x0B, 0x8B, 0xD5, 0x51, 0x28 };
+//Not correct... static const u1_t PROGMEM APPKEY[16] = { 0x28, 0x51, 0xD5, 0x8B, 0x0B, 0x26, 0xA7, 0xAA, 0x58, 0x3E, 0xF7, 0x98, 0x80, 0x64, 0xC3, 0xC3 };
 void os_getDevKey (u1_t* buf) {
   memcpy_P(buf, APPKEY, 16);
 }
@@ -169,7 +171,7 @@ void do_send(osjob_t* j) {
     u8x8.drawString(0, 7, "OP_TXRXPEND, not sent");
   } else {
     // Prepare upstream data transmission at the next possible time.
-    LMIC_setTxData2(1, mydata, sizeof(mydata) - 1, 0);
+    LMIC_setTxData2(1, mydata, sizeof(mydata) , 0);
     Serial.println(F("Packet queued"));
     u8x8.drawString(0, 7, "PACKET QUEUED");
     digitalWrite(BUILTIN_LED, HIGH);
@@ -197,6 +199,8 @@ void setup() {
 
   pinMode(BUILTIN_LED, OUTPUT);
   digitalWrite(BUILTIN_LED, LOW);
+
+  digitalWrite(BUILTIN_LED, HIGH);
 }
 
 void loop() {
