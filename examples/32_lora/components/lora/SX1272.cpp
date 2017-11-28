@@ -213,7 +213,8 @@ uint8_t SX1272::ON()
     //Configure the MISO, MOSI, CS, SPCR.
     //SPI.begin();
     //SPI.begin(18,19,23,17);
-    SPI.begin(MISO,MOSI,SX1272_SS,SCK);
+    // begin(int8_t sck=-1, int8_t miso=-1, int8_t mosi=-1, int8_t ss=-1)
+    SPI.begin(SCK,MISO,MOSI,SX1272_SS);
     //Set Most significant bit first
     SPI.setBitOrder(MSBFIRST);
     //Divide the clock frequency
