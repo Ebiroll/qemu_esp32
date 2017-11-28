@@ -3,6 +3,11 @@
 SX1272 taken from here
 https://github.com/Waziup/waziup-gateway
 
+Better code could possibly be located here,
+http://www.airspayce.com/mikem/arduino/RadioHead/
+
+
+
 # You must checkout the arduino helpfiles
 cd components && \
 git clone https://github.com/espressif/arduino-esp32.git arduino && \

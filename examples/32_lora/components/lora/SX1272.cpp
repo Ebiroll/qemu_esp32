@@ -184,6 +184,17 @@ void SX1272::RxChainCalibration()
 /*
  Function: Sets the module ON.
  Returns: uint8_t setLORA state
+
+
+#define SCK     5    // GPIO5  -- SX127x's SCK
+#define MISO    19   // GPIO19 -- SX127x's MISO
+#define MOSI    27   // GPIO27 -- SX127x's MOSI
+#define SS      18   // GPIO18 -- SX127x's CS
+#define RST     14   // GPIO14 -- SX127x's RESET
+#define DI00 26 // GPIO26 -- SX127x's IRQ(Interrupt Request)
+
+          MISO, MOSI, CS, SPCR.
+   SPI.begin(18,19,23,17);
 */
 uint8_t SX1272::ON()
 {
@@ -201,7 +212,8 @@ uint8_t SX1272::ON()
 
     //Configure the MISO, MOSI, CS, SPCR.
     //SPI.begin();
-    SPI.begin(18,19,23,17);
+    //SPI.begin(18,19,23,17);
+    SPI.begin(MISO,MOSI,SX1272_SS,SCK);
     //Set Most significant bit first
     SPI.setBitOrder(MSBFIRST);
     //Divide the clock frequency

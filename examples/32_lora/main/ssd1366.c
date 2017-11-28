@@ -10,8 +10,8 @@
 #include "ssd1366.h"
 #include "font8x8_basic.h"
 
-#define SDA_PIN GPIO_NUM_21
-#define SCL_PIN GPIO_NUM_22
+#define SDA_PIN GPIO_NUM_4
+#define SCL_PIN GPIO_NUM_15
 
 #define tag "SSD1306"
 

@@ -62,12 +62,19 @@
 // GPIO14 -- SX1278's RESET
 // GPIO26 -- SX1278's IRQ(Interrupt Request G0 / DI0??)
 
+#define SCK            5    // GPIO5  -- SX127x's SCK
+#define MISO           19   // GPIO19 -- SX127x's MISO
+#define MOSI           27   // GPIO27 -- SX127x's MOSI
+#define SX1272_SS      18   // GPIO18 -- SX127x's CS
+#define SX1272_RST     14   // GPIO14 -- SX127x's RESET
+#define DI00           26 // GPIO26 -- SX127x's IRQ(Interrupt Request)
+
 
 //#define SS      18
 //#define RST     14
 //#define DI0     26
 
-#define SX1272_RST  14
+//#define SX1272_RST  14
 #define SX1272Chip  0
 #define SX1276Chip  1
 // end
