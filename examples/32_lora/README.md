@@ -6,6 +6,8 @@ https://github.com/Waziup/waziup-gateway
 Better code could possibly be located here,
 http://www.airspayce.com/mikem/arduino/RadioHead/
 
+#Lora wan datasheet
+http://www.semtech.com/images/datasheet/an1200.24.pdf
 
 
 # You must checkout the arduino helpfiles
