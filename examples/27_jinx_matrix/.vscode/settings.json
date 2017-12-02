@@ -1,0 +1,11 @@
+{
+    "files.associations": {
+        "freertos.h": "c",
+        "esp_event.h": "c",
+        "esp_wifi.h": "c",
+        "parser.hpp": "c",
+        "zlib.h": "c",
+        "freertosconfig.h": "c",
+        "sdkconfig.h": "c"
+    }
+}
