@@ -41,7 +41,7 @@ void WiFiServer::stopAll(){}
 WiFiClient WiFiServer::available(){
   if(!_listening)
     return WiFiClient();
-  int client_sock;
+  int client_sock=0;
   if (_accepted_sockfd >= 0) {
     client_sock = _accepted_sockfd;
     _accepted_sockfd = -1;

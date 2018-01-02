@@ -2,7 +2,7 @@
 #include <SeeedOLED.h>
 //#include <avr/pgmspace.h>
 
-static unsigned char SeeedLogo[]  ={
+static unsigned char SeeedLogo[] ={
 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80,
 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -76,13 +76,100 @@ void setup()
   //DDRB|=0x21;        //digital pin 8, LED glow indicates Film properly Connected .
   //PORTB |= 0x21;
 
-  SeeedOled.clearDisplay();               // clear the screen and set start position to top left corner
-  SeeedOled.drawBitmap(SeeedLogo,1024);   // 1024 = 128 Pixels * 64 Pixels / 8
 
 }
 
+void setDisplayToOriginalState(char testCase)
+
+{
+  delay(5000);
+  SeeedOled.init();                       //initialze SEEED OLED display
+  SeeedOled.clearDisplay();               // clear the screen and set start position to top left corner
+  SeeedOled.deactivateScroll();           // deactivete Scroll (might be activated by previous test case)
+  SeeedOled.setNormalDisplay();           // Non-inverted Display 
+  SeeedOled.setPageMode();                // Page mode to start with
+  SeeedOled.setTextXY(2,0);               // 0 Page, 0th Column  
+  SeeedOled.putString("Test Case ");
+  SeeedOled.putNumber(testCase);
+  SeeedOled.setTextXY(3,0);
+  SeeedOled.putString("Test Case ");
+  SeeedOled.putNumber(testCase);
+  SeeedOled.setTextXY(4,0);
+  SeeedOled.putString("Test Case ");
+  SeeedOled.putNumber(testCase);
+  SeeedOled.setTextXY(5,0);
+  SeeedOled.putString("Test Case ");
+  SeeedOled.putNumber(testCase);
+  delay(2000);
+  
+
+
+}
+
+
 void loop()
 {
+
+  setDisplayToOriginalState(1);
+
+  SeeedOled.clearDisplay();          //clear the screen and set start position to top left corner
+  SeeedOled.setNormalDisplay();      //Set display to normal mode (i.e non-inverse mode)
+  SeeedOled.setPageMode();           //Set addressing mode to Page Mode
+  SeeedOled.setTextXY(0,0);          //Set the cursor to Xth Page, Yth Column  
+  SeeedOled.putString("Hello World!"); //Print the String
+
+
+  setDisplayToOriginalState(2);
+
+  SeeedOled.clearDisplay();           //clear the screen and set start position to top left corner
+  SeeedOled.setNormalDisplay();       //Set display to Normal mode
+  SeeedOled.setPageMode();            //Set addressing mode to Page Mode
+  SeeedOled.setTextXY(0,0);           //Set the cursor to 0th Page, 0th Column  
+  SeeedOled.putNumber(123);           //Print number
+  SeeedOled.setTextXY(1,0);           //Set the cursor to 1st Page, 0th Column  
+  SeeedOled.putNumber(0xFFFF);        //Print number
+  SeeedOled.setTextXY(2,0);           //Set the cursor to 2nd Page, 0th Column  
+  SeeedOled.putNumber(0xFFFFFFFF);    //Print number
+  SeeedOled.setTextXY(3,0);           //Set the cursor to 3rd Page, 0th Column  
+  SeeedOled.putNumber(-12345);        //Print number
+
+
+  setDisplayToOriginalState(3);
+  
+  SeeedOled.clearDisplay();           //clear the screen and set start position to top left corner
+  SeeedOled.setNormalDisplay();       //Set display to Normal mode
+  SeeedOled.setHorizontalMode();      //Set addressing mode to Horizontal Mode
+  SeeedOled.putString("!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~");  //Print String (ASCII 32 - 126 )
+
+
+
+  setDisplayToOriginalState(4);
+  
+  SeeedOled.clearDisplay();               // clear the screen and set start position to top left corner
+  SeeedOled.drawBitmap(SeeedLogo,1024);   // 1024 = 128 Pixels * 64 Pixels / 8
+
+  setDisplayToOriginalState(5);
+  
+  SeeedOled.setInverseDisplay();          // Set Display to inverse mode
+  SeeedOled.clearDisplay();               // clear the screen and set start position to top left corner
+  SeeedOled.drawBitmap(SeeedLogo,1024);   // 1024 = 128 Pixels * 64 Pixels / 8
+
+  setDisplayToOriginalState(6);
+  
+  SeeedOled.clearDisplay();               // clear the screen and set start position to top left corner
+  SeeedOled.drawBitmap(SeeedLogo,1024);   // 1024 = 128 Pixels * 64 Pixels / 8
+  SeeedOled.setHorizontalScrollProperties(Scroll_Left,4,7,Scroll_5Frames); //Set Scrolling properties to Scroll Left
+  SeeedOled.activateScroll();             // Activate Scrolling
+  delay(5000);
+  
+  setDisplayToOriginalState(7);
+
+  SeeedOled.clearDisplay();               // clear the screen and set start position to top left corner
+  SeeedOled.drawBitmap(SeeedLogo,1024);   // 1024 = 128 Pixels * 64 Pixels / 8
+  SeeedOled.setHorizontalScrollProperties(Scroll_Right,4,7,Scroll_5Frames);  //Set the properties of Horizontal Scrool
+  SeeedOled.activateScroll();             // Activate Scroll
+  delay(5000);  
+
   
 }
 

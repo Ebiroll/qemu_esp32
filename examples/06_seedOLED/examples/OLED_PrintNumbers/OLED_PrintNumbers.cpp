@@ -6,8 +6,8 @@ void setup()
 {
   Wire.begin();	
   SeeedOled.init();  //initialze SEEED OLED display
-  DDRB|=0x21;        //digital pin 8, LED glow indicates Film properly Connected .
-  PORTB |= 0x21;
+  // DDRB|=0x21;        //digital pin 8, LED glow indicates Film properly Connected .
+  //PORTB |= 0x21;
 
   SeeedOled.clearDisplay();           //clear the screen and set start position to top left corner
   SeeedOled.setNormalDisplay();       //Set display to Normal mode
