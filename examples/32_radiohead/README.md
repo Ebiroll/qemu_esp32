@@ -1,6 +1,29 @@
 The puropse of this example is to test the lora heltec board, similar to the 32_helltec example but with the
 rf95 library.
 
+OLED library not working...
+Will try this,
+https://github.com/olikraus/u8g2
+
+cd components 
+git clone https://github.com/olikraus/u8g2
+Add the file components/u8g2/component.mk
+COMPONENT_SRCDIRS:=csrc cppsrc
+COMPONENT_ADD_INCLUDEDIRS:=csrc cppsrc
+
+Then make..
+
+Still does not work,
+
+Execusion ends like this....
+Task watchdog got triggered. The following tasks did not reset the watchdog in time:
+ - IDLE (CPU 0)
+Tasks currently running:
+CPU 0: loopTask
+CPU 1: IDLE
+
+
+
 
 https://hackaday.io/project/27791
 

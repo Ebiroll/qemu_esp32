@@ -36,11 +36,16 @@ SOFTWARE.
 
 #include <Wire.h>  // Only needed for Arduino 1.6.5 and earlier
 //#include "SSD1306.h" // alias for `
-#include "SSD1306Wire.h"
+//#include "SSD1306Wire.h"
 #include <SPI.h>
 #include<Arduino.h>
 
-SSD1306Wire display(0x3c, 4, 15);
+#include <U8x8lib.h>
+
+//SSD1306Wire display(0x3c, 4, 15);
+
+// u8x8
+U8X8_SSD1306_128X64_NONAME_SW_I2C display(/* clock=*/ 15, /* data=*/ 4, /* reset=*/ 16);
 
 static const char *TAG = "radio";
 
@@ -123,6 +128,9 @@ void setup()
 {
   pinMode(25,OUTPUT); //Send success, LED will bright 1 second
 
+
+  Wire.begin(4,15);	
+
   pinMode(16,OUTPUT);
   digitalWrite(16, LOW); // set GPIO16 low to reset OLED
   delay(50);
@@ -133,9 +141,16 @@ void setup()
    // uint8_t slaveSelectPin, uint8_t interruptPin, RHGenericSPI& spi
   SPI.begin(SCK,MISO,MOSI,SS);
 
-  display.init();
-  display.flipScreenVertically();
-  display.setFont(ArialMT_Plain_16);
+  // For oled module 
+  //display.init();
+  //display.flipScreenVertically();
+  //display.setFont(ArialMT_Plain_16);
+
+    // u8x8 module
+  display.begin();
+  display.setFont(u8x8_font_chroma48medium8_r);
+
+
   display.drawString(30,30,"setup!");
 
   Serial.println("init");
@@ -181,7 +196,7 @@ void loop()
 
     //sprintf((char *)data,"Hello.. %d",j);
   
-    display.drawString(2,10,String((const char *)data));
+    display.drawString(2,10,(const char *)data);
 
     rf95.send(data,sizeof(data));
     delay(500);
