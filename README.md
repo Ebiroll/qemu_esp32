@@ -66,7 +66,10 @@ Start qemu
 Connect to emulated UART1
 nc 127.0.0.1 8881
 Press return
-However the latest changes in esp-idf makes i2c emulation very slow, also arduino i2c emulation is not working. There is also something about interrupts that has changed. This is still a great tool to learn about the esp32.
+However the latest changes in esp-idf makes i2c emulation very slow.
+A much faster but non-interactive example is the 06_duino example.
+It runs fine with the latest version of esp-idf
+
 ```
 
 
@@ -234,6 +237,9 @@ However debugging c-functions in the elf file requires a patched qemu.
 In the bin directory there are patched versions of xtensa-esp32-elf-gdb.
 You can also build your own. Just apply this patch,
 https://github.com/jcmvbkbc/xtensa-toolchain-build/blob/master/fixup-gdb.sh
+Another option is to build from this prepatched gdb crosstool source,
+https://github.com/Ebiroll/gdb
+One has to create a link or copy ar to x86_64-build_pc-linux-gnu-ar
 
 ## Building qemu
 ```
