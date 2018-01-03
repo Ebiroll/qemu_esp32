@@ -14,14 +14,15 @@ pcbreflux, also has nice examples.
     06_duino, ssd1306 i2c run by the Arduino i2c driver
     06_ssd1306-esp-idf-i2c, not yet tested with qemu
     06_oledu8g2, ssd1306 but also other displays
-    06_ssd1306, experimental code with experimental 1306 driver.
+    06_seedOLED, 1106 display with SSG1106 controller chip. works with qemu
+    06_ssd1306, experimental code with experimental 1306 driver. Not recomended.
     07_flash_mmap, test of mmap function
     07_flash_test, test of reading/writing to the flash
     07_nvs_rw_value, test of reading/writing to the flash with nv-library 
     08_nvs_rw_blob, test of reading/writing binary data with nv-library 
     09_onchip_sensor, test of temp sensor
     10_i2cscan, i2c scan with esp-idf i2c driver
-    11_hvacIli9341, Test of the ESP WROVER Ili9341 display
+    11_hvacIli9341, Test of the ESP WROVER Ili9341 display. Broken with new esp-idf
     12_distance, Mini project with ultrasonic sensor and 1306 display
     14_bootwifi, Useful. Taken from here https://github.com/nkolban/esp32-snippets
     15_websocket, Websocket example
