@@ -222,9 +222,9 @@ static void initialise_wifi(void)
     ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
     wifi_config_t wifi_config = {
         .sta = {
-	        //#include "secret.i"
-	        .ssid = "ssid",
-            .password = "password",
+	//#include "secret.i"
+	.ssid = "ssid",
+	.password = "password",
         },
     };
     ESP_LOGI(tag, "Setting WiFi configuration SSID %s...", wifi_config.sta.ssid);
@@ -263,7 +263,7 @@ uint32_t get_usec() {
 static void uartLoopTask(void *inpar)
 {
     QueueHandle_t uart_queue;
-    char* line=malloc(1024*2);
+    char* line=malloc(1024*3);
     int display_number=123;
     unsigned char display_data[16];
 
@@ -285,13 +285,13 @@ static void uartLoopTask(void *inpar)
     ESP_ERROR_CHECK(uart_set_pin(uart_num, 23, 19, -1, -1));
 
     // driver_install, otherwise E (20206) uart: uart_read_bytes(841): uart driver error
-    ESP_ERROR_CHECK(uart_driver_install(uart_num, 512 * 2, 512 * 2, 10, &uart_queue, 0));
+    ESP_ERROR_CHECK(uart_driver_install(uart_num, 512 * 4, 512 * 4, 20, &uart_queue, 0));
     sprintf(line,"Select 1,2,3,4 or 5\n");
     ssd1306_128x64_noname_powersave_off();
     //display_three_numbers(display_number,0);
 
 
-    printMenu(line,2*1024);
+    printMenu(line,3*1024);
     uart_tx_chars(UART_NUM_1, (const char *)line, strlen(line));
     
     printf("Uart Menu\n");
@@ -311,10 +311,20 @@ static void uartLoopTask(void *inpar)
 		if (!strncmp(line, "quit", 4))
 			break;
 
-		if (!strncmp(line, "0", 1))
+		if (!strncmp(line, "s", 1))
 		{
 			printf("i2c_scan\n");
 			i2c_scan();
+		}
+
+		if (!strncmp(line, "0", 1))
+		{
+			int j=0;
+			for (j=0;j<8;j++) {
+				display_data[j]=0x00;
+			}
+			Write_data(display_data,4);
+
 		}
 
 		if (!strncmp(line, "1", 1))
@@ -380,6 +390,46 @@ static void uartLoopTask(void *inpar)
 			  dataLen-=128;
 			}
 		}
+		
+		if (!strncmp(line, "a", 1))
+		{
+		  // column 0-8
+		        Write_command(0x21);
+			Write_command(0);
+			Write_command(8);
+		}
+
+		if (!strncmp(line, "b", 1))
+		{
+		  // page 2-6
+			Write_command(0x20);
+			Write_command(2);
+			Write_command(6);
+		}
+
+		if (!strncmp(line, "c", 1))
+		{
+		  // column 8-28
+			Write_command(0x21);
+			Write_command(8);
+			Write_command(28);
+		}
+
+		if (!strncmp(line, "d", 1))
+		{
+		  // column 1-127
+			Write_command(0x21);
+			Write_command(0);
+			Write_command(127);
+		}
+
+		if (!strncmp(line, "e", 1))
+		{
+		  // page 2-6
+			Write_command(0x20);
+			Write_command(0);
+			Write_command(7);
+		}
     }
     //#endif
 }
@@ -419,7 +469,7 @@ void app_main(void)
     //(gdb) p/x &GPIO_PIN_MUX_REG[21]
     //$5 = 0x3f408448
 
-    //nvs_flash_init();
+    nvs_flash_init();
     i2c_init(0,0x3C);
     ssd1306_128x64_noname_init();
     //printf("t=0x%x\n",*quemu_test);
@@ -437,22 +487,10 @@ void app_main(void)
 #endif
 
     } else {
-        initialise_wifi();
+      initialise_wifi();
     }
 
     // Uart
     xTaskCreatePinnedToCore(&uartLoopTask, "loop", 4096, NULL, 20, NULL, 0);
-
-    // wifi socket with 
-
-
-#if 0
-#endif
-
-
-// 
-
-
-
 
 }
