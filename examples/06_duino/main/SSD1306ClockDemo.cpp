@@ -1,3 +1,4 @@
+#if 0
 /**
  * The MIT License (MIT)
  *
@@ -25,7 +26,6 @@
  */
 
 //#include <TimeLib.h>
-#if 0
 // Include the correct display library
 // For a connection via I2C using Wire include
 #include <Wire.h>  // Only needed for Arduino 1.6.5 and earlier
@@ -66,7 +66,7 @@
 // SH1106Brzo  display(0x3c, D3, D5);
 
 // Initialize the OLED display using Wire library
-SSD1306  display(0x3c, D3, D5);
+SSD1306  display(0x3c, 5, 4);
 // SH1106 display(0x3c, D3, D5);
 
 OLEDDisplayUi ui ( &display );
@@ -152,8 +152,8 @@ OverlayCallback overlays[] = { clockOverlay };
 int overlaysCount = 1;
 
 void setup() {
-  Serial.begin(9600);
-  Serial.println();
+  //Serial.begin(9600);
+  //Serial.println();
 
 	// The ESP is capable of rendering 60fps in 80Mhz mode
 	// but that won't give you much time for anything else
@@ -190,8 +190,8 @@ void setup() {
   // Unix time starts on Jan 1 1970. In seconds, that's 2208988800:
   const unsigned long seventyYears = 2208988800UL;
   // subtract seventy years:
-  unsigned long epoch = secsSinceStart - seventyYears * SECS_PER_HOUR;
-  setTime(epoch);
+  //unsigned long epoch = secsSinceStart - seventyYears * SECS_PER_HOUR;
+  //setTime(epoch);
 
 }
 
