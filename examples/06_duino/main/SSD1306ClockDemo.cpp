@@ -1,4 +1,5 @@
 #if 0
+// TODO, time goes negative when displaying digital clock, WHY??
 /**
  * The MIT License (MIT)
  *
@@ -100,20 +101,42 @@ uint32_t get_usec() {
 
 uint32_t minute() {
  struct timeval tv;
- gettimeofday(&tv,NULL);
- return (tv.tv_sec/60);
- //uint64_t tmp=get_time_since_boot();
- //uint32_t ret=(uint32_t)tmp;
- //return ret;
+ struct timezone tz;
+
+ gettimeofday(&tv,&tz);
+
+   long hms = tv.tv_sec % SEC_PER_DAY;
+  hms += tz.tz_dsttime * SEC_PER_HOUR;
+  hms -= tz.tz_minuteswest * SEC_PER_MIN;
+  // mod `hms` to insure in positive range of [0...SEC_PER_DAY)
+  hms = (hms + SEC_PER_DAY) % SEC_PER_DAY;
+
+  // Tear apart hms into h:m:s
+  int min = (hms % SEC_PER_HOUR) / SEC_PER_MIN;
+
+  //printf("min %d\n",min);
+  
+ return (min);
 }
 
 uint32_t second() {
  struct timeval tv;
- gettimeofday(&tv,NULL);
- return (tv.tv_sec%60);
- //uint64_t tmp=get_time_since_boot();
- //uint32_t ret=(uint32_t)tmp;
- //return ret;
+ struct timezone tz;
+ gettimeofday(&tv, &tz);
+
+  long hms = tv.tv_sec % SEC_PER_DAY;
+  hms += tz.tz_dsttime * SEC_PER_HOUR;
+  hms -= tz.tz_minuteswest * SEC_PER_MIN;
+  // mod `hms` to insure in positive range of [0...SEC_PER_DAY)
+  hms = (hms + SEC_PER_DAY) % SEC_PER_DAY;
+
+  // Tear apart hms into h:m:s
+  //int hour = hms / SEC_PER_HOUR;
+  //int min = (hms % SEC_PER_HOUR) / SEC_PER_MIN;
+  int sec = (hms % SEC_PER_HOUR) % SEC_PER_MIN; // or hms % SEC_PER_MIN
+  //printf("sec %d\n",sec);
+  
+ return (sec);
 }
 
 uint32_t hour() {
@@ -137,14 +160,19 @@ uint32_t hour() {
 
   // Tear apart hms into h:m:s
   int hour = hms / SEC_PER_HOUR;
-  int min = (hms % SEC_PER_HOUR) / SEC_PER_MIN;
-  int sec = (hms % SEC_PER_HOUR) % SEC_PER_MIN; // or hms % SEC_PER_MIN
+  //int min = (hms % SEC_PER_HOUR) / SEC_PER_MIN;
+  //int sec = (hms % SEC_PER_HOUR) % SEC_PER_MIN; // or hms % SEC_PER_MIN
 
+  //printf("hour %d\n",hour);
+  
   return hour;
 }
 
 // utility function for digital clock display: prints leading 0
 String twoDigits(int digits){
+  if(digits<0) {
+    digits=-digits;
+  }
   if(digits < 10) {
     String i = '0'+String(digits);
     return i;
@@ -275,5 +303,4 @@ void loop() {
 
 
 }
-
 #endif
