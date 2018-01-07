@@ -15,10 +15,32 @@
 #include "esp_system.h"
 #include "nvs_flash.h"
 #include "nvs.h"
+#include "rom/spi_flash.h"
+
 
 void app_main()
 {
+    uint32_t before_buf[10];
+    uint32_t after_buf[10];
     nvs_flash_init();
+
+#if 0
+    // for debugging of qemu,  esp_rom_spiflash functions
+    esp_rom_spiflash_result_t res;
+
+    res = esp_rom_spiflash_read(0x100, before_buf, 8);
+
+    for (int j=0;j<8;j++) {
+        before_buf[j]=j;
+    }
+    before_buf[0]=0xaaaaaaaa;
+    before_buf[1]=0xbbbbbbbb;
+    before_buf[7]=0x88888888;
+
+    //spi_flash_guard_start();
+    res = esp_rom_spiflash_write(0x100, before_buf, 8);
+    //spi_flash_guard_end();
+#endif
 
     nvs_handle my_handle;
     esp_err_t err;
@@ -52,6 +74,7 @@ void app_main()
         // Write
         printf("Updating restart counter in NVS ... ");
         restart_counter++;
+        //restart_counter=0xaabbccdd;
         err = nvs_set_i32(my_handle, "restart_conter", restart_counter);
         printf((err != ESP_OK) ? "Failed!\n" : "Done\n");
 
