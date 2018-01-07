@@ -30,6 +30,10 @@ void Set_Column_Address(unsigned char add);
 
 void Write_data(unsigned char *data,unsigned char len);
 
+void Write_command(unsigned char command);
+  
+void Write_multi_command(unsigned char *data,unsigned char len);
+  
 #ifdef __cplusplus
 }
 #endif

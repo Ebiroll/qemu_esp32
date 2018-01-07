@@ -55,7 +55,8 @@ void print_echo_app_header()
 
 int printMenu(char *data,int maxlen) {
 
-    sprintf(data,"0. i2c_scan\n\
+    sprintf(data,"s. i2c_scan\n\
+0. Send 4*0x00.\n\
 1. clear display.\n\
 2. Set page and col to 0.\n\
 3. Set page to 4.\n\
@@ -64,7 +65,12 @@ int printMenu(char *data,int maxlen) {
 6. Send 8*0x0f.\n\
 7. Incremet number and draw it.\n\
 8. draw dot.\n\
-9. draw image.\n\n");
+9. draw image.\n\
+a. set column address 0-8\n\
+b. set row address 2-6\n\
+c. set column address 8-28\n\
+d. set column address 0-127\n\
+e. set row address 0-7\n");
 
 return (strlen(data));
 }
@@ -111,7 +117,7 @@ void process_menu_request(void *p)
 		if (!strncmp(recv_buf, "quit", 4))
 			break;
 
-		if (!strncmp(recv_buf, "0", 1))
+		if (!strncmp(recv_buf, "s", 1))
 		{
 			printf("i2c_scan\n");
 			i2c_scan();
@@ -138,6 +144,16 @@ void process_menu_request(void *p)
 			Set_Column_Address(4);
 		}
 
+		if (!strncmp(recv_buf, "0", 1))
+		{
+			int j=0;
+			for (j=0;j<8;j++) {
+				display_data[j]=0x00;
+			}
+			Write_data(display_data,4);
+
+		}
+		
 		if (!strncmp(recv_buf, "5", 1))
 		{
 			int j=0;
@@ -178,6 +194,47 @@ void process_menu_request(void *p)
 			  data+=128;
 			  dataLen-=128;
 			}
+		}
+
+
+		if (!strncmp(recv_buf, "a", 1))
+		{
+		  // column 0-8
+		        Write_command(0x21);
+			Write_command(0);
+			Write_command(8);
+		}
+
+		if (!strncmp(recv_buf, "b", 1))
+		{
+		  // page 2-6
+			Write_command(0x20);
+			Write_command(2);
+			Write_command(6);
+		}
+
+		if (!strncmp(recv_buf, "c", 1))
+		{
+		  // column 8-28
+			Write_command(0x21);
+			Write_command(8);
+			Write_command(28);
+		}
+
+		if (!strncmp(recv_buf, "d", 1))
+		{
+		  // column 1-127
+			Write_command(0x21);
+			Write_command(0);
+			Write_command(127);
+		}
+
+		if (!strncmp(recv_buf, "e", 1))
+		{
+		  // page 2-6
+			Write_command(0x20);
+			Write_command(0);
+			Write_command(7);
 		}
 		
 		/* break if client closed connection */

@@ -316,6 +316,15 @@ void Write_data(unsigned char *data,unsigned char len){
     i2c_1306_write_data(data,len);        
 }
 
+void Write_multi_command(unsigned char *data,unsigned char len){
+    i2c_1306_write_command(data,len);        
+}
+
+void Write_command(unsigned char command){
+  unsigned char tmp[2];
+  tmp[0]=command;
+   i2c_1306_write_command(tmp,1);        
+}
 
 
 #if 0
