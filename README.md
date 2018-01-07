@@ -6,12 +6,82 @@ This documents how to add an esp32 cpu and a simple esp32 board to qemu in order
 It is a good way to learn about qemu , esp32 and the esp32 rom.
 
 
+## Quick Start
+
+```
+1. Build qemu
+git clone git://github.com/Ebiroll/qemu-xtensa-esp32
+mkdir qemu_esp32
+cd qemu_esp32
+../qemu-xtensa-esp32/configure --disable-werror --prefix=`pwd`/root --target-list=xtensa-softmmu,xtensaeb-softmmu
+make
+
+2. Dump rom1 and rom.bin
+~/esp/esp-idf/components/esptool_py/esptool/esptool.py --chip esp32 -b 921600 -p /dev/ttyUSB0 dump_mem 0x40000000 0x000C2000 rom.bin
+~/esp/esp-idf/components/esptool_py/esptool/esptool.py --chip esp32 -b 921600 -p /dev/ttyUSB0 dump_mem 0x3FF90000 0x00010000 rom1.bin
+
+3. Build an esp32 application
+Open a new window to build example app, and set env variables
+export PATH=$PATH:$HOME/esp/xtensa-esp32-elf/bin
+export IDF_PATH=~/esp/esp-idf
+cd esp   
+git clone git://github.com/Ebiroll/qemu_esp32
+cd qemu_esp32
+make menuconfig
+> Set [*] Run FreeRTOS only on first core      
+>     [ ] Make exception and panic handlers JTAG/OCD aware 
+make
+
+4. Build the qemu_flash app to create the qemu flash image
+Dont forget to check the code in toflash.c as it uses hardcoded paths.
+gcc toflash.c -o qemu_flash
+
+5. Flash the esp32flash.bin file
+> ./qemu_flash build/app-template.bin
+
+6. In the first window, start qemu
+  > xtensa-softmmu/qemu-system-xtensa -d guest_errors,unimp  -cpu esp32 -M esp32 -m 4M  -s  > io.txt
+Add -S if you want halt execution until debugger is attached.
+
+7. Optional step (start debugger)
+cp qemu_esp32/bin/xtensa-esp32-elf-gdb    $HOME/esp/xtensa-esp32-elf/bin/xtensa-esp32-elf-gdb.qemu   
+  > xtensa-esp32-elf-gdb.qemu   build/app-template.elf -ex 'target remote:1234'
+    (gdb) b bootloader_main
+    (gdb) b app_main
+    (gdb) c
+When breakpoint is hit try Ctrl-X then O
+
+Or to debug the bootloader,
+    xtensa-esp32-elf-gdb.qemu   build/bootloader/bootloader.elf -ex 'target remote:1234'
+    (gdb) b bootloader_main
+Remember to start qemu with -S (capital S) this will halt qemu execusion until debugger is attached.
+
+A fun example with an emulated 1306 display
+cd examples/06_1306_interactive
+ln -s ../../components/ components
+make
+gcc ../toflash.c -o qemu_flash
+./qemu_flash build/app-template.bin
+Start qemu
+Connect to emulated UART1
+nc 127.0.0.1 8881
+Press return
+However the latest changes in esp-idf makes i2c emulation very slow.
+A much faster but non-interactive example is the 06_duino example.
+It runs fine with the latest version of esp-idf
+
+```
+
+
+
+
+
 ## IMPORTANT update, July 2017
 
 Booting from emulated flash! This is very cool.
-Now IT IS MANDATORY to have a proper flash file ,
+Now IT IS MANDATORY to have a proper flash file , ets_unpack_flash_code is not longer patched , qemu now relies on flash and MMU emulation.
 
-ets_unpack_flash_code is not longer patched , qemu now relies on flash and MMU emulation.
+Not that esp-idf is constantly being updated and you must keep the qemu source updated to keep it working.
 
 
 > Serial flasher config  --->  Flash size (4 MB)
@@ -20,6 +90,7 @@ ets_unpack_flash_code is not longer patched , qemu now relies on flash and MMU e
   flash hash caclulations dont match.
   This is because bootloader always use hardware acceleration to calculate the hash and
   qemu does not emulate hardware SHA5 calculation.
+
 
 ```
   Component config  --->    
@@ -52,57 +123,13 @@ Then run the ./qemu_flash program.
 
 Note that you have to use the .bin file as argument. This will generate a flash image with bootloader, partition information and flash file that the bootloder can use boot the proper application from.
 
-It is still recomend that you give the  application as kernel parameter.
+You no longer need to give  application as kernel parameter.
 > -kernel /home/olas/esp/qemu_esp32/examples/07_flash_mmap/build/mmap_test.elf
 
-
-
 ```
-If you get a crash like this,
-I (124) cpu_start: Pro cpu start user code
- File 'esp32flash.bin' is truncated or corrupt.
- 
-qemu) MMU 117f4  1
-(qemu) MMU 117f8  3ff12b00
-(qemu) MMU 117fc  17
-(qemu) MMU 11808  4000c2e0
-(qemu) MMU 1180c  4000c2f6
-(qemu) MMU 11814  800855cd
-(qemu) MMU 11818  3ff11a90
-(qemu) MMU 1181c  40081144
-(qemu) MMU 11800  14
-(qemu) MMU 117bc  400d12f0
-(qemu) MMU 116e0  3ff11790
-(qemu) MMU 116c4  3ff11790
-(qemu) MMU 116d8  60033
-(qemu) MMU 116d4  400d12f0
-(qemu) MMU 116c0  400d12f0
-(qemu) MMU 1170c  800855cd
-```
-Then try starting with -s -S, this will wait for the debugger.
+STARTING QEMU, with forward of localhost port 10080 to qemu port 80
+xtensa-softmmu/qemu-system-xtensa -d guest_errors,unimp  -cpu esp32 -M esp32 -m 4M -net nic,model=vlan0 -net user,id=simnet,ipver4=on,net=192.168.4.0/24,host=192.168.4.40,hostfwd=tcp::10080-192.168.4.3:80  -net dump,file=/tmp/vm0.pcap    -s   > io.txt
 
-
-This seems to happen most often with C++ applications.
-
-
-Needs furher investigations!
-
-It seems like c++ code has more problems in qemu, maybe because the
-```
-code is not mapped properly and because of 
- The .flash.rodata section and
- do_global_ctors();
-
-```
-
-## The workaround is,
-
-    > (gdb) b call_start_cpu0
-    > (gdb) c
-Now the bootloader sets up the system to what the application exects,
-However some bug somewhere sometimes overwrites the code,
-
-    > (gdb) load build/app-template.elf
 
  This will reload the application and prevent the crash as the code is reloaded 
  on the correct locations.
@@ -113,31 +140,11 @@ However some bug somewhere sometimes overwrites the code,
 Press Ctrl-X o  to open the source
 n
 Press return to reuse latest command
-```
-
-
-Seems that the qemu, mmapping has a bug and or  spi_flash_read, spi_flash_write  Will maybe fixed on a rainy day.
-
-Another reason for this problem is because you forgot to create the flash file
-> ./qemu_flash build/app-template.bin
 
 
 
-So, if you see this
-```
-I (124) cpu_start: Pro cpu start user code
- File 'esp32flash.bin' is truncated or corrupt.
- File 'esp32flash.bin' is truncated or corrupt.
- File 'esp32flash.bin' is truncated or corrupt.
- File 'esp32flash.bin' is truncated or corrupt.
- File 'esp32flash.bin' is truncated or corrupt.
-```
-Do
-    > (gdb) b call_start_cpu0
-    > (gdb) c
-    > (gdb) load build/app-template.elf
 
-However it is sometimes possible to run only from the generated flash, 
+It is sometimes possible to run only from the generated flash, 
 ```
 xtensa-softmmu/qemu-system-xtensa  -cpu esp32 -M esp32  -s   > io.txt
 TRYING to MAP esp32flash.binMAPPED esp32flash.binI (14) boot: ESP-IDF v3.0-dev-20-g9b955f4c 2nd stage bootloader
@@ -212,6 +219,11 @@ prerequisites Debian/Ubuntu:
 sudo apt-get install libpixman-1-0 libpixman-1-dev 
 ```
 
+prerequisites Redhat/Centos
+yum install glib2-devel pixman-devel
+
+
+
 
 ## qemu-esp32
 
@@ -225,6 +237,9 @@ However debugging c-functions in the elf file requires a patched qemu.
 In the bin directory there are patched versions of xtensa-esp32-elf-gdb.
 You can also build your own. Just apply this patch,
 https://github.com/jcmvbkbc/xtensa-toolchain-build/blob/master/fixup-gdb.sh
+Another option is to build from this prepatched gdb crosstool source,
+https://github.com/Ebiroll/gdb
+One has to create a link or copy ar to x86_64-build_pc-linux-gnu-ar
 
 ## Building qemu
 ```
@@ -321,7 +336,7 @@ git clone --recursive https://github.com/espressif/esp-idf.git
 
 #  To keep the esp-idf updated  
   git pull & git submodule update --recursive
-
+  git  submodule update --init
 
 ```
 export PATH=$PATH:$HOME/esp/xtensa-esp32-elf/bin
@@ -447,6 +462,7 @@ Or to debug the bootloader,
     xtensa-esp32-elf-gdb.qemu   build/bootloader/bootloader.elf -ex 'target remote:1234'
     (gdb) b bootloader_main
     (gdb) b bootloader_mmap
+
 
 ```
 #define DPORT_PRO_FLASH_MMU_TABLE ((volatile uint32_t) 0x3FF10000)
@@ -840,12 +856,15 @@ Those two files will be loaded by qemu and must be in same directory as you star
 ```
 
 #  This is head of qemu development.
-Now it also works for esp32 debugging. (2.9.0)
+Now it also works for esp32 debugging. (2.10.0)
 ```
 git clone git://git.qemu.org/qemu.git
 
 cd qemu
 This is probably no longer necessary. git submodule update --init dtc
+
+However uart emulation may cause this behaviour.
+ERROR:/home/olas/qemu-2.10.1/accel/tcg/tcg-all.c:42:tcg_handle_interrupt: assertion failed: (qemu_mutex_iothread_locked())
 ```
 
 

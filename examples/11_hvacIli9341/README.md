@@ -1,5 +1,15 @@
 Example of working ESP32 and 2.2 Inch SPI TFT LCD Serial Port Module Display ILI9341
 
+NOTE!!!
+I did not get this to work with latest version of esp-idf
+
+TRY this instead!!!
+https://github.com/loboris/ESP32_TFT_library
+
+However output was mirrored on my ESP-WROVER-KIT. :-P
+Problem solved by setting #define TFT_INVERT_ROTATION1 0
+in the file components/tft/tftspi.h
+
 Specifically configured for the ESP-WROVER-KIT
 
 User Interface adapted from Sermus' implementation on ESP8266 (https://github.com/Sermus/ESP8266_Adafruit_ILI9341)

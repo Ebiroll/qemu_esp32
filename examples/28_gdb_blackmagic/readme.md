@@ -67,9 +67,15 @@ Not so useful
 In qemu
 ======
 
-xtensa-softmmu/qemu-system-xtensa -d unimp,guest_errors -cpu esp32 -M esp32 -m 4M   -net nic,model=vlan0 -net user,id=simnet,net=192.168.4.0/24,host=192.168.4.40,hostfwd=tcp::2345-192.168.4.3:2345  -net dump,file=/tmp/vm0.pcap  -kernel /home/olas/esp/qemu_esp32/examples/26_wifigdb/build/wifigdb.elf -s     >  io.txt
+xtensa-softmmu/qemu-system-xtensa -d unimp,guest_errors -cpu esp32 -M esp32 -m 4M   -net nic,model=vlan0 -net user,id=simnet,net=192.168.4.0/24,host=192.168.4.40,hostfwd=tcp::2345-192.168.4.3:2345  -net dump,file=/tmp/vm0.pcap   -s     >  io.txt
 
+No longer needed
+# -kernel /home/olas/esp/qemu_esp32/examples/26_wifigdb/build/wifigdb.elf
 
+xtensa-esp32-elf-gdb.qemu 
+(gdb) target extended-remote:2345
+
+However due to far from perfect network emulation, it does not run so well in qemu. :-(
 
 Also try 
 (gdb) target extended-remote:2345

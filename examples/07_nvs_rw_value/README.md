@@ -10,6 +10,11 @@ Detailed functional description of NVS and API is provided in
 
 See the README.md file in the upper level 'examples' directory for more information about examples.
 
+If you want to step into the spi driver you can experiment with this,
+  [ ] Enable SPI flash ROM driver patched functions
+It used to run in qemu but it stopped working at some point in time.
+
+
 When running in qemu, first time:
 ```
  xtensa-softmmu/qemu-system-xtensa -d guest_errors,unimp  -cpu esp32 -M esp32 -m 4M -kernel  ~/esp/qemu_esp32/examples/07_nvs_rw_value/build/nvs-rw-value.elf  -s   > io.txt 

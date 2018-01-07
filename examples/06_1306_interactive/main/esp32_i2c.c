@@ -185,7 +185,8 @@ esp_err_t i2c_1306_write_command( uint8_t* data,int len)
         i2c_master_write_byte(cmd, 0x80, ACK_CHECK_DIS);
         i2c_master_write_byte(cmd, data[i],ACK_CHECK_DIS);
         i2c_master_stop(cmd);
-        ret = i2c_master_cmd_begin(g_1306_port, cmd, 1000 / portTICK_RATE_MS);
+        //ret = i2c_master_cmd_begin(g_1306_port, cmd, 1000 / portTICK_RATE_MS);
+        ret = i2c_master_cmd_begin(g_1306_port, cmd, 2);
 
         i++;
         i2c_cmd_link_delete(cmd);
@@ -218,7 +219,8 @@ esp_err_t i2c_1306_write_data(const uint8_t* data,int len)
     i2c_master_write_byte(cmd, 0x40, ACK_CHECK_DIS);
     i2c_master_write(cmd,  data,len,ACK_CHECK_DIS);
     i2c_master_stop(cmd);
-    int ret = i2c_master_cmd_begin(g_1306_port, cmd, 1000 / portTICK_RATE_MS);
+    //int ret = i2c_master_cmd_begin(g_1306_port, cmd, 1000 / portTICK_RATE_MS);
+    int ret = i2c_master_cmd_begin(g_1306_port, cmd, 2);
     i2c_cmd_link_delete(cmd);
     if (ret == ESP_FAIL) {
         return ret;

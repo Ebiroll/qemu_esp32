@@ -126,6 +126,7 @@ static void measure_Distance() {
                 tot=tot+all_distance[j];
             }
             avg_distance=tot/10.0;
+	    printf("Avg is %f cm\n", avg_distance );
         }
         else
         {
@@ -169,31 +170,35 @@ void init_SSD1306i2c() {
 	u8g2_DrawFrame(&u8g2, 0,2,100,6);
 
 	ESP_LOGI(TAG, "u8g2_SetFont");
-    u8g2_SetFont(&u8g2, u8g2_font_ncenB24_tr);
+        u8g2_SetFont(&u8g2, u8g2_font_ncenB24_tr);
 	ESP_LOGI(TAG, "u8g2_DrawStr");
-    u8g2_DrawStr(&u8g2, 2,55,"Hej Alla!");
+        u8g2_DrawStr(&u8g2, 2,55,"Hej Alla!");
 	ESP_LOGI(TAG, "u8g2_SendBuffer");
 	u8g2_SendBuffer(&u8g2);
 
 	ESP_LOGI(TAG, "All Init!");
-
 }
 
 void display_Avg() {
-    char Buff[128];
+        char Buff[128];
 
+	 //printf("display_AVG !!\n" );
+         //avg_distance=10.0;
+      
 	ESP_LOGI(TAG, "u8g2_ClearBuffer");
 	u8g2_ClearBuffer(&u8g2);
 	ESP_LOGI(TAG, "u8g2_DrawBox");
 	u8g2_DrawBox(&u8g2, 0, 2, avg_distance * 100,6);
 	u8g2_DrawFrame(&u8g2, 0,2,100,6);
 
-    sprintf(Buff,"%.2f cm", avg_distance * 100);
+        sprintf(Buff,"%.2f cm", avg_distance * 100);
 
+        printf("Display %f cm\n", avg_distance );
+	
 	ESP_LOGI(TAG, "u8g2_SetFont");
-    u8g2_SetFont(&u8g2, u8g2_font_ncenB18_tf);
-	ESP_LOGI(TAG, "u8g2_DrawStr");
-    u8g2_DrawStr(&u8g2, 2,55,Buff);
+        u8g2_SetFont(&u8g2, u8g2_font_ncenB18_tf);
+        ESP_LOGI(TAG, "u8g2_DrawStr");
+        u8g2_DrawStr(&u8g2, 2,55,Buff);
 	ESP_LOGI(TAG, "u8g2_SendBuffer");
 	u8g2_SendBuffer(&u8g2);
 

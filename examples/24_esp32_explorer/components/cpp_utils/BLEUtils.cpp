@@ -6,6 +6,7 @@
  */
 #include "sdkconfig.h"
 #if defined(CONFIG_BT_ENABLED)
+#if 0
 #include "BLEUtils.h"
 #include "BLEUUID.h"
 #include "BLEDevice.h"
@@ -1090,5 +1091,5 @@ void BLEUtils::registerByConnId(uint16_t conn_id, BLEDevice* pDevice) {
 } // registerByConnId
 
 
-
+#endif
 #endif // CONFIG_BT_ENABLED

@@ -253,7 +253,25 @@ static uint64_t esp32_serial_read(void *opaque, hwaddr addr,
     //}
 
     switch (addr / 4) {
+        case ESP32_UART_INT_ST:
+        {
+            if (s->uart_num==0) {
+              qemu_irq_lower(uart0_irq);
+            }
+            else if (s->uart_num==1) {
+              qemu_irq_lower(uart1_irq);
+            }
+            else
+            {
+              qemu_irq_lower(s->irq);
+            }
+           return s->reg[ESP32_UART_INT_ST];
+
+        }
+
+
     case ESP32_UART_STATUS:
+        DEBUG_LOG("%s: ESP32_UART_STATUS +0x%02x: \n", __func__, (uint32_t)addr);
         // return 0;
         // TODO!! TODO!! Make read interrupt work for UARRTS!
         return esp32_serial_rx_fifo_size(s);
@@ -268,10 +286,11 @@ static uint64_t esp32_serial_read(void *opaque, hwaddr addr,
             esp32_serial_rx_irq_update(s);
             return r;
         } else {
+            //fprintf(stderr,"-->NULL\n");
             return 0;
         }
     case ESP32_UART_INT_RAW:
-    case ESP32_UART_INT_ST:
+        //case ESP32_UART_INT_ST:
     case ESP32_UART_INT_ENA:
     case ESP32_UART_INT_CLR:
     case ESP32_UART_CLKDIV:
@@ -323,7 +342,6 @@ static void esp32_serial_tx(Esp32SerialState *s, hwaddr addr,
             fprintf(stderr,"loopback %c",(char)val);
             esp32_serial_receive(s, buf, 1);
         }
-
     } else if (true /*s->chr*/) {
         uint8_t buf[1] = { val };
         qemu_chr_fe_write(&s->chr, buf, 1);
@@ -515,12 +533,11 @@ Esp32SerialState *esp32_serial_init(int uart_num,MemoryRegion *address_space,
 
     qemu_chr_fe_set_handlers(&s->chr, esp32_serial_can_receive,
                              esp32_serial_receive, esp32_serial_event,
-                             s, NULL, true);
+                             NULL,s, NULL, true);
 
     if (uart_num==0) {
         silly_serial=&s->chr;
     }
-
 
 
     return s;
@@ -690,6 +707,7 @@ typedef struct Esp32SpiState {
     qemu_irq irq;
     void *flash_image;
     int length;
+    int wren;
 
     uint32_t reg[R_MAX];
 } Esp32SpiState;
@@ -706,7 +724,7 @@ static uint64_t esp32_spi_read(void *opaque, hwaddr addr, unsigned size)
     DEBUG_LOG("0x%08x\n", s->reg[addr / 4]);
 
 
-    if (s->spiNum==2) {
+    if (s->spiNum!=0) {
         if (addr==0x38) {
             // SPI_TRANS_DONE
             s->reg[addr / 4]=0xff;
@@ -721,13 +739,23 @@ static void esp32_spi_cmd(Esp32SpiState *s, hwaddr addr,
     //DEBUG_LOG("esp32_spi_cmd %08x\n",val);
     //s->reg[addr / 4] = val;
 
-    if (s->spiNum!=0) {
-        return;
-    }
+    //  WRITE_PERI_REG(PERIPHS_SPI_FLASH_CMD, SPI_FLASH_PP);
+    // TODO,              WRITE_PERI_REG(PERIPHS_SPI_FLASH_CMD, SPI_FLASH_PP);
+    // Results in 0      esp32_spi_write: +0x00 = 0x02000000
+    // This should be when data is written to the flash file
+    // Information is available in spi_flash_rom_patch.c
+
 
     if (val & 0x1000000) {
-            DEBUG_LOG("esp32_spi_cmd_erase??? %08x\n",val);
+            DEBUG_LOG("esp32_spi_cmd_erase??? " PRIx64 "\n",val);
             unsigned int write_addr=ESP32_SPI_GET(s, ADDR, OFFSET);
+            //write_addr=s->reg[ESP32_SPI_FLASH_ADDR] >> 8;
+
+        // Only allow spi0 to write to flash
+        if (s->spiNum!=0) {
+            return;
+        }
+
 
     // Set all in sector to 0xff
         memset(s->flash_image + write_addr,
@@ -752,14 +780,19 @@ static void esp32_spi_cmd(Esp32SpiState *s, hwaddr addr,
     }
     if (val & ESP32_SPI_FLASH_CMD_WREN) {
         DEBUG_LOG("status wren\n");
-        unsigned int write_addr=ESP32_SPI_GET(s, ADDR, OFFSET);
+         unsigned int write_addr=ESP32_SPI_GET(s, ADDR, OFFSET);
+         (void)write_addr;
+         DEBUG_LOG("Is this address " PRIx64 "\n",write_addr);
         // Not sure this is a good idea??
-        // Where is length field?
+        // Where is length field?  ESP32_MISO_DLEN
+        //    REG_WRITE(SPI_MISO_DLEN_REG(1),  ((ESP_ROM_SPIFLASH_BUFF_BYTE_READ_NUM << 3) - 1) << SPI_USR_MISO_DBITLEN_S);
+        // 0 esp32_spi_write: +0x2c = 0x000001ff    32 bytes
         DEBUG_LOG("len %d\n",s->length);
+        s->wren=1;
 
-        memcpy(s->flash_image + write_addr,
-            &s->reg[data_w0],  // ESP32_SPI_GET(s, ADDR, OFFSET)
-            4*8);  // (ESP32_SPI_GET(s, ADDR, LENGTH) + 3) & 0x3c 
+        //memcpy(s->flash_image + write_addr,
+        //    &s->reg[data_w0],  // ESP32_SPI_GET(s, ADDR, OFFSET)
+        //    4*8);  // (ESP32_SPI_GET(s, ADDR, LENGTH) + 3) & 0x3c 
 
         s->reg[ESP32_SPI_FLASH_STATUS] |= ESP32_SPI_FLASH_STATUS_WRENABLE;
     }
@@ -776,15 +809,21 @@ static void esp32_spi_cmd(Esp32SpiState *s, hwaddr addr,
            DEBUG_LOG("CMD 0x35 (RDSR2) read status register\n");
        }
        if (command==0x05) {
-           DEBUG_LOG("CMD 0x05 (RDSR).\n");
+           DEBUG_LOG("CMD 0x05 (RDSR) Read status register.\n");
+           if (s->wren==1) {
+              s->reg[data_w0]=0x02; // WRITE ENABLED
+           }
        }       
-       if (command==0x03) {
+       if (command==0x03 || command==0x3b) {
            DEBUG_LOG("SPI_READ 0x03. %08X\n",ESP32_SPI_GET(s, ADDR, OFFSET));
            // TODO, ignore bit 0-7 !!!
-           unsigned int silly=ESP32_SPI_GET(s, ADDR, OFFSET) >> 8;
+           s->wren=0;
+           // ESP32_SPI_GET(s, ADDR, OFFSET)
+           unsigned int silly= s->reg[ESP32_SPI_FLASH_ADDR] >> 8;
            DEBUG_LOG("Silly %08X\n",silly);
-
-/*
+ /*           0x111f00 00
+            001111f0
+            
             unsigned int *data1=(unsigned int *)s->flash_image +silly;
             int q=0;
             for(q=0;q<16;q++) 
@@ -815,6 +854,9 @@ static void esp32_spi_cmd(Esp32SpiState *s, hwaddr addr,
 */
 
 
+       }
+       if (command==0x02) {
+           DEBUG_LOG("SPI_WRITE 0x02. %08X\n",ESP32_SPI_GET(s, ADDR, OFFSET));
        }
        /*
        if (command==0x02) {
@@ -890,6 +932,7 @@ static void esp32_spi_write(void *opaque, hwaddr addr, uint64_t val,
 
     if (addr>=0x80 && addr <= 0x9c) {
        unsigned int write_addr=ESP32_SPI_GET(s, ADDR, OFFSET);
+       //write_addr=s->reg[ESP32_SPI_FLASH_ADDR] >> 8;
 
 #if 0
        int offset=(addr-0x80);
@@ -907,6 +950,37 @@ static void esp32_spi_write(void *opaque, hwaddr addr, uint64_t val,
 #endif    
        int length=1+(addr-0x80)/4;
 
+       //if (addr==0x80)
+       if (true /*s->wren==1*/)
+       {
+         s->reg[addr / 4] = val;
+         //unsigned int *set=(uint32_t)s->flash_image + (uint32_t)silly +(uint32_t)(addr-0x80);
+         //*set=val;
+         // Memory mapped file
+         if (s->spiNum!=0) {
+             return;
+         }
+
+         // Only clear 1:s not possible to set a 0 to 1
+         // However does not work. :-P
+         unsigned int *data=(unsigned int *)(s->flash_image + write_addr + length);
+         unsigned int test=*data;
+          test = ~test;
+         unsigned int in_data=val;
+
+         DEBUG_LOG("------SPI 0 data written 0x%08x v=0x%08x now=0x%08x 0x%08x\n",length,val,*data,test & in_data);     
+         *data= test & in_data;
+
+         // We trust that data will be stored correctly
+         memcpy(s->flash_image + write_addr,
+            &s->reg[data_w0],  // ESP32_SPI_GET(s, ADDR, OFFSET)
+            length*4);  // (ESP32_SPI_GET(s, ADDR, LENGTH) + 3) & 0x3c 
+
+
+
+       }
+
+
        if (addr==0x9c)
        {
          s->reg[addr / 4] = val;
@@ -921,6 +995,10 @@ static void esp32_spi_write(void *opaque, hwaddr addr, uint64_t val,
          memcpy(s->flash_image + write_addr,
             &s->reg[data_w0],  // ESP32_SPI_GET(s, ADDR, OFFSET)
             4*8);  // (ESP32_SPI_GET(s, ADDR, LENGTH) + 3) & 0x3c 
+
+
+         DEBUG_LOG("SPI data written 0x%08x\n",write_addr);     
+         s->wren=0;
 
        }
 
@@ -1129,8 +1207,10 @@ void *connection_handler(void *connect)
     return 0 ;
 }
 
-void *gdb_socket_thread(void *uart_num)
+void *gdb_socket_thread(void *data)
 {
+    int *ptr=(int *)data;
+    int uart_num=(int) *ptr;
     int socket_desc , client_sock , c ; //, *new_sock;
     struct sockaddr_in server , client;
      
@@ -1299,7 +1379,7 @@ static void open_net_init(MemoryRegion *address_space,
             sysbus_mmio_get_region(s, 1));
 
     ram = g_malloc(sizeof(*ram));
-    memory_region_init_ram(ram, OBJECT(s), "open_eth.ram", 16384,
+    memory_region_init_ram_nomigrate(ram, OBJECT(s), "open_eth.ram", 16384,
                            &error_fatal);
     vmstate_register_ram_global(ram);
     memory_region_add_subregion(address_space, buffers, ram);
@@ -1314,6 +1394,23 @@ static uint64_t translate_phys_addr(void *opaque, uint64_t addr)
 }
 #endif
 
+#if 0
+static void esp_xtensa_ccompare_cb(void *opaque)
+{
+    XtensaCPU *cpu = opaque;
+    CPUXtensaState *env = &cpu->env;
+    CPUState *cs = CPU(cpu);
+
+    if (cs->halted) {
+        //env->halt_clock = qemu_clock_get_ns(QEMU_CLOCK_VIRTUAL);
+        //xtensa_advance_ccount(env, env->wake_ccount - env->sregs[CCOUNT]);
+        if (!cpu_has_work(cs)) {
+            //env->sregs[CCOUNT] = env->wake_ccount + 1;
+            xtensa_rearm_ccompare_timer(env);
+        }
+    }
+}
+#endif
 
 static void esp32_reset(void *opaque)
 {
@@ -1355,11 +1452,14 @@ static unsigned int sim_DPORT_APP_CACHE_CTRL_REG=0x28;
 static unsigned int sim_DPORT_APPCPU_CTRL_D_REG=0;
 
 
-static unsigned int pro_MMU_REG[0x2000];
+static unsigned int pro_MMU_REG[0x2000]={0};
 
-static unsigned int app_MMU_REG[0x2000];
+static unsigned int app_MMU_REG[0x2000]={0};
 
 bool nv_init_called=false;
+
+void memdump(uint32_t mem,uint32_t len);
+
 
 void memdump(uint32_t mem,uint32_t len)
 {
@@ -1376,10 +1476,11 @@ void memdump(uint32_t mem,uint32_t len)
 void mapFlashToMem(uint32_t flash_start,uint32_t mem_addr,uint32_t len)
 {
         if (flash_start==0x01000000) {
+            //fprintf(stderr, "0x100.\n");
             // Special value 0x100 to mark begining. Should not be mapped
             return;
         }
-        fprintf(stderr,"(qemu)  %08X to memory, %08X\n",flash_start,mem_addr);
+        //fprintf(stderr,"(qemu)  %08X to memory, %08X\n",flash_start,mem_addr);
         printf("Flash map data to  %08X to memory, %08X\n",flash_start,mem_addr);
         // I dont know how this works. Guessing
         
@@ -1395,16 +1496,19 @@ void mapFlashToMem(uint32_t flash_start,uint32_t mem_addr,uint32_t len)
             fseek(f_flash,flash_start,SEEK_SET);
             if (fread(rom_data, len, 1, f_flash) < 1)
             {
-                fprintf(stderr, " File 'esp32flash.bin' is truncated or corrupt.\n");
+                fprintf(stderr, " File 'esp32flash.bin' is truncated or corrupt. %d,%d\n",flash_start,len);
             }
-            //fprintf(stderr,"-%8X\n",mem_addr);
-            //fprintf(stderr,"->%8X\n",mem_addr+0x10000);
+            else {
+                //fprintf(stderr,"-%8X\n",mem_addr);
+                //fprintf(stderr,"->%8X\n",mem_addr+0x10000);
 
-            //memdump(mem_addr,0x4000);
-            cpu_physical_memory_write(mem_addr, rom_data, len );
+                //memdump(mem_addr,0x4000);
+                cpu_physical_memory_write(mem_addr, rom_data, len );
 
-            //fprintf(stderr, "(qemu) Flash partition data is loaded.\n");
+                //fprintf(stderr, "(qemu) Flash partition data is loaded.\n");
+            }
             free(rom_data);
+
         }        
 }
 
@@ -1426,8 +1530,12 @@ static uint64_t esp_io_read(void *opaque, hwaddr addr,
 
         if (addr==0x123fc)
         {
+            fprintf(stderr,"NV_INIT_CALLED\n\n");
             // Bootlader already did this, it should be safe to map this, app expects it
-            mapFlashToMem(0x8000, 0x3f408000,0x10000-0x8000);
+            // OLAS? mapFlashToMem(0x9000, 0x3f409000,0x10000-0x9000);
+
+            //mapFlashToMem(0x10000 + 0x7000, 0x3f407000,0x10000-0x7000);
+
             // TODO!! Only works for factory app
             //mapFlashToMem(2*0x10000, 0x3f400000,0x10000);  
             nv_init_called=true;
@@ -1436,8 +1544,22 @@ static uint64_t esp_io_read(void *opaque, hwaddr addr,
         return(app_MMU_REG[addr/4-0x12000/4]);
     }
 
+     // gpio
+     if (addr>=0x44000 && addr<0x445cc) {
+        unsigned int gpio_num=(addr-0x44000)/4;
+        if (addr==0x44038) {
+           printf("GPIO_STRAP_REG 3ff44038=0x13\n");
+           // boot_sel_chip[5:0]: MTDI, GPIO0, GPIO2, GPIO4, MTDO, GPIO5
+           //                             1                    1     1
+           return 0x13;
+        }
+        return(esp32->gpio_reg[gpio_num]);
 
+     }
 
+    // Timer count reg
+    static int timerCountReg=0;
+     
 
     switch (addr) {
 
@@ -1538,6 +1660,14 @@ static uint64_t esp_io_read(void *opaque, hwaddr addr,
                 timerCountReg++;  // Ticks??
                 return(timerCountReg);
             }
+
+            case 0x47024:
+            //  READ_PERI_REG(FRC_TIMER_COUNT_REG(1));
+            {
+                timerCountReg++;  // Ticks??
+                return(timerCountReg);
+            }
+
             break;
         case 0x48044:
            printf("RTC_CNTL_INT_ST_REG 3ff48044=0x0\n");
@@ -1555,7 +1685,7 @@ static uint64_t esp_io_read(void *opaque, hwaddr addr,
            break;
             // rtc_clk_xtal_freq_get TODO investigate further
        case 0x480b0:
-           printf("RTC_XTAL_FREQ_REG 3ff480b0=%08X\n",0xf04ff04ff);
+           printf("RTC_XTAL_FREQ_REG 3ff480b0=%" PRIx64 "\n",0xf04ff04ff);
            return 0x04ff04ff;
            break;
 
@@ -1614,6 +1744,13 @@ static uint64_t esp_io_read(void *opaque, hwaddr addr,
            break;
            //case 0xb05f0:
            //printf(" boot_time_lock 3ffb05f0=01\n");
+
+
+// TIMG_RTCCALICFG_REG(0),
+       case 0x5f068:
+           printf("TIMG_RTCCALICFG_REG(0) 3ff5f068=8000\n");
+           return 0x8000;
+           break;
 
        case 0x5f06c:
            printf("TIMG_RTCCALICFG1_REG 3ff5f06c=25\n");
@@ -1706,23 +1843,29 @@ if ((addr==0x60054) ||
 }
 
 if (addr>=0x10000 && addr<0x11ffc) {
-  if (addr==0x100c8) {
-    // Bootloader, loads instruction cache
+    if (addr==0x100c8) {
+    // Bootloader, loads instruction cache, from this location
     if (sim_DPORT_PRO_CACHE_CTRL1_REG==0x8ff) {
-        mapFlashToMem(val*0x10000, 0x3f720000,0x10000);            
+        mapFlashToMem(val*0x10000, 0x3f720000 + 0*0x10000 ,0x10000);            
     }
   }
 
-
+  // This probably continues
   if (addr==0x10134 || addr==0x10138 || addr==0x1013c || addr==0x10140 || 
       addr==0x10144 || addr==0x10148 || addr==0x1014c || addr==0x10150 || 
       addr==0x10154 || addr==0x10158 || addr==0x1015c || addr==0x10160 ||  
-      addr==0x10164 || addr==0x10168 || addr==0x1016c || addr==0x10170 
+      addr==0x10164 || addr==0x10168 || addr==0x1016c || addr==0x10170 ||
+      addr==0x10174 || addr==0x10178 || addr==0x1017c || addr==0x10180 ||
+      addr==0x10184 || addr==0x10188 || addr==0x1018c || addr==0x10190 ||
+      addr==0x10194 || addr==0x10198 || addr==0x1019c || addr==0x101a0 
 ) {
-    // Bootloader, loads instruction cache
+
     if (sim_DPORT_PRO_CACHE_CTRL1_REG==0x8ff) {
+        int ix=(addr-0x10000)/4;
+        unsigned int mem_loc=0x400d0000+(ix-77)*0x10000;
         // TO TEST BOOTLOADER UNCOMMENT THIS ---->
-        mapFlashToMem(val*0x10000, 0x400d0000+(val-5)*0x10000,0x10000);            
+        mapFlashToMem(val*0x10000, mem_loc,0x10000);
+        //fprintf (stderr, "(qemu) IMMU2 %" PRIx64 "  %" PRIx64 "\n" ,mem_loc,val); 
     }
   }
 
@@ -1736,10 +1879,15 @@ if (addr>=0x10000 && addr<0x11ffc) {
                 // Data is located and used at 0x3f400000  0x3f404000 ???
                 // Try this for bootloader
                 // TO TEST BOOTLOADER UNCOMMENT THIS ---->
-                //mapFlashToMem(val*0x10000, 0x3f400000,0x10000);  
-                // for application.. flash.rodata is would be overwritten if mapped on 0x3f400000 
+                // mapFlashToMem(val*0x10000, 0x3f400000,0x10000);  
+                // for application.. flash.rodata is would be overwritten if mapped on 0x3f400000
+                // 0x3f400000
+
+                // This is outside the partition information. This must bew resolved.
+                // We cannot allow application to use   0x3f400000
                 if (val!=0x100) {
-                    mapFlashToMem(val*0x10000 + 0x7000, 0x3f407000,0x10000-0x7000); 
+                //    mapFlashToMem(val*0x10000 + 0x7000, 0x3f407000,0x10000-0x7000);
+                // OLAS?    mapFlashToMem(val*0x10000 + 0x9000, 0x3f409000,0x10000-0x9000); 
                 }
             }
       }
@@ -1776,7 +1924,7 @@ if (addr>=0x10000 && addr<0x11ffc) {
         if (addr==0x10024) {
                 mapFlashToMem(val*0x10000, 0x3f490000,0x10000);
         }
-/*
+
         if (addr==0x10028) {
                 mapFlashToMem(val*0x10000, 0x3f4a0000,0x10000);
         }
@@ -1792,13 +1940,16 @@ if (addr>=0x10000 && addr<0x11ffc) {
         if (addr==0x10038) {
                 mapFlashToMem(val*0x10000, 0x3f4e0000,0x10000);
         }
-*/
+        if (addr==0x1003c) {
+                mapFlashToMem(val*0x10000, 0x3f4f0000,0x10000);
+        }
+
    }
 
 
     pro_MMU_REG[addr/4-0x10000/4]=val;
     if (val!=0 && val!=0x100) {
-       fprintf (stderr, "(qemu) MMU %" PRIx64 "  %" PRIx64 "\n" ,addr,val); 
+        //fprintf (stderr, "(qemu) MMU %" PRIx64 "  %" PRIx64 "\n" ,addr,val); 
     }
 }
 
@@ -1867,7 +2018,7 @@ if (addr>=0x12000 && addr<0x13ffc) {
            break;
 
         case 0x5C:
-           printf(" DPORT_APP_CACHE_CTRL1_REG  3ff0005C=%08X\n",val);
+           printf(" DPORT_APP_CACHE_CTRL1_REG  3ff0005C= %" PRIx64 "\n",val);
            sim_DPORT_APP_CACHE_CTRL1_REG=val;
            break;
 
@@ -1880,6 +2031,7 @@ if (addr>=0x12000 && addr<0x13ffc) {
 
         case 0x5F0:
             // TODO!! CHECK IF UNUSED, Just unpatches the rom patches
+/*
            printf(" OLAS_EMULATION_ROM_UNPATCH  3ff005F0\n");
            {
              FILE *f_rom=fopen("rom.bin", "r");
@@ -2099,6 +2251,16 @@ static uint64_t esp_wifi_read(void *opaque, hwaddr addr,
 
     printf("wifi read %" PRIx64 " \n",addr);
 
+
+        // WDEV_RND_REG
+
+        if (addr==0x35144) {
+            static int rr=47;
+             rr=rr*735%65535;
+             printf("WDEV_RND_REG\n");
+            return (rr);
+        }
+    
     // e004   rom i2c 
     // e044   rom i2c
 /*
@@ -2372,6 +2534,7 @@ static uint64_t esp_iomux_read(void *opaque, hwaddr addr,
         unsigned size)
 {
        printf("iomux read %" PRIx64 " \n",addr);
+       return(0);
 
 }
 
@@ -2436,7 +2599,9 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
         
     printf("esp32_init\n");
     for (q=0;q<3;q++) {
-        if( pthread_create( &pgdb_socket_thread , NULL ,  gdb_socket_thread , (void*) q) < 0)
+        int *index=(int *)malloc(sizeof(int));
+        *index=q;
+        if( pthread_create( &pgdb_socket_thread , NULL ,  gdb_socket_thread , (void*) index) < 0)
         {
             printf("Failed to create gdb connection thread\n");
         }
@@ -2452,8 +2617,20 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
             0xcdcd,
             0xabab,
         };
-        XtensaCPU *cpu = cpu_xtensa_init(cpu_model);
+        //XtensaCPU *cpu        = cpu_xtensa_init(cpu_model);
+        XtensaCPU *cpu = XTENSA_CPU(cpu_create(machine->cpu_type));
 
+        //static const LxBoardDesc lx60_board = {
+        //    .flash_base = 0x08000000,
+        //    .flash_size = 0x00400000,
+        //    .flash_sector_size = 0x10000,
+        //    .sram_size = 0x20000,
+        //};
+        //
+        //lx_init(&lx60_board, machine);
+
+
+        
         if (cpu == NULL) {
             error_report("unable to find CPU definition '%s'",
                          cpu_model);
@@ -2494,22 +2671,25 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
 
     // Map all as ram 
     ram = g_malloc(sizeof(*ram));
+    memset(ram,0,sizeof(*ram));
     // memory_region_init_ram(ram, NULL, "iram0", 0x1fffffff,  // 00000
     //                       &error_abort);
-     memory_region_init_ram(ram, NULL, "iram0", 0x20000000,  // 00000
+    //memory_region_init_ram(ram, NULL, "iram0", 0x20000000,  // 00000
+    //                       &error_abort);
+
+    memory_region_init_ram_nomigrate(ram, NULL, /*"esp32.ram0"*/ NULL , 0x20000000,  // 00000
                            &error_abort);
 
-    vmstate_register_ram_global(ram);
+    //vmstate_register_ram_global(ram);
     memory_region_add_subregion(system_memory, 0x20000000, ram);
 
 
 
-
     ram1 = g_malloc(sizeof(*ram1));
-    memory_region_init_ram(ram1, NULL, "iram1",  0xBFFFFF,  
+    memory_region_init_ram_nomigrate(ram1, NULL, NULL /*"iram1"*/ ,  0xBFFFFF,  
                            &error_abort);
 
-    vmstate_register_ram_global(ram1);
+    //vmstate_register_ram_global(ram1);
     memory_region_add_subregion(system_memory,0x40000000, ram1);
 
 
@@ -2652,16 +2832,17 @@ static void esp32_init(const ESP32BoardDesc *board, MachineState *machine)
 
     }
 
-
-spi = esp32_spi_init(2,system_io, 0x64000, "esp32.spi0",
+    
+spi = esp32_spi_init(2,system_io, 0x64000, "esp32.spi2",
                     system_memory, /*cache*/ 0x800000, "esp32.flash",
                     xtensa_get_extint(&esp32->cpu[0]->env, 6), &flash_image);
 
-spi = esp32_spi_init(1,system_io, 0x43000, "esp32.spi0",
+spi = esp32_spi_init(0,system_io, 0x43000, "esp32.spi0",
                     system_memory, /*cache*/ 0x800000, "esp32.flash",
                     xtensa_get_extint(&esp32->cpu[0]->env, 6), &flash_image);
 
 
+// Shoud be #1 but that creates problems
 spi = esp32_spi_init(0,system_io, 0x42000, "esp32.spi1",
                     system_memory, /*cache*/ 0x800000, "esp32.flash.odd",
                     xtensa_get_extint(&esp32->cpu[0]->env, 6), &flash_image);
@@ -2669,17 +2850,43 @@ spi = esp32_spi_init(0,system_io, 0x42000, "esp32.spi1",
 
     // OLED & tempsensor , on i2c0
 #if 0
-    if (true) {  // 0x40020000
+     if (true) {  // 0x40020000
         // qdev_get_gpio_in(nvic, 8)
-        // I2c0
-        dev = sysbus_create_simple(TYPE_ESP32_I2C, 0x3FF53000 , NULL);
+        // I2c0 =  0x3FF53000
+        dev = sysbus_create_simple(TYPE_ESP32_I2C,  0x3FF67000 , NULL);
         i2c = (I2CBus *)qdev_get_child_bus(dev, "i2c");
         if (true) {
-            i2c_create_slave(i2c, "ssd1306", 0x78);
+            i2c_create_slave(i2c, "ssd1306", 0x3c);
             //i2c_create_slave(i2c, "ssd1306", 0x02);
-            i2c_create_slave(i2c, "tmpbme280", 0x77);
+            //i2c_create_slave(i2c, "tmpbme280", 0x77);
         }
     }
+
+
+    if (true) {  // 0x40020000
+        // qdev_get_gpio_in(nvic, 8)
+        // I2c0 =  
+        dev = sysbus_create_simple(TYPE_ESP32_I2C,  0x3FF53000 , NULL);
+        i2c = (I2CBus *)qdev_get_child_bus(dev, "i2c");
+        if (true) {
+            i2c_create_slave(i2c, "ssd1306", 0x3c);
+            //i2c_create_slave(i2c, "ssd1306", 0x02);
+            //i2c_create_slave(i2c, "tmpbme280", 0x77);
+        }
+
+        dev_fixed = sysbus_create_simple(TYPE_ESP32_I2C,  0x60013000 , NULL);
+        i2c_fixed = (I2CBus *)qdev_get_child_bus(dev_fixed, "i2c");
+        if (true) {
+            i2c_create_slave(i2c_fixed, "ssd1306", 0x3c);
+        }
+
+        dev_fixed_2 = sysbus_create_simple(TYPE_ESP32_I2C,  0x60027000 , NULL);
+        i2c_fixed_2 = (I2CBus *)qdev_get_child_bus(dev_fixed_2, "i2c");
+        if (true) {
+            i2c_create_slave(i2c_fixed_2, "ssd1306", 0x3c);
+        }
+    }
+
 #endif
 
 
@@ -2884,9 +3091,9 @@ spi = esp32_spi_init(0,system_io, 0x42000, "esp32.spi1",
 
 
            //Patch SPIEraseSector b *0x40062ccc
-           static const uint8_t retw_n[] = {
-               0xc, 0x2,0x1d, 0xf0
-           };
+           //static const uint8_t retw_n[] = {
+           //    0xc, 0x2,0x1d, 0xf0
+           //};
 
             // Patch rom, SPIEraseSector 0x40062ccc
             //cpu_physical_memory_write(0x40062ccc+3, retw_n, sizeof(retw_n));
@@ -2999,6 +3206,7 @@ static void xtensa_esp32_class_init(ObjectClass *oc, void *data)
     mc->desc = "esp32 DEV (esp32)";
     mc->init = xtensa_esp32_init;
     mc->max_cpus = 2;
+    mc->default_cpu_type = XTENSA_DEFAULT_CPU_TYPE;
 
 }
 

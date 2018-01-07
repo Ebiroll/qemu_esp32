@@ -210,12 +210,14 @@ void IRAM_ATTR start_cpu0(void)
 
 
         esp_setup_syscall_table();
-        esp_set_cpu_freq();     // set CPU frequency configured in menuconfig  
-        
+        //esp_set_cpu_freq();     // set CPU frequency configured in menuconfig        esp_clk_init();
+       //esp_perip_clk_init();
+       //intr_matrix_clear();
+         
         uart_div_modify(CONFIG_CONSOLE_UART_NUM, (APB_CLK_FREQ << 4) / CONFIG_CONSOLE_UART_BAUDRATE);          
 	//esp_brownout_init();
        rtc_gpio_force_hold_dis_all();
-       esp_setup_time_syscalls();
+       //esp_setup_time_syscalls();
        esp_vfs_dev_uart_register();
        esp_reent_init(_GLOBAL_REENT);
 
@@ -228,7 +230,7 @@ void IRAM_ATTR start_cpu0(void)
        do_global_ctors();
        esp_cache_err_int_init();
        esp_crosscore_int_init();
-       esp_ipc_init();
+       //esp_ipc_init();
        spi_flash_init();
        /* init default OS-aware flash access critical section */
        spi_flash_guard_set(&g_flash_guard_default_ops);
@@ -238,7 +240,15 @@ void IRAM_ATTR start_cpu0(void)
 			       ESP_TASK_MAIN_STACK, NULL,
 			       ESP_TASK_MAIN_PRIO, NULL, 0);
        //ESP_LOGI(tag, "Starting scheduler on PRO CPU.");
-       vTaskStartScheduler();
+       //vTaskStartScheduler();
+       // Dont start scheduler.
+       int i=0;
+
+       for (;;) {
+         for (i=0;i<MAX_TEST;i++) {
+	   //printf("cycles %d %u %u\n",i,cycles[i],core[i]);
+	 }
+       }
 }
 
 

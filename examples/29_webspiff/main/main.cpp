@@ -21,6 +21,7 @@ extern "C" {
 #include "esp_log.h"
 #include "spiffs_vfs.h"
 #include "emul_ip.h"
+#include "nvs_flash.h"
 }
 
 
@@ -130,9 +131,9 @@ void spiffs_fs_stat(uint32_t *total, uint32_t *used);
 
 
 int app_main(void) {
-   spi_flash_init();
+    //spi_flash_init();
    void *ptr;
-   //nvs_flash_init(); 
+   nvs_flash_init(); 
    spi_flash_mmap_handle_t handle;
    spi_flash_mmap_handle_t handle2;
    spi_flash_mmap_handle_t handle3;
@@ -294,7 +295,6 @@ int app_main(void) {
     if (is_running_qemu()) {
         printf("Running in qemu\n");
         xTaskCreatePinnedToCore(task_lwip_init, "loop", 4096, NULL, 14, NULL, 0);
-
     }
     else {
        initialise_wifi();

@@ -1,0 +1,8 @@
+#
+# Component Makefile
+#
+
+COMPONENT_SRCDIRS := LoRa/src
+COMPONENT_ADD_INCLUDEDIRS := LoRa/src
+#COMPONENT_PRIV_INCLUDEDIRS := include
+

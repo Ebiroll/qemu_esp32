@@ -7,27 +7,22 @@
 
 #include "GeneralUtils.h"
 #include <esp_log.h>
+#include <esp_system.h>
 #include <string.h>
 #include <stdio.h>
 #include <string>
 #include <sstream>
 #include <iomanip>
-#include <freertos/FreeRTOS.h>
+#include <FreeRTOS.h>
+#include <esp_err.h>
+#include <nvs.h>
+#include <esp_wifi.h>
 
-static char tag[] = "GeneralUtils";
+static const char* LOG_TAG = "GeneralUtils";
 
 static const char kBase64Alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     "abcdefghijklmnopqrstuvwxyz"
     "0123456789+/";
-
-GeneralUtils::GeneralUtils() {
-	// TODO Auto-generated constructor stub
-
-}
-
-GeneralUtils::~GeneralUtils() {
-	// TODO Auto-generated destructor stub
-}
 
 static int base64EncodedLength(size_t length) {
 	return (length + 2 - ((length + 2) % 3)) / 3 * 4;
@@ -101,6 +96,23 @@ bool GeneralUtils::base64Encode(const std::string &in, std::string *out) {
 
 	return (enc_len == out->size());
 } // base64Encode
+
+
+/**
+ * @brief Does the string end with a specific character?
+ * @param [in] str The string to examine.
+ * @param [in] c The character to look form.
+ * @return True if the string ends with the given character.
+ */
+bool GeneralUtils::endsWith(std::string str, char c) {
+	if (str.empty()) {
+		return false;
+	}
+	if (str.at(str.length()-1) == c) {
+		return true;
+	}
+	return false;
+} // endsWidth
 
 
 static int DecodedLength(const std::string &in) {
@@ -251,6 +263,7 @@ void GeneralUtils::hexDump(uint8_t* pData, uint32_t length) {
 }
 */
 
+
 /**
  * @brief Dump a representation of binary data to the console.
  *
@@ -258,10 +271,13 @@ void GeneralUtils::hexDump(uint8_t* pData, uint32_t length) {
  * @param [in] length Length of the data (in bytes) to be logged.
  * @return N/A.
  */
-void GeneralUtils::hexDump(uint8_t* pData, uint32_t length) {
+void GeneralUtils::hexDump(const uint8_t* pData, uint32_t length) {
 	char ascii[80];
 	char hex[80];
 	char tempBuf[80];
+	uint32_t lineNumber = 0;
+
+	ESP_LOGD(LOG_TAG, "     00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f  ----------------");
 	strcpy(ascii, "");
 	strcpy(hex, "");
 	uint32_t index=0;
@@ -276,9 +292,10 @@ void GeneralUtils::hexDump(uint8_t* pData, uint32_t length) {
 		strcat(ascii, tempBuf);
 		index++;
 		if (index % 16 == 0) {
-			ESP_LOGD(tag, "%s %s", hex, ascii);
+			ESP_LOGD(LOG_TAG, "%.4x %s %s", lineNumber*16, hex, ascii);
 			strcpy(ascii, "");
 			strcpy(hex, "");
+			lineNumber++;
 		}
 	}
 	if (index %16 != 0) {
@@ -286,9 +303,10 @@ void GeneralUtils::hexDump(uint8_t* pData, uint32_t length) {
 			strcat(hex, "   ");
 			index++;
 		}
-		ESP_LOGD(tag, "%s %s", hex, ascii);
+		ESP_LOGD(LOG_TAG, "%.4x %s %s", lineNumber*16, hex, ascii);
 	}
 } // hexDump
+
 
 /**
  * @brief Convert an IP address to string.
@@ -300,3 +318,89 @@ std::string GeneralUtils::ipToString(uint8_t *ip) {
 	s << (int)ip[0] << '.' << (int)ip[1] << '.' << (int)ip[2] << '.' << (int)ip[3];
 	return s.str();
 } // ipToString
+
+
+/**
+ * @brief Convert an ESP error code to a string.
+ * @param [in] errCode The errCode to be converted.
+ * @return A string representation of the error code.
+ */
+const char* GeneralUtils::errorToString(esp_err_t errCode) {
+	switch(errCode) {
+		case ESP_OK:
+			return "OK";
+		case ESP_FAIL:
+			return "Fail";
+		case ESP_ERR_NO_MEM:
+			return "No memory";
+		case ESP_ERR_INVALID_ARG:
+			return "Invalid argument";
+		case ESP_ERR_INVALID_SIZE:
+			return "Invalid state";
+		case ESP_ERR_INVALID_STATE:
+			return "Invalid state";
+		case ESP_ERR_NOT_FOUND:
+			return "Not found";
+		case ESP_ERR_NOT_SUPPORTED:
+			return "Not supported";
+		case ESP_ERR_TIMEOUT:
+			return "Timeout";
+		case ESP_ERR_NVS_NOT_INITIALIZED:
+			return "ESP_ERR_NVS_NOT_INITIALIZED";
+		case ESP_ERR_NVS_NOT_FOUND:
+			return "ESP_ERR_NVS_NOT_FOUND";
+		case ESP_ERR_NVS_TYPE_MISMATCH:
+			return "ESP_ERR_NVS_TYPE_MISMATCH";
+		case ESP_ERR_NVS_READ_ONLY:
+			return "ESP_ERR_NVS_READ_ONLY";
+		case ESP_ERR_NVS_NOT_ENOUGH_SPACE:
+			return "ESP_ERR_NVS_NOT_ENOUGH_SPACE";
+		case ESP_ERR_NVS_INVALID_NAME:
+			return "ESP_ERR_NVS_INVALID_NAME";
+		case ESP_ERR_NVS_INVALID_HANDLE:
+			return "ESP_ERR_NVS_INVALID_HANDLE";
+		case ESP_ERR_NVS_REMOVE_FAILED:
+			return "ESP_ERR_NVS_REMOVE_FAILED";
+		case ESP_ERR_NVS_KEY_TOO_LONG:
+			return "ESP_ERR_NVS_KEY_TOO_LONG";
+		case ESP_ERR_NVS_PAGE_FULL:
+			return "ESP_ERR_NVS_PAGE_FULL";
+		case ESP_ERR_NVS_INVALID_STATE:
+			return "ESP_ERR_NVS_INVALID_STATE";
+		case ESP_ERR_NVS_INVALID_LENGTH:
+			return "ESP_ERR_NVS_INVALID_LENGTH";
+		case ESP_ERR_WIFI_NOT_INIT:
+			return "ESP_ERR_WIFI_NOT_INIT";
+		//case ESP_ERR_WIFI_NOT_START:
+		//	return "ESP_ERR_WIFI_NOT_START";
+		case ESP_ERR_WIFI_IF:
+			return "ESP_ERR_WIFI_IF";
+		case ESP_ERR_WIFI_MODE:
+			return "ESP_ERR_WIFI_MODE";
+		case ESP_ERR_WIFI_STATE:
+			return "ESP_ERR_WIFI_STATE";
+		case ESP_ERR_WIFI_CONN:
+			return "ESP_ERR_WIFI_CONN";
+		case ESP_ERR_WIFI_NVS:
+			return "ESP_ERR_WIFI_NVS";
+		case ESP_ERR_WIFI_MAC:
+			return "ESP_ERR_WIFI_MAC";
+		case ESP_ERR_WIFI_SSID:
+			return "ESP_ERR_WIFI_SSID";
+		case ESP_ERR_WIFI_PASSWORD:
+			return "ESP_ERR_WIFI_PASSWORD";
+		case ESP_ERR_WIFI_TIMEOUT:
+			return "ESP_ERR_WIFI_TIMEOUT";
+		case ESP_ERR_WIFI_WAKE_FAIL:
+			return "ESP_ERR_WIFI_WAKE_FAIL";
+		}
+	return "Unknown ESP_ERR error";
+} // errorToString
+
+
+/**
+ * @brief Restart the ESP32.
+ */
+void GeneralUtils::restart() {
+	esp_restart();
+} // restart

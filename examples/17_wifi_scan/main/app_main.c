@@ -76,7 +76,7 @@ void scan_ap_task(void *pvParameters)
 						ap_records[i].primary,(ap_records[i].second>0) ? "(HT40)" : "      ",
 						MAC2STR(bi),
 						ap_records[i].rssi,
-						(ap_records[i].low_rate_enable==1) ? " LR " : "    " ,
+						(/*ap_records[i].low_rate_enable==1*/ false) ? " LR " : "    " ,
 						getAuthModeName(ap_records[i].authmode)
 					);
 			}

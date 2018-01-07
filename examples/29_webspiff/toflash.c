@@ -9,7 +9,7 @@
 // 0x8000 /home/olas/esp/esp-idf/examples/system/ota/build/partitions_two_ota.bin
 //
 
-void merge_flash(char *binfile,char *flashfile,int flash_pos)
+void merge_flash(char *binfile,char *flashfile,int flash_pos,int patch_hash)
 {
     FILE *fbin;
     FILE *fflash;
@@ -60,6 +60,14 @@ void merge_flash(char *binfile,char *flashfile,int flash_pos)
 
     int len_read=fread(tmp_data,sizeof(char),file_size,fbin);
 
+    if (patch_hash==1) {
+      int j=0;
+      for (j=0;j<33;j++)
+	{
+          tmp_data[file_size-j]=0;
+	}
+    }
+    
     int len_write=fwrite(tmp_data,sizeof(char),file_size,fflash);
 
     if (len_read!=len_write) {
@@ -84,14 +92,13 @@ int main(int argc,char *argv[])
     system("dd if=/dev/zero bs=1M count=4  | tr \"\\000\" \"\\377\" >  esp32flash.bin");
 
     // Add bootloader
-    merge_flash("build/bootloader/bootloader.bin","esp32flash.bin",0x1000);
-    // Add partitions, test OTA here
-    merge_flash("build/partitions_example.bin","esp32flash.bin",0x8000);
-    // Add application
-    merge_flash("build/spiffs_image.img","esp32flash.bin",0x180000);
-    // Add application
-
-    merge_flash(argv[1],"esp32flash.bin",0x10000);
+    merge_flash("build/bootloader/bootloader.bin","esp32flash.bin",0x1000,0);
+    // Add partitions, partitions example here
+    merge_flash("build/partitions_example.bin","esp32flash.bin",0x8000,0);
+    // Add flash image
+    merge_flash("build/spiffs_image.img","esp32flash.bin",0x180000,0);
+    // Add application build/webspiff.bin
+    merge_flash(argv[1],"esp32flash.bin",0x10000,1);
 
     system("cp esp32flash.bin ~/qemu_esp32");
 

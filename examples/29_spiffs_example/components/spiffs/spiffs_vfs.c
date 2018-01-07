@@ -823,7 +823,7 @@ void vfs_spiffs_register() {
 	if (spiffs_is_registered) return;
 
 	esp_vfs_t vfs = {
-        .fd_offset = 0,
+	  //        .fd_offset = 0,
         .flags = ESP_VFS_FLAG_DEFAULT,
         .write = &vfs_spiffs_write,
         .open = &vfs_spiffs_open,

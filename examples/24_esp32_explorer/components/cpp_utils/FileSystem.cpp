@@ -10,6 +10,7 @@
 
 #include <dirent.h>
 #include <errno.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -17,14 +18,7 @@
 
 #include "FileSystem.h"
 
-static char tag[] = "FileSystem";
-
-FileSystem::FileSystem() {
-}
-
-FileSystem::~FileSystem() {
-}
-
+static const char* LOG_TAG = "FileSystem";
 
 /**
  * @brief Dump a given directory to the log.
@@ -34,11 +28,11 @@ FileSystem::~FileSystem() {
 void FileSystem::dumpDirectory(std::string path) {
 	DIR *pDir = ::opendir(path.c_str());
 	if (pDir == nullptr) {
-		ESP_LOGD(tag, "Unable to open directory: %s [errno=%d]", path.c_str(), errno);
+		ESP_LOGD(LOG_TAG, "Unable to open directory: %s [errno=%d]", path.c_str(), errno);
 		return;
 	}
 	struct dirent *pDirent;
-	ESP_LOGD(tag, "Directory dump of %s", path.c_str());
+	ESP_LOGD(LOG_TAG, "Directory dump of %s", path.c_str());
 	while((pDirent = readdir(pDir)) != nullptr) {
 		std::string type;
 		switch(pDirent->d_type) {
@@ -52,7 +46,7 @@ void FileSystem::dumpDirectory(std::string path) {
 			type = "Directory";
 			break;
 		}
-		ESP_LOGD(tag, "Entry: d_ino: %d, d_name: %s, d_type: %s", pDirent->d_ino, pDirent->d_name, type.c_str());
+		ESP_LOGD(LOG_TAG, "Entry: d_ino: %d, d_name: %s, d_type: %s", pDirent->d_ino, pDirent->d_name, type.c_str());
 	}
 	::closedir(pDir);
 } // dumpDirectory
@@ -67,13 +61,13 @@ std::vector<File> FileSystem::getDirectoryContents(std::string path) {
 	std::vector<File> ret;
 	DIR *pDir = ::opendir(path.c_str());
 	if (pDir == nullptr) {
-		ESP_LOGE(tag, "getDirectoryContents:: Unable to open directory: %s [errno=%d]", path.c_str(), errno);
+		ESP_LOGE(LOG_TAG, "getDirectoryContents:: Unable to open directory: %s [errno=%d]", path.c_str(), errno);
 		return ret;
 	}
 	struct dirent *pDirent;
-	ESP_LOGD(tag, "Directory dump of %s", path.c_str());
+	ESP_LOGD(LOG_TAG, "Directory dump of %s", path.c_str());
 	while((pDirent = readdir(pDir)) != nullptr) {
-		File file(std::string(pDirent->d_name), pDirent->d_type);
+		File file(path +"/" + std::string(pDirent->d_name), pDirent->d_type);
 		ret.push_back(file);
 	}
 	::closedir(pDir);
@@ -82,14 +76,30 @@ std::vector<File> FileSystem::getDirectoryContents(std::string path) {
 
 
 /**
+ * @brief Does the path refer to a directory?
+ * @param [in] path The path to the directory.
+ */
+bool FileSystem::isDirectory(std::string path) {
+	struct stat statBuf;
+	int rc = stat(path.c_str(), &statBuf);
+	if (rc != 0) {
+		return false;
+	}
+	return S_ISDIR(statBuf.st_mode);
+} // isDirectory
+
+
+
+/**
  * @brief Create a directory
  * @param [in] path The directory to create.
  * @return N/A.
  */
 int FileSystem::mkdir(std::string path) {
+	ESP_LOGD(LOG_TAG, ">> mkdir: %s", path.c_str());
 	int rc = ::mkdir(path.c_str(), 0);
 	if (rc != 0) {
-		ESP_LOGE(tag, "mkdir: errno=%d", errno);
+		ESP_LOGE(LOG_TAG, "mkdir: errno=%d %s", errno, strerror(errno));
 		rc = errno;
 	}
 	return rc;
@@ -124,7 +134,7 @@ std::vector<std::string> FileSystem::pathSplit(std::string path) {
 	}
 	// Debug
 	for (int i=0; i<ret.size(); i++) {
-		ESP_LOGD(tag, "part[%d]: %s", i, ret[i].c_str());
+		ESP_LOGD(LOG_TAG, "part[%d]: %s", i, ret[i].c_str());
 	}
 	return ret;
 } // pathSplit
@@ -138,7 +148,7 @@ std::vector<std::string> FileSystem::pathSplit(std::string path) {
 int FileSystem::remove(std::string path) {
 	int rc = ::unlink(path.c_str());
 	if (rc != 0) {
-		ESP_LOGE(tag, "unlink: errno=%d", errno);
+		ESP_LOGE(LOG_TAG, "unlink: errno=%d", errno);
 		rc = errno;
 	}
 	return rc;

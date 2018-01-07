@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>ESP32 Explorer</title>
+<script src="jquery/jquery-3.2.1.min.js"></script>
+<link rel="stylesheet" href="jqueryui/jquery-ui.min.css">
+<link rel="stylesheet" href="jstree/themes/default/style.min.css" />
+<script src="jqueryui/jquery-ui.min.js"></script>
+<script src="jstree/jstree.min.js"></script>
+<script src="jQuery-File-Upload-9.18.0/js/jquery.fileupload.js"></script>
+<script src="ESP32Explorer.js"></script>
+<style>
+
+.service {
+	width: 32px;
+	height: 32px;
+	background-image: url('images/in.png');
+	margin: 0;
+	padding: 0;
+}
+
+.characteristic {
+	width: 16px;
+	height: 16px;
+	background-image: url('images/out.png');
+	margin: 0;
+	padding: 0;
+}
+
+.flexHoriz {
+	display: flex;
+}
+
+.flexHorizCenter {
+	display: flex;
+	justify-content: center;
+}
+
+.tableBorders {
+	border: 1px solid black;
+	border-collapse: collapse;
+}
+
+.tableBorders td {
+	border: 1px solid black;
+	padding: 8px;
+}
+
+.infoImageX {
+	content: url(images/info.png);
+}
+
+.infoImage {
+	width: 16px;
+	height: 16px;
+	background-image: url('images/info.png');
+	margin: 0;
+	padding: 0;
+	cursor: pointer;
+}
+
+.inputImage {
+	width: 32px;
+	height: 32px;
+	background-image: url('images/in.png');
+	margin: 0;
+	padding: 0;
+}
+
+.outputImage {
+	width: 32px;
+	height: 32px;
+	background-image: url('images/out.png');
+	margin: 0;
+	padding: 0;
+}
+
+.checkImage {
+	width: 24px;
+	height: 24px;
+	background-image: url('images/check.png');
+	margin: 0;
+	padding: 0;
+}
+
+.crossImage {
+	width: 24px;
+	height: 24px;
+	background-image: url('images/cross.png');
+	margin: 0;
+	padding: 0;
+}
+
+
+</style>
+</head>
+<body>
+	<h1>ESP32 Explorer</h1>
+	<div id="myTabs">
+		<ul>
+			<li><a href="#systemTab">System</a></li>
+			<li><a href="#wifiTab">WiFi</a></li>
+			<li><a href="#gpioTab">GPIO</a></li>
+			<li><a href="#i2sTab">I2S</a></li>
+			<li><a href="#i2cTab">I2C</a></li>
+			<li><a href="#bleSystemTab">BLE</a></li>
+			<li><a href="#fileSystemTab">File System</a></li>
+		</ul>
+
+
+		<!-- --------- -->
+		<!-- systemTab -->
+		<!-- --------- -->
+		<div id="systemTab">
+			<div id="systemTabs">
+				<ul>
+					<li><a href="#systemGeneralTab">General</a></li>
+					<li><a href="#systemFreeRTOSTab">FreeRTOS</a></li>
+					<li><a href="#systemPartitionTab">Partitions</a></li>
+					<li><a href="#systemLoggingTab">Logging</a></li>
+					<li><a href="#systemJSONTab">JSON</a></li>
+				</ul>
+				<div id="systemGeneralTab">
+					<div>
+						<span>Free heap memory:</span> <span id="freeHeapSystemGeneralTab"></span>
+					</div>
+					<div>
+						<span>Minimum free heap memory:</span> <span id="minimumFreeHeapSystemGeneralTab"></span>
+					</div>					
+					<div>
+						<span>Time:</span> <span id="timeSystemGeneralTab"></span>
+					</div>
+					<div>
+						<span>ESP IDF Version:</span> <span id="espVersionSystemGeneralTab"></span>
+					</div>
+					<div>
+						<span>Cores:</span> <span id="coresSystemGeneralTab"></span>
+					</div>
+					<div>
+						<span>Revision:</span> <span id="revisionSystemGeneralTab"></span>
+					</div>
+				</div>
+				<div id="systemFreeRTOSTab">
+					<div>
+						<table id="taskStatusTable" border="1" cellspacing="0" cellpadding="4">
+							<thead>
+								<tr>
+									<th>Name</th>
+									<th>Task Number</th>
+									<th>Priority</th>
+									<th>Stack High</th>
+									<th>State</th>
+								</tr>
+							</thead>
+						</table>
+						<p>					
+						<span>Task count:</span> <span id="taskCountFreeRTOSTab"></span>
+						</p>
+					</div>
+				</div>
+				<div id="systemPartitionTab">
+					<h3>Partitions:</h3>
+					<table id="partitionTable" border="1" cellspacing="0" cellpadding="4">
+						<thead>
+							<tr>
+								<th>Type</th>
+								<th>Sub Type</th>
+								<th>Size</th>
+								<th>Address</th>
+								<th>Encrypted</th>
+								<th>Label</th>
+							</tr>
+						</thead>
+					</table>
+				</div>
+				<div id="systemLoggingTab">
+					<fieldset style="margin-top: 8px;">
+						<legend>Logging</legend>
+						<label for="systemLoggingNone">None</label>
+						<!--  -->
+						<input type="radio" name="systemLogging" id="systemLoggingNone" data-logLevel="0">
+						<!--  -->
+						<label for="systemLoggingError">Error</label>
+						<!-- -->
+						<input type="radio" name="systemLogging" id="systemLoggingError" data-logLevel="1">
+						<!--  -->
+						<label for="systemLoggingWarn">Warn</label>
+						<!-- -->
+						<input type="radio" name="systemLogging" id="systemLoggingWarn" data-logLevel="2">
+						<!--  -->
+						<label for="systemLoggingInfo">Info</label>
+						<!-- -->
+						<input type="radio" name="systemLogging" id="systemLoggingInfo" data-logLevel="3">
+						<!--  -->
+						<label for="systemLoggingDebug">Debug</label>
+						<!-- -->
+						<input type="radio" name="systemLogging" id="systemLoggingDebug" data-logLevel="4">
+						<!--  -->
+						<label for="systemLoggingVerbose">Verbose</label>
+						<!-- -->
+						<input type="radio" name="systemLogging" id="systemLoggingVerbose" data-logLevel="5">
+					</fieldset>
+				</div>
+				<div id="systemJSONTab" class="flexHoriz">
+					<textarea id="systemJsonText" style="width: 100%; height: 500px; font-family: monospace;"></textarea>
+				</div>
+			</div>
+
+			<p>
+				<button id="systemRefreshButton">Refresh</button>
+			</p>
+		</div>
+
+		<!-- ------- -->
+		<!-- wifiTab -->
+		<!-- ------- -->
+		<div id="wifiTab">
+			<div id="wifiTabs">
+				<ul>
+					<li><a href="#wifiTabsGeneralTab">General</a></li>
+					<li><a href="#wifiTabsJSONTab">JSON</a></li>
+				</ul>
+				<div id="wifiTabsGeneralTab">
+					<h3>WiFi</h3>
+					<table>
+						<tr>
+							<td>Mode</td>
+							<td id="modeWifi"></td>
+						</tr>
+						<tr>
+							<td>Station Mac</td>
+							<td id="staMacWifi"></td>
+						</tr>
+						<tr>
+							<td>AP Mac</td>
+							<td id="apMacWifi"></td>
+						</tr>
+						<tr>
+							<td>Station SSID</td>
+							<td id="staSSIDWifi"></td>
+						</tr>
+						<tr>
+							<td>AP SSID</td>
+							<td id="apSSIDWifi"></td>
+						</tr>
+						<tr>
+							<td>AP IP</td>
+							<td id="apIpWifi"></td>
+						</tr>
+						<tr>
+							<td>AP Gateway</td>
+							<td id="apGwWifi"></td>
+						</tr>
+						<tr>
+							<td>AP Netmask</td>
+							<td id="apNetmaskWifi"></td>
+						</tr>
+						<tr>
+							<td>Station IP</td>
+							<td id="staIpWifi"></td>
+						</tr>
+						<tr>
+							<td>Station Gateway</td>
+							<td id="staGwWifi"></td>
+						</tr>
+						<tr>
+							<td>Station Netmask</td>
+							<td id="staNetmaskWifi"></td>
+						</tr>
+					</table>
+				</div>
+				<div id="wifiTabsJSONTab">
+					<div class="flexHoriz">
+						<textarea id="wifiJsonText" style="width: 100%; height: 500px; font-family: monospace;"></textarea>
+					</div>
+				</div>
+			</div>
+			<!-- End of wifiTabs -->
+			<p>
+				<button id="wifiRefreshButton">Refresh</button>
+			</p>
+		</div>
+		<!-- End of wifiTab -->
+
+		<!-- ------- -->
+		<!-- gpioTab -->
+		<!-- ------- -->
+		<div id="gpioTab">
+			<div id="gpioTabs">
+				<ul>
+					<li><a href="#gpioTabsGeneralTab">General</a></li>
+					<li><a href="#gpioTabsJSONTab">JSON</a></li>
+				</ul>
+				<div id="gpioTabsGeneralTab">
+					<h3>GPIOs</h3>
+					<table id="gpioTable" class="tableBorders"></table>
+
+				</div>
+				<div id="gpioTabsJSONTab">
+					<div>
+						<div class="flexHoriz">
+							<textarea id="gpioJsonText" style="width: 100%; height: 500px; font-family: monospace;"></textarea>
+						</div>
+					</div>
+				</div>
+			</div>
+			<p>
+			<button id="gpioRefreshButton">Refresh</button>
+			</p>
+		</div>
+
+		<!-- ------ -->
+		<!-- i2cTab -->
+		<!-- ------ -->
+		<div id="i2cTab">
+			<div id="i2cTabs">
+				<ul>
+					<li><a href="#i2cTabsGeneralTab">General</a></li>
+					<li><a href="#i2cTabsInitTab">Commands</a></li>
+					<li><a href="#i2cTabsJSONTab">JSON</a></li>
+				</ul>
+				<div id="i2cTabsGeneralTab">
+					<h3>I2C</h3>
+					<table id="i2cScanTable" class="tableBorders"></table>
+					<p>
+						<button id="i2cScanButton">Scan</button>
+					</p>
+				</div>
+				<div id="i2cTabsInitTab">
+					<h3>Commands</h3>
+					<form style="margin-top: 8px;" action=javascript:void(0);>
+					<fieldset>
+						<legend>Open/close I2C</legend>
+						<table><tr>
+							<td>I2C port</td>
+							<td><label><input type="radio" name="i2c_port" value="0" checked> i2c port 0</label>
+							<label><input type="radio" name="i2c_port" value="1"> i2c port 1</label></td>
+						</tr>
+						<tr>
+							<td>I2C mode</td>
+							<td><label><input type="radio" name="i2c_mode" value="1" checked> master</label>
+							<label><input type="radio" name="i2c_mode" value="0"> slave</label></td>
+						</tr>
+						<tr><td>SDA pin</td><td><input id="i2c_sda"></td>
+						<tr><td>SCL pin</td><td><input id="i2c_scl"></td>
+						<tr><td>Speed</td><td><input id="i2c_speed"></td></tr></table>
+						<button id="i2cInitButton">Open port</button>
+						<button id="i2cCloseButton">Close port</button>
+					</fieldset>
+					</form>
+
+					<form style="margin-top: 8px;" action=javascript:void(0);>
+					<fieldset>
+						<legend>Send command</legend><!--
+						<div>
+							<label>I2C mode</label>
+							<label><input type="radio" name="i2c_mode" value="1" checked> master</label>
+							<label><input type="radio" name="i2c_mode" value="0"> slave</label>
+						</div>-->
+						<table>
+						<tr><td>I2C address</td><td><input id="i2c_adr"></td></tr>
+						<tr><td>Register</td><td><input id="i2c_reg"></td></tr>
+						<tr><td>Bytes   </td><td><input id="i2c_cnt"></td></tr>
+						<tr><td>Data    </td><td><input id="i2c_data"></td></tr></table>
+						<button id="i2cReadButton">Read register</button>
+						<button id="i2cWriteButton">Write register</button>
+					</fieldset>
+					</form>
+				</div>
+				<div id="i2cTabsJSONTab">
+					<div>
+						<div class="flexHoriz">
+							<textarea id="i2cJsonText" style="width: 100%; height: 500px; font-family: monospace;"></textarea>
+						</div>
+					</div>
+				</div>
+			</div>
+
+		</div>
+
+		<!-- ------ -->
+		<!-- i2sTab -->
+		<!-- ------ -->
+		<div id="i2sTab">
+			<div class="flexHoriz">
+				<textarea id="i2sJsonText" style="width: 100%; height: 500px; font-family: monospace;"></textarea>
+			</div>
+			<div>
+				<button id="i2sRefreshButton">Refresh</button>
+			</div>
+		</div>
+
+		<!-- ------------ -->
+		<!-- bleSystemTab -->
+		<!-- ------------ -->
+		<div id="bleSystemTab">
+			<div id="bleTabs">
+				<ul>
+					<li><a href="#bleClientTabsGeneralTab">Client</a></li>
+					<li><a href="#bleServerTabsGeneralTab">Server</a></li>					
+					<li><a href="#bleTabsJSONTab">JSON</a></li>
+				</ul>
+				<div id="bleClientTabsGeneralTab">
+					<button id="bleScanButton">Scan</button>
+					<button id="bleConnectButton">Connect</button>
+					<div id="bleTree" ></div>
+					<div id="bleServicesTree" ></div>
+				</div>
+				<div id="bleServerTabsGeneralTab">  <!-- TODO add service to server, add characteristic to service, add descriptor, stop adverising, stop server -->
+					<table><tr><td>UUID:</td><td  colspan="2"><input type="text" id="bleFormData"  style="width: -webkit-fill-available;"></td></tr>
+					<tr><td><button id="bleCreateServerButton" style="width: -webkit-fill-available;">Create server</button></td>
+					<td><button id="bleAdvertiseButton" style="width: -webkit-fill-available;">Start advertising</button></td>
+					<td><button id="bleStopAdvertisingButton" style="width: -webkit-fill-available;">Stop advertising</button></td></tr>
+					<tr><td><button id="bleAddServiceButton" style="width: -webkit-fill-available;">Add service</button></td>
+					<td><button id="bleAddCharacteristicButton" style="width: -webkit-fill-available;">Add characteristic</button></td>
+					<td><button id="bleAddDescriptorButton" style="width: -webkit-fill-available;">Add descriptor</button></td></tr>
+				<!--	<tr><td><button id="bleDeleteServiceButton" style="width: -webkit-fill-available;">Delete service</button></td>
+					<td><button id="bleDeleteCharacteristicButton" style="width: -webkit-fill-available;">Delete characteristic</button></td>
+					<td><button id="bleDeleteDescriptorButton" style="width: -webkit-fill-available;">Delete descriptor</button></td></tr>-->
+					</table>
+					<div id="bleServerTree" ></div>
+				</div>				
+				<div id="bleTabsJSONTab">
+					<div>
+						<div class="flexHoriz">
+							<textarea id="bleJsonText" style="width: 100%; height: 500px; font-family: monospace;"></textarea>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<!-- ------------- -->
+		<!-- fileSystemTab -->
+		<!-- ------------- -->
+		<div id="fileSystemTab">
+			<div class="ui-widget">
+				<span>Root Path:</span> <input id="rootPathText" type="text" value="/spiflash/dir1">
+				<div id="fileTree" style="width: 500px; height: 500px; border: 1px solid; margin-top: 8px;"></div>
+				
+				<form id="fileUploadForm" method="POST" enctype="multipart/form-data" action="http://192.168.1.99/ESP32/FILE">
+					<input type="file" name="myfile"> <input type="submit" id="submit" value="Upload Now">
+				</form>
+				
+			</div>
+			<div style="margin-top: 8px;">
+				<button id="fileSystemRefreshButton">Refresh</button>
+			</div>
+		</div>
+	</div>
+<!-- TODO: add i2c dialog to each active i2c device to read/write register -->
+	<!-- ------- -->
+	<!-- DIALOGS -->
+	<!-- ------- -->
+	<div id="gpioDialog">
+		<h3>GPIO details</h3>
+		<table>
+			<tr>
+				<td>GPIO_OUT_REG</td>
+				<td id="gpioDialog_OUT_REG"></td>
+			</tr>
+			<tr>
+				<td>GPIO_IN_REG</td>
+				<td id="gpioDialog_IN_REG"></td>
+			</tr>
+			<tr>
+				<td>GPIO_ENABLE_REG</td>
+				<td id="gpioDialog_ENABLE_REG"></td>
+			</tr>
+			<tr>
+				<td>GPIO_STATUS_REG</td>
+				<td id="gpioDialog_STATUS_REG"></td>
+			</tr>
+		</table>
+		<fieldset style="margin-top: 8px;">
+			<legend>GPIO Direction:</legend>
+			<label for="inputGpioDialog">Input</label>
+			<!--  -->
+			<input type="radio" name="radioIO" id="inputGpioDialog">
+			<!--  -->
+			<label for="outputGpioDialog">Output</label>
+			<!-- -->
+			<input type="radio" name="radioIO" id="outputGpioDialog">
+		</fieldset>
+	</div>
+
+	<div id="fileNameDialog">
+		<span>Filename:</span> <input type="text" id="fileNameText">
+	</div>
+</body>
+</html>

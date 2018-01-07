@@ -73,7 +73,8 @@ wifi_sniffer_init(void)
     	wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
 	ESP_ERROR_CHECK( esp_wifi_init(&cfg) );
 	/* set country EU for channel range [1, 13] */
-	ESP_ERROR_CHECK( esp_wifi_set_country(WIFI_COUNTRY_EU) );
+	// Default is china channel 1-14
+	//ESP_ERROR_CHECK( esp_wifi_set_country(WIFI_COUNTRY_EU) );
 	ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
     	ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_NULL) );
     	ESP_ERROR_CHECK( esp_wifi_start() );
@@ -92,7 +93,7 @@ const char *
 wifi_sniffer_packet_type2str(wifi_promiscuous_pkt_type_t type)
 {
 	switch(type) {
-	case WIFI_PKT_CTRL: return "CTRL";
+	  //case WIFI_PKT_CTRL: return "CTRL";
 	case WIFI_PKT_MGMT: return "MGMT";
 	case WIFI_PKT_DATA: return "DATA";
 	default:	

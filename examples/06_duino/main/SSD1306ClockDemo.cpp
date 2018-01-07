@@ -1,3 +1,5 @@
+#if 0
+// TODO, time goes negative when displaying digital clock, WHY??
 /**
  * The MIT License (MIT)
  *
@@ -24,10 +26,12 @@
  *
  */
 
+
 //#include <TimeLib.h>
-#if 0
 // Include the correct display library
 // For a connection via I2C using Wire include
+#include <math.h>
+#include <sys/time.h>
 #include <Wire.h>  // Only needed for Arduino 1.6.5 and earlier
 #include "SSD1306.h" // alias for `#include "SSD1306Wire.h"`
 // or #include "SH1106.h" alis for `#include "SH1106Wire.h"`
@@ -66,7 +70,7 @@
 // SH1106Brzo  display(0x3c, D3, D5);
 
 // Initialize the OLED display using Wire library
-SSD1306  display(0x3c, D3, D5);
+SSD1306  display(0x3c, 5, 4);
 // SH1106 display(0x3c, D3, D5);
 
 OLEDDisplayUi ui ( &display );
@@ -77,8 +81,98 @@ int clockCenterX = screenW/2;
 int clockCenterY = ((screenH-16)/2)+16;   // top yellow part is 16 px height
 int clockRadius = 23;
 
+
+#define SEC_PER_DAY   86400
+#define SEC_PER_HOUR  3600
+#define SEC_PER_MIN   60
+
+
+
+// Similar to uint32_t system_get_time(void)
+uint32_t get_usec() {
+
+ struct timeval tv;
+ gettimeofday(&tv,NULL);
+ return (tv.tv_sec*1000000 + tv.tv_usec);
+ //uint64_t tmp=get_time_since_boot();
+ //uint32_t ret=(uint32_t)tmp;
+ //return ret;
+}
+
+uint32_t minute() {
+ struct timeval tv;
+ struct timezone tz;
+
+ gettimeofday(&tv,&tz);
+
+   long hms = tv.tv_sec % SEC_PER_DAY;
+  hms += tz.tz_dsttime * SEC_PER_HOUR;
+  hms -= tz.tz_minuteswest * SEC_PER_MIN;
+  // mod `hms` to insure in positive range of [0...SEC_PER_DAY)
+  hms = (hms + SEC_PER_DAY) % SEC_PER_DAY;
+
+  // Tear apart hms into h:m:s
+  int min = (hms % SEC_PER_HOUR) / SEC_PER_MIN;
+
+  //printf("min %d\n",min);
+  
+ return (min);
+}
+
+uint32_t second() {
+ struct timeval tv;
+ struct timezone tz;
+ gettimeofday(&tv, &tz);
+
+  long hms = tv.tv_sec % SEC_PER_DAY;
+  hms += tz.tz_dsttime * SEC_PER_HOUR;
+  hms -= tz.tz_minuteswest * SEC_PER_MIN;
+  // mod `hms` to insure in positive range of [0...SEC_PER_DAY)
+  hms = (hms + SEC_PER_DAY) % SEC_PER_DAY;
+
+  // Tear apart hms into h:m:s
+  //int hour = hms / SEC_PER_HOUR;
+  //int min = (hms % SEC_PER_HOUR) / SEC_PER_MIN;
+  int sec = (hms % SEC_PER_HOUR) % SEC_PER_MIN; // or hms % SEC_PER_MIN
+  //printf("sec %d\n",sec);
+  
+ return (sec);
+}
+
+uint32_t hour() {
+  struct timeval tv;
+  struct timezone tz;
+  gettimeofday(&tv, &tz);
+  //printf("TimeZone-1 = %d\n", tz.tz_minuteswest);
+  //printf("TimeZone-2 = %d\n", tz.tz_dsttime);
+  // Cast members as specific type of the members may be various 
+  // signed integer types with Unix.
+  //printf("TimeVal-3  = %lld\n", (long long) tv.tv_sec);
+  //printf("TimeVal-4  = %lld\n", (long long) tv.tv_usec);
+
+
+// Form the seconds of the day
+  long hms = tv.tv_sec % SEC_PER_DAY;
+  hms += tz.tz_dsttime * SEC_PER_HOUR;
+  hms -= tz.tz_minuteswest * SEC_PER_MIN;
+  // mod `hms` to insure in positive range of [0...SEC_PER_DAY)
+  hms = (hms + SEC_PER_DAY) % SEC_PER_DAY;
+
+  // Tear apart hms into h:m:s
+  int hour = hms / SEC_PER_HOUR;
+  //int min = (hms % SEC_PER_HOUR) / SEC_PER_MIN;
+  //int sec = (hms % SEC_PER_HOUR) % SEC_PER_MIN; // or hms % SEC_PER_MIN
+
+  //printf("hour %d\n",hour);
+  
+  return hour;
+}
+
 // utility function for digital clock display: prints leading 0
 String twoDigits(int digits){
+  if(digits<0) {
+    digits=-digits;
+  }
   if(digits < 10) {
     String i = '0'+String(digits);
     return i;
@@ -148,12 +242,12 @@ FrameCallback frames[] = { analogClockFrame, digitalClockFrame };
 int frameCount = 2;
 
 // Overlays are statically drawn on top of a frame eg. a clock
-OverlayCallback overlays[] = { clockOverlay };
-int overlaysCount = 1;
+OverlayCallback overlays_clk[] = { clockOverlay };
+int overlaysCount_clk = 1;
 
 void setup() {
-  Serial.begin(9600);
-  Serial.println();
+  //Serial.begin(9600);
+  //Serial.println();
 
 	// The ESP is capable of rendering 60fps in 80Mhz mode
 	// but that won't give you much time for anything else
@@ -179,7 +273,7 @@ void setup() {
   ui.setFrames(frames, frameCount);
 
   // Add overlays
-  ui.setOverlays(overlays, overlaysCount);
+  ui.setOverlays(overlays_clk, overlaysCount_clk);
 
   // Initialising the UI will init the display too.
   ui.init();
@@ -190,8 +284,8 @@ void setup() {
   // Unix time starts on Jan 1 1970. In seconds, that's 2208988800:
   const unsigned long seventyYears = 2208988800UL;
   // subtract seventy years:
-  unsigned long epoch = secsSinceStart - seventyYears * SECS_PER_HOUR;
-  setTime(epoch);
+  //unsigned long epoch = secsSinceStart - seventyYears * SECS_PER_HOUR;
+  //setTime(epoch);
 
 }
 
@@ -209,5 +303,4 @@ void loop() {
 
 
 }
-
 #endif
