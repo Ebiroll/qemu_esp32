@@ -102,33 +102,34 @@ void dumpPartitionData() {
 
 }
 
-void dumpSector0() {
+void dumpSector(int i) {
 
-    spi_flash_read(0 , g_rbuf, sizeof(g_rbuf));
+    spi_flash_read(i*SPI_FLASH_SEC_SIZE , g_rbuf, sizeof(g_rbuf));
     //esp_partition_t* p = (esp_partition_t*) g_rbuf;
 
-    printf("Dump of sector 0, sectors are (4096) 0x1000 bytes\n");
+    printf("Dump of sector %x, sectors are (%d)=0x1000 bytes\n",i,SPI_FLASH_SEC_SIZE);
     printf("Pages are (65536) 0x10000 bytes = (16) 0x10 sectors long\n");
 
-    // Dump entire sector
+    // Dump first part of sector
     int q=0;
     int j=0;
-    for(q=0;q<SPI_FLASH_SEC_SIZE/4;q++) 
+    for(q=i*SPI_FLASH_SEC_SIZE;q<(i*SPI_FLASH_SEC_SIZE)+SPI_FLASH_SEC_SIZE/8;q++) 
     {
-        printf( "%08X", g_rbuf[q]);
+        printf( "%08X", g_rbuf[q-i*SPI_FLASH_SEC_SIZE]);
         if (q%8==7) {
             printf("  ");
             int letters[16];
+	    int j=q-i*SPI_FLASH_SEC_SIZE;
             // Only 4 byte access?
             //memcpy(letters,g_rbuf[q-6],8*4);
-            letters[0]=g_rbuf[q-7];
-            letters[1]=g_rbuf[q-6];
-            letters[2]=g_rbuf[q-5];
-            letters[3]=g_rbuf[q-4];
-            letters[4]=g_rbuf[q-3];
-            letters[5]=g_rbuf[q-2];
-            letters[6]=g_rbuf[q-1];
-            letters[7]=g_rbuf[q];
+            letters[0]=g_rbuf[j-7];
+            letters[1]=g_rbuf[j-6];
+            letters[2]=g_rbuf[j-5];
+            letters[3]=g_rbuf[j-4];
+            letters[4]=g_rbuf[j-3];
+            letters[5]=g_rbuf[j-2];
+            letters[6]=g_rbuf[j-1];
+            letters[7]=g_rbuf[j];
 
             char *text=(char *)letters;
             for(j=0;j<8*4;j++) {
@@ -232,7 +233,7 @@ void readWriteTask(void *pvParameters)
 {
     //srand(0);
 
-    dumpSector0();
+    dumpSector(0x2000);
 
     //    for (uint32_t base_addr = 0x200000;
     //     base_addr < 0x300000;
@@ -245,6 +246,9 @@ void readWriteTask(void *pvParameters)
 
         printf("erasing sector %x\n", base_addr / SPI_FLASH_SEC_SIZE);
         spi_flash_erase_sector(base_addr / SPI_FLASH_SEC_SIZE);
+
+        dumpSector(base_addr/0x100);
+
 
         for (int i = 0; i < sizeof(g_wbuf)/sizeof(g_wbuf[0]); ++i) {
             g_wbuf[i] = i; //rand();
@@ -273,7 +277,7 @@ void readWriteTask(void *pvParameters)
     // TODO flash map and check data.
     //spi_flash_mmap
 
-    dumpSector0();
+    dumpSector(0x2000);
 
 
     spi_flash_mmap_dump();
@@ -315,9 +319,6 @@ void app_main()
     //SPIParamCfg(0x1540ef, 4*1024*1024, 64*1024, 4096, 256, 0xffff);
 
 
-    // This is just a qemu trick to restore original rom content 
-    //int *unpatch=(int *) 0x3ff005F0;
-    //*unpatch=0x42;
     mmu_table_dump();
     nvs_flash_init();
 
