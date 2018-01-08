@@ -38,10 +38,10 @@ Now it runs
 #Examining FAT data,
 
 Dump the FAT flash partition
-    ~/esp/esp-idf/components/esptool_py/esptool/esptool.py --baud 920600 read_flash 0x110000 0x100000 fat.bin
+    ~/esp/esp-idf/components/esptool_py/esptool/esptool.py --baud 920600 read_flash 0x200000 0x100000 fat.bin
     mkdir fat_partition
     sudo mount -o loop,offset=0x0 fat.bin fat_partition
 
 Or if you use the qemu image directly,
-    sudo mount -o loop,offset=0x110000 esp32flash.bin fat_partition
-However there are still bugs in qemu spi flash emulation that causes the FAT data to be corrupted.
+    sudo mount -o loop,offset=0x200000 esp32flash.bin fat_partition
+However there are still bugs that causes the FAT data to be corrupted.
