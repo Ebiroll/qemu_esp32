@@ -69,7 +69,7 @@ What?
 ```
 
 
-Have not been able to get it to run on qemu.
+# Have not been able to get it to run on qemu.
 
 
 # qemu
@@ -86,3 +86,13 @@ Stops in this loop,
   io write 5f048,0 
   wifi read 0 
 
+This would be on address  0x6000001c &  0x60000000
+
+```
+To send cr/lf
+telnet
+telnet> toggle crlf
+open 127.0.0.1 8880
+To exit press Ctrl-]
+telnet> quit
+```
