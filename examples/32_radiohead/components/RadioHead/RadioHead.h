@@ -1054,6 +1054,8 @@ these examples and explanations and extend them to suit your needs.
 #ifndef RadioHead_h
 #define RadioHead_h
 
+#define ESP32 1
+
 // Official version numbers are maintained automatically by Makefile:
 #define RH_VERSION_MAJOR 1
 #define RH_VERSION_MINOR 81
@@ -1283,7 +1285,8 @@ these examples and explanations and extend them to suit your needs.
 // ESP8266 also hash it
  #define YIELD yield();
 #else
- #define YIELD
+// Why do we have to do this in esp32??
+ #define YIELD  yield();
 #endif
 
 ////////////////////////////////////////////////////
