@@ -59,3 +59,13 @@ https://www.thethingsnetwork.org/forum/t/big-esp32-sx127x-topic-part-1/10247/18
 # Python gateway
 
 https://github.com/pycom/pycom-libraries/tree/master/examples/lorawan-nano-gateway
+
+# Mapping data
+https://flows.nodered.org/node/node-red-contrib-web-worldmap
+
+# Gateway 1-channel
+https://github.com/kersing/ESP-1ch-Gateway-v5.0
+
+
+# Reprogramming LOPY
+https://www.thethingsnetwork.org/labs/story/program-your-lopy-from-the-arduino-ide-using-lmic

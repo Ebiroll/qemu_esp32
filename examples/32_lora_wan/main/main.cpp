@@ -78,6 +78,7 @@ void onEvent (ev_t ev) {
   u8x8.setCursor(0, 5);
   u8x8.printf("TIME %u", os_getTime());
   Serial.print(": ");
+  u8x8.clearLine(7); 
   switch (ev) {
   case EV_SCAN_TIMEOUT:
     Serial.println(F("EV_SCAN_TIMEOUT"));
@@ -193,7 +194,7 @@ void setup() {
   u8x8.setFont(u8x8_font_chroma48medium8_r);
   u8x8.drawString(0, 1, "LoRaWAN LMiC");
 
-  SPI.begin(5, 19, 27);
+  //SPI.begin(5, 19, 27);, done in, hal_spi_init()
 
   // LMIC init
   os_init();
