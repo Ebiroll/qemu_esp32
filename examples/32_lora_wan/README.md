@@ -18,8 +18,8 @@ https://github.com/bokse001/dual_chan_pkt_fwd
 
 
 
-Join Request
-
+#Join Request
+```
 Dev EUI
 1234567812345678
 App EUI
@@ -50,7 +50,27 @@ Event Data
 
 The payload is base64 encoded and is,
 0x00 0xBE 0x85 0x00 0xD0 0x7E 0xD5 0xB3 0x70 0x78 0x56 0x34 0x12 0x78 0x56 0x34 0x12 0x5F 0x12 0x1D 0x23 0x76 0x6D
+```
 
+# From test.cpp
+```
+{
+  "gw_id": "eui-b827ebffff79bb75",
+  "payload": "QNgTAzGACAABxlOVZ0VFiw==",
+  "f_cnt": 8,
+  "lora": {
+    "spreading_factor": 7,
+    "bandwidth": 125,
+    "air_time": 51456000
+  },
+  "coding_rate": "4/5",
+  "timestamp": "2018-01-12T19:08:43.326Z",
+  "rssi": -84,
+  "snr": 9,
+  "dev_addr": "310313D8",
+  "frequency": 868100000
+}
+```
 
 # To fix problem, check here..
 

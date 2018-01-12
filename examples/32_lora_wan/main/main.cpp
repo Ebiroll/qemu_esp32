@@ -1,3 +1,4 @@
+
 #include <lmic.h>
 #include <hal/hal.h>
 #include <SPI.h>
@@ -20,6 +21,11 @@
 // the OLED used
 U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ 15, /* data=*/ 4, /* reset=*/ 16);
 
+
+// These callbacks are only used in over-the-air activation, 
+// Also consider using
+// DISABLE_JOIN  in config.h, otherwise the linker will complain).
+
 // This EUI must be in little-endian format, so least-significant-byte
 // first. When copying an EUI from ttnctl output, this means to reverse
 // the bytes. For TTN issued EUIs the last bytes should be 0xD5, 0xB3,
@@ -36,6 +42,8 @@ void os_getDevEui (u1_t* buf) {
   memcpy_P(buf, DEVEUI, 8);
 }
 
+static const u4_t DEVADDR = 0x12345678 ; // <-- Change this address for every node!
+
 // This key should be in big endian format (or, since it is not really a
 // number but a block of memory, endianness does not really apply). In
 // practice, a key taken from ttnctl can be copied as-is.
@@ -46,6 +54,10 @@ static const u1_t PROGMEM APPKEY[16] = { 0xC3, 0xC3, 0x64, 0x80, 0x98, 0xF7, 0x3
 void os_getDevKey (u1_t* buf) {
   memcpy_P(buf, APPKEY, 16);
 }
+
+// This is the default Semtech key, which is used by the early prototype TTN
+// network.
+static const PROGMEM u1_t NWKSKEY[16] = { 0xAA, 0xCE, 0x88, 0x69, 0x05, 0xC6, 0xCE, 0xEF, 0x33, 0xF4, 0x76, 0xDC, 0xDC, 0x77, 0x67, 0x9F };
 
 
 static uint8_t mydata[] = "Hi";
@@ -194,12 +206,24 @@ void setup() {
   u8x8.setFont(u8x8_font_chroma48medium8_r);
   u8x8.drawString(0, 1, "LoRaWAN LMiC");
 
-  //SPI.begin(5, 19, 27);, done in, hal_spi_init()
+  SPI.begin(5, 19, 27); // Also done in, hal_spi_init()
 
   // LMIC init
   os_init();
   // Reset the MAC state. Session and pending data transfers will be discarded.
   LMIC_reset();
+
+ #if defined(CFG_eu868)
+  LMIC_setupChannel(0, 868100000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
+#endif
+// Disable link check validation
+    LMIC_setLinkCheckMode(0);
+// TTN uses SF9 for its RX2 window.
+    LMIC.dn2Dr = DR_SF9;
+
+  LMIC_setSession (0x1, DEVADDR, (u1_t *)NWKSKEY, (u1_t *)APPKEY);
+  LMIC_setDrTxpow(DR_SF7,14);
+
 
   // Start job (sending automatically starts OTAA too)
   do_send(&sendjob);
