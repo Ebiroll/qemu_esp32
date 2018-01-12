@@ -1,0 +1,25 @@
+#######################################
+# Syntax Coloring Map for Streaming
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+Streaming	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+_HEX	KEYWORD2
+_DEC	KEYWORD2
+_OCT	KEYWORD2
+_BIN	KEYWORD2
+_BYTE	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+endl	LITERAL1

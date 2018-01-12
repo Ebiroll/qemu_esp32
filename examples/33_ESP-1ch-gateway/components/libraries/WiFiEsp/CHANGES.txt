@@ -1,0 +1,65 @@
+2.2.1 (2017-01-02)
+  * Fixing Issue #69 (Can't declare member function to have static linkage) 
+  * Supporting ESP8266 firmware 2.X
+
+2.1.2 (2016-05-08)
+  * Added retry in EspDrv::wifiDriverInit method
+  * Clean buffer in ScanNetwork (bug #43)
+
+2.1.1 (2016-05-09)
+  * Implemented gatwayIP() and subnetMask() methods
+
+2.1 (2016-03-13)
+  * SSL connection support
+  * Implementation of config and configAP methods
+  * Fixed read methods WiFiEspClient.read(buf, size) and WiFiEspUDP::read(buf, size)
+  * Fixed possible buffer overflow in EspDrv.sendCmdGet
+  * Added beginAP methods similar to WiFi101 library - parameters order for beginAP is now different!
+
+1.6 (2016-02-21)
+  * Improved UDP support
+  * Added WiFiEspClient.remoteIP() method
+  * Consistent use use of uint16_t to manage port numbers
+  * Added AT+CIPDINFO=1 during init to return remote IP and port with IPD
+  * Added AT+CWAUTOCONN=0 during init to disable autoconnect
+
+1.5.1 (2016-02-11)
+  * Fix in EspDrv.getScanNetworks method 
+  * Fix buffer overflow in getFwVersion
+
+1.5 (2016-01-25)
+  * Implemented scanNetworks method
+  * Increased ring buffer size to 32 to read long SSID names
+
+1.4.2 (2016-01-05)
+  * Fixed compilation problem when using WiFiEspClient.print
+
+1.4.1 (2016-01-05)
+  * Speed optimizations
+
+1.4 (2016-01-04)
+  * Reduced dynamic memory footprint
+
+1.3 (2016-01-03)
+  * UDP support (experimental)
+  * Fixed WiFiEspClient.connected and WiFi.status and methods
+  * Connection close detection
+  * Ring buffer optimization
+  * Client peek method fixed
+
+1.2 (2015-12-29)
+  * Redesigned WiFi.init method to accept a Stream object
+  * Use CUR when starting the AP
+  * Small improvements to samples
+
+1.1 (2015-12-20)
+  * Fix for receiving large data packets
+  * Access point mode support
+  * Ring buffer class is now used in EspDrv.cpp
+  * Removed not implemented methods
+  * Prints firmware version if not recognized
+  * Multiple exclamation marks fixed for Arduino Mega
+  * Cleaned up comments
+
+1.0 (2015-12-11)
+  * First stable release
