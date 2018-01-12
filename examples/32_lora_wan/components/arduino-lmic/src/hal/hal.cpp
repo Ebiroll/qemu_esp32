@@ -61,6 +61,26 @@ static void hal_io_check() {
     uint8_t i;
     for (i = 0; i < NUM_DIO; ++i) {
         if (lmic_pins.dio[i] == LMIC_UNUSED_PIN)
+        {
+            // Check IRQ flags in radio module
+            if ( radio_has_irq() ) 
+                radio_irq_handler(0);
+
+            // We've soft checked IRQ reading Radio register no need to continue
+            // Setting this will exit us from for loop
+            i = NUM_DIO;
+        } else {
+            if (dio_states[i] != digitalRead(lmic_pins.dio[i])) {
+                dio_states[i] = !dio_states[i];
+                if (dio_states[i])
+                    radio_irq_handler(i);
+            }
+        }
+    }
+#if 0
+    uint8_t i;
+    for (i = 0; i < NUM_DIO; ++i) {
+        if (lmic_pins.dio[i] == LMIC_UNUSED_PIN)
             continue;
 
         if (dio_states[i] != digitalRead(lmic_pins.dio[i])) {
@@ -69,6 +89,7 @@ static void hal_io_check() {
                 radio_irq_handler(i);
         }
     }
+#endif
 }
 
 // -----------------------------------------------------------------------------

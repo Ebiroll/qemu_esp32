@@ -25,7 +25,7 @@
 // enable more verbose output. Make sure that printf is actually
 // configured (e.g. on AVR it is not by default), otherwise using it can
 // cause crashing.
-#define LMIC_DEBUG_LEVEL 0
+#define LMIC_DEBUG_LEVEL 2
 
 // Enable this to allow using printf() to print to the given serial port
 // (or any other Print object). This can be easy for debugging. The
@@ -63,7 +63,7 @@
 // hear gateways). This should probably only be used when debugging
 // and/or when talking to the radio directly (e.g. like in the "raw"
 // example).
-//#define DISABLE_INVERT_IQ_ON_RX
+#define DISABLE_INVERT_IQ_ON_RX
 
 // This allows choosing between multiple included AES implementations.
 // Make sure exactly one of these is uncommented.
@@ -72,7 +72,7 @@
 // implementation is optimized for speed on 32-bit processors using
 // fairly big lookup tables, but it takes up big amounts of flash on the
 // AVR architecture.
-// #define USE_ORIGINAL_AES
+//#define USE_ORIGINAL_AES
 //
 // This selects the AES implementation written by Ideetroon for their
 // own LoRaWAN library. It also uses lookup tables, but smaller

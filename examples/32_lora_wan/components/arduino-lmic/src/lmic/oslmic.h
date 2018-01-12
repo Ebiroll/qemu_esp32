@@ -81,6 +81,8 @@ u1_t radio_rand1 (void);
 #define DEFINE_LMIC  struct lmic_t LMIC
 #define DECLARE_LMIC extern struct lmic_t LMIC
 
+
+u1_t radio_has_irq (void);
 void radio_init (void);
 void radio_irq_handler (u1_t dio);
 void os_init (void);

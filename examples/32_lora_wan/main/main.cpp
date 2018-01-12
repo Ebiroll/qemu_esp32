@@ -64,8 +64,14 @@ const lmic_pinmap lmic_pins = {
  .nss = 18,
  .rxtx = LMIC_UNUSED_PIN,
  .rst = 14,
- .dio = {26, 33, 32},
+ .dio = {26, 33 /* or 26 again.. 33*/,32 /*32*/},
 };
+
+//SX1276 (pin) – ESP32 (pin)
+//DIO0 (8) – GPIO26 (15)
+//DIO1 (9) – GPIO33 (13)
+//DIO2 (10) – GPIO32 (12)
+
 
 void onEvent (ev_t ev) {
   Serial.print(os_getTime());
