@@ -651,3 +651,1277 @@ Starting 'sendWithTimeout'
 ## Writing:  ##	Register 1:  81
 ## LoRa flags cleared ##
 Packet sent, state 0
+
+Starting 'sendPacketTimeout'
+
+Starting 'setPacket'
+## Reading:  ##	Register 1:  81
+## Writing:  ##	Register 1:  81
+## Writing:  ##	Register 12:  FF
+## Writing:  ##	Register 1:  81
+## LoRa flags cleared ##
+## Writing:  ##	Register 1:  81
+
+Starting 'setDestination'
+## Destination 8 successfully set ##
+## Source 3 successfully set ##
+## Packet number 6 successfully set ##
+
+
+Starting 'setPayload'
+
+Starting 'truncPayload'
+
+Starting 'setPacketLength'
+## Reading:  ##	Register 1:  81
+## Writing:  ##	Register 1:  81
+## Writing:  ##	Register 22:  4A
+## Reading:  ##	Register 22:  4A
+## Packet length 74 has been successfully set ##
+
+## Writing:  ##	Register 1:  81
+## Writing:  ##	Register D:  80
+## Writing:  ##	Register 0:  8
+## Writing:  ##	Register 0:  10
+## Writing:  ##	Register 0:  3
+## Writing:  ##	Register 0:  6
+## Writing:  ##	Register 0:  50
+## Writing:  ##	Register 0:  61
+## Writing:  ##	Register 0:  63
+## Writing:  ##	Register 0:  6B
+## Writing:  ##	Register 0:  65
+## Writing:  ##	Register 0:  74
+## Writing:  ##	Register 0:  20
+## Writing:  ##	Register 0:  31
+## Writing:  ##	Register 0:  2C
+## Writing:  ##	Register 0:  20
+## Writing:  ##	Register 0:  77
+## Writing:  ##	Register 0:  61
+## Writing:  ##	Register 0:  6E
+## Writing:  ##	Register 0:  74
+## Writing:  ##	Register 0:  69
+## Writing:  ##	Register 0:  6E
+## Writing:  ##	Register 0:  67
+## Writing:  ##	Register 0:  20
+## Writing:  ##	Register 0:  74
+## Writing:  ##	Register 0:  6F
+## Writing:  ##	Register 0:  20
+## Writing:  ##	Register 0:  73
+## Writing:  ##	Register 0:  65
+## Writing:  ##	Register 0:  65
+## Writing:  ##	Register 0:  20
+## Writing:  ##	Register 0:  69
+## Writing:  ##	Register 0:  66
+## Writing:  ##	Register 0:  20
+## Writing:  ##	Register 0:  72
+## Writing:  ##	Register 0:  65
+## Writing:  ##	Register 0:  63
+## Writing:  ##	Register 0:  65
+## Writing:  ##	Register 0:  69
+## Writing:  ##	Register 0:  76
+## Writing:  ##	Register 0:  65
+## Writing:  ##	Register 0:  64
+## Writing:  ##	Register 0:  20
+## Writing:  ##	Register 0:  70
+## Writing:  ##	Register 0:  61
+## Writing:  ##	Register 0:  63
+## Writing:  ##	Register 0:  6B
+## Writing:  ##	Register 0:  65
+## Writing:  ##	Register 0:  74
+## Writing:  ##	Register 0:  20
+## Writing:  ##	Register 0:  69
+## Writing:  ##	Register 0:  73
+## Writing:  ##	Register 0:  20
+## Writing:  ##	Register 0:  74
+## Writing:  ##	Register 0:  68
+## Writing:  ##	Register 0:  65
+## Writing:  ##	Register 0:  20
+## Writing:  ##	Register 0:  73
+## Writing:  ##	Register 0:  61
+## Writing:  ##	Register 0:  6D
+## Writing:  ##	Register 0:  65
+## Writing:  ##	Register 0:  20
+## Writing:  ##	Register 0:  61
+## Writing:  ##	Register 0:  73
+## Writing:  ##	Register 0:  20
+## Writing:  ##	Register 0:  73
+## Writing:  ##	Register 0:  65
+## Writing:  ##	Register 0:  6E
+## Writing:  ##	Register 0:  74
+## Writing:  ##	Register 0:  20
+## Writing:  ##	Register 0:  70
+## Writing:  ##	Register 0:  61
+## Writing:  ##	Register 0:  63
+## Writing:  ##	Register 0:  6B
+## Writing:  ##	Register 0:  65
+## Writing:  ##	Register 0:  74
+## Packet set and written in FIFO ##
+## Packet to send:  
+Destination: 8
+Type: 16
+Source: 3
+Packet number: 6
+Packet length: 74
+Data: Packet 1, wanting to see if received packet is the same as sent packet
+ ##
+
+
+Starting 'setTimeout'
+Timeout to send/receive is: 10000
+
+Starting 'sendWithTimeout'
+## Reading:  ##	Register 1:  81
+## Writing:  ##	Register 1:  81
+## Writing:  ##	Register 12:  FF
+## Writing:  ##	Register 1:  81
+## LoRa flags cleared ##
+## Writing:  ##	Register 1:  83
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  8
+## Packet successfully sent ##
+
+## Reading:  ##	Register 1:  81
+## Writing:  ##	Register 1:  81
+## Writing:  ##	Register 12:  FF
+## Writing:  ##	Register 1:  81
+## LoRa flags cleared ##
+Packet sent, state 0
+
+Starting 'sendPacketTimeout'
+
+Starting 'setPacket'
+## Reading:  ##	Register 1:  81
+## Writing:  ##	Register 1:  81
+## Writing:  ##	Register 12:  FF
+## Writing:  ##	Register 1:  81
+## LoRa flags cleared ##
+## Writing:  ##	Register 1:  81
+
+Starting 'setDestination'
+## Destination 0 successfully set ##
+## Source 3 successfully set ##
+## Packet number 7 successfully set ##
+
+
+Starting 'setPayload'
+
+Starting 'truncPayload'
+
+Starting 'setPacketLength'
+## Reading:  ##	Register 1:  81
+## Writing:  ##	Register 1:  81
+## Writing:  ##	Register 22:  1C
+## Reading:  ##	Register 22:  1C
+## Packet length 28 has been successfully set ##
+
+## Writing:  ##	Register 1:  81
+## Writing:  ##	Register D:  80
+## Writing:  ##	Register 0:  0
+## Writing:  ##	Register 0:  10
+## Writing:  ##	Register 0:  3
+## Writing:  ##	Register 0:  7
+## Writing:  ##	Register 0:  50
+## Writing:  ##	Register 0:  61
+## Writing:  ##	Register 0:  63
+## Writing:  ##	Register 0:  6B
+## Writing:  ##	Register 0:  65
+## Writing:  ##	Register 0:  74
+## Writing:  ##	Register 0:  20
+## Writing:  ##	Register 0:  32
+## Writing:  ##	Register 0:  2C
+## Writing:  ##	Register 0:  20
+## Writing:  ##	Register 0:  62
+## Writing:  ##	Register 0:  72
+## Writing:  ##	Register 0:  6F
+## Writing:  ##	Register 0:  61
+## Writing:  ##	Register 0:  64
+## Writing:  ##	Register 0:  63
+## Writing:  ##	Register 0:  61
+## Writing:  ##	Register 0:  73
+## Writing:  ##	Register 0:  74
+## Writing:  ##	Register 0:  20
+## Writing:  ##	Register 0:  74
+## Writing:  ##	Register 0:  65
+## Writing:  ##	Register 0:  73
+## Writing:  ##	Register 0:  74
+## Packet set and written in FIFO ##
+## Packet to send:  
+Destination: 0
+Type: 16
+Source: 3
+Packet number: 7
+Packet length: 28
+Data: Packet 2, broadcast test
+ ##
+
+
+Starting 'setTimeout'
+Timeout to send/receive is: 10000
+
+Starting 'sendWithTimeout'
+## Reading:  ##	Register 1:  81
+## Writing:  ##	Register 1:  81
+## Writing:  ##	Register 12:  FF
+## Writing:  ##	Register 1:  81
+## LoRa flags cleared ##
+## Writing:  ##	Register 1:  83
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  8
+## Packet successfully sent ##
+
+## Reading:  ##	Register 1:  81
+## Writing:  ##	Register 1:  81
+## Writing:  ##	Register 12:  FF
+## Writing:  ##	Register 1:  81
+## LoRa flags cleared ##
+Packet sent, state 0
+
+Starting 'sendPacketTimeout'
+
+Starting 'setPacket'
+## Reading:  ##	Register 1:  81
+## Writing:  ##	Register 1:  81
+## Writing:  ##	Register 12:  FF
+## Writing:  ##	Register 1:  81
+## LoRa flags cleared ##
+## Writing:  ##	Register 1:  81
+
+Starting 'setDestination'
+## Destination 8 successfully set ##
+## Source 3 successfully set ##
+## Packet number 8 successfully set ##
+
+
+Starting 'setPayload'
+
+Starting 'truncPayload'
+
+Starting 'setPacketLength'
+## Reading:  ##	Register 1:  81
+## Writing:  ##	Register 1:  81
+## Writing:  ##	Register 22:  4A
+## Reading:  ##	Register 22:  4A
+## Packet length 74 has been successfully set ##
+
+## Writing:  ##	Register 1:  81
+## Writing:  ##	Register D:  80
+## Writing:  ##	Register 0:  8
+## Writing:  ##	Register 0:  10
+## Writing:  ##	Register 0:  3
+## Writing:  ##	Register 0:  8
+## Writing:  ##	Register 0:  50
+## Writing:  ##	Register 0:  61
+## Writing:  ##	Register 0:  63
+## Writing:  ##	Register 0:  6B
+## Writing:  ##	Register 0:  65
+## Writing:  ##	Register 0:  74
+## Writing:  ##	Register 0:  20
+## Writing:  ##	Register 0:  31
+## Writing:  ##	Register 0:  2C
+## Writing:  ##	Register 0:  20
+## Writing:  ##	Register 0:  77
+## Writing:  ##	Register 0:  61
+## Writing:  ##	Register 0:  6E
+## Writing:  ##	Register 0:  74
+## Writing:  ##	Register 0:  69
+## Writing:  ##	Register 0:  6E
+## Writing:  ##	Register 0:  67
+## Writing:  ##	Register 0:  20
+## Writing:  ##	Register 0:  74
+## Writing:  ##	Register 0:  6F
+## Writing:  ##	Register 0:  20
+## Writing:  ##	Register 0:  73
+## Writing:  ##	Register 0:  65
+## Writing:  ##	Register 0:  65
+## Writing:  ##	Register 0:  20
+## Writing:  ##	Register 0:  69
+## Writing:  ##	Register 0:  66
+## Writing:  ##	Register 0:  20
+## Writing:  ##	Register 0:  72
+## Writing:  ##	Register 0:  65
+## Writing:  ##	Register 0:  63
+## Writing:  ##	Register 0:  65
+## Writing:  ##	Register 0:  69
+## Writing:  ##	Register 0:  76
+## Writing:  ##	Register 0:  65
+## Writing:  ##	Register 0:  64
+## Writing:  ##	Register 0:  20
+## Writing:  ##	Register 0:  70
+## Writing:  ##	Register 0:  61
+## Writing:  ##	Register 0:  63
+## Writing:  ##	Register 0:  6B
+## Writing:  ##	Register 0:  65
+## Writing:  ##	Register 0:  74
+## Writing:  ##	Register 0:  20
+## Writing:  ##	Register 0:  69
+## Writing:  ##	Register 0:  73
+## Writing:  ##	Register 0:  20
+## Writing:  ##	Register 0:  74
+## Writing:  ##	Register 0:  68
+## Writing:  ##	Register 0:  65
+## Writing:  ##	Register 0:  20
+## Writing:  ##	Register 0:  73
+## Writing:  ##	Register 0:  61
+## Writing:  ##	Register 0:  6D
+## Writing:  ##	Register 0:  65
+## Writing:  ##	Register 0:  20
+## Writing:  ##	Register 0:  61
+## Writing:  ##	Register 0:  73
+## Writing:  ##	Register 0:  20
+## Writing:  ##	Register 0:  73
+## Writing:  ##	Register 0:  65
+## Writing:  ##	Register 0:  6E
+## Writing:  ##	Register 0:  74
+## Writing:  ##	Register 0:  20
+## Writing:  ##	Register 0:  70
+## Writing:  ##	Register 0:  61
+## Writing:  ##	Register 0:  63
+## Writing:  ##	Register 0:  6B
+## Writing:  ##	Register 0:  65
+## Writing:  ##	Register 0:  74
+## Packet set and written in FIFO ##
+## Packet to send:  
+Destination: 8
+Type: 16
+Source: 3
+Packet number: 8
+Packet length: 74
+Data: Packet 1, wanting to see if received packet is the same as sent packet
+ ##
+
+
+Starting 'setTimeout'
+Timeout to send/receive is: 10000
+
+Starting 'sendWithTimeout'
+## Reading:  ##	Register 1:  81
+## Writing:  ##	Register 1:  81
+## Writing:  ##	Register 12:  FF
+## Writing:  ##	Register 1:  81
+## LoRa flags cleared ##
+## Writing:  ##	Register 1:  83
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  8
+## Packet successfully sent ##
+
+## Reading:  ##	Register 1:  81
+## Writing:  ##	Register 1:  81
+## Writing:  ##	Register 12:  FF
+## Writing:  ##	Register 1:  81
+## LoRa flags cleared ##
+Packet sent, state 0
+
+Starting 'sendPacketTimeout'
+
+Starting 'setPacket'
+## Reading:  ##	Register 1:  81
+## Writing:  ##	Register 1:  81
+## Writing:  ##	Register 12:  FF
+## Writing:  ##	Register 1:  81
+## LoRa flags cleared ##
+## Writing:  ##	Register 1:  81
+
+Starting 'setDestination'
+## Destination 0 successfully set ##
+## Source 3 successfully set ##
+## Packet number 9 successfully set ##
+
+
+Starting 'setPayload'
+
+Starting 'truncPayload'
+
+Starting 'setPacketLength'
+## Reading:  ##	Register 1:  81
+## Writing:  ##	Register 1:  81
+## Writing:  ##	Register 22:  1C
+## Reading:  ##	Register 22:  1C
+## Packet length 28 has been successfully set ##
+
+## Writing:  ##	Register 1:  81
+## Writing:  ##	Register D:  80
+## Writing:  ##	Register 0:  0
+## Writing:  ##	Register 0:  10
+## Writing:  ##	Register 0:  3
+## Writing:  ##	Register 0:  9
+## Writing:  ##	Register 0:  50
+## Writing:  ##	Register 0:  61
+## Writing:  ##	Register 0:  63
+## Writing:  ##	Register 0:  6B
+## Writing:  ##	Register 0:  65
+## Writing:  ##	Register 0:  74
+## Writing:  ##	Register 0:  20
+## Writing:  ##	Register 0:  32
+## Writing:  ##	Register 0:  2C
+## Writing:  ##	Register 0:  20
+## Writing:  ##	Register 0:  62
+## Writing:  ##	Register 0:  72
+## Writing:  ##	Register 0:  6F
+## Writing:  ##	Register 0:  61
+## Writing:  ##	Register 0:  64
+## Writing:  ##	Register 0:  63
+## Writing:  ##	Register 0:  61
+## Writing:  ##	Register 0:  73
+## Writing:  ##	Register 0:  74
+## Writing:  ##	Register 0:  20
+## Writing:  ##	Register 0:  74
+## Writing:  ##	Register 0:  65
+## Writing:  ##	Register 0:  73
+## Writing:  ##	Register 0:  74
+## Packet set and written in FIFO ##
+## Packet to send:  
+Destination: 0
+Type: 16
+Source: 3
+Packet number: 9
+Packet length: 28
+Data: Packet 2, broadcast test
+ ##
+
+
+Starting 'setTimeout'
+Timeout to send/receive is: 10000
+
+Starting 'sendWithTimeout'
+## Reading:  ##	Register 1:  81
+## Writing:  ##	Register 1:  81
+## Writing:  ##	Register 12:  FF
+## Writing:  ##	Register 1:  81
+## LoRa flags cleared ##
+## Writing:  ##	Register 1:  83
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  0
+## Reading:  ##	Register 12:  8
+## Packet successfully sent ##
+
+## Reading:  ##	Register 1:  81
+## Writing:  ##	Register 1:  81
+## Writing:  ##	Register 12:  FF
+## Writing:  ##	Register 1:  81
+## LoRa flags cleared ##
+Packet sent, state 0

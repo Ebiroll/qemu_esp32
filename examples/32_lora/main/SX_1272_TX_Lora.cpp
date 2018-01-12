@@ -48,7 +48,8 @@ void setup()
   printf("Setting power ON: state %d\n", e);
   
   // Set transmission mode
-  e |= sx1272.setMode(4);
+  //e |= sx1272.setMode(4);
+  e |= sx1272.setMode(12);
   printf("Setting Mode: state %d\n", e);
   
   // Set header

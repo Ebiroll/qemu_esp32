@@ -9,6 +9,7 @@
 
 #include "ssd1366.h"
 #include "font8x8_basic.h"
+#include "driver/gpio.h"
 
 #define SDA_PIN GPIO_NUM_4
 #define SCL_PIN GPIO_NUM_15
@@ -29,10 +30,41 @@ void i2c_master_init()
 	i2c_driver_install(I2C_NUM_0, I2C_MODE_MASTER, 0, 0, 0);
 }
 
+#define GPIO_RESET_PIN    16
+#define GPIO_OUTPUT_PIN_SEL  ((1<<GPIO_RESET_PIN) )
+// | (1<<GPIO_OUTPUT_IO_1)
+
+void set_reset_pin() {
+
+    gpio_config_t io_conf;
+    //disable interrupt
+    io_conf.intr_type = GPIO_PIN_INTR_DISABLE;
+    //set as output mode
+    io_conf.mode = GPIO_MODE_OUTPUT;
+    //bit mask of the pins that you want to set,e.g.GPIO15/17
+    io_conf.pin_bit_mask = GPIO_OUTPUT_PIN_SEL;
+    //disable pull-down mode
+    io_conf.pull_down_en = 0;
+    //disable pull-up mode
+    io_conf.pull_up_en = 0;
+    //configure GPIO with the given settings
+    gpio_config(&io_conf);
+
+    //start gpio task
+    //xTaskCreate(gpio_task_example, "gpio_task_example", 2048, NULL, 10, NULL);
+
+    gpio_set_level(16, 0);
+    vTaskDelay(100 / portTICK_RATE_MS);
+    gpio_set_level(16, 1);
+}
+
 void ssd1306_init() {
 	esp_err_t espRc;
 
+	set_reset_pin();
+
 	i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+	
 
 	i2c_master_start(cmd);
 	i2c_master_write_byte(cmd, (OLED_I2C_ADDRESS << 1) | I2C_MASTER_WRITE, true);

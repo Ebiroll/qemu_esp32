@@ -849,6 +849,17 @@ int8_t SX1272::setMode(uint8_t mode)
         printf("%X\n", _syncWord);
         break;
 
+    case 12:
+        setCR(CR_5);        // CR = 4/5
+        setSF(SF_7);        // SF = 7
+        setBW(BW_125);      // BW = 500 KHz
+       // set the sync word to the LoRaWAN sync word which is 0x34
+        setSyncWord(0x34);
+        printf("** Using sync word of 0x");
+        printf("%X\n", _syncWord);
+        break;
+
+
     default:    state = -1; // The indicated mode doesn't exist
 
     };
@@ -1148,7 +1159,7 @@ int8_t SX1272::setMode(uint8_t mode)
             break;
         }// end switch
 
-        if (mode!=11) {
+        if (mode!=12) {
             setSyncWord(_defaultSyncWord);
 #if (SX1272_debug_mode > 1)
             printf("** Using sync word of 0x");
