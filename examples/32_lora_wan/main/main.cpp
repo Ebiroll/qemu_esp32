@@ -21,6 +21,19 @@
 // the OLED used
 U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ 15, /* data=*/ 4, /* reset=*/ 16);
 
+// On the things network you must set Activation Method = ABP
+// Over-the-Air Activation (OTAA)
+/*   https://www.thethingsnetwork.org/wiki/LoRaWAN/Home
+
+Over-the-Air Activation (OTAA) is the preferred and most secure way to connect with The Things Network. Devices perform a join-procedure with the network, during which a dynamic DevAddr is assigned and security keys are negotiated with the device.
+Activation by Personalization (ABP)
+
+In some cases you might need to hardcode the DevAddr as well as the security keys in the device. This means activating a device by personalization (ABP). This strategy might seem simpler, because you skip the join procedure, but it has some downsides related to security.
+*/
+
+//const char *devAddr = "26011526";
+//const char *nwkSKey = "E5A9FE42754C83DBE8BF856B46C7EA0F";
+//const char *appSKey = "673AE574F2A55DC5007F7AA575DD756A";
 
 // These callbacks are only used in over-the-air activation, 
 // Also consider using
@@ -28,8 +41,7 @@ U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ 15, /* data=*/ 4, /* reset=*/
 
 // This EUI must be in little-endian format, so least-significant-byte
 // first. When copying an EUI from ttnctl output, this means to reverse
-// the bytes. For TTN issued EUIs the last bytes should be 0xD5, 0xB3,
-// 0x70.  70B3D57E D00085BE
+// the bytes. For TTN issued EUIs the last bytes should be 0xD5, 0xB3, 0x70.  70B3D57E D00085BE
 static const u1_t PROGMEM APPEUI[8] = { 0xBE, 0x85, 0x00, 0xD0, 0x7E, 0xD5, 0xB3, 0x70 };
 void os_getArtEui (u1_t* buf) {
   memcpy_P(buf, APPEUI, 8);
@@ -37,27 +49,36 @@ void os_getArtEui (u1_t* buf) {
 
 // 1234567812345678
 // This should also be in little endian format, see above.
-static const u1_t PROGMEM DEVEUI[8] = { 0x78, 0x56, 0x34, 0x12, 0x78, 0x56, 0x34, 0x12 };
+//static const u1_t PROGMEM DEVEUI[8] = { 0x78, 0x56, 0x34, 0x12, 0x78, 0x56, 0x34, 0x12 };
+// 0x0780560340120780
+u1_t PROGMEM DEVEUI[8] = {  0x80,0x07, 0x12,0x40,0x03,0x56,0x80,0x07 };
+
 void os_getDevEui (u1_t* buf) {
   memcpy_P(buf, DEVEUI, 8);
 }
 
-static const u4_t DEVADDR = 0x12345678 ; // <-- Change this address for every node!
+//static const u4_t DEVADDR = 0x00012345 ; // <-- Change this address for every node!
+
+static const u4_t DEVADDR = 0x26011526 ; // <-- Change this address for every node!
 
 // This key should be in big endian format (or, since it is not really a
 // number but a block of memory, endianness does not really apply). In
 // practice, a key taken from ttnctl can be copied as-is.
 // C3C364 80 98F73E58 AA A7 26 0B 8B D5 51 28
 // The key shown here is the semtech default key.  C3C3 6480 98F7 3E58 AAA7 260B 8BD5 5128
-static const u1_t PROGMEM APPKEY[16] = { 0xC3, 0xC3, 0x64, 0x80, 0x98, 0xF7, 0x3E, 0x58, 0xAA, 0xA7, 0x26, 0x0B, 0x8B, 0xD5, 0x51, 0x28 };
-//Not correct... static const u1_t PROGMEM APPKEY[16] = { 0x28, 0x51, 0xD5, 0x8B, 0x0B, 0x26, 0xA7, 0xAA, 0x58, 0x3E, 0xF7, 0x98, 0x80, 0x64, 0xC3, 0xC3 };
+//static const u1_t PROGMEM APPKEY[16] = { 0xC3, 0xC3, 0x64, 0x80, 0x98, 0xF7, 0x3E, 0x58, 0xAA, 0xA7, 0x26, 0x0B, 0x8B, 0xD5, 0x51, 0x28 };
+
+//673AE574F2A55DC5007F7AA575DD756A
+static const u1_t PROGMEM APPKEY[16] = { 0x67 , 0x3A , 0xE5 , 0x74 , 0xF2, 0xA5, 0x5D, 0xC5, 0x00, 0x7F, 0x7A, 0xA5, 0x75, 0xDD, 0x75, 0x6A };
 void os_getDevKey (u1_t* buf) {
   memcpy_P(buf, APPKEY, 16);
 }
 
-// This is the default Semtech key, which is used by the early prototype TTN
-// network.
-static const PROGMEM u1_t NWKSKEY[16] = { 0xAA, 0xCE, 0x88, 0x69, 0x05, 0xC6, 0xCE, 0xEF, 0x33, 0xF4, 0x76, 0xDC, 0xDC, 0x77, 0x67, 0x9F };
+// This is the default Semtech key, which is used by the early prototype TTN network.
+// static const PROGMEM u1_t NWKSKEY[16] = { 0xAA, 0xCE, 0x88, 0x69, 0x05, 0xC6, 0xCE, 0xEF, 0x33, 0xF4, 0x76, 0xDC, 0xDC, 0x77, 0x67, 0x9F };
+ 
+static const u1_t NWKSKEY[16] = { 0xE5,0xA9,0xFE,0x42,0x75,0x4C,0x83,0xDB,0xE8,0xBF,0x85,0x6B,0x46,0xC7,0xEA,0x0F };
+
 
 
 static uint8_t mydata[] = "Hi";
