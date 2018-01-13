@@ -1,0 +1,622 @@
+ets Jun  8 2016 00:22:57
+
+rst:0x1 (POWERON_RESET),boot:0x17 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0018,len:4
+load:0x3fff001c,len:5544
+load:0x40078000,len:0
+ho 12 tail 0 room 4
+load:0x40078000,len:13716
+entry 0x40078fb4
+[0;32mI (30) boot: ESP-IDF v3.1-dev-137-g4f44d16e 2nd stage bootloader[0m
+[0;32mI (30) boot: compile time 04:51:00[0m
+[0;32mI (41) boot: Enabling RNG early entropy source...[0m
+[0;32mI (41) boot: SPI Speed      : 40MHz[0m
+[0;32mI (41) boot: SPI Mode       : DIO[0m
+[0;32mI (44) boot: SPI Flash Size : 4MB[0m
+[0;32mI (48) boot: Partition Table:[0m
+[0;32mI (51) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (59) boot:  0 nvs              WiFi data        01 02 00009000 00006000[0m
+[0;32mI (66) boot:  1 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (74) boot:  2 factory          factory app      00 00 00010000 00100000[0m
+[0;32mI (81) boot: End of partition table[0m
+[0;32mI (85) esp_image: segment 0: paddr=0x00010020 vaddr=0x3f400020 size=0x0a878 ( 43128) map[0m
+[0;32mI (109) esp_image: segment 1: paddr=0x0001a8a0 vaddr=0x3ffb0000 size=0x02180 (  8576) load[0m
+[0;32mI (113) esp_image: segment 2: paddr=0x0001ca28 vaddr=0x40080000 size=0x00400 (  1024) load[0m
+[0;32mI (116) esp_image: segment 3: paddr=0x0001ce30 vaddr=0x40080400 size=0x031e0 ( 12768) load[0m
+[0;32mI (130) esp_image: segment 4: paddr=0x00020018 vaddr=0x400d0018 size=0x19918 (104728) map[0m
+[0;32mI (170) esp_image: segment 5: paddr=0x00039938 vaddr=0x400835e0 size=0x05be4 ( 23524) load[0m
+[0;32mI (180) esp_image: segment 6: paddr=0x0003f524 vaddr=0x400c0000 size=0x00000 (     0) load[0m
+[0;32mI (186) boot: Loaded app from partition at offset 0x10000[0m
+[0;32mI (186) boot: Disabling RNG early entropy source...[0m
+[0;32mI (191) cpu_start: Pro cpu up.[0m
+[0;32mI (194) cpu_start: Starting app cpu, entry point is 0x40080e34[0m
+[0;32mI (0) cpu_start: App cpu up.[0m
+[0;32mI (205) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (212) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (218) heap_init: At 3FFB2C40 len 0002D3C0 (180 KiB): DRAM[0m
+[0;32mI (224) heap_init: At 3FFE0440 len 00003BC0 (14 KiB): D/IRAM[0m
+[0;32mI (230) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (237) heap_init: At 400891C4 len 00016E3C (91 KiB): IRAM[0m
+[0;32mI (243) cpu_start: Pro cpu start user code[0m
+[0;32mI (261) cpu_start: Starting scheduler on PRO CPU.[0m
+[0;32mI (0) cpu_start: Starting scheduler on APP CPU.[0m
+[0;32mI (263) LMIC_HAL: Starting initialisation of os_init()[0m
+[0;32mI (263) LMIC_HAL: Starting IO initialization[0m
+[0;32mI (273) gpio: GPIO[14]| InputEn: 0| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0 [0m
+[0;32mI (273) gpio: GPIO[18]| InputEn: 0| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0 [0m
+[0;32mI (283) gpio: GPIO[26]| InputEn: 1| OutputEn: 0| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0 [0m
+[0;32mI (293) LMIC_HAL: Finished IO initialization[0m
+[0;32mI (303) LMIC_HAL: Starting SPI initialization[0m
+[0;32mI (303) LMIC_HAL: Finished SPI initialization[0m
+[0;32mI (313) LMIC_HAL: Starting initialisation of timer[0m
+[0;32mI (313) LMIC_HAL: Finished initalisation of timer[0m
+[0;32mI (323) LMIC_HAL: Finished initialisation of hal_init()[0m
+[0;32mI (323) gpio: GPIO[14]| InputEn: 0| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0 [0m
+Getting some ticks
+[0;32mI (343) LMIC_HAL: Wait until[0m
+Getting some ticks
+[0;32mI (343) LMIC_HAL: Done waiting until[0m
+[0;32mI (353) gpio: GPIO[14]| InputEn: 1| OutputEn: 0| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0 [0m
+Getting some ticks
+[0;32mI (363) LMIC_HAL: Wait until[0m
+Getting some ticks
+[0;32mI (363) LMIC_HAL: Done waiting until[0m
+[0;32mI (373) LMIC_HAL: Read address: 0x1 with value: 0x9[0m
+[0;32mI (373) LMIC_HAL: Write address: 0x1 with value: 0x8| sent back val: 0x9[0m
+[0;32mI (383) LMIC_HAL: Read address: 0x42 with value: 0x12[0m
+[0;32mI (383) LMIC_HAL: Write address: 0x1 with value: 0x88| sent back val: 0x8[0m
+[0;32mI (393) LMIC_HAL: Read address: 0x1 with value: 0x88[0m
+[0;32mI (403) LMIC_HAL: Read address: 0x1 with value: 0x88[0m
+[0;32mI (403) LMIC_HAL: Write address: 0x1 with value: 0x89| sent back val: 0x88[0m
+[0;32mI (413) LMIC_HAL: Write address: 0x1D with value: 0xA| sent back val: 0x72[0m
+[0;32mI (423) LMIC_HAL: Write address: 0x1E with value: 0x70| sent back val: 0x70[0m
+[0;32mI (433) LMIC_HAL: Write address: 0xC with value: 0x21| sent back val: 0x20[0m
+[0;32mI (433) LMIC_HAL: Write address: 0x23 with value: 0x40| sent back val: 0xFF[0m
+[0;32mI (443) LMIC_HAL: Read address: 0x33 with value: 0x27[0m
+[0;32mI (453) LMIC_HAL: Write address: 0x33 with value: 0x67| sent back val: 0x27[0m
+[0;32mI (453) LMIC_HAL: Write address: 0x1F with value: 0x0| sent back val: 0x64[0m
+[0;32mI (463) LMIC_HAL: Write address: 0x39 with value: 0x34| sent back val: 0x12[0m
+[0;32mI (473) LMIC_HAL: Write address: 0x40 with value: 0xC0| sent back val: 0x0[0m
+[0;32mI (483) LMIC_HAL: Write address: 0x12 with value: 0xFF| sent back val: 0x0[0m
+[0;32mI (483) LMIC_HAL: Write address: 0x11 with value: 0xFF| sent back val: 0x0[0m
+[0;32mI (493) LMIC_HAL: Read address: 0x1 with value: 0x89[0m
+[0;32mI (503) LMIC_HAL: Write address: 0x1 with value: 0x8D| sent back val: 0x89[0m
+[0;32mI (513) LMIC_HAL: Read address: 0x1 with value: 0x8D[0m
+[0;32mI (513) LMIC_HAL: Read address: 0x2C with value: 0x11[0m
+[0;32mI (523) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (523) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (533) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (533) LMIC_HAL: Read address: 0x2C with value: 0xD[0m
+[0;32mI (543) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (553) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (553) LMIC_HAL: Read address: 0x2C with value: 0x13[0m
+[0;32mI (563) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (563) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (573) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (573) LMIC_HAL: Read address: 0x2C with value: 0xB[0m
+[0;32mI (583) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (583) LMIC_HAL: Read address: 0x2C with value: 0xD[0m
+[0;32mI (593) LMIC_HAL: Read address: 0x2C with value: 0x11[0m
+[0;32mI (603) LMIC_HAL: Read address: 0x2C with value: 0x8[0m
+[0;32mI (603) LMIC_HAL: Read address: 0x2C with value: 0xC[0m
+[0;32mI (613) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (613) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (623) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (623) LMIC_HAL: Read address: 0x2C with value: 0xD[0m
+[0;32mI (633) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (643) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (643) LMIC_HAL: Read address: 0x2C with value: 0xD[0m
+[0;32mI (653) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (653) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (663) LMIC_HAL: Read address: 0x2C with value: 0x14[0m
+[0;32mI (663) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (673) LMIC_HAL: Read address: 0x2C with value: 0x11[0m
+[0;32mI (683) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (683) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (693) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (693) LMIC_HAL: Read address: 0x2C with value: 0x3[0m
+[0;32mI (703) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (703) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (713) LMIC_HAL: Read address: 0x2C with value: 0x11[0m
+[0;32mI (723) LMIC_HAL: Read address: 0x2C with value: 0xD[0m
+[0;32mI (723) LMIC_HAL: Read address: 0x2C with value: 0x1F[0m
+[0;32mI (733) LMIC_HAL: Read address: 0x2C with value: 0x11[0m
+[0;32mI (733) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (743) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (743) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (753) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (753) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (763) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (773) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (773) LMIC_HAL: Read address: 0x2C with value: 0xC[0m
+[0;32mI (783) LMIC_HAL: Read address: 0x2C with value: 0x12[0m
+[0;32mI (783) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (793) LMIC_HAL: Read address: 0x2C with value: 0x19[0m
+[0;32mI (793) LMIC_HAL: Read address: 0x2C with value: 0xC[0m
+[0;32mI (803) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (813) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (813) LMIC_HAL: Read address: 0x2C with value: 0x13[0m
+[0;32mI (823) LMIC_HAL: Read address: 0x2C with value: 0x11[0m
+[0;32mI (823) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (833) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (833) LMIC_HAL: Read address: 0x2C with value: 0x0[0m
+[0;32mI (843) LMIC_HAL: Read address: 0x2C with value: 0xC[0m
+[0;32mI (853) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (853) LMIC_HAL: Read address: 0x2C with value: 0x12[0m
+[0;32mI (863) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (863) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (873) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (873) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (883) LMIC_HAL: Read address: 0x2C with value: 0xC[0m
+[0;32mI (893) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (893) LMIC_HAL: Read address: 0x2C with value: 0x13[0m
+[0;32mI (903) LMIC_HAL: Read address: 0x2C with value: 0x0[0m
+[0;32mI (903) LMIC_HAL: Read address: 0x2C with value: 0xD[0m
+[0;32mI (913) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (913) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (923) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (933) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (933) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (943) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (943) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (953) LMIC_HAL: Read address: 0x2C with value: 0x11[0m
+[0;32mI (953) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (963) LMIC_HAL: Read address: 0x2C with value: 0xB[0m
+[0;32mI (963) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (973) LMIC_HAL: Read address: 0x2C with value: 0x11[0m
+[0;32mI (983) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (983) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (993) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (993) LMIC_HAL: Read address: 0x2C with value: 0x9[0m
+[0;32mI (1003) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1003) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (1013) LMIC_HAL: Read address: 0x2C with value: 0xA[0m
+[0;32mI (1023) LMIC_HAL: Read address: 0x2C with value: 0x11[0m
+[0;32mI (1023) LMIC_HAL: Read address: 0x2C with value: 0x11[0m
+[0;32mI (1033) LMIC_HAL: Read address: 0x2C with value: 0xD[0m
+[0;32mI (1033) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (1043) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1043) LMIC_HAL: Read address: 0x2C with value: 0xC[0m
+[0;32mI (1053) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1063) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (1063) LMIC_HAL: Read address: 0x2C with value: 0xD[0m
+[0;32mI (1073) LMIC_HAL: Read address: 0x2C with value: 0xD[0m
+[0;32mI (1073) LMIC_HAL: Read address: 0x2C with value: 0xD[0m
+[0;32mI (1083) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1083) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1093) LMIC_HAL: Read address: 0x2C with value: 0x9[0m
+[0;32mI (1103) LMIC_HAL: Read address: 0x2C with value: 0x1F[0m
+[0;32mI (1103) LMIC_HAL: Read address: 0x2C with value: 0x11[0m
+[0;32mI (1113) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1113) LMIC_HAL: Read address: 0x2C with value: 0xC[0m
+[0;32mI (1123) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1133) LMIC_HAL: Read address: 0x2C with value: 0xD[0m
+[0;32mI (1133) LMIC_HAL: Read address: 0x2C with value: 0xC[0m
+[0;32mI (1143) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1143) LMIC_HAL: Read address: 0x2C with value: 0x17[0m
+[0;32mI (1153) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1153) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1163) LMIC_HAL: Read address: 0x2C with value: 0xD[0m
+[0;32mI (1173) LMIC_HAL: Read address: 0x2C with value: 0x11[0m
+[0;32mI (1173) LMIC_HAL: Read address: 0x2C with value: 0x17[0m
+[0;32mI (1183) LMIC_HAL: Read address: 0x2C with value: 0xD[0m
+[0;32mI (1183) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (1193) LMIC_HAL: Read address: 0x2C with value: 0xD[0m
+[0;32mI (1193) LMIC_HAL: Read address: 0x2C with value: 0xC[0m
+[0;32mI (1203) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1213) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1213) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1223) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1223) LMIC_HAL: Read address: 0x2C with value: 0xD[0m
+[0;32mI (1233) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1233) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (1243) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1253) LMIC_HAL: Read address: 0x2C with value: 0xC[0m
+[0;32mI (1253) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1263) LMIC_HAL: Read address: 0x2C with value: 0xD[0m
+[0;32mI (1263) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1273) LMIC_HAL: Read address: 0x2C with value: 0x8[0m
+[0;32mI (1273) LMIC_HAL: Read address: 0x2C with value: 0xB[0m
+[0;32mI (1283) LMIC_HAL: Read address: 0x2C with value: 0x8[0m
+[0;32mI (1293) LMIC_HAL: Read address: 0x2C with value: 0xC[0m
+[0;32mI (1293) LMIC_HAL: Read address: 0x2C with value: 0x1E[0m
+[0;32mI (1303) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1303) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (1313) LMIC_HAL: Read address: 0x2C with value: 0x9[0m
+[0;32mI (1313) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1323) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (1333) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (1333) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (1343) LMIC_HAL: Read address: 0x2C with value: 0xC[0m
+[0;32mI (1343) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (1353) LMIC_HAL: Read address: 0x2C with value: 0x11[0m
+[0;32mI (1353) LMIC_HAL: Read address: 0x2C with value: 0xC[0m
+[0;32mI (1363) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1373) LMIC_HAL: Read address: 0x2C with value: 0x17[0m
+[0;32mI (1373) LMIC_HAL: Read address: 0x2C with value: 0xC[0m
+[0;32mI (1383) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1383) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1393) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (1403) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1403) LMIC_HAL: Read address: 0x2C with value: 0xC[0m
+[0;32mI (1413) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1413) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1423) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (1423) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (1433) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (1443) LMIC_HAL: Read address: 0x2C with value: 0x4[0m
+[0;32mI (1443) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1453) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (1453) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (1463) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1463) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1473) LMIC_HAL: Read address: 0x2C with value: 0xC[0m
+[0;32mI (1483) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (1483) LMIC_HAL: Read address: 0x2C with value: 0x4[0m
+[0;32mI (1493) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1493) LMIC_HAL: Read address: 0x2C with value: 0xC[0m
+[0;32mI (1503) LMIC_HAL: Read address: 0x2C with value: 0xD[0m
+[0;32mI (1503) LMIC_HAL: Read address: 0x2C with value: 0x1B[0m
+[0;32mI (1513) LMIC_HAL: Read address: 0x2C with value: 0x11[0m
+[0;32mI (1523) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1523) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (1533) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (1533) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (1543) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1543) LMIC_HAL: Read address: 0x2C with value: 0x18[0m
+[0;32mI (1553) LMIC_HAL: Read address: 0x2C with value: 0x9[0m
+[0;32mI (1563) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (1563) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (1573) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (1573) LMIC_HAL: Read address: 0x2C with value: 0x0[0m
+[0;32mI (1583) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1583) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1593) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (1603) LMIC_HAL: Read address: 0x2C with value: 0x11[0m
+[0;32mI (1603) LMIC_HAL: Read address: 0x2C with value: 0xD[0m
+[0;32mI (1613) LMIC_HAL: Read address: 0x2C with value: 0xD[0m
+[0;32mI (1613) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1623) LMIC_HAL: Read address: 0x2C with value: 0x6[0m
+[0;32mI (1623) LMIC_HAL: Read address: 0x2C with value: 0xC[0m
+[0;32mI (1633) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (1643) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (1643) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1653) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1653) LMIC_HAL: Read address: 0x2C with value: 0x11[0m
+[0;32mI (1663) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (1673) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (1673) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1683) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1683) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (1693) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1693) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1703) LMIC_HAL: Read address: 0x2C with value: 0x11[0m
+[0;32mI (1713) LMIC_HAL: Read address: 0x2C with value: 0xA[0m
+[0;32mI (1713) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (1723) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1723) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (1733) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1733) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1743) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (1753) LMIC_HAL: Read address: 0x2C with value: 0x1[0m
+[0;32mI (1753) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (1763) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1763) LMIC_HAL: Read address: 0x2C with value: 0x11[0m
+[0;32mI (1773) LMIC_HAL: Read address: 0x2C with value: 0x14[0m
+[0;32mI (1773) LMIC_HAL: Read address: 0x2C with value: 0xC[0m
+[0;32mI (1783) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1793) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (1793) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (1803) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (1803) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (1813) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1813) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (1823) LMIC_HAL: Read address: 0x2C with value: 0x1C[0m
+[0;32mI (1833) LMIC_HAL: Read address: 0x2C with value: 0xC[0m
+[0;32mI (1833) LMIC_HAL: Read address: 0x2C with value: 0x12[0m
+[0;32mI (1843) LMIC_HAL: Read address: 0x2C with value: 0xC[0m
+[0;32mI (1843) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1853) LMIC_HAL: Read address: 0x2C with value: 0x16[0m
+[0;32mI (1863) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (1863) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (1873) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1873) LMIC_HAL: Read address: 0x2C with value: 0x11[0m
+[0;32mI (1883) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (1883) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (1893) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1903) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (1903) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (1913) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (1913) LMIC_HAL: Read address: 0x2C with value: 0x15[0m
+[0;32mI (1923) LMIC_HAL: Read address: 0x2C with value: 0x18[0m
+[0;32mI (1923) LMIC_HAL: Read address: 0x2C with value: 0x13[0m
+[0;32mI (1933) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1943) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1943) LMIC_HAL: Read address: 0x2C with value: 0xD[0m
+[0;32mI (1953) LMIC_HAL: Read address: 0x2C with value: 0x11[0m
+[0;32mI (1953) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (1963) LMIC_HAL: Read address: 0x2C with value: 0x7[0m
+[0;32mI (1963) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1973) LMIC_HAL: Read address: 0x2C with value: 0xC[0m
+[0;32mI (1983) LMIC_HAL: Read address: 0x2C with value: 0xD[0m
+[0;32mI (1983) LMIC_HAL: Read address: 0x2C with value: 0x8[0m
+[0;32mI (1993) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (1993) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (2003) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (2003) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (2013) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (2023) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (2023) LMIC_HAL: Read address: 0x2C with value: 0x13[0m
+[0;32mI (2033) LMIC_HAL: Read address: 0x2C with value: 0xC[0m
+[0;32mI (2033) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2043) LMIC_HAL: Read address: 0x2C with value: 0xC[0m
+[0;32mI (2053) LMIC_HAL: Read address: 0x2C with value: 0x3[0m
+[0;32mI (2053) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (2063) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2063) LMIC_HAL: Read address: 0x2C with value: 0x8[0m
+[0;32mI (2073) LMIC_HAL: Read address: 0x2C with value: 0xD[0m
+[0;32mI (2073) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (2083) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2093) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2093) LMIC_HAL: Read address: 0x2C with value: 0xC[0m
+[0;32mI (2103) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (2103) LMIC_HAL: Read address: 0x2C with value: 0x13[0m
+[0;32mI (2113) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (2113) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (2123) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (2133) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2133) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (2143) LMIC_HAL: Read address: 0x2C with value: 0x1F[0m
+[0;32mI (2143) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2153) LMIC_HAL: Read address: 0x2C with value: 0x1F[0m
+[0;32mI (2153) LMIC_HAL: Read address: 0x2C with value: 0x16[0m
+[0;32mI (2163) LMIC_HAL: Read address: 0x2C with value: 0x11[0m
+[0;32mI (2173) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2173) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (2183) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (2183) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (2193) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (2203) LMIC_HAL: Read address: 0x2C with value: 0xB[0m
+[0;32mI (2203) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (2213) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (2213) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2223) LMIC_HAL: Read address: 0x2C with value: 0xC[0m
+[0;32mI (2223) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (2233) LMIC_HAL: Read address: 0x2C with value: 0xC[0m
+[0;32mI (2243) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2243) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (2253) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (2253) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (2263) LMIC_HAL: Read address: 0x2C with value: 0x7[0m
+[0;32mI (2263) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (2273) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2283) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (2283) LMIC_HAL: Read address: 0x2C with value: 0xD[0m
+[0;32mI (2293) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (2293) LMIC_HAL: Read address: 0x2C with value: 0xC[0m
+[0;32mI (2303) LMIC_HAL: Read address: 0x2C with value: 0xD[0m
+[0;32mI (2303) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2313) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2323) LMIC_HAL: Read address: 0x2C with value: 0x8[0m
+[0;32mI (2323) LMIC_HAL: Read address: 0x2C with value: 0x11[0m
+[0;32mI (2333) LMIC_HAL: Read address: 0x2C with value: 0x11[0m
+[0;32mI (2333) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (2343) LMIC_HAL: Read address: 0x2C with value: 0xC[0m
+[0;32mI (2343) LMIC_HAL: Read address: 0x2C with value: 0x17[0m
+[0;32mI (2353) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2363) LMIC_HAL: Read address: 0x2C with value: 0x8[0m
+[0;32mI (2363) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2373) LMIC_HAL: Read address: 0x2C with value: 0x1F[0m
+[0;32mI (2373) LMIC_HAL: Read address: 0x2C with value: 0x0[0m
+[0;32mI (2383) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2383) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (2393) LMIC_HAL: Read address: 0x2C with value: 0x11[0m
+[0;32mI (2403) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2403) LMIC_HAL: Read address: 0x2C with value: 0x8[0m
+[0;32mI (2413) LMIC_HAL: Read address: 0x2C with value: 0x11[0m
+[0;32mI (2413) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (2423) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2433) LMIC_HAL: Read address: 0x2C with value: 0x17[0m
+[0;32mI (2433) LMIC_HAL: Read address: 0x2C with value: 0xD[0m
+[0;32mI (2443) LMIC_HAL: Read address: 0x2C with value: 0xD[0m
+[0;32mI (2443) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2453) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (2453) LMIC_HAL: Read address: 0x2C with value: 0xA[0m
+[0;32mI (2463) LMIC_HAL: Read address: 0x2C with value: 0xD[0m
+[0;32mI (2473) LMIC_HAL: Read address: 0x2C with value: 0x11[0m
+[0;32mI (2473) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2483) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2483) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (2493) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (2493) LMIC_HAL: Read address: 0x2C with value: 0x11[0m
+[0;32mI (2503) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2513) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2513) LMIC_HAL: Read address: 0x2C with value: 0xC[0m
+[0;32mI (2523) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2523) LMIC_HAL: Read address: 0x2C with value: 0xC[0m
+[0;32mI (2533) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (2533) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (2543) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (2553) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2553) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (2563) LMIC_HAL: Read address: 0x2C with value: 0x17[0m
+[0;32mI (2563) LMIC_HAL: Read address: 0x2C with value: 0x1B[0m
+[0;32mI (2573) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2573) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (2583) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2593) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2593) LMIC_HAL: Read address: 0x2C with value: 0xD[0m
+[0;32mI (2603) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (2603) LMIC_HAL: Read address: 0x2C with value: 0x16[0m
+[0;32mI (2613) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (2623) LMIC_HAL: Read address: 0x2C with value: 0xD[0m
+[0;32mI (2623) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (2633) LMIC_HAL: Read address: 0x2C with value: 0xD[0m
+[0;32mI (2633) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (2643) LMIC_HAL: Read address: 0x2C with value: 0x13[0m
+[0;32mI (2643) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2653) LMIC_HAL: Read address: 0x2C with value: 0xC[0m
+[0;32mI (2663) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2663) LMIC_HAL: Read address: 0x2C with value: 0xD[0m
+[0;32mI (2673) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (2673) LMIC_HAL: Read address: 0x2C with value: 0x1F[0m
+[0;32mI (2683) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2683) LMIC_HAL: Read address: 0x2C with value: 0x14[0m
+[0;32mI (2693) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2703) LMIC_HAL: Read address: 0x2C with value: 0x13[0m
+[0;32mI (2703) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (2713) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2713) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2723) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (2723) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (2733) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (2743) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (2743) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2753) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2753) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2763) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2763) LMIC_HAL: Read address: 0x2C with value: 0xD[0m
+[0;32mI (2773) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2783) LMIC_HAL: Read address: 0x2C with value: 0x0[0m
+[0;32mI (2783) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2793) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2793) LMIC_HAL: Read address: 0x2C with value: 0x11[0m
+[0;32mI (2803) LMIC_HAL: Read address: 0x2C with value: 0xD[0m
+[0;32mI (2803) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (2813) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (2823) LMIC_HAL: Read address: 0x2C with value: 0xD[0m
+[0;32mI (2823) LMIC_HAL: Read address: 0x2C with value: 0x3[0m
+[0;32mI (2833) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (2833) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2843) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (2853) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2853) LMIC_HAL: Read address: 0x2C with value: 0xD[0m
+[0;32mI (2863) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2863) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2873) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2873) LMIC_HAL: Read address: 0x2C with value: 0x11[0m
+[0;32mI (2883) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (2893) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2893) LMIC_HAL: Read address: 0x2C with value: 0x11[0m
+[0;32mI (2903) LMIC_HAL: Read address: 0x2C with value: 0xB[0m
+[0;32mI (2903) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (2913) LMIC_HAL: Read address: 0x2C with value: 0xD[0m
+[0;32mI (2913) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (2923) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (2933) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (2933) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2943) LMIC_HAL: Read address: 0x2C with value: 0x13[0m
+[0;32mI (2943) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2953) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (2953) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (2963) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2973) LMIC_HAL: Read address: 0x2C with value: 0x1F[0m
+[0;32mI (2973) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2983) LMIC_HAL: Read address: 0x2C with value: 0x11[0m
+[0;32mI (2983) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (2993) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (2993) LMIC_HAL: Read address: 0x2C with value: 0x11[0m
+[0;32mI (3003) LMIC_HAL: Read address: 0x2C with value: 0x13[0m
+[0;32mI (3013) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (3013) LMIC_HAL: Read address: 0x2C with value: 0x11[0m
+[0;32mI (3023) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (3023) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (3033) LMIC_HAL: Read address: 0x2C with value: 0x11[0m
+[0;32mI (3043) LMIC_HAL: Read address: 0x2C with value: 0xC[0m
+[0;32mI (3043) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (3053) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (3053) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (3063) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (3063) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (3073) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (3083) LMIC_HAL: Read address: 0x2C with value: 0x10[0m
+[0;32mI (3083) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (3093) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (3093) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (3103) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (3103) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (3113) LMIC_HAL: Read address: 0x2C with value: 0x18[0m
+[0;32mI (3123) LMIC_HAL: Read address: 0x2C with value: 0x17[0m
+[0;32mI (3123) LMIC_HAL: Read address: 0x2C with value: 0xC[0m
+[0;32mI (3133) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (3133) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (3143) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (3143) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (3153) LMIC_HAL: Read address: 0x2C with value: 0xD[0m
+[0;32mI (3163) LMIC_HAL: Read address: 0x2C with value: 0xF[0m
+[0;32mI (3163) LMIC_HAL: Read address: 0x2C with value: 0x13[0m
+[0;32mI (3173) LMIC_HAL: Read address: 0x2C with value: 0xE[0m
+[0;32mI (3173) LMIC_HAL: Read address: 0x1 with value: 0x8D[0m
+[0;32mI (3183) LMIC_HAL: Write address: 0x1 with value: 0x88| sent back val: 0x8D[0m
+[0;32mI (3193) LMIC_HAL: Finished initialisation of radio_init()[0m
+[0;32mI (3193) LMIC_HAL: Finished initialisation of LMIC_init()[0m
+[0;32mI (3203) LMIC_HAL: Finished initialisation of os_init()[0m
+[0;32mI (3203) LMIC_HAL: Read address: 0x1 with value: 0x88[0m
+[0;32mI (3213) LMIC_HAL: Write address: 0x1 with value: 0x88| sent back val: 0x88[0m
+LMIC RESETGetting some ticks
+Getting some ticks
+Getting some ticks
+1939937: Unknown event: 17[0;32mI (3223) LMIC_HAL: Read address: 0x1 with value: 0x88[0m
+[0;32mI (3233) LMIC_HAL: Write address: 0x1 with value: 0x88| sent back val: 0x88[0m
+[0;32mI (3243) LMIC_HAL: Read address: 0x1 with value: 0x88[0m
+[0;32mI (3253) LMIC_HAL: Read address: 0x1 with value: 0x88[0m
+[0;32mI (3253) LMIC_HAL: Write address: 0x1 with value: 0x89| sent back val: 0x88[0m
+[0;32mI (3263) LMIC_HAL: Write address: 0x1D with value: 0x72| sent back val: 0xA[0m
+[0;32mI (3273) LMIC_HAL: Write address: 0x1E with value: 0x74| sent back val: 0x70[0m
+[0;32mI (3273) LMIC_HAL: Write address: 0x26 with value: 0x4| sent back val: 0x4[0m
+[0;32mI (3283) LMIC_HAL: Write address: 0x6 with value: 0xD9| sent back val: 0x6C[0m
+[0;32mI (3293) LMIC_HAL: Write address: 0x7 with value: 0x6| sent back val: 0x80[0m
+[0;32mI (3303) LMIC_HAL: Write address: 0x8 with value: 0x66| sent back val: 0x0[0m
+[0;32mI (3303) LMIC_HAL: Read address: 0xA with value: 0x9[0m
+[0;32mI (3313) LMIC_HAL: Write address: 0xA with value: 0x8| sent back val: 0x9[0m
+[0;32mI (3323) LMIC_HAL: Write address: 0x9 with value: 0x8E| sent back val: 0x4F[0m
+[0;32mI (3333) LMIC_HAL: Read address: 0x5A with value: 0xC[0m
+[0;32mI (3333) LMIC_HAL: Write address: 0x5A with value: 0xC| sent back val: 0xC[0m
+[0;32mI (3343) LMIC_HAL: Write address: 0x39 with value: 0x34| sent back val: 0x34[0m
+[0;32mI (3353) LMIC_HAL: Write address: 0x40 with value: 0xF0| sent back val: 0xC0[0m
+[0;32mI (3353) LMIC_HAL: Write address: 0x12 with value: 0xFF| sent back val: 0x0[0m
+[0;32mI (3363) LMIC_HAL: Write address: 0x11 with value: 0xF7| sent back val: 0xFF[0m
+[0;32mI (3373) LMIC_HAL: Write address: 0xE with value: 0x0| sent back val: 0x80[0m
+[0;32mI (3383) LMIC_HAL: Write address: 0xD with value: 0x0| sent back val: 0x0[0m
+[0;32mI (3383) LMIC_HAL: Write address: 0x22 with value: 0x12| sent back val: 0x1[0m
+[0;32mI (3393) LMIC_HAL: Writing buffer to LoRa module[0m
+[0;32mI (3403) LMIC_HAL: Finished writing buffer to LoRa module[0m
+[0;32mI (3403) LMIC_HAL: Read address: 0x1 with value: 0x89[0m
+[0;32mI (3413) LMIC_HAL: Write address: 0x1 with value: 0x8B| sent back val: 0x89[0m
+Packet queued[0;32mI (3473) LMIC_HAL: Fired IRQ0
+[0m
+Getting some ticks
+[0;32mI (3473) LMIC_HAL: Read address: 0x1 with value: 0x89[0m
+[0;32mI (3473) LMIC_HAL: Read address: 0x12 with value: 0x8[0m
+[0;32mI (3473) LMIC_HAL: Write address: 0x11 with value: 0xFF| sent back val: 0xF7[0m
+[0;32mI (3483) LMIC_HAL: Write address: 0x12 with value: 0xFF| sent back val: 0x0[0m
+[0;32mI (3493) LMIC_HAL: Read address: 0x1 with value: 0x89[0m
+[0;32mI (3493) LMIC_HAL: Write address: 0x1 with value: 0x88| sent back val: 0x89[0m
+[0;32mI (3523) LMIC_HAL: Read address: 0x1 with value: 0x88[0m
+[0;32mI (3523) LMIC_HAL: Write address: 0x1 with value: 0x88| sent back val: 0x88[0m
+[0;32mI (3523) LMIC_HAL: Read address: 0x1 with value: 0x88[0m
+[0;32mI (3523) LMIC_HAL: Read address: 0x1 with value: 0x88[0m
+[0;32mI (3533) LMIC_HAL: Write address: 0x1 with value: 0x89| sent back val: 0x88[0m
+[0;32mI (3543) LMIC_HAL: Write address: 0x1D with value: 0x72| sent back val: 0x72[0m
+[0;32mI (3543) LMIC_HAL: Write address: 0x1E with value: 0x70| sent back val: 0x74[0m
+[0;32mI (3553) LMIC_HAL: Write address: 0x26 with value: 0x4| sent back val: 0x4[0m
+[0;32mI (3563) LMIC_HAL: Write address: 0x6 with value: 0xD9| sent back val: 0xD9[0m
+[0;32mI (3573) LMIC_HAL: Write address: 0x7 with value: 0x6| sent back val: 0x6[0m
+[0;32mI (3573) LMIC_HAL: Write address: 0x8 with value: 0x66| sent back val: 0x66[0m
+[0;32mI (3583) LMIC_HAL: Write address: 0xC with value: 0x21| sent back val: 0x21[0m
+[0;32mI (3593) LMIC_HAL: Write address: 0x23 with value: 0x40| sent back val: 0x40[0m
+[0;32mI (3603) LMIC_HAL: Read address: 0x33 with value: 0x67[0m
+[0;32mI (3603) LMIC_HAL: Write address: 0x33 with value: 0x67| sent back val: 0x67[0m
+[0;32mI (3613) LMIC_HAL: Write address: 0x1F with value: 0x5| sent back val: 0x0[0m
+[0;32mI (3623) LMIC_HAL: Write address: 0x39 with value: 0x34| sent back val: 0x34[0m
+[0;32mI (3633) LMIC_HAL: Write address: 0x40 with value: 0xC0| sent back val: 0xF0[0m
+[0;32mI (3633) LMIC_HAL: Write address: 0x12 with value: 0xFF| sent back val: 0x0[0m
+[0;32mI (3643) LMIC_HAL: Write address: 0x11 with value: 0x3F| sent back val: 0xFF[0m
+[0;32mI (3653) LMIC_HAL: Wait until[0m
+Getting some ticks
+[0;32mI (3653) LMIC_HAL: Done waiting until[0m
+[0;32mI (3663) LMIC_HAL: Read address: 0x1 with value: 0x89[0m
+[0;32mI (3673) LMIC_HAL: Write address: 0x1 with value: 0x8E| sent back val: 0x89[0m
