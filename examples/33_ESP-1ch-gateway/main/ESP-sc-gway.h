@@ -1,3 +1,6 @@
+#ifndef ESP_SC_GWAY_H
+#define ESP_SC_GWAY_H 1
+
 // 1-channel LoRa Gateway for ESP8266
 // Copyright (c) 2016, 2017 Maarten Westenberg version for ESP8266
 // Version 5.0.1
@@ -22,6 +25,10 @@
 // For Heltec ESP32 based WIFI_LoRa_32 boards (and may-be others as well)
 // REMOVE for ESP8266 builds
 #define ESP32BUILD  1
+
+
+
+
 
 #ifdef ESP32BUILD
 #define VERSION "V.5.0.2.H+; 171128a nOLED, 15/10"
@@ -62,7 +69,7 @@
 // Definitions for the admin webserver.
 // A_SERVER determines whether or not the admin webpage is included in the sketch.
 // Normally, leave it in!
-#define A_SERVER 1        // Define local WebServer only if this define is set
+#define A_SERVER 0            // Define local WebServer only if this define is set
 #define A_REFRESH 1				// Will the webserver refresh or not?
 #define A_SERVERPORT 80			// local webserver port
 #define A_MAXBUFSIZE 192		// Must be larger than 128, but small enough to work
@@ -234,21 +241,8 @@ struct wpas {
 	char passw[64];
 };
 
-// Please fill in at least ONE SSID and password from your own WiFI network
-// below. This is needed to get the gateway working
-// Note: DO NOT use the first and the last line of the stucture, these should be empty strings and
-//	the first line in te struct is reserved for WifiManager.
-//
-#if 0
-wpas wpa[] = {
-	{ "" , "" },							// Reserved for WiFi Manager
-  { "aap", "aapPasswd" },
-	{ "ape", "apePasswd" }
-};
-#else
-// Place outside version control to avoid the risk of commiting it to github ;-)
-#include "d:\arduino\wpa.h"
-#endif
+extern wpas wpa[];
+
 
 // For asserting and testing the following defines are used.
 //
@@ -259,3 +253,50 @@ wpas wpa[] = {
 #endif
 
 
+// Set the structure for spreading factor
+enum sf_t { SF6=6, SF7, SF8, SF9, SF10, SF11, SF12 };
+
+// The state of the receiver. See Semtech Datasheet (rev 4, March 2015) page 43
+// The _state is of the enum type (and should be cast when used as a number)
+enum state_t { S_INIT=0, S_SCAN, S_CAD, S_RX, S_TX, S_TXDONE};
+
+
+// Global uesful variables
+
+extern uint32_t cp_nb_rx_rcv;
+extern uint32_t cp_nb_rx_ok;
+extern uint32_t cp_nb_rx_bad;
+extern uint32_t cp_nb_rx_nocrc;
+extern uint32_t cp_up_pkt_fwd;
+
+extern sf_t sf;
+extern sf_t sfi;				// Initial value of SF
+extern volatile state_t _state;
+
+extern int debug;
+
+extern uint32_t  freq;
+extern uint8_t	 ifreq;
+
+
+extern uint32_t stattime;							// last time we sent a stat message to server
+extern uint32_t pulltime;							// last time we sent a pull_data request to server
+extern uint32_t lastTmst;
+
+
+extern bool _cad;  //= (bool) _CAD;	// Set to true for Channel Activity Detection, only when dio 1 connected
+extern bool _hop;  //=false;		// experimental; frequency hopping. Only use when dio2 connected
+extern bool inHop; //=false;
+				
+
+void gway_failed(const char *file, uint16_t line);
+int receivePacket();
+
+extern uint8_t MAC_array[6];
+
+#define TX_BUFF_SIZE  1024						// Upstream buffer to send to MQTT
+#define RX_BUFF_SIZE  1024						// Downstream received from MQTT
+#define STATUS_SIZE	  512						// Should(!) be enough based on the static text .. was 1024
+
+
+#endif

@@ -353,7 +353,7 @@ void OLEDDisplay::drawFastImage(int16_t xMove, int16_t yMove, int16_t width, int
 
 void OLEDDisplay::drawXbm(int16_t xMove, int16_t yMove, int16_t width, int16_t height, const char *xbm) {
   int16_t widthInXbm = (width + 7) / 8;
-  uint8_t data;
+  uint8_t data=0;
 
   for(int16_t y = 0; y < height; y++) {
     for(int16_t x = 0; x < width; x++ ) {
@@ -388,6 +388,8 @@ void OLEDDisplay::drawStringInternal(int16_t xMove, int16_t yMove, char* text, u
     case TEXT_ALIGN_RIGHT:
       xMove -= textWidth;
       break;
+    case TEXT_ALIGN_LEFT:
+    break;
   }
 
   // Don't draw anything if it is not on the screen.

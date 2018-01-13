@@ -27,7 +27,9 @@
 
 //
 
-#include "ESP-sc-gway.h"					
+#include <Arduino.h>					
+#include "ESP-sc-gway.h"
+
 // This file contains configuration of GWay
 
 #include <Esp.h>
@@ -126,6 +128,36 @@ uint32_t cp_up_pkt_fwd;
 uint8_t MAC_array[6];
 //char MAC_char[19];
 
+
+int readConfig(const char *fn, struct espGwayConfig *c);
+int writeConfig(const char *fn, struct espGwayConfig *c);
+int writeGwayCfg(const char *fn);
+int sendPacket(uint8_t *buf, uint8_t length);
+void initLoraModem();
+extern "C" void setup_WWW(void);
+void writeRegister(uint8_t addr, uint8_t value);
+void cadScanner();
+void rxLoraModem();
+void stateMachine();
+void hop(); 
+
+
+// Please fill in at least ONE SSID and password from your own WiFI network
+// below. This is needed to get the gateway working
+// Note: DO NOT use the first and the last line of the stucture, these should be empty strings and
+//	the first line in te struct is reserved for WifiManager.
+//
+#if 1
+wpas wpa[] = {
+	{ "" , "" },							// Reserved for WiFi Manager
+    { "aap", "aapPasswd" },
+	{ "", "" }
+};
+#else
+// Place outside version control to avoid the risk of commiting it to github ;-)
+#include "secret.i"
+#endif
+
 // ----------------------------------------------------------------------------
 //
 // Configure these values only if necessary!
@@ -165,9 +197,6 @@ uint32_t ntptimer = 0;
 
 SimpleTimer timer; 								// Timer is needed for delayed sending
 
-#define TX_BUFF_SIZE  1024						// Upstream buffer to send to MQTT
-#define RX_BUFF_SIZE  1024						// Downstream received from MQTT
-#define STATUS_SIZE	  512						// Should(!) be enough based on the static text .. was 1024
 
 #if GATEWAYNODE==1
 uint16_t frameCount=0;							// We write this to SPIFF file
@@ -200,6 +229,8 @@ void ICACHE_FLASH_ATTR CreateMutux(int *mutex);
 bool ICACHE_FLASH_ATTR GetMutex(int *mutex);
 void ICACHE_FLASH_ATTR ReleaseMutex(int *mutex);
 #endif
+
+int sendUdp(IPAddress server, int port, uint8_t *msg, int length);
 
 // ----------------------------------------------------------------------------
 // DIE is not use actively in the source code anymore.
@@ -452,7 +483,7 @@ int WlanReadWpa() {
 	Serial.print(wpa[0].passw);
 	Serial.println(F(">"));
 #endif
-
+	return 1;
 }
 
 // ----------------------------------------------------------------------------
@@ -1290,7 +1321,7 @@ void setup() {
 
 #if A_SERVER==1	
 	// Setup the webserver
-	setupWWW();
+	setup_WWW();
 #endif
 
 	delay(100);												// Wait after setup

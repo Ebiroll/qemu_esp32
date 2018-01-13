@@ -5,7 +5,7 @@
    inspired by:
    http://www.esp8266.com/viewtopic.php?f=29&t=2520
    https://github.com/chriscook8/esp-arduino-apboot
-   https://github.com/esp8266/Arduino/tree/esp8266/hardware/esp8266com/esp8266/libraries/DNSServer/examples/CaptivePortalAdvanced
+   https://github.com/esp8266/Arduino/tree/master/libraries/DNSServer/examples/CaptivePortalAdvanced
    Built by AlexT https://github.com/tzapu
    Licensed under MIT license
  **************************************************************/
@@ -64,6 +64,14 @@ WiFiManager::WiFiManager() {
 }
 
 void WiFiManager::addParameter(WiFiManagerParameter *p) {
+  if(_paramsCount + 1 > WIFI_MANAGER_MAX_PARAMS)
+  {
+    //Max parameters exceeded!
+	DEBUG_WM("WIFI_MANAGER_MAX_PARAMS exceeded, increase number (in WiFiManager.h) before adding more parameters!");
+	DEBUG_WM("Skipping parameter with ID:");
+	DEBUG_WM(p->getID());
+	return;
+  }
   _params[_paramsCount] = p;
   _paramsCount++;
   DEBUG_WM("Adding parameter");
@@ -72,7 +80,11 @@ void WiFiManager::addParameter(WiFiManagerParameter *p) {
 
 void WiFiManager::setupConfigPortal() {
   dnsServer.reset(new DNSServer());
+#ifdef ESP8266
   server.reset(new ESP8266WebServer(80));
+#else
+  server.reset(new WebServer(80));
+#endif
 
   DEBUG_WM(F(""));
   _configPortalStart = millis();
@@ -124,7 +136,7 @@ void WiFiManager::setupConfigPortal() {
 }
 
 boolean WiFiManager::autoConnect() {
-  String ssid = "ESP" + String(ESP.getChipId());
+  String ssid = "ESP" + String(ESP_getChipId());
   return autoConnect(ssid.c_str(), NULL);
 }
 
@@ -149,6 +161,23 @@ boolean WiFiManager::autoConnect(char const *apName, char const *apPassword) {
   return startConfigPortal(apName, apPassword);
 }
 
+boolean WiFiManager::configPortalHasTimeout(){
+#if defined(ESP8266)
+    if(_configPortalTimeout == 0 || wifi_softap_get_station_num() > 0){
+#else
+    if(_configPortalTimeout == 0){  // TODO
+#endif
+      _configPortalStart = millis(); // kludge, bump configportal start time to skew timeouts
+      return false;
+    }
+    return (millis() > _configPortalStart + _configPortalTimeout);
+}
+
+boolean WiFiManager::startConfigPortal() {
+  String ssid = "ESP" + String(ESP_getChipId());
+  return startConfigPortal(ssid.c_str(), NULL);
+}
+
 boolean  WiFiManager::startConfigPortal(char const *apName, char const *apPassword) {
   //setup AP
   WiFi.mode(WIFI_AP_STA);
@@ -165,7 +194,11 @@ boolean  WiFiManager::startConfigPortal(char const *apName, char const *apPasswo
   connect = false;
   setupConfigPortal();
 
-  while (_configPortalTimeout == 0 || millis() < _configPortalStart + _configPortalTimeout) {
+  while(1){
+
+    // check if timeout
+    if(configPortalHasTimeout()) break;
+
     //DNS
     dnsServer->processNextRequest();
     //HTTP
@@ -231,10 +264,14 @@ int WiFiManager::connectWifi(String ssid, String pass) {
   } else {
     if (WiFi.SSID()) {
       DEBUG_WM("Using last saved values, should be faster");
+#if defined(ESP8266)
       //trying to fix connection in progress hanging
       ETS_UART_INTR_DISABLE();
       wifi_station_disconnect();
       ETS_UART_INTR_ENABLE();
+#else
+      esp_wifi_disconnect();
+#endif
 
       WiFi.begin();
     } else {
@@ -278,11 +315,16 @@ uint8_t WiFiManager::waitForConnectResult() {
 }
 
 void WiFiManager::startWPS() {
+#if defined(ESP8266)
   DEBUG_WM("START WPS");
   WiFi.beginWPSConfig();
   DEBUG_WM("END WPS");
+#else
+  // TODO
+  DEBUG_WM("ESP32 WPS TODO");
+#endif
 }
-/*
+
   String WiFiManager::getSSID() {
   if (_ssid == "") {
     DEBUG_WM(F("Reading SSID"));
@@ -302,7 +344,7 @@ void WiFiManager::startWPS() {
   }
   return _pass;
   }
-*/
+
 String WiFiManager::getConfigPortalSSID() {
   return _apName;
 }
@@ -310,6 +352,9 @@ String WiFiManager::getConfigPortalSSID() {
 void WiFiManager::resetSettings() {
   DEBUG_WM(F("settings invalidated"));
   DEBUG_WM(F("THIS MAY CAUSE AP NOT TO START UP PROPERLY. YOU NEED TO COMMENT IT OUT AFTER ERASING THE DATA."));
+  // TODO On ESP32 this does not erase the SSID and password. See
+  // https://github.com/espressif/arduino-esp32/issues/400
+  // For now, use "make erase_flash".
   WiFi.disconnect(true);
   //delay(200);
 }
@@ -369,6 +414,7 @@ void WiFiManager::handleRoot() {
   page += FPSTR(HTTP_PORTAL_OPTIONS);
   page += FPSTR(HTTP_END);
 
+  server->sendHeader("Content-Length", String(page.length()));
   server->send(200, "text/html", page);
 
 }
@@ -441,7 +487,11 @@ void WiFiManager::handleWifi(boolean scan) {
           rssiQ += quality;
           item.replace("{v}", WiFi.SSID(indices[i]));
           item.replace("{r}", rssiQ);
+#if defined(ESP8266)
           if (WiFi.encryptionType(indices[i]) != ENC_TYPE_NONE) {
+#else
+          if (WiFi.encryptionType(indices[i]) != WIFI_AUTH_OPEN) {
+#endif
             item.replace("{i}", "l");
           } else {
             item.replace("{i}", "");
@@ -522,6 +572,7 @@ void WiFiManager::handleWifi(boolean scan) {
 
   page += FPSTR(HTTP_END);
 
+  server->sendHeader("Content-Length", String(page.length()));
   server->send(200, "text/html", page);
 
 
@@ -579,6 +630,7 @@ void WiFiManager::handleWifiSave() {
   page += FPSTR(HTTP_SAVED);
   page += FPSTR(HTTP_END);
 
+  server->sendHeader("Content-Length", String(page.length()));
   server->send(200, "text/html", page);
 
   DEBUG_WM(F("Sent wifi save page"));
@@ -598,16 +650,26 @@ void WiFiManager::handleInfo() {
   page += FPSTR(HTTP_HEAD_END);
   page += F("<dl>");
   page += F("<dt>Chip ID</dt><dd>");
-  page += ESP.getChipId();
+  page += ESP_getChipId();
   page += F("</dd>");
   page += F("<dt>Flash Chip ID</dt><dd>");
+#if defined(ESP8266)
   page += ESP.getFlashChipId();
+#else
+  // TODO
+  page += F("TODO");
+#endif
   page += F("</dd>");
   page += F("<dt>IDE Flash Size</dt><dd>");
   page += ESP.getFlashChipSize();
   page += F(" bytes</dd>");
   page += F("<dt>Real Flash Size</dt><dd>");
+#if defined(ESP8266)
   page += ESP.getFlashChipRealSize();
+#else
+  // TODO
+  page += F("TODO");
+#endif
   page += F(" bytes</dd>");
   page += F("<dt>Soft AP IP</dt><dd>");
   page += WiFi.softAPIP().toString();
@@ -621,6 +683,7 @@ void WiFiManager::handleInfo() {
   page += F("</dl>");
   page += FPSTR(HTTP_END);
 
+  server->sendHeader("Content-Length", String(page.length()));
   server->send(200, "text/html", page);
 
   DEBUG_WM(F("Sent info page"));
@@ -638,24 +701,19 @@ void WiFiManager::handleReset() {
   page += FPSTR(HTTP_HEAD_END);
   page += F("Module will reset in a few seconds.");
   page += FPSTR(HTTP_END);
+
+  server->sendHeader("Content-Length", String(page.length()));
   server->send(200, "text/html", page);
 
   DEBUG_WM(F("Sent reset page"));
   delay(5000);
+#if defined(ESP8266)
   ESP.reset();
+#else
+  ESP.restart();
+#endif
   delay(2000);
 }
-
-
-
-//removed as mentioned here https://github.com/tzapu/WiFiManager/issues/114
-/*void WiFiManager::handle204() {
-  DEBUG_WM(F("204 No Response"));
-  server->sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-  server->sendHeader("Pragma", "no-cache");
-  server->sendHeader("Expires", "-1");
-  server->send ( 204, "text/plain", "");
-}*/
 
 void WiFiManager::handleNotFound() {
   if (captivePortal()) { // If captive portal redirect instead of displaying the error page.
@@ -676,6 +734,7 @@ void WiFiManager::handleNotFound() {
   server->sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
   server->sendHeader("Pragma", "no-cache");
   server->sendHeader("Expires", "-1");
+  server->sendHeader("Content-Length", String(message.length()));
   server->send ( 404, "text/plain", message );
 }
 
