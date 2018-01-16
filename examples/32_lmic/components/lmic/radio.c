@@ -283,7 +283,7 @@ static void writeReg (u1_t addr, u1_t data ) {
     hal_spi(addr | 0x80);
     u1_t val = hal_spi(data);
     hal_pin_nss(1);
-    ESP_LOGI(TAG, "Write address: 0x%X with value: 0x%X| sent back val: 0x%X", addr, data, val);
+    //ESP_LOGI(TAG, "Write address: 0x%X with value: 0x%X| sent back val: 0x%X", addr, data, val);
 }
 
 static u1_t readReg (u1_t addr) {
@@ -291,7 +291,7 @@ static u1_t readReg (u1_t addr) {
     hal_spi(addr & 0x7F);
     u1_t val = hal_spi(0x00);
     hal_pin_nss(1);
-    ESP_LOGI(TAG, "Read address: 0x%X with value: 0x%X", addr, val);
+    //ESP_LOGI(TAG, "Read address: 0x%X with value: 0x%X", addr, val);
     return val;
 }
 

@@ -283,6 +283,7 @@ void hal_init () {
 
 void hal_failed () {
     // HALT...
+    printf("hal_failed\n");
     hal_disableIRQs();
     hal_sleep();
     while(1);

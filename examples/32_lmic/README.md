@@ -1,5 +1,7 @@
 # Lmic under esp-idf
 
+Currently does not work..
+
 https://github.com/matthijskooijman/arduino-lmic
 
 
@@ -7,6 +9,7 @@ https://www.lora-alliance.org/lorawan-for-developers
 
 With arduino, esp32
 https://github.com/PiAir/esp32-sx1276
+
 
 
 LMIC was implemented before LoRaWAN specification existed, there are some things to fix, for example:

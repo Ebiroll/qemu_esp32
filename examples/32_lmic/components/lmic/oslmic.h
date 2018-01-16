@@ -109,6 +109,11 @@ void os_run (void);
 #define TX_RAMPUP  (us2osticks(2000))
 #endif
 
+#define US_PER_OSTICK_EXPONENT 4
+#define US_PER_OSTICK (1 << US_PER_OSTICK_EXPONENT)
+#define OSTICKS_PER_SEC (1000000 / US_PER_OSTICK)
+
+
 #ifndef OSTICKS_PER_SEC
 #define OSTICKS_PER_SEC 20000
 #elif OSTICKS_PER_SEC < 10000 || OSTICKS_PER_SEC > 64516
