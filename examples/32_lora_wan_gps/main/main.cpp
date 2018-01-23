@@ -112,7 +112,7 @@ const lmic_pinmap lmic_pins = {
   .rst = 14,
   .dio = {26, 33, 32},
 };
-void get_coords () {
+bool get_coords () {
   while (GPSSerial.available())
     gps.encode(GPSSerial.read());
   latitude  = gps.location.lat();
@@ -136,6 +136,7 @@ void get_coords () {
   u8x8.setCursor(5, 3);
   sprintf(s, "%f", longitude);
   u8x8.print(s);
+  return(gps.location.isValid());
 }
 void onEvent (ev_t ev) {
   switch (ev) {
@@ -235,12 +236,15 @@ void do_send(osjob_t* j) {
     u8x8.drawString(0, 7, "OP_TXRXPEND, not sent");
   } else {
     // Prepare upstream data transmission at the next possible time.
-    get_coords();
-    //LMIC_setTxData2(1, (uint8_t*) coords, sizeof(coords), 0);
-    LMIC_setTxData2(1, latlong.bytes, 8, 0);
-    Serial.println(F("Packet queued"));
-    u8x8.drawString(0, 7, "PACKET QUEUED");
-    digitalWrite(BUILTIN_LED, HIGH);
+    if (get_coords()) {
+      //LMIC_setTxData2(1, (uint8_t*) coords, sizeof(coords), 0);
+      LMIC_setTxData2(1, latlong.bytes, 8, 0);
+      Serial.println(F("Packet queued"));
+      u8x8.drawString(0, 7, "PACKET QUEUED");
+      digitalWrite(BUILTIN_LED, HIGH);
+    } else {
+      os_setTimedCallback(&sendjob, os_getTime() + sec2osticks(TX_INTERVAL), do_send);
+    }
   }
   // Next TX is scheduled after TX_COMPLETE event.
 }
