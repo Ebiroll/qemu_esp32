@@ -229,6 +229,14 @@ void onEvent (ev_t ev) {
       break;
   }
 }
+
+//
+void check_progress(osjob_t* j) {
+
+  // Here we can check progress of osmic
+
+}
+
 void do_send(osjob_t* j) {
   // Check if there is not a current TX/RX job running
   if (LMIC.opmode & OP_TXRXPEND) {
@@ -243,7 +251,9 @@ void do_send(osjob_t* j) {
       u8x8.drawString(0, 7, "PACKET QUEUED");
       digitalWrite(BUILTIN_LED, HIGH);
     } else {
-      os_setTimedCallback(&sendjob, os_getTime() + sec2osticks(TX_INTERVAL), do_send);
+       u8x8.drawString(0, 7, "GPS not valid");
+       printf("Gps data not valid yet");
+       os_setTimedCallback(&sendjob, os_getTime() + sec2osticks(15), do_send);
     }
   }
   // Next TX is scheduled after TX_COMPLETE event.
@@ -275,5 +285,9 @@ void setup() {
   digitalWrite(BUILTIN_LED, LOW);
 }
 void loop() {
+  // Read serial data fron gps
+  while (GPSSerial.available()) {
+    gps.encode(GPSSerial.read());
+  }
   os_runloop_once();
 }
