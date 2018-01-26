@@ -53,12 +53,15 @@ void test_main(void *param) {
       tsha256_update(&ctx,text3,strlen((char *)text3));
    tsha256_final(&ctx,hash);
    print_hash(hash);
+
+
    vTaskDelete(NULL);
 }
 void app_main(void)
 {
     unsigned char hash[32];
     nvs_flash_init();
+    int idx;
     
     printf("starting sha test\n");
 
@@ -77,7 +80,10 @@ void app_main(void)
     print_hash(hash);
 
     handle=qemu_sha256_start();
-    qemu_sha256_data(handle,text3,strlen((char *)text3));
+    for (idx=0; idx < 100000; ++idx)
+      qemu_sha256_data(handle,text3,strlen((char *)text3));
+
+    //qemu_sha256_data(handle,text3,strlen((char *)text3));
     qemu_sha256_finish(handle,hash);
     print_hash(hash);
 
