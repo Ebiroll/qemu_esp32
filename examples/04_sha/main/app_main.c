@@ -11,12 +11,6 @@
 
 #include <stdio.h>
 
-/*
-Output should be:
-ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
-248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1
-cdc76e5c9914fb9281a1c7e284d73e67f1809a48a497200e046d39ccc7112cd0
-*/
 
 void print_hash(unsigned char hash[])
 {
@@ -26,45 +20,66 @@ void print_hash(unsigned char hash[])
    printf("\n");
 }
 
-int test_main()
-{
-   const unsigned char text1[]={"abc"},
-                 text2[]={"abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"},
-                 text3[]={"aaaaaaaaaa"},
-                 hash[32];
+/*
+Output should be:
+88d4266fd4e6338d13b845fcf289579d209c897823b9217da3e161936f031589
+248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1
+f48d00cb89d8e79ada420b8bc839ee6c9d61b5b36b90e91b076d0fa641892c3e
+*/
+const unsigned char text1[]={"abcd"};
+const unsigned char text2[]={"abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"};
+const unsigned char text3[]={"aaaaaaaaaaaa"};
+
+void test_main(void *param) {
+   unsigned char hash[32];
    int idx;
    SHA256_CTX ctx;
 
    // Hash one
-   sha256_init(&ctx);
-   sha256_update(&ctx,text1,strlen((char)text1));
-   sha256_final(&ctx,hash);
+   tsha256_init(&ctx);
+   tsha256_update(&ctx,text1,strlen((char *)text1));
+   tsha256_final(&ctx,hash);
    print_hash(hash);
 
    // Hash two
-   sha256_init(&ctx);
-   sha256_update(&ctx,text2,strlen((char)text2));
-   sha256_final(&ctx,hash);
+   tsha256_init(&ctx);
+   tsha256_update(&ctx,text2,strlen((char *)text2));
+   tsha256_final(&ctx,hash);
    print_hash(hash);
 
    // Hash three
-   sha256_init(&ctx);
+   tsha256_init(&ctx);
    for (idx=0; idx < 100000; ++idx)
-      sha256_update(&ctx,text3,strlen((char)text3));
-   sha256_final(&ctx,hash);
+      tsha256_update(&ctx,text3,strlen((char *)text3));
+   tsha256_final(&ctx,hash);
    print_hash(hash);
-
-   getchar();
-   return 0;
+   vTaskDelete(NULL);
 }
 void app_main(void)
 {
+    unsigned char hash[32];
     nvs_flash_init();
     
     printf("starting sha test\n");
 
-    test_main();
+    xTaskCreatePinnedToCore(&test_main, "test_main", 4096, NULL, 20, NULL, 0);
 
-    //qemu_sha256_start();
-    //qemu_sha256_data(qemu_sha256_handle_t handle, const void *data, size_t data_len);
+
+    printf("HW accelerated hash\n");
+    qemu_sha256_handle_t handle=qemu_sha256_start();
+    qemu_sha256_data(handle,text1,strlen((char *)text1));
+    qemu_sha256_finish(handle,hash);
+    print_hash(hash);
+
+    handle=qemu_sha256_start();
+    qemu_sha256_data(handle,text2,strlen((char *)text2));
+    qemu_sha256_finish(handle,hash);
+    print_hash(hash);
+
+    handle=qemu_sha256_start();
+    qemu_sha256_data(handle,text3,strlen((char *)text3));
+    qemu_sha256_finish(handle,hash);
+    print_hash(hash);
+
+
 }

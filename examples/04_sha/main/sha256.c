@@ -28,7 +28,7 @@ uint k[64] = {
 };
 
 
-void sha256_transform(SHA256_CTX *ctx, uchar data[])
+void tsha256_transform(SHA256_CTX *ctx, uchar data[])
 {  
    uint a,b,c,d,e,f,g,h,i,j,t1,t2,m[64];
       
@@ -69,7 +69,7 @@ void sha256_transform(SHA256_CTX *ctx, uchar data[])
    ctx->state[7] += h;
 }  
 
-void sha256_init(SHA256_CTX *ctx)
+void tsha256_init(SHA256_CTX *ctx)
 {  
    ctx->datalen = 0; 
    ctx->bitlen[0] = 0; 
@@ -84,7 +84,7 @@ void sha256_init(SHA256_CTX *ctx)
    ctx->state[7] = 0x5be0cd19;
 }
 
-void sha256_update(SHA256_CTX *ctx, const uchar *data, uint len)
+void tsha256_update(SHA256_CTX *ctx, const uchar *data, uint len)
 {  
    uint t,i;
    
@@ -92,14 +92,14 @@ void sha256_update(SHA256_CTX *ctx, const uchar *data, uint len)
       ctx->data[ctx->datalen] = data[i]; 
       ctx->datalen++; 
       if (ctx->datalen == 64) { 
-         sha256_transform(ctx,ctx->data);
+         tsha256_transform(ctx,ctx->data);
          DBL_INT_ADD(ctx->bitlen[0],ctx->bitlen[1],512); 
          ctx->datalen = 0; 
       }  
    }  
 }  
 
-void sha256_final(SHA256_CTX *ctx, uchar hash[])
+void tsha256_final(SHA256_CTX *ctx, uchar hash[])
 {  
    uint i; 
    
@@ -115,7 +115,7 @@ void sha256_final(SHA256_CTX *ctx, uchar hash[])
       ctx->data[i++] = 0x80; 
       while (i < 64) 
          ctx->data[i++] = 0x00; 
-      sha256_transform(ctx,ctx->data);
+      tsha256_transform(ctx,ctx->data);
       memset(ctx->data,0,56); 
    }  
    
@@ -129,7 +129,7 @@ void sha256_final(SHA256_CTX *ctx, uchar hash[])
    ctx->data[58] = ctx->bitlen[1] >> 8; 
    ctx->data[57] = ctx->bitlen[1] >> 16;  
    ctx->data[56] = ctx->bitlen[1] >> 24; 
-   sha256_transform(ctx,ctx->data);
+   tsha256_transform(ctx,ctx->data);
    
    // Since this implementation uses little endian byte ordering and SHA uses big endian,
    // reverse all the bytes when copying the final state to the output hash. 
