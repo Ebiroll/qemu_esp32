@@ -62,6 +62,10 @@ void app_main(void)
     unsigned char hash[32];
     nvs_flash_init();
     int idx;
+
+    int *quemu_test=(int *) 0x3ff005f2;
+    // Turn on wardware sha
+    *quemu_test=0x01;
     
     printf("starting sha test\n");
 
