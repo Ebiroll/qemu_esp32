@@ -30,10 +30,20 @@ const unsigned char text1[]={"abcd"};
 const unsigned char text2[]={"abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"};
 const unsigned char text3[]={"aaaaaaaaaaaa"};
 
+
+const unsigned char text0[32*8];
+
 void test_main(void *param) {
    unsigned char hash[32];
    int idx;
    SHA256_CTX ctx;
+
+   memset(text0,0,sizeof(text0));
+   strcpy(text0,"abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijkl");
+   tsha256_init(&ctx);
+   tsha256_update(&ctx,text0,60);
+   tsha256_final(&ctx,hash);
+   print_hash(hash);
 
    // Hash one
    tsha256_init(&ctx);
@@ -59,6 +69,7 @@ void test_main(void *param) {
 }
 void app_main(void)
 {
+    SHA256_CTX ctx;
     unsigned char hash[32];
     nvs_flash_init();
     int idx;
@@ -73,7 +84,26 @@ void app_main(void)
 
 
     printf("HW accelerated hash\n");
+
+    // Compare to local sha256
+    //tsha256_init(&ctx);
+    //tsha256_update(&ctx,text0,60);
+    //tsha256_final(&ctx,hash);
+    //print_hash(hash);
+
+
     qemu_sha256_handle_t handle=qemu_sha256_start();
+    qemu_sha256_data(handle,text0,60);
+    qemu_sha256_finish(handle,hash);
+    print_hash(hash);
+
+    //handle=qemu_sha256_start();
+    //qemu_sha256_data(handle,text0,8);
+    //qemu_sha256_finish(handle,hash);
+    //print_hash(hash);
+
+
+    handle=qemu_sha256_start();
     qemu_sha256_data(handle,text1,strlen((char *)text1));
     qemu_sha256_finish(handle,hash);
     print_hash(hash);
@@ -90,6 +120,5 @@ void app_main(void)
     //qemu_sha256_data(handle,text3,strlen((char *)text3));
     qemu_sha256_finish(handle,hash);
     print_hash(hash);
-
 
 }
