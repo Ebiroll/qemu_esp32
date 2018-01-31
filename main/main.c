@@ -338,7 +338,7 @@ void emulated_net(void *pvParameter) {
 
     //int i;
     // We cant use this for emulated network, need to setup tcpip manually
-    //tcpip_adapter_init();
+    tcpip_adapter_init();
     //ESP_ERROR_CHECK( esp_event_loop_init(event_handler, NULL) );
 
 #if 0
@@ -600,6 +600,7 @@ void app_main()
     if (is_running_qemu()) {
 	tcpip_adapter_init();
         xTaskCreate(&emulated_net, "emulated_net",2*4096, NULL, 20, NULL); 
+	xTaskCreate(&echo_application_thread, "echo_thread", 2048, NULL, 5, NULL);
         // emulated_net(NULL);
     } else {
         xTaskCreate(&wifi_task,"wifi_task",2*2048, NULL, 5, NULL);
