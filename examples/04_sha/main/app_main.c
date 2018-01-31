@@ -74,7 +74,7 @@ void app_main(void)
     nvs_flash_init();
     int idx;
 
-    int *quemu_test=(int *) 0x3ff005f2;
+    int *quemu_test=(int *) 0x3ff005f4;
     // Turn on wardware sha
     *quemu_test=0x01;
     
@@ -113,6 +113,10 @@ void app_main(void)
     qemu_sha256_finish(handle,hash);
     print_hash(hash);
 
+    //printf("c2182b36373ec5fcb43f73570438c44c3d7ec8a5a03f75409a68d3fd0c3d89c3\n");
+    //printf("ESP32 faulty hash\n");
+
+
     handle=qemu_sha256_start();
     for (idx=0; idx < 100000; ++idx)
       qemu_sha256_data(handle,text3,strlen((char *)text3));
@@ -120,5 +124,9 @@ void app_main(void)
     //qemu_sha256_data(handle,text3,strlen((char *)text3));
     qemu_sha256_finish(handle,hash);
     print_hash(hash);
+
+    int *quemu_stop=(int *) 0x3ff005f0;
+    // Turn off qemu
+    *quemu_stop=0x01;
 
 }
