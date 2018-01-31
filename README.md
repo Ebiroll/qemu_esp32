@@ -39,7 +39,9 @@ gcc toflash.c -o qemu_flash
 5. Flash the esp32flash.bin file
 > ./qemu_flash build/app-template.bin
 
-Note that this will create an 4MB empty file filled wit 0xff then write bootloader, partition table and application to this file called esp32flash.bin then copy this file fo /home/user/qemu_esp32, this file will be read by qemu at upstart.
+Note that this will create an 4MB empty file filled with 0xff and write
+bootloader, partition table and application to this file called esp32flash.bin
+This is then copied to  /home/user/qemu_esp32, this file will be read by qemu at upstart.
 
 6. In the first window, start qemu
   > xtensa-softmmu/qemu-system-xtensa -d guest_errors,unimp  -cpu esp32 -M esp32 -m 4M  -s  > io.txt
