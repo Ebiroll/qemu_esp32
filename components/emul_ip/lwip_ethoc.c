@@ -34,6 +34,7 @@
 #include <string.h>
 #include "rom/ets_sys.h"
 #include "esp_intr.h"
+#include "freertos/FreeRTOS.h"
 #include "freertos/xtensa_api.h"
 #include "freertos/portmacro.h"
 #include "netif/etharp.h"
@@ -543,6 +544,8 @@ static void ethoc_interrupt()
 	u32 pending;
 	u32 mask;
 
+    static BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+
 	/* Figure out what triggered the interrupt...
 	 * The tricky bit here is that the interrupt source bits get
 	 * set in INT_SOURCE for an event regardless of whether that
@@ -560,6 +563,7 @@ static void ethoc_interrupt()
 	if (unlikely(pending == 0))
 	{
 		//printf("No pendig irq, spurious.\n");
+		ethoc_ack_irq(priv, INT_MASK_ALL);		
 		return;
 	}
     //printf("IRQ\n");
@@ -578,8 +582,13 @@ static void ethoc_interrupt()
 		//ethoc_disable_irq(priv, INT_MASK_TX | INT_MASK_RX);
 		//napi_schedule(&priv->napi);
 		//xTaskResumeFromISR(pollHandle);
-		//static signed BaseType_t xHigherPriorityTaskWoken;
-		xSemaphoreGiveFromISR( xSemaphore, NULL );
+
+		ethoc_ack_irq(priv, INT_MASK_ALL);		
+		xSemaphoreGiveFromISR( xSemaphore, &xHigherPriorityTaskWoken );
+
+        if( xHigherPriorityTaskWoken) {
+            portYIELD_FROM_ISR(); // this wakes up sample_timer_task immediately
+        }
 	}
 
 	return;
@@ -614,7 +623,7 @@ int ethoc_poll(int budget)
 
 	rx_work_done = ethoc_rx(priv->netdev, budget);
 	// TODO, Dont understand the driver... This transmits again?!
-	//tx_work_done = ethoc_tx( budget);
+	tx_work_done = ethoc_tx( budget);
 
 	if (rx_work_done < budget && tx_work_done < budget) {
 		//napi_complete(napi);
@@ -713,15 +722,15 @@ static int ethoc_mdio_probe(struct netif *dev)
 void poll_task(void *pvParameter) {
     struct ethoc *priv = &priv_ethoc;
 
-    ethoc_reset(priv);
+    //ethoc_reset(priv);
 
     for(;;) {
-	  if( xSemaphoreTake( xSemaphore, LONG_TIME ) == pdTRUE ) {
+	  //if( xSemaphoreTake( xSemaphore, LONG_TIME ) == pdTRUE ) {
          ethoc_poll(8);
-	  }
+	  //}
 	  //vTaskSuspend(NULL);
 
-      //vTaskDelay(5);
+       vTaskDelay(1);
 	  
     }
 }
@@ -749,9 +758,9 @@ int ethoc_open(struct netif *dev)
     xSemaphore = xSemaphoreCreateBinary();
 
 
-    intr_matrix_set(xPortGetCoreID(), ETS_RWBLE_NMI_SOURCE /*ETS_ETH_MAC_INTR_SOURCE*/, 9);
-    xt_set_interrupt_handler(9, &ethoc_interrupt, NULL);                                                           
-    xt_ints_on(1 << 9);                                   
+    //intr_matrix_set(xPortGetCoreID(), ETS_RWBLE_NMI_SOURCE /*ETS_ETH_MAC_INTR_SOURCE*/, 9);
+    //xt_set_interrupt_handler(9, &ethoc_interrupt, NULL);                                                           
+    //xt_ints_on(1 << 9);                                   
 
    //ret = request_irq(dev->irq, ethoc_interrupt, IRQF_SHARED,
    //		dev->name, dev);
@@ -759,12 +768,12 @@ int ethoc_open(struct netif *dev)
    //if (ret)
    //	return ret;
 
-   ethoc_init_ring(priv, OC_BUF_START);
-   ethoc_reset(priv);
+    ethoc_init_ring(priv, OC_BUF_START);
+    ethoc_reset(priv);
 
     // Poll for input
 	// Interrupts work now, Should not need to do polling 
-    xTaskCreate(&poll_task,"poll_task",2048, NULL, 20, &pollHandle);
+    xTaskCreate(&poll_task,"poll_task",2048, NULL, 25, &pollHandle);
 
 
 	//if (netif_queue_stopped(dev)) {
@@ -1376,9 +1385,9 @@ static void low_level_init(struct netif * netif)
     //static void IRAM_ATTR frc_timer_isr()
 	// Interrupt source not important for qemu
 
-	intr_matrix_set(xPortGetCoreID(), ETS_RWBT_INTR_SOURCE, 8);
-    xt_set_interrupt_handler(9, &ethoc_interrupt, NULL);                                                           
-    xt_ints_on(1 << 8);                     
+	//intr_matrix_set(xPortGetCoreID(), ETS_RWBT_INTR_SOURCE, 8);
+    //xt_set_interrupt_handler(9, &ethoc_interrupt, NULL);                                                           
+    //xt_ints_on(1 << 8);                     
 	
 	// memcpy 0x3FFE_8000~0x3FFE_FFFF to 
 	// 0x4000_0000  0x4000_7FFF
