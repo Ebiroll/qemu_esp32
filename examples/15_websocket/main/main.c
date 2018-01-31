@@ -88,9 +88,10 @@ void app_main(void)
     nvs_flash_init();
 
     if (*quemu_test==0x42) {
+        tcpip_adapter_init();
         printf("Running in qemu\n");
         //Task_lwip_init(NULL);
-	xTaskCreate(&task_lwip_init, "task_lwip", 2048*2, NULL, 12, NULL);
+	xTaskCreate(&task_lwip_init, "task_lwip", 2048*4, NULL, 15, NULL);
     }
     else {
         tcpip_adapter_init();

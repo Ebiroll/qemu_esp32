@@ -1229,6 +1229,15 @@ However the work is not yet finished.
 
 ```  
 
+```  
+The examples/14_basic_webserver worked when I tried it,
+Start qemu like this,
+ xtensa-softmmu/qemu-system-xtensa -d guest_errors,unimp  -cpu esp32 -M esp32 -m 4M -net nic,model=vlan0 -net user,id=simnet,ipver4=on,net=192.168.4.0/24,host=192.168.4.40,hostfwd=tcp::10080-192.168.4.3:80  -net dump,file=/tmp/vm0.pcap  -s    > io.txt 
+
+Then start browser on http://127.0.0.1:10080
+
+```  
+
 [Networking options in qemu](./QEMU_NET.md)
 
 ## Remote debugging with gdbstub.c

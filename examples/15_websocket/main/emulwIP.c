@@ -59,7 +59,7 @@ void task_lwip_init(void * pParam)
 
   // From esp-idf
   //lwip_init();
-  sys_init();
+  //sys_init();
 
   //ethernet_hardreset();//hard reset of EthernetDaughterCard
   // This should be done in lwip_init
@@ -95,13 +95,13 @@ void task_lwip_init(void * pParam)
   
 
   printf("TCP/IP initializing...\n");  
-  if (sys_sem_new(&sem,0)!=ERR_OK) {
-    printf("Failed creating semaphore\n");
-  }
+  //if (sys_sem_new(&sem,0)!=ERR_OK) {
+  //  printf("Failed creating semaphore\n");
+  //}
   // OLAS 
-  tcpip_init(tcpip_init_done_ok, &sem);
-  sys_sem_wait(sem);
-  sys_sem_free(sem);
+  //tcpip_init(tcpip_init_done_ok, &sem);
+  //sys_sem_wait(sem);
+  //sys_sem_free(sem);
   printf("TCP/IP initialized.\n");
 
   netif_set_up(&ethoc_if); 

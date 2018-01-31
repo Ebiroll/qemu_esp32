@@ -362,6 +362,7 @@ void emulated_net(void *pvParameter) {
 #endif
 
 
+
     task_lwip_init(NULL);
 
     //gpio_set_direction(GPIO_NUM_4, GPIO_MODE_OUTPUT);
@@ -386,7 +387,7 @@ void emulated_net(void *pvParameter) {
         printf("No en0");
     }
 
-    xTaskCreate(&echo_application_thread, "echo_thread", 2048, NULL, 2, NULL);
+    xTaskCreate(&echo_application_thread, "echo_thread", 2048, NULL, 15, NULL);
 
     unsigned char hostnum=1;
     char tmpBuff[20];
@@ -597,7 +598,7 @@ void app_main()
 
     //dump_i2c_regs();
     if (is_running_qemu()) {
-        printf("Running in qemu\n");
+	tcpip_adapter_init();
         xTaskCreate(&emulated_net, "emulated_net",2*4096, NULL, 20, NULL); 
         // emulated_net(NULL);
     } else {
