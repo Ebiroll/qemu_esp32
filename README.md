@@ -72,9 +72,10 @@ It runs fine with the latest version of esp-idf
 
 ```
 
+## IMPORTANT update, Feb 2018
 
-
-
+As the bootloader uses HW accelerated sha256 calculations this is now
+emulated by qemu,checksum must be correct and should not be overwritten with 000
 
 ## IMPORTANT update, July 2017
 
@@ -97,9 +98,9 @@ Not that esp-idf is constantly being updated and you must keep the qemu source u
        mbedTLS  --->
           [ ] Enable hardware SHA acceleration                                     
 
-So now the toflash.c program will overwrite the checksum with 00000
-If you insist on using an older esp-idf try commenting out this, as
-older bootloader relies on proper hash of the image
+So now the toflash.c program did overwrite the checksum with 00000
+this must not happen anymore as 
+the bootloader relies on proper hash of the image
 
     if (patch_hash==1) {
       for (j=0;j<33;j++)
@@ -107,6 +108,8 @@ older bootloader relies on proper hash of the image
           tmp_data[file_size-j]=0;
 	}
     }
+
+
 
 
 ```

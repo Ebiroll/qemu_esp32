@@ -102,7 +102,7 @@ int main(int argc,char *argv[])
     merge_flash("build/default.bin","esp32flash.bin",0x8000,0);
 
     // Add application
-    merge_flash(argv[1],"esp32flash.bin",0x10000,1);
+    merge_flash(argv[1],"esp32flash.bin",0x10000,0);
 
     system("cp esp32flash.bin ~/qemu_esp32");
 }

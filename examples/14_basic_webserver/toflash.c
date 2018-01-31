@@ -92,9 +92,9 @@ int main(int argc,char *argv[])
     merge_flash("build/partitions_singleapp.bin","esp32flash.bin",0x8000,0);
     // Add application
     if (argc>1) {
-      merge_flash(argv[1],"esp32flash.bin",0x10000,1);
+      merge_flash(argv[1],"esp32flash.bin",0x10000,0);
     } else {
-      merge_flash("build/14_basic_webserver.bin","esp32flash.bin",0x10000,1);
+      merge_flash("build/14_basic_webserver.bin","esp32flash.bin",0x10000,0);
     }
     system("cp esp32flash.bin ~/qemu_esp32");
 }
