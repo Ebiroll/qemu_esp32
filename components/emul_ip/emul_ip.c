@@ -59,7 +59,7 @@ void task_lwip_init(void * pParam)
 
   // From esp-idf
   //lwip_init();
-  //sys_init();
+  sys_init();
 
   //ethernet_hardreset();//hard reset of EthernetDaughterCard
   // This should be done in lwip_init
