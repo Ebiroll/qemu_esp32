@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8"><title>https://academo.org/demos/virtual-oscilloscope/</title><link rel="stylesheet" type="text/css" href="virtual-oscilloscope_files/viewsource.css"></head><body id="viewsource" class="highlight" style="-moz-tab-size: 4" contextmenu="actions"><pre id="line1"><span></span><span class="doctype">&lt;!DOCTYPE html&gt;</span><span>
+<span id="line2"></span></span><span>&lt;<span class="start-tag">html</span> <span class="attribute-name">lang</span>="<a class="attribute-value">en</a>"&gt;</span><span>
+<span id="line3"></span></span><span>&lt;<span class="start-tag">head</span>&gt;</span><span>
+<span id="line4"></span>	</span><span>&lt;<span class="start-tag">meta</span> <span class="attribute-name">charset</span>="<a class="attribute-value">utf-8</a>"&gt;</span><span>
+<span id="line5"></span>	</span><span>&lt;<span class="start-tag">title</span>&gt;</span><span>Virtual Oscilloscope | Academo.org - Free, interactive, education.</span><span>&lt;/<span class="end-tag">title</span>&gt;</span><span>
+<span id="line6"></span>	</span><span>&lt;<span class="start-tag">meta</span> <span class="attribute-name">name</span>="<a class="attribute-value">viewport</a>" <span class="attribute-name">content</span>="<a class="attribute-value">width=device-width, initial-scale=1.0</a>"&gt;</span><span>
+<span id="line7"></span>	
+<span id="line8"></span>	</span><span>&lt;<span class="start-tag">link</span> <span class="attribute-name">rel</span>="<a class="attribute-value">shortcut icon</a>" <span class="attribute-name">type</span>="<a class="attribute-value">image/x-icon</a>" <span class="attribute-name">href</span>="<a class="attribute-value" href="view-source:https://academo.org/favicon.ico">/favicon.ico</a>"&gt;</span><span>
+<span id="line9"></span>	</span><span>&lt;<span class="start-tag">link</span> <span class="attribute-name">rel</span>="<a class="attribute-value">stylesheet</a>" <span class="attribute-name">href</span>="<a class="attribute-value" href="view-source:https://academo.org/scss/main.css?v=1506008388">/scss/main.css?v=1506008388</a>"&gt;</span><span>
+<span id="line10"></span>	</span><span>&lt;<span class="start-tag">link</span> <span class="attribute-name">rel</span>="<a class="attribute-value">stylesheet</a>" <span class="attribute-name">href</span>="<a class="attribute-value" href="view-source:https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css</a>"&gt;</span><span>
+<span id="line11"></span>
+<span id="line12"></span>	
+<span id="line13"></span>				</span><span>&lt;<span class="start-tag">meta</span> <span class="attribute-name">name</span>="<a class="attribute-value">twitter:card</a>" <span class="attribute-name">content</span>="<a class="attribute-value">summary_large_image</a>"&gt;</span><span>
+<span id="line14"></span>				</span><span>&lt;<span class="start-tag">meta</span> <span class="attribute-name">name</span>="<a class="attribute-value">twitter:site</a>" <span class="attribute-name">content</span>="<a class="attribute-value">@AcademoOrg</a>"&gt;</span><span>
+<span id="line15"></span>				</span><span>&lt;<span class="start-tag">meta</span> <span class="attribute-name">name</span>="<a class="attribute-value">twitter:title</a>" <span class="attribute-name">content</span>="<a class="attribute-value">Virtual Oscilloscope</a>"&gt;</span><span>
+<span id="line16"></span>				</span><span>&lt;<span class="start-tag">meta</span> <span class="attribute-name">name</span>="<a class="attribute-value">twitter:description</a>" <span class="attribute-name">content</span>="<a class="attribute-value">This
+ online virtual oscilloscope allows you to visualise live sound input 
+and get to grips with how to adjust the display. If you find this 
+useful, our online spectrum analyser may also be of interest to you.</a>"&gt;</span><span>
+<span id="line17"></span>				</span><span>&lt;<span class="start-tag">meta</span> <span class="attribute-name">name</span>="<a class="attribute-value">twitter:image</a>" <span class="attribute-name">content</span>="<a class="attribute-value">https://academo.org/demos/virtual-oscilloscope/twitter-card.png</a>"&gt;</span><span>
+<span id="line18"></span>				</span><span>&lt;<span class="start-tag">meta</span> <span class="attribute-name">property</span>="<a class="attribute-value">og:url</a>"	<span class="attribute-name">content</span>="<a class="attribute-value">https://academo.org/demos/virtual-oscilloscope/</a>" <span>/</span>&gt;</span><span>
+<span id="line19"></span>				</span><span>&lt;<span class="start-tag">meta</span> <span class="attribute-name">property</span>="<a class="attribute-value">og:site_name</a>" <span class="attribute-name">content</span>="<a class="attribute-value">Academo.org</a>"<span>/</span>&gt;</span><span>
+<span id="line20"></span>				</span><span>&lt;<span class="start-tag">meta</span> <span class="attribute-name">property</span>="<a class="attribute-value">og:title</a>" <span class="attribute-name">content</span>="<a class="attribute-value">Virtual Oscilloscope</a>"<span>/</span>&gt;</span><span>
+<span id="line21"></span>				</span><span>&lt;<span class="start-tag">meta</span> <span class="attribute-name">property</span>="<a class="attribute-value">og:description</a>" <span class="attribute-name">content</span>="<a class="attribute-value">This
+ online virtual oscilloscope allows you to visualise live sound input 
+and get to grips with how to adjust the display. If you find this 
+useful, our online spectrum analyser may also be of interest to you.</a>"<span>/</span>&gt;</span><span>
+<span id="line22"></span>				</span><span>&lt;<span class="start-tag">meta</span> <span class="attribute-name">property</span>="<a class="attribute-value">og:image</a>" <span class="attribute-name">content</span>="<a class="attribute-value">https://academo.org/demos/virtual-oscilloscope/facebook-og.png</a>" <span>/</span>&gt;</span><span>
+<span id="line23"></span>				</span><span>&lt;<span class="start-tag">meta</span> <span class="attribute-name">property</span>="<a class="attribute-value">og:image:width</a>" <span class="attribute-name">content</span>="<a class="attribute-value">1200</a>" <span>/</span>&gt;</span><span> 
+<span id="line24"></span>				</span><span>&lt;<span class="start-tag">meta</span> <span class="attribute-name">property</span>="<a class="attribute-value">og:image:height</a>" <span class="attribute-name">content</span>="<a class="attribute-value">630</a>" <span>/</span>&gt;</span><span>
+<span id="line25"></span>				</span><span>&lt;<span class="start-tag">style</span> <span class="attribute-name">type</span>="<a class="attribute-value">text/css</a>" <span class="attribute-name">class</span>='<a class="attribute-value">demo-specific-styles</a>'&gt;</span><span>
+<span id="line26"></span>#demo{
+<span id="line27"></span>  position:relative;
+<span id="line28"></span>}
+<span id="line29"></span>canvas{
+<span id="line30"></span>  position: absolute;
+<span id="line31"></span>  top:0;
+<span id="line32"></span>  left:0;
+<span id="line33"></span>  display: block;
+<span id="line34"></span>  border:solid 5px #E3E3E3;
+<span id="line35"></span>  /*border-radius: 10px;*/
+<span id="line36"></span>  /*background: #E3E3E3;*/
+<span id="line37"></span>}
+<span id="line38"></span>.preamble{
+<span id="line39"></span>	margin-bottom: 20px;
+<span id="line40"></span>}
+<span id="line41"></span>.embedded {
+<span id="line42"></span>	height:380px;
+<span id="line43"></span>	overflow:hidden;
+<span id="line44"></span>}
+<span id="line45"></span>.embedded #ui-container {
+<span id="line46"></span>    height: 358px;
+<span id="line47"></span>    overflow-y: scroll;
+<span id="line48"></span>}
+<span id="line49"></span>.embedded .header,
+<span id="line50"></span>.embedded .preamble,
+<span id="line51"></span>.embedded .sponsor-wrapper,
+<span id="line52"></span>.embedded .demo-description,
+<span id="line53"></span>.embedded .sidebar,
+<span id="line54"></span>.embedded .footer {
+<span id="line55"></span>	display:none;
+<span id="line56"></span>}
+<span id="line57"></span>.embedded .main {
+<span id="line58"></span>	width: 100%;
+<span id="line59"></span>	padding: 10px;
+<span id="line60"></span>	margin: 0 auto;
+<span id="line61"></span>	box-sizing: border-box;
+<span id="line62"></span>}
+<span id="line63"></span>.embed-title {
+<span id="line64"></span>	margin-top: 0;
+<span id="line65"></span>	font-size: 14px;
+<span id="line66"></span>}
+<span id="line67"></span>				</span><span>&lt;/<span class="end-tag">style</span>&gt;</span><span>
+<span id="line68"></span>	
+<span id="line69"></span> 
+<span id="line70"></span>	</span><span class="comment">&lt;!-- HTML5 shim, for IE6-8 support of HTML5 elements --&gt;</span><span>
+<span id="line71"></span>	</span><span class="comment">&lt;!--[if lt IE 9]&gt;
+<span id="line72"></span>		&lt;script src="http://html5shim.googlecode.com/svn/trunk/html5.js"&gt;&lt;/script&gt;
+<span id="line73"></span>	&lt;![endif]--&gt;</span><span>
+<span id="line74"></span>
+<span id="line75"></span></span><span>&lt;/<span class="end-tag">head</span>&gt;</span><span>
+<span id="line76"></span>
+<span id="line77"></span></span><span>&lt;<span class="start-tag">body</span> <span class="attribute-name">class</span>='<a class="attribute-value">body--shaded </a>'&gt;</span><span>
+<span id="line78"></span>
+<span id="line79"></span>	</span><span>&lt;<span class="start-tag">div</span> <span class="attribute-name">class</span>="<a class="attribute-value">header</a>"&gt;</span><span>
+<span id="line80"></span>		</span><span>&lt;<span class="start-tag">div</span> <span class="attribute-name">class</span>="<a class="attribute-value">header-upper</a>"&gt;</span><span>
+<span id="line81"></span>			</span><span>&lt;<span class="start-tag">div</span> <span class="attribute-name">class</span>="<a class="attribute-value">header-inner</a>"&gt;</span><span>
+<span id="line82"></span>				</span><span>&lt;<span class="start-tag">a</span> <span class="attribute-name">class</span>="<a class="attribute-value">logo</a>" <span class="attribute-name">href</span>="<a class="attribute-value" href="view-source:https://academo.org/">/</a>"&gt;</span><span>Academo</span><span>&lt;/<span class="end-tag">a</span>&gt;</span><span>
+<span id="line83"></span>				</span><span>&lt;<span class="start-tag">ul</span> <span class="attribute-name">class</span>="<a class="attribute-value">nav nav--primary</a>"&gt;</span><span>
+<span id="line84"></span>					</span><span>&lt;<span class="start-tag">li</span>&gt;</span><span></span><span>&lt;<span class="start-tag">a</span> <span class="attribute-name">class</span>="<a class="attribute-value"></a>" <span class="attribute-name">href</span>="<a class="attribute-value" href="view-source:https://academo.org/about/">/about/</a>"&gt;</span><span>About</span><span>&lt;/<span class="end-tag">a</span>&gt;</span><span></span><span>&lt;/<span class="end-tag">li</span>&gt;</span><span>
+<span id="line85"></span>					</span><span>&lt;<span class="start-tag">li</span>&gt;</span><span></span><span>&lt;<span class="start-tag">a</span> <span class="attribute-name">class</span>="<a class="attribute-value"></a>" <span class="attribute-name">href</span>="<a class="attribute-value" href="view-source:https://academo.org/search/">/search/</a>"&gt;</span><span>Search</span><span>&lt;/<span class="end-tag">a</span>&gt;</span><span></span><span>&lt;/<span class="end-tag">li</span>&gt;</span><span>
+<span id="line86"></span>					</span><span>&lt;<span class="start-tag">li</span>&gt;</span><span></span><span>&lt;<span class="start-tag">a</span> <span class="attribute-name">class</span>="<a class="attribute-value"></a>" <span class="attribute-name">href</span>="<a class="attribute-value" href="view-source:https://academo.org/contact/">/contact/</a>"&gt;</span><span>Contact</span><span>&lt;/<span class="end-tag">a</span>&gt;</span><span></span><span>&lt;/<span class="end-tag">li</span>&gt;</span><span>
+<span id="line87"></span>					</span><span>&lt;<span class="start-tag">li</span>&gt;</span><span></span><span>&lt;<span class="start-tag">a</span> <span class="attribute-name">class</span>="<a class="attribute-value"></a>" <span class="attribute-name">href</span>="<a class="attribute-value" href="view-source:https://academo.org/submit-an-idea/">/submit-an-idea/</a>"&gt;</span><span>Submit an idea</span><span>&lt;/<span class="end-tag">a</span>&gt;</span><span></span><span>&lt;/<span class="end-tag">li</span>&gt;</span><span>
+<span id="line88"></span>					</span><span>&lt;<span class="start-tag">li</span>&gt;</span><span></span><span>&lt;<span class="start-tag">a</span> <span class="attribute-name">class</span>="<a class="attribute-value"></a>" <span class="attribute-name">href</span>="<a class="attribute-value" href="view-source:https://academo.org/sponsor/">/sponsor/</a>"&gt;</span><span>Sponsor</span><span>&lt;/<span class="end-tag">a</span>&gt;</span><span></span><span>&lt;/<span class="end-tag">li</span>&gt;</span><span>
+<span id="line89"></span>					</span><span class="error" title="No “li” element in scope but a “li” end tag seen.">&lt;/<span class="end-tag">li</span>&gt;</span><span>
+<span id="line90"></span>					</span><span>&lt;<span class="start-tag">li</span> <span class="attribute-name">class</span>="<a class="attribute-value">social--twitter</a>"&gt;</span><span></span><span>&lt;<span class="start-tag">a</span> <span class="attribute-name">target</span>='<a class="attribute-value">_blank</a>' <span class="attribute-name">href</span>="<a class="attribute-value" href="view-source:https://twitter.com/AcademoOrg">https://twitter.com/AcademoOrg</a>"&gt;</span><span></span><span>&lt;<span class="start-tag">i</span> <span class="attribute-name">class</span>="<a class="attribute-value">fa fa-twitter</a>"&gt;</span><span></span><span>&lt;/<span class="end-tag">i</span>&gt;</span><span></span><span>&lt;/<span class="end-tag">a</span>&gt;</span><span></span><span>&lt;/<span class="end-tag">li</span>&gt;</span><span>
+<span id="line91"></span>					</span><span>&lt;<span class="start-tag">li</span> <span class="attribute-name">class</span>="<a class="attribute-value">social--facebook</a>"&gt;</span><span></span><span>&lt;<span class="start-tag">a</span> <span class="attribute-name">target</span>='<a class="attribute-value">_blank</a>' <span class="attribute-name">href</span>="<a class="attribute-value" href="view-source:https://facebook.com/academo.org">https://facebook.com/academo.org</a>"&gt;</span><span></span><span>&lt;<span class="start-tag">i</span> <span class="attribute-name">class</span>="<a class="attribute-value">fa fa-facebook</a>"&gt;</span><span></span><span>&lt;/<span class="end-tag">i</span>&gt;</span><span></span><span>&lt;/<span class="end-tag">a</span>&gt;</span><span></span><span>&lt;/<span class="end-tag">li</span>&gt;</span><span>
+<span id="line92"></span>				</span><span>&lt;/<span class="end-tag">ul</span>&gt;</span><span>
+<span id="line93"></span>			</span><span>&lt;/<span class="end-tag">div</span>&gt;</span><span>
+<span id="line94"></span>		</span><span>&lt;/<span class="end-tag">div</span>&gt;</span><span>
+<span id="line95"></span>		</span><span>&lt;<span class="start-tag">div</span> <span class="attribute-name">class</span>="<a class="attribute-value">header-lower</a>"&gt;</span><span>
+<span id="line96"></span>			</span><span>&lt;<span class="start-tag">div</span> <span class="attribute-name">class</span>="<a class="attribute-value">header-inner</a>"&gt;</span><span>
+<span id="line97"></span>				</span><span>&lt;<span class="start-tag">ul</span> <span class="attribute-name">class</span>="<a class="attribute-value">nav nav--secondary</a>"&gt;</span><span>
+<span id="line98"></span>					</span><span>&lt;<span class="start-tag">li</span>&gt;</span><span></span><span>&lt;<span class="start-tag">a</span> <span class="attribute-name">class</span>="<a class="attribute-value">mobile-show </a>" <span class="attribute-name">href</span>="<a class="attribute-value" href="view-source:https://academo.org/demos/">/demos/</a>"&gt;</span><span>Browse all demos</span><span>&lt;/<span class="end-tag">a</span>&gt;</span><span></span><span>&lt;/<span class="end-tag">li</span>&gt;</span><span>
+<span id="line99"></span>					</span><span>&lt;<span class="start-tag">li</span>&gt;</span><span></span><span>&lt;<span class="start-tag">a</span> <span class="attribute-name">class</span>="<a class="attribute-value">mobile-hide </a>" <span class="attribute-name">href</span>="<a class="attribute-value" href="view-source:https://academo.org/demos/">/demos/</a>"&gt;</span><span>All</span><span>&lt;/<span class="end-tag">a</span>&gt;</span><span></span><span>&lt;/<span class="end-tag">li</span>&gt;</span><span>
+<span id="line100"></span>					</span><span>&lt;<span class="start-tag">li</span>&gt;</span><span></span><span>&lt;<span class="start-tag">a</span> <span class="attribute-name">class</span>="<a class="attribute-value">mobile-hide </a>" <span class="attribute-name">href</span>="<a class="attribute-value" href="view-source:https://academo.org/engineering/">/engineering/</a>"&gt;</span><span>Engineering</span><span>&lt;/<span class="end-tag">a</span>&gt;</span><span></span><span>&lt;/<span class="end-tag">li</span>&gt;</span><span>
+<span id="line101"></span>					</span><span>&lt;<span class="start-tag">li</span>&gt;</span><span></span><span>&lt;<span class="start-tag">a</span> <span class="attribute-name">class</span>="<a class="attribute-value">mobile-hide </a>" <span class="attribute-name">href</span>="<a class="attribute-value" href="view-source:https://academo.org/geography/">/geography/</a>"&gt;</span><span>Geography</span><span>&lt;/<span class="end-tag">a</span>&gt;</span><span></span><span>&lt;/<span class="end-tag">li</span>&gt;</span><span>
+<span id="line102"></span>					</span><span>&lt;<span class="start-tag">li</span>&gt;</span><span></span><span>&lt;<span class="start-tag">a</span> <span class="attribute-name">class</span>="<a class="attribute-value">mobile-hide </a>" <span class="attribute-name">href</span>="<a class="attribute-value" href="view-source:https://academo.org/maths/">/maths/</a>"&gt;</span><span>Maths</span><span>&lt;/<span class="end-tag">a</span>&gt;</span><span></span><span>&lt;/<span class="end-tag">li</span>&gt;</span><span>
+<span id="line103"></span>					</span><span>&lt;<span class="start-tag">li</span>&gt;</span><span></span><span>&lt;<span class="start-tag">a</span> <span class="attribute-name">class</span>="<a class="attribute-value">mobile-hide </a>" <span class="attribute-name">href</span>="<a class="attribute-value" href="view-source:https://academo.org/music/">/music/</a>"&gt;</span><span>Music</span><span>&lt;/<span class="end-tag">a</span>&gt;</span><span></span><span>&lt;/<span class="end-tag">li</span>&gt;</span><span>
+<span id="line104"></span>					</span><span>&lt;<span class="start-tag">li</span>&gt;</span><span></span><span>&lt;<span class="start-tag">a</span> <span class="attribute-name">class</span>="<a class="attribute-value">mobile-hide </a>" <span class="attribute-name">href</span>="<a class="attribute-value" href="view-source:https://academo.org/physics/">/physics/</a>"&gt;</span><span>Physics</span><span>&lt;/<span class="end-tag">a</span>&gt;</span><span></span><span>&lt;/<span class="end-tag">li</span>&gt;</span><span>
+<span id="line105"></span>				</span><span>&lt;/<span class="end-tag">ul</span>&gt;</span><span>
+<span id="line106"></span>			</span><span>&lt;/<span class="end-tag">div</span>&gt;</span><span>
+<span id="line107"></span>		</span><span>&lt;/<span class="end-tag">div</span>&gt;</span><span>
+<span id="line108"></span>	</span><span>&lt;/<span class="end-tag">div</span>&gt;</span><span>
+<span id="line109"></span>
+<span id="line110"></span>	</span><span>&lt;<span class="start-tag">div</span> <span class="attribute-name">class</span>="<a class="attribute-value">wrapper</a>"&gt;</span><span>
+<span id="line111"></span>		</span><span>&lt;<span class="start-tag">div</span> <span class="attribute-name">class</span>='<a class="attribute-value">sponsor-wrapper js-sponsor-wrapper</a>'&gt;</span><span>
+<span id="line112"></span>		</span><span>&lt;/<span class="end-tag">div</span>&gt;</span><span>
+<span id="line113"></span>		</span><span>&lt;<span class="start-tag">div</span> <span class="attribute-name">class</span>="<a class="attribute-value">main</a>"&gt;</span><span>
+<span id="line114"></span>
+<span id="line115"></span>
+<span id="line116"></span>
+<span id="line117"></span></span><span>&lt;<span class="start-tag">div</span> <span class="attribute-name">class</span>="<a class="attribute-value">preamble</a>"&gt;</span><span>
+<span id="line118"></span>	</span><span>&lt;<span class="start-tag">h1</span>&gt;</span><span>Virtual Oscilloscope</span><span>&lt;/<span class="end-tag">h1</span>&gt;</span><span>
+<span id="line119"></span>	</span><span>&lt;<span class="start-tag">hr</span>&gt;</span><span>
+<span id="line120"></span>	</span><span>&lt;<span class="start-tag">p</span> <span class="attribute-name">class</span>="<a class="attribute-value">blurb</a>"&gt;</span><span>
+<span id="line121"></span>		This online virtual oscilloscope allows you 
+to visualise live sound input and get to grips with how to adjust the 
+display. If you find this useful, our </span><span>&lt;<span class="start-tag">a</span> <span class="attribute-name">href</span>='<a class="attribute-value" href="view-source:https://academo.org/demos/spectrum-analyzer/">/demos/spectrum-analyzer/</a>'&gt;</span><span>online spectrum analyser</span><span>&lt;/<span class="end-tag">a</span>&gt;</span><span> may also be of interest to you.
+<span id="line122"></span>	</span><span>&lt;/<span class="end-tag">p</span>&gt;</span><span>
+<span id="line123"></span>	</span><span>&lt;<span class="start-tag">p</span> <span class="attribute-name">class</span>="<a class="attribute-value">tags</a>"&gt;</span><span>
+<span id="line124"></span>		
+<span id="line125"></span>				</span><span>&lt;<span class="start-tag">a</span> <span class="attribute-name">href</span>='<a class="attribute-value" href="view-source:https://academo.org/physics">/physics</a>'&gt;</span><span>Physics</span><span>&lt;/<span class="end-tag">a</span>&gt;</span><span>
+<span id="line126"></span>				        </span><span>&lt;<span class="start-tag">a</span> <span class="attribute-name">href</span>='<a class="attribute-value" href="view-source:https://academo.org/physics/sound/">/physics/sound/</a>'&gt;</span><span>Sound</span><span>&lt;/<span class="end-tag">a</span>&gt;</span><span>
+<span id="line127"></span>		        </span><span>&lt;<span class="start-tag">a</span> <span class="attribute-name">href</span>='<a class="attribute-value" href="view-source:https://academo.org/search/?q=audio">/search/?q=audio</a>'&gt;</span><span>Audio</span><span>&lt;/<span class="end-tag">a</span>&gt;</span><span>
+<span id="line128"></span>        
+<span id="line129"></span>    </span><span>&lt;/<span class="end-tag">p</span>&gt;</span><span>
+<span id="line130"></span>    </span><span>&lt;<span class="start-tag">hr</span>&gt;</span><span>
+<span id="line131"></span>
+<span id="line132"></span>		</span><span>&lt;<span class="start-tag">div</span> <span class="attribute-name">class</span>="<a class="attribute-value">social-buttons</a>"&gt;</span><span>
+<span id="line133"></span>	</span><span>&lt;<span class="start-tag">div</span> <span class="attribute-name">class</span>="<a class="attribute-value">social-button social-button--google-classroom</a>"&gt;</span><span>
+<span id="line134"></span>        </span><span>&lt;<span class="start-tag">script</span> <span class="attribute-name">src</span>="<a class="attribute-value" href="view-source:https://apis.google.com/js/platform.js">https://apis.google.com/js/platform.js</a>" <span class="attribute-name">async</span> <span class="attribute-name">defer</span>&gt;</span><span></span><span>&lt;/<span class="end-tag">script</span>&gt;</span><span>
+<span id="line135"></span>        </span><span>&lt;<span class="start-tag">div</span> <span class="attribute-name">class</span>="<a class="attribute-value">g-sharetoclassroom</a>" <span class="attribute-name">data-size</span>="<a class="attribute-value">32</a>" <span class="attribute-name">data-url</span>="<a class="attribute-value">https://academo.org/demos/virtual-oscilloscope/</a>" &gt;</span><span></span><span>&lt;/<span class="end-tag">div</span>&gt;</span><span>
+<span id="line136"></span>	</span><span>&lt;/<span class="end-tag">div</span>&gt;</span><span>
+<span id="line137"></span>
+<span id="line138"></span>	</span><span>&lt;<span class="start-tag">div</span> <span class="attribute-name">class</span>="<a class="attribute-value">social-button social-button--facebook</a>"&gt;</span><span>
+<span id="line139"></span>		</span><span>&lt;<span class="start-tag">a</span> <span class="attribute-name">target</span>="<a class="attribute-value">_blank</a>" <span class="attribute-name">href</span>="<a class="attribute-value" href="view-source:https://www.facebook.com/sharer/sharer.php?u=https://academo.org/demos/virtual-oscilloscope/">https://www.facebook.com/sharer/sharer.php?u=https://academo.org/demos/virtual-oscilloscope/</a>"&gt;</span><span></span><span>&lt;/<span class="end-tag">a</span>&gt;</span><span>
+<span id="line140"></span>    </span><span>&lt;/<span class="end-tag">div</span>&gt;</span><span>
+<span id="line141"></span>
+<span id="line142"></span>	</span><span>&lt;<span class="start-tag">div</span> <span class="attribute-name">class</span>="<a class="attribute-value">social-button social-button--twitter</a>"&gt;</span><span>
+<span id="line143"></span>        </span><span>&lt;<span class="start-tag">a</span> <span class="attribute-name">target</span>="<a class="attribute-value">_blank</a>" <span class="attribute-name">href</span>="<a class="attribute-value" href="view-source:https://twitter.com/intent/tweet?text=Virtual%20Oscilloscope%20https://academo.org/demos/virtual-oscilloscope/+from+@AcademoOrg">https://twitter.com/intent/tweet?text=Virtual Oscilloscope%20https://academo.org/demos/virtual-oscilloscope/+from+@AcademoOrg</a>"&gt;</span><span></span><span>&lt;/<span class="end-tag">a</span>&gt;</span><span>
+<span id="line144"></span>    </span><span>&lt;/<span class="end-tag">div</span>&gt;</span><span>
+<span id="line145"></span>	
+<span id="line146"></span></span><span>&lt;/<span class="end-tag">div</span>&gt;</span><span>
+<span id="line147"></span>
+<span id="line148"></span>    </span><span>&lt;<span class="start-tag">hr</span>&gt;</span><span>
+<span id="line149"></span></span><span>&lt;/<span class="end-tag">div</span>&gt;</span><span>
+<span id="line150"></span>
+<span id="line151"></span></span><span>&lt;<span class="start-tag">div</span> <span class="attribute-name">id</span>="<a class="attribute-value">demo</a>"  <span class="attribute-name">class</span>="<a class="attribute-value"></a>"&gt;</span><span>
+<span id="line152"></span>	
+<span id="line153"></span></span><span>&lt;/<span class="end-tag">div</span>&gt;</span><span>
+<span id="line154"></span>
+<span id="line155"></span>
+<span id="line156"></span></span><span>&lt;<span class="start-tag">div</span> <span class="attribute-name">class</span>="<a class="attribute-value">clearfix</a>" <span class="attribute-name">id</span>='<a class="attribute-value">ui-container</a>'&gt;</span><span>
+<span id="line157"></span></span><span>&lt;/<span class="end-tag">div</span>&gt;</span><span>
+<span id="line158"></span>
+<span id="line159"></span>
+<span id="line160"></span>
+<span id="line161"></span></span><span>&lt;<span class="start-tag">div</span> <span class="attribute-name">class</span>="<a class="attribute-value">demo-description</a>"&gt;</span><span>
+<span id="line162"></span>
+<span id="line163"></span>    </span><span>&lt;<span class="start-tag">hr</span>&gt;</span><span>
+<span id="line164"></span>
+<span id="line165"></span>    </span><span>&lt;<span class="start-tag">p</span>&gt;</span><span>
+<span id="line166"></span>	An oscilloscope is a useful tool for anyone 
+working with electrical signals because it provides a visual 
+representation of the signal's shape, or waveform. This allows you to 
+measure properties of the wave, such as amplitude or frequency.</span><span>&lt;/<span class="end-tag">p</span>&gt;</span><span>
+<span id="line167"></span>
+<span id="line168"></span></span><span>&lt;<span class="start-tag">p</span>&gt;</span><span>
+<span id="line169"></span>	The initial signal above is a 200Hz sine 
+wave, which has an amplitude of 5 volts. The frequency of this wave can 
+be adjusted by using the "Input Wave Frequency" slider.
+<span id="line170"></span>	(You can also choose to display a square wave.)
+<span id="line171"></span></span><span>&lt;/<span class="end-tag">p</span>&gt;</span><span>
+<span id="line172"></span>
+<span id="line173"></span></span><span>&lt;<span class="start-tag">p</span>&gt;</span><span>
+<span id="line174"></span>	If you are browsing using the latest version 
+of Google Chrome, the input dropdown box allows you to select "live 
+input".  This will take data from any microphone connected to your 
+computer and display the live audio data. (Different microphones send 
+different voltages to the computer, so for consistency we have 
+normalised the input so the raw input signal will always be limited to 
+somewhere between -5 and +5 volts.)
+<span id="line175"></span></span><span>&lt;/<span class="end-tag">p</span>&gt;</span><span>
+<span id="line176"></span>
+<span id="line177"></span></span><span>&lt;<span class="start-tag">p</span>&gt;</span><span>
+<span id="line178"></span>	Since waveforms come in a wide variety of 
+shapes, amplitudes and frequencies, oscilloscopes need to have a number 
+of controls to adjust the display of the waveform so it can comfortably 
+fit inside the viewport.
+<span id="line179"></span></span><span>&lt;/<span class="end-tag">p</span>&gt;</span><span>
+<span id="line180"></span>
+<span id="line181"></span></span><span>&lt;<span class="start-tag">p</span>&gt;</span><span>
+<span id="line182"></span>	</span><span>&lt;<span class="start-tag">em</span>&gt;</span><span>Freeze live input</span><span>&lt;/<span class="end-tag">em</span>&gt;</span><span></span><span>&lt;<span class="start-tag">br</span> <span>/</span>&gt;</span><span>This
+ tickbox freezes the input allowing you to effectively take a snapshot 
+of what is displayed on the oscilloscope at a given instant in time. 
+This is especially useful
+<span id="line183"></span>	because you can still adjust the time base 
+and volts per division setting. Try whistling and freezing the input. 
+Adjust the timebase to a convenient scale allows you to calculate the 
+frequency of your whistle by counting the period of one complete 
+waveform.
+<span id="line184"></span></span><span>&lt;/<span class="end-tag">p</span>&gt;</span><span>
+<span id="line185"></span>
+<span id="line186"></span></span><span>&lt;<span class="start-tag">p</span>&gt;</span><span>
+<span id="line187"></span>	</span><span>&lt;<span class="start-tag">em</span>&gt;</span><span>Oscilloscope gain</span><span>&lt;/<span class="end-tag">em</span>&gt;</span><span></span><span>&lt;<span class="start-tag">br</span> <span>/</span>&gt;</span><span>This
+ is a number that the incoming signal is multiplied by. A gain of 1 will
+ have no effect, a gain of less than 1 will make the signal smaller and a
+ gain of more than 1 will make it larger.
+<span id="line188"></span></span><span>&lt;/<span class="end-tag">p</span>&gt;</span><span>
+<span id="line189"></span>
+<span id="line190"></span></span><span class="comment">&lt;!-- &lt;p&gt;
+<span id="line191"></span>	&lt;em&gt;Invert&lt;/em&gt;&lt;br /&gt;This 
+flips the signal in the line y = 0, providing a mirror image of the 
+original signal.
+<span id="line192"></span>&lt;/p&gt; --&gt;</span><span>
+<span id="line193"></span>
+<span id="line194"></span></span><span>&lt;<span class="start-tag">p</span>&gt;</span><span>
+<span id="line195"></span>	</span><span>&lt;<span class="start-tag">em</span>&gt;</span><span>seconds / div</span><span>&lt;/<span class="end-tag">em</span>&gt;</span><span></span><span>&lt;<span class="start-tag">br</span> <span>/</span>&gt;</span><span>This
+ control allows you to adjust the length of time that each square of the
+ grid represents. When the oscilloscope is first loaded, this setting is
+ set at 1ms, and shows one complete waveform over 4 squares. This means 
+that the period of the wave is 4ms, or 0.004s, giving a frequency of 
+(1/0.004) = 250Hz. If you change the timebase to 500µs (half of what it 
+started at), you should see the waveform now takes 8 squares to complete
+ one full oscillation. The period (and hence the frequency) remain 
+constant because 8 times 500µs still equals 0.004s.
+<span id="line196"></span></span><span>&lt;/<span class="end-tag">p</span>&gt;</span><span>
+<span id="line197"></span>
+<span id="line198"></span></span><span>&lt;<span class="start-tag">p</span>&gt;</span><span>
+<span id="line199"></span>	</span><span>&lt;<span class="start-tag">em</span>&gt;</span><span>volts / div</span><span>&lt;/<span class="end-tag">em</span>&gt;</span><span></span><span>&lt;<span class="start-tag">br</span> <span>/</span>&gt;</span><span>This
+ setting is very similar to the timebase setting described above, but 
+instead of stretching the wave along the x-axis, it involves stretching 
+it along the y-axis. The sine wave has an amplitude of 5V, meaning when 
+volts/div is set to 5, the waveform just reaches the top of the first 
+square. If you were to change the setting to 10 volts/div, the waveform 
+now only reaches up half of a square.
+<span id="line200"></span></span><span>&lt;/<span class="end-tag">p</span>&gt;</span><span>
+<span id="line201"></span>
+<span id="line202"></span></span><span>&lt;<span class="start-tag">p</span>&gt;</span><span>
+<span id="line203"></span>	</span><span>&lt;<span class="start-tag">em</span>&gt;</span><span>Horizontal and Vertical Offsets</span><span>&lt;/<span class="end-tag">em</span>&gt;</span><span></span><span>&lt;<span class="start-tag">br</span> <span>/</span>&gt;</span><span>
+<span id="line204"></span>	These two sliders allow you to adjust the 
+position of the oscilloscope's trace on the grid. They are particularly 
+useful for lining up parts of the
+<span id="line205"></span>	waveform with the gridlines (this can make it easier for you to count the squares when determining wavelength, for example).
+<span id="line206"></span></span><span>&lt;/<span class="end-tag">p</span>&gt;</span><span>
+<span id="line207"></span>
+<span id="line208"></span></span><span>&lt;<span class="start-tag">p</span>&gt;</span><span>
+<span id="line209"></span>	If you would like to embed the oscilloscope on your own website, please copy and paste the following html onto your web page.
+<span id="line210"></span></span><span>&lt;/<span class="end-tag">p</span>&gt;</span><span>
+<span id="line211"></span>
+<span id="line212"></span></span><span>&lt;<span class="start-tag">textarea</span> <span class="attribute-name">name</span>="<a class="attribute-value"></a>" <span class="attribute-name">id</span>="<a class="attribute-value"></a>" <span class="attribute-name">cols</span>="<a class="attribute-value">60</a>" <span class="attribute-name">rows</span>="<a class="attribute-value">2</a>" <span class="attribute-name">class</span>='<a class="attribute-value">embed-code</a>'&gt;</span><span></span><span>&lt;</span><span>iframe src="https://academo.org/demos/virtual-oscilloscope/?embedded=true" width="800" height="380"&gt;</span><span>&lt;/<span></span>i</span><span>frame&gt;
+<span id="line213"></span></span><span>&lt;/<span class="end-tag">textarea</span>&gt;</span><span>
+<span id="line214"></span>			
+<span id="line215"></span>	
+<span id="line216"></span>
+<span id="line217"></span>	
+<span id="line218"></span>	    </span><span>&lt;<span class="start-tag">div</span> <span class="attribute-name">id</span>="<a class="attribute-value">disqus_thread</a>"&gt;</span><span></span><span>&lt;/<span class="end-tag">div</span>&gt;</span><span>
+<span id="line219"></span>        </span><span>&lt;<span class="start-tag">script</span> <span class="attribute-name">type</span>="<a class="attribute-value">text/javascript</a>"&gt;</span><span>
+<span id="line220"></span>            /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+<span id="line221"></span>            var disqus_shortname = 'academo'; // required: replace example with your forum shortname
+<span id="line222"></span>
+<span id="line223"></span>            var disqus_config = function () {
+<span id="line224"></span>				this.page.url = 'https://academo.org/demos/virtual-oscilloscope/';
+<span id="line225"></span>				// this.page.identifier = 'a unique identifier for each page where Disqus is present';
+<span id="line226"></span>				// this.page.title = 'a unique title for each page where Disqus is present';
+<span id="line227"></span>		    };
+<span id="line228"></span>
+<span id="line229"></span>            /* * * DON'T EDIT BELOW THIS LINE * * */
+<span id="line230"></span>            (function() {
+<span id="line231"></span>                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+<span id="line232"></span>                dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+<span id="line233"></span>                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+<span id="line234"></span>            })();
+<span id="line235"></span>        </span><span>&lt;/<span class="end-tag">script</span>&gt;</span><span>
+<span id="line236"></span>        </span><span>&lt;<span class="start-tag">noscript</span>&gt;</span><span>Please enable JavaScript to view the </span><span>&lt;</span><span>a href="http://disqus.com/?ref_noscript"&gt;comments powered by Disqus.</span><span>&lt;/<span></span>a</span><span>&gt;</span><span>&lt;/<span class="end-tag">noscript</span>&gt;</span><span>
+<span id="line237"></span>    
+<span id="line238"></span>    	        
+<span id="line239"></span> </span><span>&lt;/<span class="end-tag">div</span>&gt;</span><span>
+<span id="line240"></span>
+<span id="line241"></span> </span><span>&lt;<span class="start-tag">div</span> <span class="attribute-name">class</span>="<a class="attribute-value">sidebar</a>"&gt;</span><span>
+<span id="line242"></span>	</span><span>&lt;<span class="start-tag">h3</span>&gt;</span><span>You might also be interested in</span><span>&lt;/<span class="end-tag">h3</span>&gt;</span><span>
+<span id="line243"></span> 	</span><span>&lt;<span class="start-tag">hr</span>&gt;</span><span>
+<span id="line244"></span> 	</span><span>&lt;<span class="start-tag">ul</span> <span class="attribute-name">class</span>="<a class="attribute-value">thumbnails</a>"&gt;</span><span>
+<span id="line245"></span>	 	</span><span>&lt;<span class="start-tag">li</span> <span class="attribute-name">class</span>='<a class="attribute-value">sponsored-tile js-sponsored-tile</a>'&gt;</span><span>	</span><span>&lt;/<span class="end-tag">li</span>&gt;</span><span>
+<span id="line246"></span> 	</span><span>&lt;/<span class="end-tag">ul</span>&gt;</span><span>
+<span id="line247"></span> </span><span>&lt;/<span class="end-tag">div</span>&gt;</span><span>
+<span id="line248"></span>
+<span id="line249"></span>
+<span id="line250"></span>
+<span id="line251"></span>
+<span id="line252"></span>		</span><span>&lt;<span class="start-tag">script</span> <span class="attribute-name">src</span>="<a class="attribute-value" href="view-source:https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js">//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js</a>"&gt;</span><span></span><span>&lt;/<span class="end-tag">script</span>&gt;</span><span>
+<span id="line253"></span>		</span><span>&lt;<span class="start-tag">script</span> <span class="attribute-name">src</span>="<a class="attribute-value" href="view-source:https://academo.org/js/all.js?v=1506008388">/js/all.js?v=1506008388</a>"&gt;</span><span></span><span>&lt;/<span class="end-tag">script</span>&gt;</span><span> 
+<span id="line254"></span>
+<span id="line255"></span>
+<span id="line256"></span>		
+<span id="line257"></span>
+<span id="line258"></span>			
+<span id="line259"></span>									</span><span>&lt;<span class="start-tag">script</span> <span class="attribute-name">src</span>="<a class="attribute-value" href="view-source:https://academo.org/demos/virtual-oscilloscope/AudioContextMonkeyPatch.js?v=1465590712">/demos/virtual-oscilloscope/AudioContextMonkeyPatch.js?v=1465590712</a>"&gt;</span><span></span><span>&lt;/<span class="end-tag">script</span>&gt;</span><span>
+<span id="line260"></span>									</span><span>&lt;<span class="start-tag">script</span> <span class="attribute-name">src</span>="<a class="attribute-value" href="view-source:https://academo.org/demos/virtual-oscilloscope/demo.js?v=1490717693">/demos/virtual-oscilloscope/demo.js?v=1490717693</a>"&gt;</span><span></span><span>&lt;/<span class="end-tag">script</span>&gt;</span><span>
+<span id="line261"></span>		    
+<span id="line262"></span>
+<span id="line263"></span>			</span><span>&lt;<span class="start-tag">script</span>&gt;</span><span>
+<span id="line264"></span>			    //ASSET SERVING
+<span id="line265"></span>			    var assetPath = "https://s3-us-west-2.amazonaws.com/academo-assets";
+<span id="line266"></span>
+<span id="line267"></span>			    $(document).trigger({
+<span id="line268"></span>			    	type: "scriptLoaded"
+<span id="line269"></span>			    });
+<span id="line270"></span>		    </span><span>&lt;/<span class="end-tag">script</span>&gt;</span><span>
+<span id="line271"></span>
+<span id="line272"></span>	    
+<span id="line273"></span>
+<span id="line274"></span>	    
+<span id="line275"></span>	    
+<span id="line276"></span>
+<span id="line277"></span>
+<span id="line278"></span>	    
+<span id="line279"></span>
+<span id="line280"></span>	    
+<span id="line281"></span>
+<span id="line282"></span>
+<span id="line283"></span>
+<span id="line284"></span>	    </span><span>&lt;<span class="start-tag">script</span>&gt;</span><span>
+<span id="line285"></span>		    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+<span id="line286"></span>		    	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+<span id="line287"></span>		    	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+<span id="line288"></span>		    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+<span id="line289"></span>
+<span id="line290"></span>		    if (window.location.host == 'academo.org') {
+<span id="line291"></span>		    	ga('create', 'UA-17960919-9', 'academo.org');
+<span id="line292"></span>		    	ga('send', 'pageview');
+<span id="line293"></span>		    }
+<span id="line294"></span>	    </span><span>&lt;/<span class="end-tag">script</span>&gt;</span><span>
+<span id="line295"></span>		</span><span>&lt;/<span class="end-tag">div</span>&gt;</span><span>
+<span id="line296"></span>	    </span><span>&lt;<span class="start-tag">div</span> <span class="attribute-name">class</span>="<a class="attribute-value">push</a>"&gt;</span><span></span><span>&lt;/<span class="end-tag">div</span>&gt;</span><span>
+<span id="line297"></span>	    </span><span>&lt;/<span class="end-tag">div</span>&gt;</span><span>
+<span id="line298"></span>	    </span><span>&lt;<span class="start-tag">div</span> <span class="attribute-name">class</span>="<a class="attribute-value">footer</a>"&gt;</span><span>
+<span id="line299"></span>	    	</span><span>&lt;<span class="start-tag">div</span> <span class="attribute-name">class</span>="<a class="attribute-value">footer-inner</a>"&gt;</span><span>
+<span id="line300"></span>		    	<span class="entity"><span>&amp;</span>copy;</span> Academo.org 2016. Source code available at </span><span>&lt;<span class="start-tag">a</span> <span class="attribute-name">href</span>="<a class="attribute-value" href="view-source:https://github.com/edwardball/academo.org">https://github.com/edwardball/academo.org</a>"&gt;</span><span>GitHub.com</span><span>&lt;/<span class="end-tag">a</span>&gt;</span><span>
+<span id="line301"></span>	    	</span><span>&lt;/<span class="end-tag">div</span>&gt;</span><span>
+<span id="line302"></span>	    </span><span>&lt;/<span class="end-tag">div</span>&gt;</span><span> </span><span class="comment">&lt;!-- End of content --&gt;</span><span>
+<span id="line303"></span>	</span><span>&lt;/<span class="end-tag">body</span>&gt;</span><span>
+<span id="line304"></span></span><span>&lt;/<span class="end-tag">html</span>&gt;</span><span></span></pre><menu type="context" id="actions"><menuitem id="goToLine" label="Go to Line…" accesskey="L"></menuitem><menuitem id="wrapLongLines" label="Wrap Long Lines" type="checkbox"></menuitem><menuitem id="highlightSyntax" label="Syntax Highlighting" type="checkbox" checked="true"></menuitem></menu></body></html>

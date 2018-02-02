@@ -1,0 +1,216 @@
+
+/*!! Props to Brad Bodine for the Checkboxes! http://codepen.io/bbodine1/details/novBm */
+
+input[type=checkbox] {
+    visibility: hidden;
+}
+
+
+.checkbox{
+    position:relative;
+}
+
+#ui-container .checkbox label {
+    cursor: pointer;
+    position: absolute;
+    width: 20px;
+    height: 14px;
+    top: 0;
+    left: 0;
+    background: white;
+    border: 1px solid #cccccc;
+    box-shadow:none;
+}
+
+.checkbox label:after {
+    -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
+    filter: alpha(opacity=0);
+    opacity: 0;
+    content: '';
+    position: absolute;
+    width: 9px;
+    height: 5px;
+    background: transparent;
+    top: 4px;
+    left: 4px;
+    border: 3px solid orange;
+    border-top: none;
+    border-right: none;
+
+    -webkit-transform: rotate(-45deg);
+    -moz-transform: rotate(-45deg);
+    -o-transform: rotate(-45deg);
+    -ms-transform: rotate(-45deg);
+    transform: rotate(-45deg);
+}
+
+.checkbox label:hover::after {
+    -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=30)";
+    filter: alpha(opacity=30);
+    opacity: 0.1;
+}
+
+.checkbox input[type=checkbox]:checked + label:after {
+    -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=100)";
+    filter: alpha(opacity=100);
+    opacity: 1;
+}
+
+.interface{
+    margin-bottom: 20px;
+    padding-bottom:20px;
+    border-bottom: 2px solid #ecf0f1;
+    width:100%;
+}
+
+.interface:first-of-type label{
+    padding-top: 0;
+}
+
+.interface:last-of-type, .interface.last{
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.interface label{
+    padding-top:6px;
+}
+
+.interface .noUi-connect{
+    max-width:240px;
+}
+
+
+.demo (max-width: 768px){
+
+    .interface .input, .interface .input-append{
+        margin-right: 40px;
+    }
+    .interface .noUi-connect{
+        margin-bottom:15px;
+    }
+
+    .interface{
+        width: 240px;
+        float: left;
+        margin-right: 60px;
+    }
+}
+
+.with-units{
+    text-align: right;
+    // padding-right: 3px;
+}
+
+
+// to stop ipad glitch
+// input[type='text'], input[type='email'], input[type='search'],
+// input[type='password'], textarea
+// {
+//         -webkit-user-select: text;
+// }
+
+
+
+.interface.disabled{
+    opacity:0.5;
+}
+
+
+#ui-container {
+
+    padding:20px;
+    background:#efefef;
+    box-sizing: border-box;
+
+    label,button{
+        font-size: 13px;
+        color:#333;
+        font-weight: 800;
+        -webkit-appearance: none;
+        width:100%;
+    }
+
+    button{
+        padding:10px;
+        background: #ddd;
+        border:none;
+        border-bottom:solid 2px #ccc;
+        transition: background 0.3s;
+
+        &:hover{
+            background:mix($green, $white, 50%);
+            border-color:mix($green, $white, 75%);
+            transition-duration: 0s;
+
+        }
+        &:active{
+            background: mix($green, $white, 90%);
+            border-color:$green;
+            transition-duration: 0s;
+
+        }
+        &:focus{
+            outline: none;
+        }
+    }
+
+    .interface{
+        margin-bottom: 0px;
+    }
+
+    input {
+        -webkit-appearance: none;
+    }
+}
+
+.user-input-numerical{
+    -moz-box-sizing:border-box;
+    box-sizing:border-box;
+}
+
+.user-input-string{
+    -moz-box-sizing:border-box;
+    box-sizing:border-box;
+}
+
+.user-input-textarea{
+    -moz-box-sizing:border-box;
+    box-sizing:border-box;
+    height:100px;
+    white-space: nowrap;
+    overflow: auto;
+}
+
+.interface input[readonly]{
+    border: none;
+    padding: 5px 5px 5px 0;
+    width: 100%;
+    background: $grey--light;
+    cursor: text;
+}
+
+
+@media (max-width: 768px) {
+    #ui-container, .sidebar{
+        width:100%;
+        float:left;
+    }
+}
+
+@media (max-width: 480px) {
+    #ui-container{
+        border:solid 1px #ccc;
+        max-height: 250px;
+        overflow: scroll;
+    }
+    ::-webkit-scrollbar {
+        -webkit-appearance: none;
+        width: 4px;
+    }
+    ::-webkit-scrollbar-thumb {
+        border-radius: 4px;
+        background-color: rgba(0,0,0,.3);
+        -webkit-box-shadow: 0 0 1px rgba(255,255,255,.5);
+    }
+}

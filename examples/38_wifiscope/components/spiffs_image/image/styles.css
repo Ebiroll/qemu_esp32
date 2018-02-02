@@ -1,0 +1,50 @@
+
+
+#demo{
+  position:relative;
+}
+
+canvas{
+  position: absolute;
+  top:0;
+  left:0;
+  display: block;
+  border:solid 5px #E3E3E3;
+  /*border-radius: 10px;*/
+  /*background: #E3E3E3;*/
+}
+
+.preamble{
+	margin-bottom: 20px;
+}
+
+.embedded {
+	height:380px;
+	overflow:hidden;
+}
+
+.embedded #ui-container {
+    height: 358px;
+    overflow-y: scroll;
+}
+
+.embedded .header,
+.embedded .preamble,
+.embedded .sponsor-wrapper,
+.embedded .demo-description,
+.embedded .sidebar,
+.embedded .footer {
+	display:none;
+}
+
+.embedded .main {
+	width: 100%;
+	padding: 10px;
+	margin: 0 auto;
+	box-sizing: border-box;
+}
+
+.embed-title {
+	margin-top: 0;
+	font-size: 14px;
+}
