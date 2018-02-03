@@ -138,7 +138,7 @@ int app_main(void) {
    spi_flash_mmap_handle_t handle2;
    spi_flash_mmap_handle_t handle3;
 
-#define ESP_PARTITION_TABLE_ADDR 0x8000
+#define ESP_PARTITION_TABLE_ADDR 0x110000
 
 
 #if 0
@@ -193,6 +193,7 @@ int app_main(void) {
 
     if (is_running_qemu()) {
         printf("Running in qemu\n");
+	tcpip_adapter_init();
         xTaskCreatePinnedToCore(task_lwip_init, "loop", 2*4096, NULL, 14, NULL, 0);
     }
     else {
