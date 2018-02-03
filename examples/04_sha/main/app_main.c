@@ -74,9 +74,9 @@ void app_main(void)
     nvs_flash_init();
     int idx;
 
-    int *quemu_test=(int *) 0x3ff005f4;
+    //int *quemu_test=(int *) 0x3ff005f4;
     // Turn on wardware sha
-    *quemu_test=0x01;
+    //*quemu_test=0x01;
     
     printf("starting sha test\n");
 
