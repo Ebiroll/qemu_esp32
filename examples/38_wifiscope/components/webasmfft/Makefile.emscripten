@@ -1,0 +1,33 @@
+
+SOURCES:=$(example *.c)
+EXPORTS_FILE=makefile_exports.txt
+VARIABLE=`cat $(EXPORTS_FILE)`
+LDFLAGS=-O2 --llvm-opts 2
+
+
+KissFFT.js:	pulse/src/kissfft/kiss_fft.c pulse/src/kissfft/kiss_fft.h pulse/src/kissfft/_kiss_fft_guts.h pulse/src/kissfft/tools/kiss_fftr.c pulse/src/kissfft/tools/kiss_fftr.h Makefile.emscripten
+	emcc -O3 -I. \
+		--memory-init-file 0 \
+		-s NO_FILESYSTEM=1 \
+		-s NO_BROWSER=1 \
+		-s MODULARIZE=1 \
+		-s PRECISE_F32=1 \		
+		-s EXPORT_NAME="'KissFFTModule'" \
+		-s EXPORTED_FUNCTIONS="['_free','_kiss_fftr_alloc','_kiss_fftr','_kiss_fftri','_kiss_fftr_free','_kiss_fft_alloc','_kiss_fft','_kiss_fft_free',]" \
+		--emrun -o demo/kissFFTasm.js \
+		pulse/src/kissfft/kiss_fft.c pulse/src/kissfft/tools/kiss_fftr.c
+
+WASMkissFFT.js: pulse/src/kissfft/kiss_fft.c pulse/src/kissfft/kiss_fft.h pulse/src/kissfft/_kiss_fft_guts.h pulse/src/kissfft/tools/kiss_fftr.c pulse/src/kissfft/tools/kiss_fftr.h Makefile.emscripten
+	emcc -O3 -I. \
+		--memory-init-file 0 \
+		-s WASM=1 \
+		-s ALLOW_MEMORY_GROWTH=1 \
+		-s BINARYEN_IMPRECISE=1 \
+		-s EXPORTED_FUNCTIONS="$(VARIABLE)" \
+		-o pulse/src/wasmkissfft.js \
+		pulse/src/kissfft/kiss_fft.c pulse/src/kissfft/tools/kiss_fftr.c
+
+clean:
+	rm -f demo/kissFFTasm.js
+	rm -f pulse/src/wasmkissfft.js
+	rm -f pulse/src/wasmkissfft.wasm
