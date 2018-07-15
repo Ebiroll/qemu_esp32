@@ -75,6 +75,24 @@ A much faster but non-interactive example is the 06_duino example.
 It runs fine with the latest version of esp-idf
 
 ```
+## Update July 2018
+With the 3.1 version of esp-idf you might get stuck here..
+
+    W (2061) clk: still waiting for source selection RTC
+    or
+    (40) clk: RTC: Not found External 32 kHz XTAL. Switching to Internal 150 kHz RC chain
+
+  This is configure in menuconfig
+    → Component config → ESP32-specific
+
+### Workaround,
+    b rtc_clk_cal
+    In end of rtc_clk_cal
+    s period=100
+Now execusion should continue
+
+
+
 
 ## IMPORTANT update, Feb 2018
 
@@ -384,6 +402,12 @@ For a short time there was a divide by zero.
 The emulation has also been some problems with do_global_ctors().
  should be available at this location... 0x3f409fb8
 __init_array_start , however nvs reuses 0x3f40000 as I have not gotten it to recognize that this is already mmapped by the bootloader. However when running full bootloader 
+
+Or you can try version 3.1
+```
+ git checkout release/v3.1
+ git submodule update --init
+```
 
 
 Or you can try version 2.0
