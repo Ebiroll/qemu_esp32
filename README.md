@@ -76,6 +76,9 @@ It runs fine with the latest version of esp-idf
 
 ```
 ## Update July 2018
+
+The latest version of qemu, then this should not be a problem
+
 With the 3.1 version of esp-idf you might get stuck here..
 
     W (2061) clk: still waiting for source selection RTC
