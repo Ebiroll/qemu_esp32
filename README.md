@@ -1237,6 +1237,11 @@ However the work is not yet finished.
      components/emul_ip/lwip_ethoc.c is the driver.
      All files in the net/ direcory is just for reference, they are currently not used.
 
+     To get emulated network to work with 3.1 version of esp-idf you must patch esp-idf components/lwip/port/freertos/sys_arch.c
+     sys_init(void) ...
+    //esp_vfs_lwip_sockets_register();
+
+
 ```  
      Dont try running   emulated_net(); on actual hardware. 
      Probably not harmful but I put the emulated hardware here, i uesd the DR_REG_EMAC_BASE
