@@ -243,7 +243,7 @@ static esp_err_t esp32_wifi_eventHandler(void *ctx, system_event_t *event) {
 		// web server.
 		case SYSTEM_EVENT_STA_GOT_IP: 
 			ESP_LOGD(TAG, "********************************************");
-			ESP_LOGD(TAG, "* We are now connected to AP")
+			ESP_LOGD(TAG, "* We are now connected to AP");
 			ESP_LOGD(TAG, "* - Our IP address is: " IPSTR, IP2STR(&event->event_info.got_ip.ip_info.ip));
 			ESP_LOGD(TAG, "********************************************");
             {
