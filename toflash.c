@@ -19,13 +19,14 @@ void merge_flash(char *binfile,char *flashfile,int flash_pos,int patch_hash)
     int file_size=0;
     int flash_size=0;
 
-    fbin = fopen(binfile, "r");
+    fbin = fopen(binfile, "rb");
     if (fbin == NULL) {
         printf("   Can't open '%s' for reading.\n", binfile);
 		return;
 	}
 
     if (fseek(fbin, 0 , SEEK_END) != 0) {
+        printf("   Can't seek end of '%s'.\n", binfile);
        /* Handle Error */
     }
     file_size = ftell(fbin);
@@ -34,12 +35,13 @@ void merge_flash(char *binfile,char *flashfile,int flash_pos,int patch_hash)
       /* Handle Error */
     }
 
-    fflash  = fopen(flashfile, "r+");
+    fflash  = fopen(flashfile, "rb+");
     if (fflash == NULL) {
         printf("   Can't open '%s' for writing.\n", flashfile);
         return;
     }
     if (fseek(fflash, 0 , SEEK_END) != 0) {
+          printf("   Can't seek end of '%s'.\n", flashfile);
        /* Handle Error */
     }
     flash_size = ftell(fflash);
@@ -57,16 +59,19 @@ void merge_flash(char *binfile,char *flashfile,int flash_pos,int patch_hash)
 
     if (patch_hash==1) {
       for (j=0;j<33;j++)
-	{
+      {
           tmp_data[file_size-j]=0;
-	}
+      }
     }
 
     
     int len_write=fwrite(tmp_data,sizeof(char),file_size,fflash);
 
     if (len_read!=len_write) {
-      printf("Not able to merge %s",binfile);
+      printf("Not able to merge %s, %d bytes read,%d to write,%d file_size\n",binfile,len_read,len_write,file_size);
+      //while()
+
+
     }
 
     fclose(fbin);
@@ -88,7 +93,7 @@ int main(int argc,char *argv[])
 
     // Add bootloader
     merge_flash("build/bootloader/bootloader.bin","esp32flash.bin",0x1000,0);
-    // Add partitions, test OTA here
+    // Add partitions, 
     merge_flash("build/partitions_singleapp.bin","esp32flash.bin",0x8000,0);
     // Add application
     if (argc>1) {
