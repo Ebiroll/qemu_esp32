@@ -321,7 +321,7 @@ endfunction(set_nana_test)
 
 
 set (demos_dir )
-set (demos  hdiff calculator )
+set (demos  tabs hdiff calculator )
 
 if (NANA_CMAKE_INCLUDE_EXPERIMENTAL_DEMOS)
     list(APPEND demos  )
@@ -331,6 +331,9 @@ if (NANA_CMAKE_INCLUDE_EXPERIMENTAL_DEMOS)
     endif (NANA_CMAKE_BUILD_FreeMe)
 endif (NANA_CMAKE_INCLUDE_EXPERIMENTAL_DEMOS)
 
+add_executable(plot plot.cpp realtime_main.cpp)
+set_property( TARGET ${test} PROPERTY CXX_STANDARD 14 )
+target_link_libraries(plot ${nana_lib} ${NANA_LINKS})
 
 set_nana_test(demos_dir demos)
 
