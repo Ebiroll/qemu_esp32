@@ -3,7 +3,7 @@
  *  \brief Nana Calculator
  *	Nana 1.3 and C++11 is required.
  *	This is a demo for Nana C++ Library.
- *	It creates an intermediate level graphical calculator with few code.
+ *	It creates an intermediate level graphical calculator with little code.
  */
 
 #include <nana/gui.hpp>
