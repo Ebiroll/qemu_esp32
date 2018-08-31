@@ -12,6 +12,9 @@
 #include <nana/gui/widgets/picture.hpp>
 #include <nana/gui/place.hpp>
 #include <iostream>
+#include <fstream>
+
+//#include <sstream>
 
 using namespace nana;
 
@@ -46,32 +49,131 @@ void add_listbox_items(listbox& lsbox) {
 
 }
 
-int main()
+inline char hdigit(int n){return "0123456789abcdef"[n&0xf];};
+
+#define LEN_LIMIT 256
+#define SUBSTITUTE_CHAR '`'
+
+static const char* dumpline(char*dest, int linelen, const char*src, const char*srcend)
+{
+    if(src>=srcend) {
+        return 0;
+    }
+    int i;
+    unsigned long s = (unsigned long)src;
+    for(i=0; i<8; i++) {
+        //dest[i] = hdigit(s>>(28-i*4));
+		dest[i] =' ';
+    }
+    dest[8] = ' ';
+    dest += 9;
+    for(i=0; i<linelen/4 ; i++) {
+        if(src+i<srcend) {
+            dest[i*3] = hdigit(src[i]>>4);
+            dest[i*3+1] = hdigit(src[i]);
+            dest[i*3+2] = ' ';
+            dest[linelen/4*3+i] = src[i] >= ' ' && src[i] < 0x7f ? src[i] : SUBSTITUTE_CHAR;
+        }else{
+            dest[i*3] = dest[i*3+1] = dest[i*3+2] = dest[linelen/4*3+i] = ' ';
+        }
+    }
+    return src+i;
+}
+
+
+void log_dumpf(const char*fmt,const void*addr,int len,int linelen,textbox &tb)
+{
+#if LEN_LIMIT
+    if(len>linelen*LEN_LIMIT) {
+        len=linelen*LEN_LIMIT;
+    }
+#endif
+    linelen *= 4;
+    static char _buf[4096];
+    char*buf = _buf;
+    buf[linelen]=0;
+    const char*start = (char*)addr;
+    const char*cur = start;
+    const char*end = start+len;
+    while(!!(cur = dumpline(buf,linelen,cur,start+len))){
+		std::string line=std::string(buf) + "\n";
+		tb.append(line,false);
+	}
+}
+
+void log_dump(const void*addr,int len,int linelen,textbox &tb)
+{
+    log_dumpf("%s\n",addr,len,linelen,tb);
+}
+
+int main(int argc,char *argv[])
 {
 	using namespace nana;
+	bool disable_draw=false;
 
-	form fm(API::make_center(800, 800),nana::appear::decorate<nana::appear::sizable>());
-    fm.div("horizontal <lsbox>"
-           "margin=5 <line weight=15><marginr=100 weight=30 tbox>");
+    form fm(API::make_center(860, 800), nana::appear::decorate<nana::appear::sizable>());
+	fm.div("vert <lsbox weight=20%>"
+		  "<<line weight=40><marginr=20 width=90% tbox>>");
+	//form fm(API::make_center(800, 800),nana::appear::decorate<nana::appear::sizable>());
+    //fm.div("horizontal <lsbox>"
+    //       "margin=5 <line weight=15><marginr=100 weight=30 tbox>");
 
 	//Define a panel widget to draw line numbers.
 	panel<true> line(fm);
 
-	listbox lsbox(fm, rectangle{ 10, 10, 80, 100 });
+	std::vector<char> buffer;
+	std::streamsize size;
+	int offset=0;
+
+	textbox tbox(fm);
+
+	if (argc==1) {
+		printf("Usage %s <file1> <file2> -p partition.csv\n",argv[0]);
+	}
+
+	if (argc>1) {
+		std::ifstream file(argv[1], std::ios::binary | std::ios::ate);
+		size = file.tellg();
+		file.seekg(0, std::ios::beg);
+		buffer.resize(size);
+		
+		if (file.read(buffer.data(), size))
+		{
+			log_dump(&(*buffer.begin()),size,16,tbox);
+			/* worked! */
+		}
+		else
+		{
+			return 0;
+		}
+	}
+
+	listbox lsbox(fm); // , rectangle{ 10, 10, 80, 100 }
 	add_listbox_items(lsbox);
 
     lsbox.events().selected([&](const nana::arg_listbox &event){
 		//API::refresh_window(line);
 		auto test=event.item.text(3);
-  		std::cout << "Click " << test << "\n"; 
+		if (event.item.selected()) {
+			std::cout << "Click " << test << "\n";
+			tbox.reset("");
+			offset=std::strtol(test.c_str(), NULL, 16);
+			char *ptr=&*buffer.begin()+offset;
+			//tbox.enabled(false);
+			// Appending data causes lots of events, although hide does not seem to work.. :-(
+			//tbox.hide();
+			disable_draw=true;
+			log_dump(ptr,size,16,tbox);
+			disable_draw=false;
+			//tbox.show();
+			//const upoint pos;
+			//tbox.caret_pos(pos);
+			//tbox.enabled(true);
+		}
 	});
 
 
-#if 1
-	textbox tbox(fm);
-
-	tbox.append("No where to select the fox where i am!",true);
-	tbox.typeface(nana::paint::font("", 20, true));
+	tbox.typeface(nana::paint::font("monospace", 10, true));
 	//tbox.line_wrapped(true); //Add this line and input a very very long line of text, give it a try.
 
     tbox.set_highlight("nisse", colors::dark_blue, colors::yellow);
@@ -90,6 +192,8 @@ int main()
 	//Draw the line numbers
 	drawing{ line }.draw([&](paint::graphics& graph)
 	{
+		if (disable_draw)
+			return;
 		auto line_px = tbox.line_pixels();
 		if (0 == line_px)
 			return;
@@ -107,7 +211,11 @@ int main()
 
 		for (auto & pos : text_pos)
 		{
-			auto line_num = std::to_wstring(pos.y + 1);
+			char hex_buff[16];
+
+			sprintf(hex_buff,"0x%04x", offset+16*(pos.y)); // gives 12ab
+
+			auto line_num = std::string(hex_buff);
 			auto pixels = graph.text_extent_size(line_num).width;
 
 			//Check if the panel widget is not enough room to display a line number
@@ -126,6 +234,9 @@ int main()
 		}
 	});
 
+
+
+
 	//When the text is exposing in the textbox, refreshs
 	//the panel widget to redraw new line numbers.
 	tbox.events().text_exposed([&line]
@@ -138,7 +249,7 @@ int main()
 	fm["line"]  << line;
     fm["tbox"]   << tbox;
     fm.collocate();
-#endif
+
 	fm.show();
 	exec();
 }
