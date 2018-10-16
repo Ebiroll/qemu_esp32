@@ -75,6 +75,17 @@ A much faster but non-interactive example is the 06_duino example.
 It runs fine with the latest version of esp-idf
 
 ```
+## Update Oct 2018
+
+The latest version of esp-idf has an assert in components/soc/esp32/rtc_clk_init.c
+To run in qemu withe latest esp-idf remove this assert
+
+120: bool res = rtc_clk_cpu_freq_mhz_to_config(cfg.cpu_freq_mhz, &new_config);
+121: //assert(res && "invalid CPU frequency value");
+121: rtc_clk_cpu_freq_set_config(&new_config);
+
+
+
 ## Update July 2018
 
 The latest version of qemu, then this should not be a problem
