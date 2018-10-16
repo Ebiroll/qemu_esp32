@@ -349,6 +349,42 @@ static void bt_app_a2d_cb(esp_a2d_cb_event_t event, esp_a2d_cb_param_t *param)
     bt_app_work_dispatch(bt_app_av_sm_hdlr, event, param, sizeof(esp_a2d_cb_param_t), NULL);
 }
 
+#include <math.h>
+
+// http://beej.us/blog/data/digital-sound/
+int remap_level_to_signed_16_bit(float v)
+{
+    long r;
+
+    // clamp values:
+    if (v > 1.0) { v = 1.0; }
+    else if (v < -1.0) { v = -1.0; }
+
+    v += 1.0;      // remap from [-1.0,1.0] to [0.0,2.0]
+    v /= 2;        // remap from [0.0,2.0] to [0.0,1.0]
+    r = v * 65535; // remap from [0.0,1.0] to [0,65535]
+
+    return r - 32768;  // remap from [0,65535] to [-32768,32767]
+}
+
+int phase=0;
+
+void generate_freq(int *buffer, size_t count, float volume, float freq)
+{
+  size_t pos; // sample number we're on
+
+  for (pos = phase; pos < (phase+count && pos>0); pos++) {
+    float a = 2 * 3.14159f * freq * pos / SAMPLING_RATE;
+    float v = sin(a) * volume;
+    // convert from [-1.0,1.0] to [-32767,32767]:
+    buffer[pos] = remap_level_to_signed_16_bit(v);
+  }
+
+  phase=pos;
+}
+
+
+
 static int32_t bt_app_a2d_data_cb(uint8_t *data, int32_t len)
 {
     if (len < 0 || data == NULL) {
