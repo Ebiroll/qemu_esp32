@@ -84,6 +84,8 @@ To run in qemu withe latest esp-idf remove this assert
     121: //assert(res && "invalid CPU frequency value");
     122: rtc_clk_cpu_freq_set_config(&new_config);
 
+However, I suspect that the new compiler required for the latest esp-idf generates an instruction that is not handled by qemu.. yet.
+Version 3.1 of esp-idf seems to work ok.
 
 
 ## Update July 2018

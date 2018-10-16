@@ -1,0 +1,295 @@
+eWÅJµ¬Ä&ä“ ∞“≤¶™˙ç°®r.óÇ¯LBBΩ◊Q™ Í•ïìâíΩ›¥'¬≈3ÄiUΩ¶∞*’e±¡*Í%=O©
+£Àk•›≥ZÈ ê	öAÖó•Ç‚’•°±≠ﬂVŸiêaê)˝‰ÆÇ∏Ç¨÷E…Ÿ∫¬¡0å¨.˙—≤óÇ¯Ç¢h§E…v'‚A∞È¡_VŸi∞A∞!ÎëÂTÍ1†,ÎÕ´¢•ˆßj
+¨+ë:¬Õf¶Ç òâïÓ'”H¨+ë∫¬Õf¶Ç±,…’ÆßÛÇ‚ç!Î+—ö¬Q∞∫∏Ç¬,¨´Íê&jäÎ+—∫¬—0¬¬ê¬å´π:“4çA÷ã…˘Ç¯¬8∞∆Ç*
+[0;32mI (28) boot: ESP-IDF v3.1-dirty 2nd stage bootloader[0m
+[0;32mI (28) boot: compile time 20:24:13[0m
+[0;32mI (37) boot: Enabling RNG early entropy source...[0m
+[0;32mI (37) boot: SPI Speed      : 40MHz[0m
+[0;32mI (37) boot: SPI Mode       : DIO[0m
+[0;32mI (41) boot: SPI Flash Size : 4MB[0m
+[0;32mI (45) boot: Partition Table:[0m
+[0;32mI (49) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (56) boot:  0 nvs              WiFi data        01 02 00009000 00006000[0m
+[0;32mI (63) boot:  1 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (71) boot:  2 factory          factory app      00 00 00010000 00100000[0m
+[0;32mI (78) boot: End of partition table[0m
+[0;32mI (82) esp_image: segment 0: paddr=0x00010020 vaddr=0x3f400020 size=0x244a8 (148648) map[0m
+[0;32mI (143) esp_image: segment 1: paddr=0x000344d0 vaddr=0x3ffc0000 size=0x02714 ( 10004) load[0m
+[0;32mI (148) esp_image: segment 2: paddr=0x00036bec vaddr=0x3ffc2714 size=0x00000 (     0) load[0m
+[0;32mI (150) esp_image: segment 3: paddr=0x00036bf4 vaddr=0x40080000 size=0x00400 (  1024) load[0m
+[0;32mI (160) esp_image: segment 4: paddr=0x00036ffc vaddr=0x40080400 size=0x09014 ( 36884) load[0m
+[0;32mI (183) esp_image: segment 5: paddr=0x00040018 vaddr=0x400d0018 size=0x884cc (558284) map[0m
+[0;32mI (379) esp_image: segment 6: paddr=0x000c84ec vaddr=0x40089414 size=0x07898 ( 30872) load[0m
+[0;32mI (392) esp_image: segment 7: paddr=0x000cfd8c vaddr=0x400c0000 size=0x00000 (     0) load[0m
+[0;32mI (393) esp_image: segment 8: paddr=0x000cfd94 vaddr=0x50000000 size=0x00000 (     0) load[0m
+[0;32mI (409) boot: Loaded app from partition at offset 0x10000[0m
+[0;32mI (409) boot: Disabling RNG early entropy source...[0m
+[0;32mI (411) cpu_start: Pro cpu up.[0m
+[0;32mI (414) cpu_start: Single core mode[0m
+[0;32mI (419) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (426) heap_init: At 3FFAFF10 len 000000F0 (0 KiB): DRAM[0m
+[0;32mI (432) heap_init: At 3FFD19D8 len 0000E628 (57 KiB): DRAM[0m
+[0;32mI (438) heap_init: At 3FFE0440 len 00003BC0 (14 KiB): D/IRAM[0m
+[0;32mI (444) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (451) heap_init: At 40090CAC len 0000F354 (60 KiB): IRAM[0m
+[0;32mI (457) cpu_start: Pro cpu start user code[0m
+[0;32mI (139) cpu_start: Starting scheduler on PRO CPU.[0m
+[0;32mI (148) BTDM_INIT: BT controller compile version [8353b1b]
+[0m
+[0;32mI (148) system_api: Base MAC address is not set, read default base MAC address from BLK0 of EFUSE[0m
+[0;32mI (218) phy: phy_version: 3960, 5211945, Jul 18 2018, 10:40:07, 0, 0[0m
+[0;32mI (718) BT_AV: Starting device discovery...[0m
+[0;32mI (728) BT_AV: Discovery started.[0m
+[0;32mI (8338) BT_AV: Scanned device: fc:58:fa:ca:50:99[0m
+[0;32mI (8338) BT_AV: --Class of Device: 0x260404[0m
+[0;32mI (8338) BT_AV: --RSSI: -28[0m
+[0;32mI (8338) BT_AV: Found a target device BT_SPEAKER [0m
+[0;32mI (8348) BT_AV: Found a target device, address fc:58:fa:ca:50:99, name SBL 4.1 A1[0m
+[0;32mI (8348) BT_AV: Found a target device, address fc:58:fa:ca:50:99, name SBL 4.1 A1[0m
+[0;32mI (8358) BT_AV: Cancel device discovery ...[0m
+[0;32mI (8368) BT_AV: Device discovery stopped.[0m
+[0;32mI (8368) BT_AV: a2dp connecting to peer: SBL 4.1 A1[0m
+[0;31mE (8378) BT_APPL: reset flags[0m
+[0;32mI (8378) BT_AV: bt_app_av_sm_hdlr state 4, evt 0x0[0m
+[0;31mE (10188) BT_APPL: bta_av_rc_create ACP handle exist for shdl:0[0m
+[0;33mW (10308) BT_APPL: new conn_srvc id:18, app_id:0[0m
+[0;32mI (10308) BT_AV: bt_app_av_sm_hdlr state 4, evt 0x0[0m
+[0;32mI (10308) BT_AV: a2dp connected[0m
+[0;32mI (10718) BT_AV: bt_app_av_sm_hdlr state 5, evt 0xff00[0m
+[0;32mI (10718) BT_AV: a2dp media ready checking ...[0m
+[0;32mI (10718) BT_AV: bt_app_av_sm_hdlr state 5, evt 0x3[0m
+[0;32mI (10718) BT_AV: a2dp media ready, starting ...[0m
+[0;33mW (10728) BT_APPL: new conn_srvc id:18, app_id:1[0m
+[0;32mI (10778) BT_LOG: bta_av_link_role_ok hndl:x41 role:1 conn_audio:x1 bits:1 features:x824b
+[0m
+[0;32mI (10778) BT_AV: bt_app_av_sm_hdlr state 5, evt 0x3[0m
+[0;32mI (10788) BT_AV: a2dp media start successfully.[0m
+[0;32mI (10788) BT_AV: bt_app_av_sm_hdlr state 5, evt 0x1[0m
+[0;33mW (11178) BT_APPL: TX Q overflow: 18/17[0m
+[0;33mW (11208) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (11238) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (11268) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (11298) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (11328) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (11358) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (11388) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (11418) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (11448) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (11478) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (11508) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (11538) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (11568) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (11598) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (11628) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (11658) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (11688) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (11748) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (11778) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (11808) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (11838) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (11868) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (11898) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (11928) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (11958) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (11988) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (12018) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (12048) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (12078) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (12108) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (12138) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (12168) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (12198) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (12228) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (12258) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (12288) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (12318) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (12348) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (12378) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (12408) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (12438) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (12468) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (12498) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (12528) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (12558) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (12588) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (12618) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (12648) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (12678) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (12708) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (12738) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (12768) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (12798) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (12828) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (12858) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (12888) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (12918) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (12948) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (12978) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (13008) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (13038) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (13068) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (13098) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (13128) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (13158) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (13188) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (13218) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (13248) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (13278) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (13308) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (13338) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (13368) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (13398) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (13428) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (13458) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (13488) BT_APPL: TX Q overflow: 19/17[0m
+[0;31mE (13508) BT_L2CAP: L2CAP got conn_comp in bad state: 4  status: 0x4
+[0m
+[0;31mE (13508) BT_APPL: bta_av_str_stopped:audio_open_cnt=1, p_data 0x0[0m
+[0;33mW (13518) BT_L2CAP: L2CAP - no LCB for L2CA_SetAclPriority[0m
+[0;33mW (13518) BT_L2CAP: WARNING L2CA_SetFlushTimeout No lcb for bd_addr [...;ca5099][0m
+[0;31mE (13528) BT_APPL: bta_dm_pm_sniff BTM_SetPowerMode() returns ERROR status=7[0m
+[0;33mW (13538) BT_AVCT: ccb 0 not allocated[0m
+[0;31mE (13538) BT_APPL: bta_av_rc_create found duplicated handle:0[0m
+[0;33mW (13548) BT_APPL: TX Q overflow: 19/8[0m
+[0;31mE (13568) BT_APPL: warning : no command pending, ignore ack[0m
+[0;32mI (13568) BT_AV: bt_app_av_sm_hdlr state 5, evt 0x1[0m
+[0;32mI (13568) BT_AV: bt_app_av_sm_hdlr state 5, evt 0x0[0m
+[0;32mI (13568) BT_AV: a2dp disconnected[0m
+[0;33mW (13578) BT_APPL: Media task Scheduled after Suspend[0m
+[0;32mI (20718) BT_AV: bt_app_av_sm_hdlr state 3, evt 0xff00[0m
+[0;32mI (20718) BT_AV: a2dp connecting to peer: fc:58:fa:ca:50:99[0m
+[0;31mE (20718) BT_APPL: reset flags[0m
+[0;32mI (20718) BT_AV: bt_app_av_sm_hdlr state 4, evt 0x0[0m
+[0;32mI (30718) BT_AV: bt_app_av_sm_hdlr state 4, evt 0xff00[0m
+[0;33mW (31218) BT_SDP: SDP - Rcvd conn cnf with error: 0x10  CID 0x45
+[0m
+[0;33mW (39988) BT_APPL: bta_dm_act no entry for connected service cbs[0m
+[0;33mW (39988) BT_BTC: BTA_AV_OPEN_EVT::FAILED status: 3
+[0m
+[0;32mI (39988) BT_AV: bt_app_av_sm_hdlr state 4, evt 0x0[0m
+[0;32mI (40718) BT_AV: bt_app_av_sm_hdlr state 3, evt 0xff00[0m
+[0;32mI (40718) BT_AV: a2dp connecting to peer: fc:58:fa:ca:50:99[0m
+[0;31mE (40718) BT_APPL: reset flags[0m
+[0;32mI (40718) BT_AV: bt_app_av_sm_hdlr state 4, evt 0x0[0m
+[0;32mI (50718) BT_AV: bt_app_av_sm_hdlr state 4, evt 0xff00[0m
+[0;32mI (60718) BT_AV: bt_app_av_sm_hdlr state 4, evt 0xff00[0m
+[0;32mI (70718) BT_AV: bt_app_av_sm_hdlr state 3, evt 0xff00[0m
+[0;32mI (70718) BT_AV: a2dp connecting to peer: fc:58:fa:ca:50:99[0m
+[0;32mI (80718) BT_AV: bt_app_av_sm_hdlr state 4, evt 0xff00[0m
+[0;32mI (90718) BT_AV: bt_app_av_sm_hdlr state 4, evt 0xff00[0m
+[0;32mI (100718) BT_AV: bt_app_av_sm_hdlr state 3, evt 0xff00[0m
+[0;32mI (100718) BT_AV: a2dp connecting to peer: fc:58:fa:ca:50:99[0m
+[0;33mW (105848) BT_APPL: bta_dm_act no entry for connected service cbs[0m
+[0;33mW (105848) BT_BTC: BTA_AV_OPEN_EVT::FAILED status: 3
+[0m
+[0;32mI (105848) BT_AV: bt_app_av_sm_hdlr state 4, evt 0x0[0m
+[0;31mE (108798) BT_APPL: bta_av_rc_create ACP handle exist for shdl:0[0m
+[0;32mI (108798) BT_AV: bt_app_av_sm_hdlr state 3, evt 0x0[0m
+[0;32mI (110718) BT_AV: bt_app_av_sm_hdlr state 3, evt 0xff00[0m
+[0;32mI (110718) BT_AV: a2dp connecting to peer: fc:58:fa:ca:50:99[0m
+[0;32mI (110798) BT_LOG: bta_av_link_role_ok hndl:x41 role:1 conn_audio:x0 bits:2 features:x824b
+[0m
+[0;33mW (110938) BT_APPL: new conn_srvc id:18, app_id:0[0m
+[0;32mI (110938) BT_AV: bt_app_av_sm_hdlr state 4, evt 0x0[0m
+[0;32mI (110938) BT_AV: a2dp connected[0m
+[0;31mE (118138) BT_APPL: bta_dm_pm_btm_status hci_status=36[0m
+[0;32mI (120718) BT_AV: bt_app_av_sm_hdlr state 5, evt 0xff00[0m
+[0;32mI (120718) BT_AV: a2dp media ready checking ...[0m
+[0;32mI (120718) BT_AV: bt_app_av_sm_hdlr state 5, evt 0x3[0m
+[0;32mI (120718) BT_AV: a2dp media ready, starting ...[0m
+[0;32mI (120848) BT_LOG: bta_av_link_role_ok hndl:x41 role:1 conn_audio:x1 bits:1 features:x824b
+[0m
+[0;32mI (120848) BT_AV: bt_app_av_sm_hdlr state 5, evt 0x3[0m
+[0;32mI (120848) BT_AV: a2dp media start successfully.[0m
+[0;32mI (120858) BT_AV: bt_app_av_sm_hdlr state 5, evt 0x1[0m
+[0;32mI (130718) BT_AV: bt_app_av_sm_hdlr state 5, evt 0xff00[0m
+[0;33mW (135998) BT_APPL: TX Q overflow: 18/17[0m
+[0;33mW (136028) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (136058) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (136088) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (136118) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (136148) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (136178) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (136208) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (136238) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (136268) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (136298) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (136328) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (136358) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (136388) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (136418) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (136448) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (136478) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (136508) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (136538) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (136568) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (136598) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (136628) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (136658) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (136688) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (136718) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (136748) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (136778) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (136808) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (136838) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (136868) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (136898) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (136928) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (136958) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (136988) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (137018) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (137048) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (137078) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (137108) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (137138) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (137168) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (137198) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (137228) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (137258) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (137288) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (137318) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (137348) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (137378) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (137408) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (137438) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (137468) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (137498) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (137528) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (137558) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (137588) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (137618) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (137648) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (137678) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (137708) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (137738) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (137768) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (137798) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (137828) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (137858) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (137888) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (137918) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (137948) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (137978) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (138008) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (138038) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (138068) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (138098) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (138128) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (138158) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (138188) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (138218) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (138248) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (138278) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (138308) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (138338) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (138368) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (138398) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (138428) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (138458) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (138488) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (138518) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (138548) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (138578) BT_APPL: TX Q overflow: 19/16[0m
+[0;33mW (138608) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (138638) BT_APPL: TX Q overflow: 19/17[0m
+[0;33mW (138668) BT_APPL: TX Q overflow: 19/16[0m

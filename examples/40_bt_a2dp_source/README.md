@@ -2,9 +2,17 @@ Example taken from the ESP-IDF A2DP-SOURCE demo
 ========================
 
 Demo of A2DP audio source role
-Note that this example requires the latest version of the esp-idf
+Note that this example requires V3.1 of esp-idf
 
 This is the demo of using Advanced Audio Distribution Profile APIs to transmit audio stream. Application can take advantage of this example to implement portable audio players or microphones to transmit audio stream to A2DP sink devices.
+
+Tested on rev 1 chip
+Connecting....
+Chip is ESP32D0WDQ6 (revision 1)
+Features: WiFi, BT, Dual Core
+With bluetooth speaker, SBL 4.1 A1
+You can see the results from running in screenlog.0
+Far from impressive.....
 
 ## How to use this example
 
