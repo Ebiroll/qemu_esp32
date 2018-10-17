@@ -77,15 +77,30 @@ It runs fine with the latest version of esp-idf
 ```
 ## Update Oct 2018
 
-The latest version of esp-idf has an assert in components/soc/esp32/rtc_clk_init.c
-To run in qemu withe latest esp-idf remove this assert
+The latest version of esp-idf has an assert in 
+To run in qemu withe latest esp-idf remove these assert
+components/soc/esp32/rtc_clk_init.c
 
     120: bool res = rtc_clk_cpu_freq_mhz_to_config(cfg.cpu_freq_mhz, &new_config);
     121: //assert(res && "invalid CPU frequency value");
     122: rtc_clk_cpu_freq_set_config(&new_config);
+   
+components/soc/esp32/rtc_time.c
 
-However, I suspect that the new compiler required for the latest esp-idf generates an instruction that is not handled by qemu.. yet.
+    74: // The required amount of slowclk_cycles can produce in a counter TIMG a overflow error. Decrease the slowclk_cycles for fix it.
+    75: //assert(us_time_estimate < us_timer_max);
+    76: /* Start calibration */
+
+
+    components/esp32/clk.c
+    126: bool res = rtc_clk_cpu_freq_mhz_to_config(new_freq_mhz, &new_config);
+    127: //assert(res);
+
+
+
+Only if you are using head.
 Version 3.1 of esp-idf seems to work ok.
+qemu will be improved to return better values in order to avoid these asserts.
 
 
 ## Update July 2018
