@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 //
 // qemu_toflash
 // 
@@ -88,7 +89,15 @@ void merge_flash(char *binfile,char *flashfile,int flash_pos,int patch_hash)
 int main(int argc,char *argv[])
 {
 
+    if (!strcmp(argv[0],"-bl")==0)  {
+      printf("Overwrite bootloader only \n");
+      merge_flash("build/bootloader/bootloader.bin","esp32flash.bin",0x1000,0);
+      system("cp esp32flash.bin ~/qemu_esp32");
+      exit(0);
+
+    }
     // Overwrites esp32flash.bin file
+
     system("dd if=/dev/zero bs=1M count=4  | tr \"\\000\" \"\\377\" >  esp32flash.bin");
 
     // Add bootloader

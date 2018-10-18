@@ -77,8 +77,8 @@ It runs fine with the latest version of esp-idf
 ```
 ## Update Oct 2018
 
-The latest version of esp-idf has an assert in 
-To run in qemu withe latest esp-idf remove these assert
+The latest version of esp-idf has some asserts regarding the RTC.
+To run in qemu withe latest esp-idf you can remove these asserts.
 components/soc/esp32/rtc_clk_init.c
 
     120: bool res = rtc_clk_cpu_freq_mhz_to_config(cfg.cpu_freq_mhz, &new_config);
@@ -105,8 +105,7 @@ qemu will be improved to return better values in order to avoid these asserts.
 
 ## Update July 2018
 
-The latest version of qemu, then this should not be a problem
-
+The latest version of qemu rtc emulation  is a little better, then this is no longer a problem.
 With the 3.1 version of esp-idf you might get stuck here..
 
     W (2061) clk: still waiting for source selection RTC
@@ -121,8 +120,6 @@ With the 3.1 version of esp-idf you might get stuck here..
     In end of rtc_clk_cal
     s period=100
 Now execusion should continue
-
-
 
 
 ## IMPORTANT update, Feb 2018
@@ -296,6 +293,10 @@ https://github.com/jcmvbkbc/xtensa-toolchain-build/blob/master/fixup-gdb.sh
 Another option is to build from this prepatched gdb crosstool source,
 https://github.com/Ebiroll/gdb
 One has to create a link or copy ar to x86_64-build_pc-linux-gnu-ar
+Also dont forget to prepare this version for use with with qemu.
+    cd gdb
+    cp xtensa-config.c.qemu xtensa-config.c
+    ./configure  --without-guile --target=xtensa-esp32-elf
 
 ## Building qemu
 ```
@@ -453,10 +454,10 @@ Anyways, things will probably work much better now.
 cd ..
 git clone --recursive https://github.com/espressif/esp-idf.git
 #  dump_mem ROM0(776KB) to rom.bin
-esp-idf/components/esptool_py/esptool/esptool.py --chip esp32 -b 921600 -p /dev/ttyUSB0 dump_mem 0x40000000 0x000C2000 rom.bin
+~/esp/esp-idf/components/esptool_py/esptool/esptool.py --chip esp32 -b 921600 -p /dev/ttyUSB0 dump_mem 0x40000000 0x000C2000 rom.bin
 
 #  dump_mem ROM1(64KB) to rom1.bin
-esp-idf/components/esptool_py/esptool/esptool.py --chip esp32 -b 921600 -p /dev/ttyUSB0 dump_mem 0x3FF90000 0x00010000 rom1.bin
+~/esp/esp-idf/components/esptool_py/esptool/esptool.py --chip esp32 -b 921600 -p /dev/ttyUSB0 dump_mem 0x3FF90000 0x00010000 rom1.bin
 
 Note that rom0 is smaller than the actual dump.
 Those two files will be loaded by qemu and must be in same directory as you start qemu.
@@ -484,7 +485,7 @@ It is because you try to start wifi
 Now there is simple flash emulation in qemu. You need the file  esp32flash.bin to be in the same directory as rom.bin & rom1.bin.
 If no flashfile exists, an empty file will be created.
 ```
-esp/esp-idf/components/esptool_py/esptool/esptool.py --baud 920600 read_flash 0 0x400000  esp32flash.bin
+~/esp/esp-idf/components/esptool_py/esptool/esptool.py --baud 920600 read_flash 0 0x400000  esp32flash.bin
 ```
 Another possibility in order to create a proper flash file is by running the following.
 ```
@@ -494,12 +495,6 @@ gcc toflash.c -o qemu_flash
 ./qemu_flash build/app-template.bin
 ```
 
-
-Currently mmap function are not correctly implemented. 
-The reason for this is that the bootloader will initiate the FLASH_MMU_TABLE
-to something. page 0 must be mapped correctly as it contains the .flash.rodata from the elf file.
-but qemu will not run the bootloader as it loads the elf file directly.
-0x3f400010 size 5794 bytes.
 
 
 BOOTLOADER UPDATE
@@ -655,6 +650,29 @@ Setting programcounter (pc) to a function,
   (gdb) p/x $a3          (register as hex)
 
 ```
+
+#  Running from dumped flash content.
+If you dump the flash from an actual hardware device,
+```
+~/esp/esp-idf/components/esptool_py/esptool/esptool.py --baud 920600 read_flash 0 0x400000  esp32flash.bin
+```
+
+You might get this problem
+```
+E (37) esp_image: Image hash failed - image is corrupt
+E (37) boot: Factory app partition is not bootable
+E (37) boot: No bootable app partitions in the partition table
+```
+This is due to incorrect dump or some flash emulation error.If you still want to run, you can replace the bootloader ony and patch the bootloader to skip the check. These are some hints to get you started.
+
+
+    ./qemu_flash -bl
+    xtensa-esp32-elf-gdb.qemu   build/bootloader/bootloader.elf -ex 'target remote:1234'
+    (gdb) b bootloader_main
+
+Dont forget to configure flashsize to < 4MB
+Also remember that the bootloader has changed slightly during the different versions of the esp-id.
+
 
 #  Objdump
 Dump mixed source/disassemply listing,
@@ -821,8 +839,6 @@ We break here ,   components/freertos/./heap_regions.c
 (gdb) where
 (gdb) up
 
-// This one we could also analyze more
-ets_get_detected_xtal_freq,  0x40008588
 ```
 
 
@@ -889,7 +905,7 @@ io write 000480b4 18CB18CB RTC_CNTL_STORE5_REG 3ff480b4
 ```
 
 #  Dumping the ROM with the main/main.c program
-Please use other method (esptool.py), its easier and faster. This is saved for historical reasons and for the screen instructions.
+Please use other method (esptool.py), its easier and faster. This is saved for historical reasons and for the screen instructions. It can also be used to dump the content as seen by cpu1.
 Set the environment properly. Build the romdump app and flash it.
 Use i.e screen as serial terminal.
 
