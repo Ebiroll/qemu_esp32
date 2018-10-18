@@ -89,12 +89,14 @@ void merge_flash(char *binfile,char *flashfile,int flash_pos,int patch_hash)
 int main(int argc,char *argv[])
 {
 
-    if (!strcmp(argv[0],"-bl")==0)  {
-      printf("Overwrite bootloader only \n");
-      merge_flash("build/bootloader/bootloader.bin","esp32flash.bin",0x1000,0);
-      system("cp esp32flash.bin ~/qemu_esp32");
-      exit(0);
+    if (argc>1) {
+      if (strcmp(argv[1],"-bl")==0)  {
+        printf("Overwrite bootloader only \n");
+        merge_flash("build/bootloader/bootloader.bin","esp32flash.bin",0x1000,0);
+        system("cp esp32flash.bin ~/qemu_esp32");
+        exit(0);
 
+      }
     }
     // Overwrites esp32flash.bin file
 
