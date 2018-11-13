@@ -162,10 +162,12 @@ function Demo(settings){
 		    $('#'+prop+'-interface input').change(function(){
 		    	if ($(this).prop('checked')){
 		    		ui[prop].value = true;
-		    		eventLabel = 'checkbox: switch on'
+					eventLabel = 'checkbox: switch on'
+					console.log("ON")
 			    } else {
 			    	ui[prop].value = false;
-			    	eventLabel = 'checkbox: switch on'
+					eventLabel = 'checkbox: switch on'
+					console.log("ON2")
 			    }
 		        self.sendEvent(ui[prop].title, eventLabel, window.location.pathname);
 			    self.update(prop);
@@ -217,8 +219,9 @@ function Demo(settings){
 	});
 
 	this.sendEvent = function(category, action, label, value){
+		console.log(label,value);
 		if (window.location.host == 'academo.org'){
-			ga('send', 'event', category, action, label, value);
+			//ga('send', 'event', category, action, label, value);
 		}
 	}
 

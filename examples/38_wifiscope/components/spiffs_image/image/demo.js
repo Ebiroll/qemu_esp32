@@ -2,8 +2,13 @@ var ui = {
     inputType: {
         title: "Input",
         value: 2,
-        values: [["Live Input (5 V peak amplitude)",1], ["Sine Wave (amplitude 5 V)",2], ["Square Wave (amplitude 5 V)",3]]
+        values: [["Live audio Input (5 V peak amplitude)",1], ["Sine Wave (amplitude 5 V)",2], ["Square Wave (amplitude 5 V)",3], ["Websocket (esp32)",4]]
     },
+    fdomain: {
+        title: "Frequency domain",
+        value: false,
+    },
+
     freeze: {
         title: "Freeze Live Input",
         value: false,
@@ -33,7 +38,7 @@ var ui = {
     volts: {
         title: "Volts / div",
         value: 1,
-        values: [["1 V", 0.2],["2 V", 0.4],["5 V", 1],["10 V", 2]]
+        values: [["0.1 V", 0.02],["0.5 V", 0.1],["1 V", 0.2],["10 V", 2]]
     },
     // dc_offset: {
     //     title: "Vertical Offset",
@@ -47,14 +52,14 @@ var ui = {
         value: 0,
         range:[-100,100],
         resolution:1,
-        input: "hidden"
+        //input: "hidden"
     },
     vertOffset: {
         title: "Vertical Offset",
         value: 0,
         range:[-100,100],
         resolution:1,
-        input: "hidden"
+        //input: "hidden"
     }
 
 };
@@ -185,7 +190,7 @@ var isRunning = false;
 function update(el){
 
   if (el == 'inputType' && ui.inputType.value == 1){
-    streaming = true;
+      streaming = true;
       animate();
       animateId = window.requestAnimationFrame(animate);
 
@@ -300,10 +305,20 @@ $(document).on("change", '#inputType-interface select', function(){
     if ($(this).val() == 1){
         streaming = true;
         $('#freq-interface').attr('disabled', 'disabled').addClass("disabled");
+        $('#fdomain-interface').removeAttr('disabled').removeClass("disabled"); 
     } else {
         streaming = false;
         $('#freq-interface').removeAttr('disabled').removeClass("disabled");
+        $('#fdomain-interface').attr('disabled', 'disabled').addClass("disabled");
+
     }
+
+    if ($(this).val() == 4){
+        streaming = true;
+        $('#freq-interface').attr('disabled', 'disabled').addClass("disabled");
+        $('#fdomain-interface').removeAttr('disabled').removeClass("disabled"); 
+    } 
+
 })
 
 
@@ -318,12 +333,16 @@ var previousTranslate = {x:0, y:0};
 function animate(){
 
     if (streaming == true && ui.freeze.value == false){
-        analyser.getByteTimeDomainData(timeDomain);
+        // OLAS !!!         
+        if (ui.fdomain.value == true) {
+            analyser.getByteFrequencyData(timeDomain);
+        } else {
+            analyser.getByteTimeDomainData(timeDomain);
+        }
         window.requestAnimationFrame(animate);
     }
 
     drawData();
-
     // gainNode.gain.value = ui.gain.value;
 }
 

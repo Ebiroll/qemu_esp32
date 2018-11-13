@@ -138,13 +138,13 @@ input[type=checkbox] {
         border-bottom:solid 2px #ccc;
         transition: background 0.3s;
 
-        &:hover{
+        :hover{
             background:mix($green, $white, 50%);
             border-color:mix($green, $white, 75%);
             transition-duration: 0s;
 
         }
-        &:active{
+        :active{
             background: mix($green, $white, 90%);
             border-color:$green;
             transition-duration: 0s;

@@ -96,12 +96,12 @@ $(document).on("scriptLoaded", function(){
 							case 38:
 								$(propContainerSelector).val( value + increment );
 								ui[prop].value = parseFloat($(this).val());
-							    ga('send', 'event', ui[prop].title, 'increment: +'+increment, window.location.pathname);
+							    //ga('send', 'event', ui[prop].title, 'increment: +'+increment, window.location.pathname);
 								break;
 						    case 40:
 							    $(propContainerSelector).val( value - increment );
 							    ui[prop].value = parseFloat($(this).val());				    
-							    ga('send', 'event', ui[prop].title, 'decrement: -'+increment, window.location.pathname);
+							    //ga('send', 'event', ui[prop].title, 'decrement: -'+increment, window.location.pathname);
 							    break;
 						}
 
@@ -130,7 +130,7 @@ $(document).on("scriptLoaded", function(){
 					    	ui[prop].value = false;
 					    	eventLabel = 'checkbox: switch on'
 					    }
-				        ga('send', 'event', ui[prop].title, eventLabel, window.location.pathname);
+				        //ga('send', 'event', ui[prop].title, eventLabel, window.location.pathname);
 					    update(prop);
 					});
 				} else if ($.isArray(ui[prop].values)){
@@ -145,7 +145,7 @@ $(document).on("scriptLoaded", function(){
 
 				    $('#'+prop+'-interface select').change(function(){
 				    	ui[prop].value = $(this).val();
-				    	ga('send', 'event', ui[prop].title, 'Dropdown change: ' + ui[prop].value, window.location.pathname);
+				    	//ga('send', 'event', ui[prop].title, 'Dropdown change: ' + ui[prop].value, window.location.pathname);
 				    	$('#'+prop+'-interface select option')
 					    	.prop('selected', false)
 					    	.filter('[value="'+ui[prop].value+'"]').prop('selected', true);
@@ -166,7 +166,7 @@ $(document).on("scriptLoaded", function(){
 
 	$("body").on('click', '#ui-container a', function(e){
 		//sends data about clicking links in #ui-container. Such as in nuclear crater map
-		ga('send', 'event', $(this).html(), 'click', window.location.pathname);
+		//ga('send', 'event', $(this).html(), 'click', window.location.pathname);
 	});
 
 	$(document).trigger({
