@@ -2,8 +2,51 @@ var ui = {
     inputType: {
         title: "Input",
         value: 2,
-        values: [["Live audio Input (5 V peak amplitude)",1], ["Sine Wave (amplitude 5 V)",2], ["Square Wave (amplitude 5 V)",3], ["Websocket (esp32)",4]]
+        values: [["Live audio Input (5 V peak amplitude)",1], ["Sine Wave (amplitude 5 V)",2], ["Square Wave (amplitude 5 V)",3], ["http (esp32)",4]]
     },
+    attenuation: {
+        title: "Attenuation",
+        value: 0,
+        values: [["ADC_ATTEN_0db, full voltage 1.1V",0],["ADC_ATTEN_2_5db, full 1.5V",1],["ADC_ATTEN_6db, full 2.2V",2],["ADC_ATTEN_11db, full voltage 3.9V",3]]
+    },
+
+    bits: {
+        title: "Capture width",
+        value: 0,
+        values: [["9 bits",0],["10 bits",1],["11 bits",2],["12 bits",3]]
+    },
+
+    ccount: {
+        title: "ccount_delay",
+        value: 0,
+        values: [["Min delay",0],["8k",8000],["80k",80000],["800k",80000]]
+    },
+
+
+    //ADC1_CHANNEL_0 = 0
+    //ADC1 channel 0 is GPIO36
+    
+    //ADC1_CHANNEL_1
+    //ADC1 channel 1 is GPIO37
+    
+    //ADC1_CHANNEL_2
+    //ADC1 channel 2 is GPIO38
+    
+    //ADC1_CHANNEL_3
+    //ADC1 channel 3 is GPIO39
+    
+    //ADC1_CHANNEL_4
+    //ADC1 channel 4 is GPIO32
+    
+    //ADC1_CHANNEL_5
+    //ADC1 channel 5 is GPIO33
+    
+    //ADC1_CHANNEL_6
+    //ADC1 channel 6 is GPIO34
+    
+    //ADC1_CHANNEL_7
+    //ADC1 channel 7 is GPIO35
+
     fdomain: {
         title: "Frequency domain",
         value: false,

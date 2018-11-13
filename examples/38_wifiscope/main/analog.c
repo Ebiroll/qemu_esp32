@@ -181,7 +181,7 @@ void start_sampling() {
     xTaskCreatePinnedToCore(&sample_thread, "sample_thread", 4096, NULL, 20, &xHandlingTask, 1);
 }
 
-bool samples_finnished() {
+bool samples_finished() {
     bool ret=false;
     unsigned int ulNotifiedValue;
 

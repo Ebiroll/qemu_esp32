@@ -16,7 +16,7 @@ void sample_thread(void *param);
 
 void start_sampling();
 
-bool samples_finnished();
+bool samples_finished();
 
 
 extern TaskHandle_t xHandlingTask;
