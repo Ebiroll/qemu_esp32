@@ -52,14 +52,14 @@ var ui = {
         value: 0,
         range:[-100,100],
         resolution:1,
-        //input: "hidden"
+        input: "hidden"
     },
     vertOffset: {
         title: "Vertical Offset",
         value: 0,
         range:[-100,100],
         resolution:1,
-        //input: "hidden"
+        input: "hidden"
     }
 
 };

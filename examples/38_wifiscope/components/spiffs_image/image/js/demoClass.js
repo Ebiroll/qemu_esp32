@@ -81,6 +81,7 @@ function Demo(settings){
   			    // self.update(prop);
 			});
 		} else if (isNumber(ui[prop].value) && (!$.isArray(ui[prop].values))){ 
+			//console.log("Adding slider!");
 	  		if (ui[prop].units){
 	  			sliderInputBoxHTML = "<div class='input-group'><input class='form-control with-units' value='"+ui[prop].value+"'><span class='input-group-addon'>"+ui[prop].units+"</span></div>";
 	  		} else if (ui[prop].input === 'readonly'){
