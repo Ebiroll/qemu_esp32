@@ -81,7 +81,7 @@ input[type=checkbox] {
 }
 
 
-.demo (max-width: 768px){
+@media (max-width: 768px){
 
     .interface .input, .interface .input-append{
         margin-right: 40px;
@@ -99,16 +99,9 @@ input[type=checkbox] {
 
 .with-units{
     text-align: right;
-    // padding-right: 3px;
+    padding-right: 3px;
 }
 
-
-// to stop ipad glitch
-// input[type='text'], input[type='email'], input[type='search'],
-// input[type='password'], textarea
-// {
-//         -webkit-user-select: text;
-// }
 
 
 
@@ -122,6 +115,7 @@ input[type=checkbox] {
     padding:20px;
     background:#efefef;
     box-sizing: border-box;
+    float: left;
 
     label,button{
         font-size: 13px;
@@ -138,13 +132,12 @@ input[type=checkbox] {
         border-bottom:solid 2px #ccc;
         transition: background 0.3s;
 
-        :hover{
+        &:hover{
             background:mix($green, $white, 50%);
             border-color:mix($green, $white, 75%);
             transition-duration: 0s;
-
         }
-        :active{
+        &:active{
             background: mix($green, $white, 90%);
             border-color:$green;
             transition-duration: 0s;
@@ -189,7 +182,6 @@ input[type=checkbox] {
     background: $grey--light;
     cursor: text;
 }
-
 
 @media (max-width: 768px) {
     #ui-container, .sidebar{
