@@ -1,10 +1,22 @@
 ### Example of using **SPIFFS** Analog input with ESP32 and mogose webserver
 
 The idea is to have a virtual osciloscope.
+
+    >make menuconfig 
+    >make makefs
+    >make flash
+    >make flashfs
+    >make monitor
+
+
+# Signal generation
+For testing you can download this 
+http://www.keuwl.com/FunctionGenerator/
+
+
+
 Here is more info,
 http://microchipdeveloper.com/harmony:javascript-oscilloscope
-
-
 
 
 Now it works in qemu, 
@@ -23,11 +35,6 @@ Left part shows MMU registers and their values, middle show memory and value, ri
 
 http://192.168.1.139/index.html
 
->make menuconfig 
->make makefs
->make flash
->make flashfs
->make monitor
 
 The API used by the javascript application,
 Goves the 64 
