@@ -123,11 +123,6 @@ void spiffs_fs_stat(uint32_t *total, uint32_t *used);
 #endif
 
 
-/* Flash MMU table for PRO CPU */
-#define DPORT_PRO_FLASH_MMU_TABLE ((volatile uint32_t*) 0x3FF10000)
-
-/* Flash MMU table for APP CPU */
-#define DPORT_APP_FLASH_MMU_TABLE ((volatile uint32_t*) 0x3FF12000)
 
 
 int app_main(void) {
@@ -138,38 +133,7 @@ int app_main(void) {
    spi_flash_mmap_handle_t handle2;
    spi_flash_mmap_handle_t handle3;
 
-#define ESP_PARTITION_TABLE_ADDR 0x110000
-
-
-#if 0
-
-    DPORT_PRO_FLASH_MMU_TABLE[51]=0x6;
-    DPORT_APP_FLASH_MMU_TABLE[51]=0x6;
-
-// Note this is not recommended, only for test!!
-    DPORT_PRO_FLASH_MMU_TABLE[70]=0x6;
-    DPORT_APP_FLASH_MMU_TABLE[70]=0x6;
-
-// Note this is not recommended, only for test!!
-    DPORT_PRO_FLASH_MMU_TABLE[88]=0x6;
-    DPORT_APP_FLASH_MMU_TABLE[88]=0x6;
-
-
-// Note this is not recommended, only for test!!
-    DPORT_PRO_FLASH_MMU_TABLE[92]=0x6;
-    DPORT_APP_FLASH_MMU_TABLE[92]=0x6;
-
-
-    DPORT_PRO_FLASH_MMU_TABLE[108]=0x7;
-    DPORT_APP_FLASH_MMU_TABLE[109]=0x7;
-
-
-    DPORT_PRO_FLASH_MMU_TABLE[109]=0x8;
-    DPORT_APP_FLASH_MMU_TABLE[109]=0x8;
-
-#endif
-
-
+#define ESP_PARTITION_TABLE_ADDR 0x8000
 
 
    RequestManager *manager=new RequestManager();
@@ -178,7 +142,7 @@ int app_main(void) {
 
 
     printf("\r\n\n");
-    ESP_LOGI(tag, "==== STARTING SPIFFS TEST ====\r\n");
+    ESP_LOGI(tag, "==== VFS SPIFF REGISTER ====\r\n");
 
     vfs_spiffs_register();
     printf("\r\n\n");
@@ -193,7 +157,7 @@ int app_main(void) {
 
     if (is_running_qemu()) {
         printf("Running in qemu\n");
-	tcpip_adapter_init();
+	    tcpip_adapter_init();
         xTaskCreatePinnedToCore(task_lwip_init, "loop", 2*4096, NULL, 14, NULL, 0);
     }
     else {
@@ -207,7 +171,6 @@ int app_main(void) {
     printf("Starting manager\r\n");
 
     manager->start();
-
 
 
     while (1) {

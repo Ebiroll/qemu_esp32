@@ -232,6 +232,13 @@ var isRunning = false;
 
 function update(el){
 
+  // Perform get request
+  if (el == 'inputType' && ui.inputType.value == 4){
+    $.getJSON('api/audio.json', function(data){
+        console.log(data);
+    });
+  }
+
   if (el == 'inputType' && ui.inputType.value == 1){
       streaming = true;
       animate();
