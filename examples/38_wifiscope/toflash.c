@@ -96,7 +96,7 @@ int main(int argc,char *argv[])
     // Add partitions, partitions example here
     merge_flash("build/partitions_example.bin","esp32flash.bin",0x8000,0);
     // Add flash image
-    merge_flash("build/spiffs_image.img","esp32flash.bin",0x80000,0);
+    merge_flash("build/spiffs_image.img","esp32flash.bin",0x180000,0);
     // Add application build/webspiff.bin
     merge_flash(argv[1],"esp32flash.bin",0x10000,0);
 
