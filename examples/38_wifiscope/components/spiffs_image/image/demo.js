@@ -231,6 +231,7 @@ createGrid(ctx);
 var isRunning = false;
 
 function update(el){
+  console.log(el);
 
   // Perform get request
   if (el == 'inputType' && ui.inputType.value == 4){
@@ -238,6 +239,15 @@ function update(el){
         console.log(data);
     });
   }
+
+  // Perform get request
+  if (el == 'attenuation'){
+    $.getJSON('api/attenuation/' + ui.attenuation.value  , function(data){
+        console.log(data);
+    });
+  }
+
+  Attenuation
 
   if (el == 'inputType' && ui.inputType.value == 1){
       streaming = true;
