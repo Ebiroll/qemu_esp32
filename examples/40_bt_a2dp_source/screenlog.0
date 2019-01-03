@@ -293,3 +293,232 @@ eWÅJµ¬Ä&ä“ ∞“≤¶™˙ç°®r.óÇ¯LBBΩ◊Q™ Í•ïìâíΩ›¥'¬≈3ÄiUΩ¶∞*’e±¡*Í%=O©
 [0;33mW (138608) BT_APPL: TX Q overflow: 19/17[0m
 [0;33mW (138638) BT_APPL: TX Q overflow: 19/17[0m
 [0;33mW (138668) BT_APPL: TX Q overflow: 19/16[0m
+[0;32mI (10811) BT_AV: bt_app_av_sm_hdlr state 1, evt 0xff00[0m
+[0;32mI (13631) BT_AV: Device discovery failed, continue to discover...[0m
+[0;32mI (13631) BT_AV: Device discovery failed, continue to discover...[0m
+[0;32mI (13641) BT_AV: Discovery started.[0m
+ets Jun  8 2016 00:22:57
+
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0018,len:4
+load:0x3fff001c,len:6232
+load:0x40078000,len:11152
+ho 0 tail 12 room 4
+load:0x40080400,len:6632
+entry 0x40080764
+[0;32mI (30) boot: ESP-IDF v3.3-beta1-169-g3c94b6e10 2nd stage bootloader[0m
+[0;32mI (30) boot: compile time 20:05:25[0m
+[0;32mI (30) boot: Enabling RNG early entropy source...[0m
+[0;32mI (36) boot: SPI Speed      : 40MHz[0m
+[0;32mI (40) boot: SPI Mode       : DIO[0m
+[0;32mI (44) boot: SPI Flash Size : 4MB[0m
+[0;32mI (48) boot: Partition Table:[0m
+[0;32mI (52) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (59) boot:  0 nvs              WiFi data        01 02 00009000 00006000[0m
+[0;32mI (67) boot:  1 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (74) boot:  2 factory          factory app      00 00 00010000 00100000[0m
+[0;32mI (82) boot: End of partition table[0m
+[0;32mI (86) esp_image: segment 0: paddr=0x00010020 vaddr=0x3f400020 size=0x2684c (157772) map[0m
+[0;32mI (150) esp_image: segment 1: paddr=0x00036874 vaddr=0x3ff80000 size=0x00000 (     0) load[0m
+[0;32mI (150) esp_image: segment 2: paddr=0x0003687c vaddr=0x3ff80000 size=0x00000 (     0) load[0m
+[0;32mI (157) esp_image: segment 3: paddr=0x00036884 vaddr=0x3ffbdb60 size=0x02060 (  8288) load[0m
+[0;32mI (169) esp_image: segment 4: paddr=0x000388ec vaddr=0x3ffbfbc0 size=0x00000 (     0) load[0m
+[0;32mI (175) esp_image: segment 5: paddr=0x000388f4 vaddr=0x40080000 size=0x00400 (  1024) load[0m
+[0;32mI (184) esp_image: segment 6: paddr=0x00038cfc vaddr=0x40080400 size=0x07314 ( 29460) load[0m
+[0;32mI (205) esp_image: segment 7: paddr=0x00040018 vaddr=0x400d0018 size=0x8dfc8 (581576) map[0m
+[0;32mI (409) esp_image: segment 8: paddr=0x000cdfe8 vaddr=0x40087714 size=0x09534 ( 38196) load[0m
+[0;32mI (425) esp_image: segment 9: paddr=0x000d7524 vaddr=0x400c0000 size=0x00000 (     0) load[0m
+[0;32mI (425) esp_image: segment 10: paddr=0x000d752c vaddr=0x50000000 size=0x00000 (     0) load[0m
+[0;32mI (432) esp_image: segment 11: paddr=0x000d7534 vaddr=0x50000000 size=0x00000 (     0) load[0m
+[0;32mI (450) boot: Loaded app from partition at offset 0x10000[0m
+[0;32mI (450) boot: Disabling RNG early entropy source...[0m
+[0;32mI (453) cpu_start: Pro cpu up.[0m
+[0;32mI (456) cpu_start: Application information:[0m
+[0;32mI (461) cpu_start: Project name:     a2dp_source[0m
+[0;32mI (466) cpu_start: App version:      7d0e184-dirty[0m
+[0;32mI (472) cpu_start: Compile time:     20:05:24[0m
+[0;32mI (477) cpu_start: Compile date:     Jan  3 2019[0m
+[0;32mI (482) cpu_start: ESP-IDF:          v3.3-beta1-169-g3c94b6e10[0m
+[0;32mI (488) cpu_start: Single core mode[0m
+[0;32mI (493) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (500) heap_init: At 3FFAFF10 len 000000F0 (0 KiB): DRAM[0m
+[0;32mI (506) heap_init: At 3FFB6388 len 00001C78 (7 KiB): DRAM[0m
+[0;32mI (512) heap_init: At 3FFB9A20 len 00004108 (16 KiB): DRAM[0m
+[0;32mI (518) heap_init: At 3FFBDB5C len 00000004 (0 KiB): DRAM[0m
+[0;32mI (524) heap_init: At 3FFCE750 len 000118B0 (70 KiB): DRAM[0m
+[0;32mI (530) heap_init: At 3FFE0440 len 0001FBC0 (126 KiB): D/IRAM[0m
+[0;32mI (537) heap_init: At 40078000 len 00008000 (32 KiB): IRAM[0m
+[0;32mI (543) heap_init: At 40090C48 len 0000F3B8 (60 KiB): IRAM[0m
+[0;32mI (549) cpu_start: Pro cpu start user code[0m
+[0;32mI (232) cpu_start: Starting scheduler on PRO CPU.[0m
+[0;32mI (241) BTDM_INIT: BT controller compile version [0b60040][0m
+[0;32mI (241) system_api: Base MAC address is not set, read default base MAC address from BLK0 of EFUSE[0m
+[0;32mI (321) phy: phy_version: 4006, e540b8e, Dec 17 2018, 11:53:06, 0, 0[0m
+[0;32mI (811) BT_AV: Starting device discovery...[0m
+[0;32mI (821) BT_AV: Discovery started.[0m
+[0;32mI (10811) BT_AV: bt_app_av_sm_hdlr state 1, evt 0xff00[0m
+[0;32mI (13631) BT_AV: Device discovery failed, continue to discover...[0m
+[0;32mI (13631) BT_AV: Device discovery failed, continue to discover...[0m
+[0;32mI (13631) BT_AV: Discovery started.[0m
+[0;32mI (20811) BT_AV: bt_app_av_sm_hdlr state 1, evt 0xff00[0m
+[0;32mI (24981) BT_AV: Scanned device: 00:1d:43:aa:6b:81[0m
+[0;32mI (24981) BT_AV: --Class of Device: 0x240404[0m
+[0;32mI (24981) BT_AV: --RSSI: -53[0m
+[0;32mI (24981) BT_AV: Found a target device, address 00:1d:43:aa:6b:81, name PLS2.1[0m
+[0;32mI (24991) BT_AV: Found a target device, address 00:1d:43:aa:6b:81, name PLS2.1[0m
+[0;32mI (25001) BT_AV: Cancel device discovery ...[0m
+[0;32mI (25011) BT_AV: Device discovery stopped.[0m
+[0;32mI (25011) BT_AV: a2dp connecting to peer: PLS2.1[0m
+[0;31mE (25021) BT_APPL: reset flags[0m
+[0;32mI (25021) BT_AV: bt_app_av_sm_hdlr state 4, evt 0x0[0m
+[0;32mI (29601) BT_AV: ESP_BT_GAP_PIN_REQ_EVT min_16_digit:0[0m
+[0;32mI (29601) BT_AV: Input pin code: 1234[0m
+[0;33mW (29641) BT_APPL: bta_dm_act no entry for connected service cbs[0m
+[0;33mW (29641) BT_BTC: BTA_AV_OPEN_EVT::FAILED status: 3
+[0m
+[0;32mI (29641) BT_AV: bt_app_av_sm_hdlr state 4, evt 0x0[0m
+[0;31mE (30011) BT_BTC:  btc_dm_auth_cmpl_evt() Authentication fail reason 5[0m
+[0;31mE (30021) BT_AV: authentication failed, status:9[0m
+[0;32mI (30811) BT_AV: bt_app_av_sm_hdlr state 3, evt 0xff00[0m
+[0;32mI (30811) BT_AV: a2dp connecting to peer: 00:1d:43:aa:6b:81[0m
+[0;31mE (30811) BT_APPL: reset flags[0m
+[0;32mI (30811) BT_AV: bt_app_av_sm_hdlr state 4, evt 0x0[0m
+[0;32mI (33371) BT_AV: ESP_BT_GAP_PIN_REQ_EVT min_16_digit:0[0m
+[0;32mI (33371) BT_AV: Input pin code: 1234[0m
+[0;33mW (33401) BT_APPL: bta_dm_act no entry for connected service cbs[0m
+[0;33mW (33401) BT_BTC: BTA_AV_OPEN_EVT::FAILED status: 3
+[0m
+[0;32mI (33401) BT_AV: bt_app_av_sm_hdlr state 4, evt 0x0[0m
+[0;31mE (33771) BT_BTC:  btc_dm_auth_cmpl_evt() Authentication fail reason 5[0m
+[0;31mE (33781) BT_AV: authentication failed, status:9[0m
+[0;32mI (40811) BT_AV: bt_app_av_sm_hdlr state 3, evt 0xff00[0m
+[0;32mI (40811) BT_AV: a2dp connecting to peer: 00:1d:43:aa:6b:81[0m
+[0;31mE (40811) BT_APPL: reset flags[0m
+[0;32mI (40811) BT_AV: bt_app_av_sm_hdlr state 4, evt 0x0[0m
+[0;32mI (43681) BT_AV: ESP_BT_GAP_PIN_REQ_EVT min_16_digit:0[0m
+[0;32mI (43681) BT_AV: Input pin code: 1234[0m
+[0;33mW (43721) BT_APPL: bta_dm_act no entry for connected service cbs[0m
+[0;33mW (43721) BT_BTC: BTA_AV_OPEN_EVT::FAILED status: 3
+[0m
+[0;32mI (43721) BT_AV: bt_app_av_sm_hdlr state 4, evt 0x0[0m
+[0;31mE (44091) BT_BTC:  btc_dm_auth_cmpl_evt() Authentication fail reason 5[0m
+[0;31mE (44101) BT_AV: authentication failed, status:9[0m
+[0;32mI (50811) BT_AV: bt_app_av_sm_hdlr state 3, evt 0xff00[0m
+[0;32mI (50811) BT_AV: a2dp connecting to peer: 00:1d:43:aa:6b:81[0m
+[0;31mE (50811) BT_APPL: reset flags[0m
+[0;32mI (50811) BT_AV: bt_app_av_sm_hdlr state 4, evt 0x0[0m
+[0;33mW (55931) BT_SDP: SDP - Rcvd conn cnf with error: 0x4  CID 0x46
+[0m
+[0;33mW (55931) BT_BTC: BTA_AV_OPEN_EVT::FAILED status: 2
+[0m
+[0;32mI (55941) BT_AV: bt_app_av_sm_hdlr state 4, evt 0x0[0m
+[0;32mI (60811) BT_AV: bt_app_av_sm_hdlr state 3, evt 0xff00[0m
+[0;32mI (60811) BT_AV: a2dp connecting to peer: 00:1d:43:aa:6b:81[0m
+[0;32mI (60811) BT_AV: bt_app_av_sm_hdlr state 4, evt 0x0[0m
+[0;33mW (65931) BT_SDP: SDP - Rcvd conn cnf with error: 0x4  CID 0x47
+[0m
+[0;33mW (65931) BT_BTC: BTA_AV_OPEN_EVT::FAILED status: 2
+[0m
+[0;32mI (65931) BT_AV: bt_app_av_sm_hdlr state 4, evt 0x0[0m
+[0;32mI (70811) BT_AV: bt_app_av_sm_hdlr state 3, evt 0xff00[0m
+[0;32mI (70811) BT_AV: a2dp connecting to peer: 00:1d:43:aa:6b:81[0m
+[0;32mI (70811) BT_AV: bt_app_av_sm_hdlr state 4, evt 0x0[0m
+[0;33mW (75931) BT_SDP: SDP - Rcvd conn cnf with error: 0x4  CID 0x48
+[0m
+[0;33mW (75931) BT_BTC: BTA_AV_OPEN_EVT::FAILED status: 2
+[0m
+[0;32mI (75931) BT_AV: bt_app_av_sm_hdlr state 4, evt 0x0[0m
+[0;32mI (80811) BT_AV: bt_app_av_sm_hdlr state 3, evt 0xff00[0m
+[0;32mI (80811) BT_AV: a2dp connecting to peer: 00:1d:43:aa:6b:81[0m
+[0;32mI (80811) BT_AV: bt_app_av_sm_hdlr state 4, evt 0x0[0m
+[0;33mW (85931) BT_SDP: SDP - Rcvd conn cnf with error: 0x4  CID 0x49
+[0m
+[0;33mW (85931) BT_BTC: BTA_AV_OPEN_EVT::FAILED status: 2
+[0m
+[0;32mI (85931) BT_AV: bt_app_av_sm_hdlr state 4, evt 0x0[0m
+[0;32mI (90811) BT_AV: bt_app_av_sm_hdlr state 3, evt 0xff00[0m
+[0;32mI (90811) BT_AV: a2dp connecting to peer: 00:1d:43:aa:6b:81[0m
+[0;32mI (90811) BT_AV: bt_app_av_sm_hdlr state 4, evt 0x0[0m
+[0;33mW (95931) BT_SDP: SDP - Rcvd conn cnf with error: 0x4  CID 0x4a
+[0m
+[0;33mW (95931) BT_BTC: BTA_AV_OPEN_EVT::FAILED status: 2
+[0m
+[0;32mI (95931) BT_AV: bt_app_av_sm_hdlr state 4, evt 0x0[0m
+ets Jun  8 2016 00:22:57
+
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0018,len:4
+load:0x3fff001c,len:6232
+load:0x40078000,len:11152
+ho 0 tail 12 room 4
+load:0x40080400,len:6632
+entry 0x40080764
+[0;32mI (30) boot: ESP-IDF v3.3-beta1-169-g3c94b6e10 2nd stage bootloader[0m
+[0;32mI (30) boot: compile time 20:05:25[0m
+[0;32mI (30) boot: Enabling RNG early entropy source...[0m
+[0;32mI (36) boot: SPI Speed      : 40MHz[0m
+[0;32mI (40) boot: SPI Mode       : DIO[0m
+[0;32mI (44) boot: SPI Flash Size : 4MB[0m
+[0;32mI (48) boot: Partition Table:[0m
+[0;32mI (52) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (59) boot:  0 nvs              WiFi data        01 02 00009000 00006000[0m
+[0;32mI (67) boot:  1 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (74) boot:  2 factory          factory app      00 00 00010000 00100000[0m
+[0;32mI (82) boot: End of partition table[0m
+[0;32mI (86) esp_image: segment 0: paddr=0x00010020 vaddr=0x3f400020 size=0x2684c (157772) map[0m
+[0;32mI (150) esp_image: segment 1: paddr=0x00036874 vaddr=0x3ff80000 size=0x00000 (     0) load[0m
+[0;32mI (150) esp_image: segment 2: paddr=0x0003687c vaddr=0x3ff80000 size=0x00000 (     0) load[0m
+[0;32mI (157) esp_image: segment 3: paddr=0x00036884 vaddr=0x3ffbdb60 size=0x02060 (  8288) load[0m
+[0;32mI (169) esp_image: segment 4: paddr=0x000388ec vaddr=0x3ffbfbc0 size=0x00000 (     0) load[0m
+[0;32mI (175) esp_image: segment 5: paddr=0x000388f4 vaddr=0x40080000 size=0x00400 (  1024) load[0m
+[0;32mI (184) esp_image: segment 6: paddr=0x00038cfc vaddr=0x40080400 size=0x07314 ( 29460) load[0m
+[0;32mI (205) esp_image: segment 7: paddr=0x00040018 vaddr=0x400d0018 size=0x8dfc8 (581576) map[0m
+[0;32mI (409) esp_image: segment 8: paddr=0x000cdfe8 vaddr=0x40087714 size=0x09534 ( 38196) load[0m
+[0;32mI (425) esp_image: segment 9: paddr=0x000d7524 vaddr=0x400c0000 size=0x00000 (     0) load[0m
+[0;32mI (425) esp_image: segment 10: paddr=0x000d752c vaddr=0x50000000 size=0x00000 (     0) load[0m
+[0;32mI (432) esp_image: segment 11: paddr=0x000d7534 vaddr=0x50000000 size=0x00000 (     0) load[0m
+[0;32mI (450) boot: Loaded app from partition at offset 0x10000[0m
+[0;32mI (450) boot: Disabling RNG early entropy source...[0m
+[0;32mI (452) cpu_start: Pro cpu up.[0m
+[0;32mI (456) cpu_start: Application information:[0m
+[0;32mI (461) cpu_start: Project name:     a2dp_source[0m
+[0;32mI (466) cpu_start: App version:      7d0e184-dirty[0m
+[0;32mI (471) cpu_start: Compile time:     20:05:24[0m
+[0;32mI (477) cpu_start: Compile date:     Jan  3 2019[0m
+[0;32mI (482) cpu_start: ESP-IDF:          v3.3-beta1-169-g3c94b6e10[0m
+[0;32mI (488) cpu_start: Single core mode[0m
+[0;32mI (493) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (500) heap_init: At 3FFAFF10 len 000000F0 (0 KiB): DRAM[0m
+[0;32mI (506) heap_init: At 3FFB6388 len 00001C78 (7 KiB): DRAM[0m
+[0;32mI (512) heap_init: At 3FFB9A20 len 00004108 (16 KiB): DRAM[0m
+[0;32mI (518) heap_init: At 3FFBDB5C len 00000004 (0 KiB): DRAM[0m
+[0;32mI (524) heap_init: At 3FFCE750 len 000118B0 (70 KiB): DRAM[0m
+[0;32mI (530) heap_init: At 3FFE0440 len 0001FBC0 (126 KiB): D/IRAM[0m
+[0;32mI (537) heap_init: At 40078000 len 00008000 (32 KiB): IRAM[0m
+[0;32mI (543) heap_init: At 40090C48 len 0000F3B8 (60 KiB): IRAM[0m
+[0;32mI (549) cpu_start: Pro cpu start user code[0m
+[0;32mI (232) cpu_start: Starting scheduler on PRO CPU.[0m
+[0;32mI (241) BTDM_INIT: BT controller compile version [0b60040][0m
+[0;32mI (241) system_api: Base MAC address is not set, read default base MAC address from BLK0 of EFUSE[0m
+[0;32mI (311) phy: phy_version: 4006, e540b8e, Dec 17 2018, 11:53:06, 0, 0[0m
+[0;32mI (851) BT_AV: Starting device discovery...[0m
+[0;32mI (861) BT_AV: Discovery started.[0m
+[0;32mI (10851) BT_AV: bt_app_av_sm_hdlr state 1, evt 0xff00[0m
+[0;32mI (13671) BT_AV: Device discovery failed, continue to discover...[0m
+[0;32mI (13671) BT_AV: Device discovery failed, continue to discover...[0m
+[0;32mI (13681) BT_AV: Discovery started.[0m
+[0;32mI (20851) BT_AV: bt_app_av_sm_hdlr state 1, evt 0xff00[0m
+[0;32mI (26501) BT_AV: Device discovery failed, continue to discover...[0m
+[0;32mI (26501) BT_AV: Device discovery failed, continue to discover...[0m
+[0;32mI (26501) BT_AV: Discovery started.[0m
+[0;32mI (30851) BT_AV: bt_app_av_sm_hdlr state 1, evt 0xff00[0m
+[0;32mI (39321) BT_AV: Device discovery failed, continue to discover...[0m
+[0;32mI (39321) BT_AV: Device discovery failed, continue to discover...[0m
+[0;32mI (39331) BT_AV: Discovery started.[0m
+[0;32mI (40851) BT_AV: bt_app_av_sm_hdlr state 1, evt 0xff00[0m
