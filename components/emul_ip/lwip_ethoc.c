@@ -797,6 +797,29 @@ int ethoc_open(struct netif *dev)
 }
 
 
+///////////////// --------------
+
+
+uint32_t crc32_for_byte(uint32_t r) {
+  for(int j = 0; j < 8; ++j)
+    r = (r & 1? 0: (uint32_t)0xEDB88320L) ^ r >> 1;
+  return r ^ (uint32_t) 0xFF000000L;
+}
+
+static uint32_t table[0x100];
+static bool table_init=false;
+
+void crc32(const void *data, size_t n_bytes, uint32_t* crc) {
+  if(!table_init) {
+    for(size_t i = 0; i < 0x100; ++i)
+      table[i] = crc32_for_byte(i);
+
+    table_init=true;
+   }
+
+  for(size_t i = 0; i < n_bytes; ++i)
+    *crc = table[(uint8_t)*crc ^ ((uint8_t*)data)[i]] ^ *crc >> 8;
+}
 
 unsigned char packet[ETHOC_BUFSIZ+40];
 
@@ -820,15 +843,22 @@ static int ethoc_start_xmit( struct pbuf *skb, struct netif *dev)
 	}
 
 	if (skb->len<ETHOC_ZLEN) {
-		u16_t crc=lwip_standard_chksum(packet,skb->len);
+		//u16_t crc=lwip_standard_chksum(packet,ETHOC_ZLEN);  // skb->len
 		// TODO, qemu does not use the TX_BD_PAD bit..
-		//printf("<%x>",crc); , does not work.
+		uint32_t crc=0;
+        crc32(packet,ETHOC_ZLEN-4,&crc);
+	 
+		//printf("<%x>",crc); //, does not work.
 
-		// Dont write 
-		packet[skb->len+1]= crc & 0xff;
-		packet[skb->len+2]= (crc & 0xff00) << 8 ;
+		if (skb->len<ETHOC_ZLEN-4) {
+			packet[ETHOC_ZLEN-1]= (crc & 0xff000000) >> 24;
+			packet[ETHOC_ZLEN-2]= (crc & 0xff0000) >> 16;
+			packet[ETHOC_ZLEN-3]= (crc & 0xff00) >> 8;
+			packet[ETHOC_ZLEN-4]= crc & 0xff ;
+		}
 
 		len=ETHOC_ZLEN;
+		//len=skb->len;
 	}
 	//if (skb_put_padto(skb, ETHOC_ZLEN)) {
 	//	dev->stats.tx_errors++;
