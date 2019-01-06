@@ -281,7 +281,7 @@ void bt_app_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param)
         }
         break;
     }
-      /*
+      
     case ESP_BT_GAP_PIN_REQ_EVT: {
         ESP_LOGI(BT_AV_TAG, "ESP_BT_GAP_PIN_REQ_EVT min_16_digit:%d", param->pin_req.min_16_digit);
         if (param->pin_req.min_16_digit) {
@@ -299,7 +299,7 @@ void bt_app_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param)
         }
         break;
     }
-    */
+    /*
     case ESP_BT_GAP_PIN_REQ_EVT:
         ESP_LOGI(BT_AV_TAG, "ESP_BT_GAP_PIN_REQ_EVT min_16_digit:%d", param->pin_req.min_16_digit);
 
@@ -312,7 +312,7 @@ void bt_app_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param)
             esp_bt_gap_pin_reply(param->pin_req.bda, true, 0, pin_code);
 	
       break;
-      
+      */
 #if (CONFIG_BT_SSP_ENABLED == true)
     case ESP_BT_GAP_CFM_REQ_EVT:
         ESP_LOGI(BT_AV_TAG, "ESP_BT_GAP_CFM_REQ_EVT Please compare the numeric value: %d", param->cfm_req.num_val);
@@ -405,17 +405,19 @@ void generate_freq(uint8_t *buffer, size_t count, float volume, float freq)
 {
   size_t pos; // sample number we're on
   uint8_t *out_pos=buffer;
+  int start_pos=phase;
   
-  for (pos = phase; pos < (phase+count && pos>0); pos++) {
+  for (pos = phase; pos < start_pos+count ; pos++) {
     //float a = 2 * 3.14159f * freq * pos / SAMPLING_RATE;
     //float v = sin(a) * volume;
     // convert from [-1.0,1.0] to [-32767,32767]:
     //int val = remap_level_to_signed_16_bit(v);
+    
     int val=phase++;
     if (phase>65535) {
       phase=0;
     }
-    
+        
     *out_pos++  = val & 0xff;
     *out_pos++ = (val >> 8) & 0xff;
   }
@@ -431,15 +433,15 @@ static int32_t bt_app_a2d_data_cb(uint8_t *data, int32_t len)
         return 0;
     }
 
-    //generate_freq(data, len/2, 1.0, 800.0);
-    
+    generate_freq(data, len/2, 1.0, 400.0);
+  /*  
   //    // generate random sequence
     int val = rand() % (1 << 16);
     for (int i = 0; i < (len >> 1); i++) {
         data[(i << 1)] = val & 0xff;
         data[(i << 1) + 1] = (val >> 8) & 0xff;
     }
-
+   */
     return len;
 }
 
