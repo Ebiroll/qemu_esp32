@@ -7,6 +7,8 @@ Note that this example requires V3.1 of esp-idf
 Also read some here
 https://github.com/espressif/esp-idf/blob/master/examples/bluetooth/gatt_security_server/tutorial/Gatt_Security_Server_Example_Walkthrough.md
 
+https://github.com/espressif/esp-idf/issues/1921
+
 
 This is the demo of using Advanced Audio Distribution Profile APIs to transmit audio stream. Application can take advantage of this example to implement portable audio players or microphones to transmit audio stream to A2DP sink devices.
 
