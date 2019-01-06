@@ -30,91 +30,12 @@ Open browser,
 http://127.0.0.1:10080/
 
 
-Left part shows MMU registers and their values, middle show memory and value, right part show values from the flash read with spi_flash_read()
 
+On hardware
 
 http://192.168.1.139/index.html
 
 
-The API used by the javascript application,
-Goves the 64 
-    http://192.168.1.139/api/mmu/
-
-
-Reads flash, sector x
-    http://192.168.1.131/api/flash/x
-
-    http://192.168.1.131/api/flash/1
-    http://192.168.1.131/api/flash/2
-
-
-ONLY POST for this, to prevent out of readable memory exceptions
-    http://192.168.1.131/api/mem/x
-Gets adress and 64 bytes for the selected mmu register (x)
-
-
-    TODO,
-    MMU_BLOCK50_VADDR 0x3f720000
-
-CODE mapping still not correct,
-Must be investigated for qemu emulation.
-
--------------------------------------------------------------
-
-
-I think qemu has problems with spi_read_flash when size <16
-Yes, and it has been fixed.
-
-rc = esp_rom_spiflash_read(read_src, t, read_size); 
-(gdb) p/x read_src
-$7 = 0x1800fc
-(gdb) p/x t
-$9 = {0x0, 0xa5a5a5a5, 0xa5a5a5a5, 0xa5a5a5a5, 0x3ffb5a00, 0x3ffb59e0}
-(gdb) p	read_size
-$10 = 4
-
-eps32flash,bin
-001800f0: ffff ffff ffff ffff ffff ffff a904 0000  ................
-00180100: 00ff ffff ffff ffff ffff ffff ffff ffff  ................
-
-Results in this output.
-
-
-0 esp32_spi_read: +0x08: 0x00e0a000
-0 esp32_spi_read: +0x1c: 0x00000000
-0 esp32_spi_write: +0x1c = 0x00000000
-written
-0 esp32_spi_read: +0x1c: 0x00000000
-0 esp32_spi_write: +0x1c = 0x50000000
-written
-0 esp32_spi_read: +0x1c: 0x50000000
-0 esp32_spi_write: +0x1c = 0x50000000
-written
-0 esp32_spi_read: +0x20: 0x00000000
-0 esp32_spi_write: +0x20 = 0x7c000000
-written
-0 esp32_spi_write: +0x24 = 0x700000bb
-written
-0 esp32_spi_read: +0xf8: 0x00000000
-0 esp32_spi_read: +0xf8: 0x00000000
-0 esp32_spi_write: +0x10 = 0x00000000
-0 esp32_spi_write: +0x00 = 0x08000000
-0 esp32_spi_read: +0x00: 0x00000000
-0 esp32_spi_read: +0x10: 0x00000002
-0 esp32_spi_write: +0x04 = 0x1800fc00
-Address esp32_spi_write_address: TX 1800fc00[24 reserved]
-0 esp32_spi_write: +0x2c = 0x000001ff
-written
-0 esp32_spi_write: +0x00 = 0x00040000
-esp32_spi_cmd: TX 00bb[7 bits]
-command 003b
-0 esp32_spi_read: +0x00: 0x00000000
-0 esp32_spi_read: +0x80: 0x00000000
-???
-Not correct, should have been a904
-
-
----
 
 #### Features
 
