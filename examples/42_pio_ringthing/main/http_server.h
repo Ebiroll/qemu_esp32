@@ -1,3 +1,4 @@
+#if 0
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -18,3 +19,4 @@
 
 void ringthing_http_start_server();
 void ringthing_http_server_loop();
+#endif

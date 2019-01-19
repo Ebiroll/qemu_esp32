@@ -1,8 +1,11 @@
 #include "./lights.h"
 
 #include "esp_log.h"
-#include "../lib/ws2812.c"
-
+//#include "../lib/ws2812.c"
+extern "C" {
+#include "ws2812.h"
+}
+  
 static rgbVal * pixels;
 static const char * TAG = "Lights!";
 
@@ -22,6 +25,38 @@ void lights_init() {
         ESP_LOGI(TAG, "light %d set up now", k);
     }
 }
+
+int pos=0;
+
+void lights_forward() {
+
+    auto red = makeRGBVal(pos*2, 0, 0);
+    auto green = makeRGBVal(0, pos*2, 0);
+    auto blue = makeRGBVal(0, 0, pos*2);
+   
+    auto dark = makeRGBVal(0, 0, 0);
+
+
+    int j=0;
+
+    for (j = 0; j < pos; j++) {
+        if (j % 3 == 0) pixels[j] = red;  
+        if (j % 3 == 1) pixels[j] = green;  
+        if (j % 3 == 2) pixels[j] = blue;  
+    }
+
+    for (auto k = pos; k < PIXEL_COUNT; k++) {
+         pixels[k] = dark;  
+    }
+
+
+    pos++;
+    if (pos>=PIXEL_COUNT) {
+        pos=0;
+    }
+}
+
+
 
 void lights_flush() {
     ESP_LOGI(TAG, "Show Lights...");

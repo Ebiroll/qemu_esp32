@@ -1,3 +1,4 @@
+#if 0
 #include "./http_server.h"
 
 static const char * TAG = "HTTPD";
@@ -85,3 +86,4 @@ void ringthing_http_server_loop()
   route((uint8_t)newsockfd, router, (uint8_t *)buffer);
   close(newsockfd);
 }
+#endif

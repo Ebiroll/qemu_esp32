@@ -78,9 +78,28 @@ It runs fine with the latest version of esp-idf
 ## Update Jan 2019
 
 Head and version 3.1.2 works fine,
-If you want to use ethernet emulation you must patch this
+If you want to use ethernet emulation in earlier version you must patch this
 https://github.com/Ebiroll/qemu_esp32/commit/bc2b6e2f50261885751ebf2335a82325eafbc656
 
+
+
+Qemu also works with esp-adf
+```
+export ADF_PATH=~/esp/esp-adf
+Or as in my case I use the released 1.0 version
+export ADF_PATH=~/esp/esp-adf-v1.0
+
+
+Change the Makfile
+PROJECT_NAME := your_proj
+include $(ADF_PATH)/project.mk
+
+Make sure to disable,
+component config → ESP32-specific → SPI RAM config
+PSI RAM emulation is 
+[*] Ignore PSRAM when not found
+
+```
 
 ## Update Oct 2018
 
@@ -499,7 +518,7 @@ It is because you try to start wifi
 Now there is simple flash emulation in qemu. You need the file  esp32flash.bin to be in the same directory as rom.bin & rom1.bin.
 If no flashfile exists, an empty file will be created.
 ```
-~/esp/esp-idf/components/esptool_py/esptool/esptool.py --baud 920600 read_flash 0 0x400000  esp32flash.bin
+~/esp/esp-idf/components/esptool_py/esptool/esptool.py --baud 92600 read_flash 0 0x400000  esp32flash.bin
 ```
 Another possibility in order to create a proper flash file is by running the following.
 ```

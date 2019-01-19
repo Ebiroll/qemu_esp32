@@ -29,8 +29,10 @@ static void flushLights() {
 extern "C" void testLights(void *params) {
     lights_init();
     for(;;) {
+        lights_forward();
         lights_flush();
-        vTaskSuspend(flushLightsTask);
+        vTaskDelay(10);
+        //vTaskSuspend(flushLightsTask);
     }
 }
 
@@ -47,10 +49,10 @@ extern "C" void loadSdCard(void * params) {
 }
 
 extern "C" void startHttpServer(void * params) {
-    ringthing_http_start_server();
+    //ringthing_http_start_server();
     for (;;) {
         ESP_LOGI(TAG, "ENTERING WORKER LOOP FOR HTTPD");
-        ringthing_http_server_loop();
+        //ringthing_http_server_loop();
     }
 }
 
@@ -69,9 +71,11 @@ extern "C" void startWifiAndHttpServer(void * params) {
 extern "C" void app_main() {
     ESP_LOGI(TAG, "app_main()");
 
-    xTaskCreate(loadSdCard, "mount SDMMC card", 4096, NULL, 10, &readFileTask);
+    //xTaskCreate(loadSdCard, "mount SDMMC card", 4096, NULL, 10, &readFileTask);
     xTaskCreate(testLights, "ws2812 even odd demo", 4096, NULL, 10, &flushLightsTask);
-    xTaskCreate(startWifiAndHttpServer, "start wifi/httpd", 4096, NULL, 10, &networkInitTask);
+
+    vTaskDelay(200);
+    //xTaskCreate(startWifiAndHttpServer, "start wifi/httpd", 4096, NULL, 10, &networkInitTask);
 
     ESP_LOGI(TAG, "app_main() out");
     return;
