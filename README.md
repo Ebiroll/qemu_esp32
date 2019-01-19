@@ -86,7 +86,7 @@ https://github.com/Ebiroll/qemu_esp32/commit/bc2b6e2f50261885751ebf2335a82325eaf
 Qemu also works with esp-adf
 ```
 export ADF_PATH=~/esp/esp-adf
-Or as in my case I use the released 1.0 version
+Or as in my case, I use the released 1.0 version
 export ADF_PATH=~/esp/esp-adf-v1.0
 
 
@@ -96,56 +96,10 @@ include $(ADF_PATH)/project.mk
 
 Make sure to disable,
 component config → ESP32-specific → SPI RAM config
-PSI RAM emulation is 
+PSI RAM emulation is next on the todo list.
 [*] Ignore PSRAM when not found
 
 ```
-
-## Update Oct 2018
-
-The latest version of esp-idf has some asserts regarding the RTC.
-To run in qemu withe latest esp-idf you can remove these asserts.
-components/soc/esp32/rtc_clk_init.c
-
-    120: bool res = rtc_clk_cpu_freq_mhz_to_config(cfg.cpu_freq_mhz, &new_config);
-    121: //assert(res && "invalid CPU frequency value");
-    122: rtc_clk_cpu_freq_set_config(&new_config);
-   
-components/soc/esp32/rtc_time.c
-
-    74: // The required amount of slowclk_cycles can produce in a counter TIMG a overflow error. Decrease the slowclk_cycles for fix it.
-    75: //assert(us_time_estimate < us_timer_max);
-    76: /* Start calibration */
-
-
-    components/esp32/clk.c
-    126: bool res = rtc_clk_cpu_freq_mhz_to_config(new_freq_mhz, &new_config);
-    127: //assert(res);
-
-
-
-Only if you are using head.
-Version 3.1 of esp-idf seems to work ok.
-qemu will be improved to return better values in order to avoid these asserts.
-
-
-## Update July 2018
-
-The latest version of qemu rtc emulation  is a little better, then this is no longer a problem.
-With the 3.1 version of esp-idf you might get stuck here..
-
-    W (2061) clk: still waiting for source selection RTC
-    or
-    (40) clk: RTC: Not found External 32 kHz XTAL. Switching to Internal 150 kHz RC chain
-
-  This is configure in menuconfig
-    → Component config → ESP32-specific
-
-### Workaround,
-    b rtc_clk_cal
-    In end of rtc_clk_cal
-    s period=100
-Now execusion should continue
 
 
 ## IMPORTANT update, Feb 2018
@@ -174,18 +128,15 @@ Not that esp-idf is constantly being updated and you must keep the qemu source u
        mbedTLS  --->
           [ ] Enable hardware SHA acceleration                                     
 
-So now the toflash.c program did overwrite the checksum with 00000
-this must not happen anymore as 
-the bootloader relies on proper hash of the image
+Previously the toflash.c program overwrote the checksum with 00000
+this must not happen anymore as the bootloader relies on proper hash of the image
 
     if (patch_hash==1) {
       for (j=0;j<33;j++)
-	{
-          tmp_data[file_size-j]=0;
-	}
+        {
+                tmp_data[file_size-j]=0;
+        }
     }
-
-
 
 
 ```
@@ -201,6 +152,26 @@ Then run the ./qemu_flash program.
 > ./qemu_flash build/app-template.bin
 
 Note that you have to use the .bin file as argument. This will generate a flash image with bootloader, partition information and flash file that the bootloder can use boot the proper application from.
+
+You can also start with a flash dump image, then remove this from the toflash.c file. 
+```
+    // Overwrites esp32flash.bin file
+    system("dd if=/dev/zero bs=1M count=4  | tr \"\\000\" \"\\377\" >  esp32flash.bin");
+
+```
+This way you can use calibratrion data from the flash file if you patch hw/xtensa/esp32.c of qemu to match your flash dump.
+The printouts are very helpful to allow you to update to correct values.
+```
+case 0x5a004:
+           printf("EFUSE MAC\n"); 
+           return 0xc400c870;
+           break;
+      case 0x5a008:
+           printf("EFUSE MAC\n"); 
+           return 0xffda240a;
+           break;
+```
+
 
 You no longer need to give  application as kernel parameter.
 > -kernel /home/olas/esp/qemu_esp32/examples/07_flash_mmap/build/mmap_test.elf
