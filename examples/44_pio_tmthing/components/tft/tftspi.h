@@ -139,7 +139,8 @@
 //     for example the one on ESP-WROWER-KIT ###
 // #############################################
 #define TFT_INVERT_ROTATION 0
-#define TFT_INVERT_ROTATION1 0
+#define TFT_INVERT_ROTATION1 1
+#define TFT_INVERT_ROTATION2 1
 
 // ################################################
 // ### SET TO 0X00 FOR DISPLAYS WITH RGB MATRIX ###

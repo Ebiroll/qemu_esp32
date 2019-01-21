@@ -1,4 +1,4 @@
-This example results in a mirrired display...
+This example 
 
 https://github.com/LilyGO/TTGO-TM-ESP32
 
@@ -7,7 +7,10 @@ https://github.com/LilyGO/TTGO-TM-ESP32
 # Amazingly confusing information
 =================================
 
-
+make
+make makefs
+make flashfs
+make flash
 
 
 https://www.esp32.com/viewtopic.php?t=6089
