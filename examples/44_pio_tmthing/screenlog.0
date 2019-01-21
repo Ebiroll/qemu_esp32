@@ -1,0 +1,164 @@
+ets Jun  8 2016 00:22:57
+
+rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0018,len:4
+load:0x3fff001c,len:5804
+load:0x40078000,len:9176
+load:0x40080000,len:6008
+entry 0x4008032c
+[0;32mI (28) boot: ESP-IDF v3.1.2 2nd stage bootloader[0m
+[0;32mI (28) boot: compile time 23:40:08[0m
+[0;32mI (40) boot: Enabling RNG early entropy source...[0m
+[0;32mI (40) boot: SPI Speed      : 40MHz[0m
+[0;32mI (40) boot: SPI Mode       : DIO[0m
+[0;32mI (43) boot: SPI Flash Size : 4MB[0m
+[0;32mI (47) boot: Partition Table:[0m
+[0;32mI (51) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (58) boot:  0 nvs              WiFi data        01 02 00009000 00006000[0m
+[0;32mI (66) boot:  1 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (73) boot:  2 factory          factory app      00 00 00010000 00100000[0m
+[0;32mI (81) boot: End of partition table[0m
+[0;32mI (85) esp_image: segment 0: paddr=0x00010020 vaddr=0x3f400020 size=0x0c2b8 ( 49848) map[0m
+[0;32mI (111) esp_image: segment 1: paddr=0x0001c2e0 vaddr=0x3ffb0000 size=0x03d30 ( 15664) load[0m
+[0;32mI (118) esp_image: segment 2: paddr=0x00020018 vaddr=0x400d0018 size=0x2029c (131740) map[0m
+[0;32mI (164) esp_image: segment 3: paddr=0x000402bc vaddr=0x3ffb3d30 size=0x014ac (  5292) load[0m
+[0;32mI (166) esp_image: segment 4: paddr=0x00041770 vaddr=0x3ffb51dc size=0x00000 (     0) load[0m
+[0;32mI (171) esp_image: segment 5: paddr=0x00041778 vaddr=0x40080000 size=0x00400 (  1024) load[0m
+[0;32mI (180) esp_image: segment 6: paddr=0x00041b80 vaddr=0x40080400 size=0x0aaa0 ( 43680) load[0m
+[0;32mI (207) esp_image: segment 7: paddr=0x0004c628 vaddr=0x400c0000 size=0x00000 (     0) load[0m
+[0;32mI (207) esp_image: segment 8: paddr=0x0004c630 vaddr=0x50000000 size=0x00000 (     0) load[0m
+[0;32mI (221) boot: Loaded app from partition at offset 0x10000[0m
+[0;32mI (221) boot: Disabling RNG early entropy source...[0m
+[0;32mI (225) cpu_start: Pro cpu up.[0m
+[0;32mI (229) cpu_start: Starting app cpu, entry point is 0x40080f14[0m
+[0;32mI (0) cpu_start: App cpu up.[0m
+[0;32mI (239) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (246) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (252) heap_init: At 3FFB63A0 len 00029C60 (167 KiB): DRAM[0m
+[0;32mI (258) heap_init: At 3FFE0440 len 00003BC0 (14 KiB): D/IRAM[0m
+[0;32mI (265) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (271) heap_init: At 4008AEA0 len 00015160 (84 KiB): IRAM[0m
+[0;32mI (277) cpu_start: Pro cpu start user code[0m
+[0;32mI (295) cpu_start: Starting scheduler on PRO CPU.[0m
+[0;32mI (0) cpu_start: Starting scheduler on APP CPU.[0m
+
+==============================
+TFT display DEMO, LoBo 11/2017
+==============================
+Pins used: miso=0, mosi=23, sck=18, cs=5
+==============================
+
+SPI: display device added to spi bus (2)
+SPI: attached display device, speed=8000000
+SPI: bus uses native pins: false
+SPI: display init...
+OK
+SPI: Max rd speed = 1000000
+SPI: Changed speed to 26666666
+
+---------------------
+Graphics demo started
+---------------------
+
+
+[0;32mI (2926) [SPIFFS]: Registering SPIFFS file system[0m
+[0;32mI (2926) [SPIFFS]: Mounting SPIFFS files system[0m
+[0;32mI (2926) [SPIFFS]: Start address: 0x180000; Size 1024 KB[0m
+[0;32mI (2936) [SPIFFS]:   Work buffer: 2048 B[0m
+[0;32mI (2936) [SPIFFS]:    FDS buffer: 384 B[0m
+[0;32mI (2946) [SPIFFS]:    Cache size: 2048 B[0m
+[0;32mI (2996) [SPIFFS]: Mounted[0m
+
+==========================================
+Display: ST7789V: PORTRAIT 240,320 Color
+
+     Clear screen time: 60 ms
+Send color buffer time: 240 us (240 pixels)
+***ERROR*** A stack overflow in task main has been detected.
+abort() was called at PC 0x40089408 on core 0
+
+Backtrace: 0x40089218:0x3ffb7120 0x400893ef:0x3ffb7140 0x40089408:0x3ffb7160 0x40086fd4:0x3ffb7180 0x4008857c:0x3ffb71a0 0x40088532:0x3ffb8198
+
+Rebooting...
+ets Jun  8 2016 00:22:57
+
+rst:0xc (SW_CPU_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+configsip: 0, SPIWP:0xee
+clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+mode:DIO, clock div:2
+load:0x3fff0018,len:4
+load:0x3fff001c,len:5804
+load:0x40078000,len:9176
+load:0x40080000,len:6008
+entry 0x4008032c
+[0;32mI (29) boot: ESP-IDF v3.1.2 2nd stage bootloader[0m
+[0;32mI (29) boot: compile time 23:40:08[0m
+[0;32mI (40) boot: Enabling RNG early entropy source...[0m
+[0;32mI (40) boot: SPI Speed      : 40MHz[0m
+[0;32mI (40) boot: SPI Mode       : DIO[0m
+[0;32mI (44) boot: SPI Flash Size : 4MB[0m
+[0;32mI (48) boot: Partition Table:[0m
+[0;32mI (52) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (59) boot:  0 nvs              WiFi data        01 02 00009000 00006000[0m
+[0;32mI (66) boot:  1 phy_init         RF data          01 01 0000f000 00001000[0m
+[0;32mI (74) boot:  2 factory          factory app      00 00 00010000 00100000[0m
+[0;32mI (81) boot: End of partition table[0m
+[0;32mI (85) esp_image: segment 0: paddr=0x00010020 vaddr=0x3f400020 size=0x0c2b8 ( 49848) map[0m
+[0;32mI (112) esp_image: segment 1: paddr=0x0001c2e0 vaddr=0x3ffb0000 size=0x03d30 ( 15664) load[0m
+[0;32mI (118) esp_image: segment 2: paddr=0x00020018 vaddr=0x400d0018 size=0x2029c (131740) map[0m
+[0;32mI (165) esp_image: segment 3: paddr=0x000402bc vaddr=0x3ffb3d30 size=0x014ac (  5292) load[0m
+[0;32mI (167) esp_image: segment 4: paddr=0x00041770 vaddr=0x3ffb51dc size=0x00000 (     0) load[0m
+[0;32mI (171) esp_image: segment 5: paddr=0x00041778 vaddr=0x40080000 size=0x00400 (  1024) load[0m
+[0;32mI (181) esp_image: segment 6: paddr=0x00041b80 vaddr=0x40080400 size=0x0aaa0 ( 43680) load[0m
+[0;32mI (207) esp_image: segment 7: paddr=0x0004c628 vaddr=0x400c0000 size=0x00000 (     0) load[0m
+[0;32mI (208) esp_image: segment 8: paddr=0x0004c630 vaddr=0x50000000 size=0x00000 (     0) load[0m
+[0;32mI (222) boot: Loaded app from partition at offset 0x10000[0m
+[0;32mI (222) boot: Disabling RNG early entropy source...[0m
+[0;32mI (226) cpu_start: Pro cpu up.[0m
+[0;32mI (229) cpu_start: Starting app cpu, entry point is 0x40080f14[0m
+[0;32mI (222) cpu_start: App cpu up.[0m
+[0;32mI (240) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (247) heap_init: At 3FFAE6E0 len 00001920 (6 KiB): DRAM[0m
+[0;32mI (253) heap_init: At 3FFB63A0 len 00029C60 (167 KiB): DRAM[0m
+[0;32mI (259) heap_init: At 3FFE0440 len 00003BC0 (14 KiB): D/IRAM[0m
+[0;32mI (265) heap_init: At 3FFE4350 len 0001BCB0 (111 KiB): D/IRAM[0m
+[0;32mI (272) heap_init: At 4008AEA0 len 00015160 (84 KiB): IRAM[0m
+[0;32mI (278) cpu_start: Pro cpu start user code[0m
+[0;32mI (296) cpu_start: Starting scheduler on PRO CPU.[0m
+[0;32mI (0) cpu_start: Starting scheduler on APP CPU.[0m
+
+==============================
+TFT display DEMO, LoBo 11/2017
+==============================
+Pins used: miso=0, mosi=23, sck=18, cs=5
+==============================
+
+SPI: display device added to spi bus (2)
+SPI: attached display device, speed=8000000
+SPI: bus uses native pins: false
+SPI: display init...
+OK
+SPI: Max rd speed = 1000000
+SPI: Changed speed to 26666666
+
+---------------------
+Graphics demo started
+---------------------
+
+
+[0;32mI (2926) [SPIFFS]: Registering SPIFFS file system[0m
+[0;32mI (2926) [SPIFFS]: Mounting SPIFFS files system[0m
+[0;32mI (2926) [SPIFFS]: Start address: 0x180000; Size 1024 KB[0m
+[0;32mI (2936) [SPIFFS]:   Work buffer: 2048 B[0m
+[0;32mI (2936) [SPIFFS]:    FDS buffer: 384 B[0m
+[0;32mI (2946) [SPIFFS]:    Cache size: 2048 B[0m
+[0;32mI (2996) [SPIFFS]: Mounted[0m
+
+==========================================
+Display: ST7789V: PORTRAIT 240,320 Color
+
+     Clear screen time: 60 ms
+Send color buffer time: 240 us (240 pixels)
