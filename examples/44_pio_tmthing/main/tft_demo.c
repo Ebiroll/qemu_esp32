@@ -1096,7 +1096,7 @@ void tft_demo() {
 		disp_header("Welcome to ESP32");
 
 		test_times();
-		font_demo();
+		//font_demo();
 		line_demo();
 		aline_demo();
 		rect_demo();
