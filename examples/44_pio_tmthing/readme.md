@@ -7,6 +7,8 @@ https://github.com/LilyGO/TTGO-TM-ESP32
 # Amazingly confusing information
 =================================
 
+https://github.com/loboris/ESP32_TFT_library
+
 make
 make makefs
 make flashfs
