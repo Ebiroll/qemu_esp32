@@ -62,7 +62,7 @@ P_BTN0_C	| u8 |	39
 Audio PCM5102A i2s chip.
 http://www.ti.com/lit/ds/symlink/pcm5102a.pdf
 
-It is connected to the esp32 over i2c for commads and i2s for audio data. 
+It is connected to the esp32 for i2s for audio data. 
 
 
 Name | type  | pin
@@ -70,10 +70,9 @@ Name | type  | pin
 P_I2S_LRCK	| u8 |	25
 P_I2S_BCLK	| u8 |	26
 P_I2S_DATA |  u8	| 19
-P_ADC	| u8 |	255
-P_I2C_SCL	| u8 |	5
-P_I2C_SDA	| u8 |	16
 
+
+No I2C interface to this chip. Audio format is selected by one of the pins on the PCM5102A.
 
 # SD card
 Name | type  | pin
@@ -85,19 +84,25 @@ P_SD_DAT0	| u8 |	02
 P_XDCS	| u8 |	2
 
 # Others, unidentified
+-----| ------ | ----- 
 P_RST	| u8 |	33
 P_DREQ	| u8 |	14
 P_ENC1_B	| u8 |	17
 P_I2C_RST	| u8 |	17
 P_IR_SIGNAL	| u8 |	34
 
+# Not used
+Name | type  | pin
+-----| ------ | ----- 
+P_ADC	| u8 |	255
+P_I2C_SCL	| u8 |	5
+P_I2C_SDA	| u8 |	16
 
 
 
 The display model is: 2.4" ST7789V LCD
 Button keys: pin 37 pin 38 pin39
 ESP32 and LED screens on controllers compatible with ILI9341.
-
 
 
 
@@ -118,7 +123,7 @@ https://github.com/kodera2t/ESP32_OLED_webradio
 
 For the boards with ESP32-PICO-D4, please swap control switch from GPIO16 to GPIO0, since GPIO16 in PICO-D4 is used for internal SPI Flash RAM connection (pre-occupied). Swap can be done in components/controls/controls.c
 
-
+```
 ==============================
 Pins used: miso=19, mosi=23, sck=18, cs=5
 ==============================
@@ -132,7 +137,7 @@ SPI: Max rd speed = 1000000
 SPI: Changed speed to 40000000
 
 
-
+Not sure about the PIN_NUM_MISO here, should be 19?
 These did a job for me (->TFT control; not sound/SD)
 PIN_NUM_MISO 0 // SPI MISO
 PIN_NUM_MOSI 23 // SPI MOSI / SDA
@@ -143,3 +148,4 @@ PIN_NUM_DC 16 // Display command/data pin / RS
 PIN_NUM_TCS 0 // Touch screen CS pin
 PIN_NUM_RST 17 // GPIO used for RESET control
 PIN_NUM_BCKL 0 // GPIO used for backlight control
+```
