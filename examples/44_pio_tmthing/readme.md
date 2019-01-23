@@ -18,10 +18,11 @@ https://github.com/loboris/ESP32_TFT_library
 
 # Building
 
-make
+```
 make makefs
 make flashfs
 make flash
+```
 
 https://www.esp32.com/viewtopic.php?t=6089
 
@@ -84,6 +85,8 @@ P_SD_DAT0	| u8 |	02
 P_XDCS	| u8 |	2
 
 # Others, unidentified
+
+Name | type  | pin
 -----| ------ | ----- 
 P_RST	| u8 |	33
 P_DREQ	| u8 |	14
