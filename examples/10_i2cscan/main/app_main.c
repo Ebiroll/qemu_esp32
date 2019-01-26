@@ -85,15 +85,15 @@ esp_err_t i2c_master_check_slave(i2c_port_t i2c_num,uint8_t addr)
 
 /**
  * @brief i2c master initialization
- */
-void i2c_init()
+ I2C_MASTER_SDA_IO ,I2C_MASTER_SCL_IO  */
+void i2c_init(int SDA,int SCL)
 {
     int i2c_master_port = I2C_MASTER_NUM;
     i2c_config_t conf;
     conf.mode = I2C_MODE_MASTER;
-    conf.sda_io_num = I2C_MASTER_SDA_IO;
+    conf.sda_io_num = SDA;
     conf.sda_pullup_en = GPIO_PULLUP_ENABLE;
-    conf.scl_io_num = I2C_MASTER_SCL_IO;
+    conf.scl_io_num = SCL;
     conf.scl_pullup_en = GPIO_PULLUP_ENABLE;
     conf.master.clk_speed = I2C_MASTER_FREQ_HZ;
     i2c_param_config(i2c_master_port, &conf);
@@ -124,8 +124,58 @@ void i2c_scan() {
 void app_main()
 {
     printf("Starting i2cscan... \r\n");
+    int sda=I2C_MASTER_SDA_IO ;
+    int clk=I2C_MASTER_SCL_IO;
+    int i2c_master_port = I2C_MASTER_NUM;
 
-    i2c_init();
+    printf("Scanning SDA=%d SCL=%d\n",sda,clk);
+    i2c_init(sda,clk);
     i2c_scan();
+    ESP_ERROR_CHECK( i2c_driver_delete(i2c_master_port));
+
+    sda=4;
+    clk=15;
+    printf("Scanning SDA=%d SCL=%d\n",sda,clk);
+    i2c_init(sda,clk);
+    i2c_scan();
+    ESP_ERROR_CHECK( i2c_driver_delete(i2c_master_port));
+
+
+    sda=14;
+    clk=12;
+    printf("Scanning SDA=%d SCL=%d\n",sda,clk);
+    i2c_init(sda,clk);
+    i2c_scan();
+    ESP_ERROR_CHECK( i2c_driver_delete(i2c_master_port));
+
+
+    sda=22;
+    clk=23;
+    printf("Scanning SDA=%d SCL=%d\n",sda,clk);
+    i2c_init(sda,clk);
+    i2c_scan();
+    ESP_ERROR_CHECK( i2c_driver_delete(i2c_master_port));
+
+    sda=05;
+    clk=04;
+    printf("Scanning SDA=%d SCL=%d\n",sda,clk);
+    i2c_init(sda,clk);
+    i2c_scan();
+    ESP_ERROR_CHECK( i2c_driver_delete(i2c_master_port));
+
+
+    sda=04;
+    clk=05;
+    printf("Scanning SDA=%d SCL=%d\n",sda,clk);
+    i2c_init(sda,clk);
+    i2c_scan();
+    ESP_ERROR_CHECK( i2c_driver_delete(i2c_master_port));
+
+    clk=22;
+    printf("Scanning SDA=%d SCL=%d\n",sda,clk);
+    i2c_init(sda,clk);
+    i2c_scan();
+    ESP_ERROR_CHECK( i2c_driver_delete(i2c_master_port));
+
 
 }
