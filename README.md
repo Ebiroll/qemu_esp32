@@ -75,6 +75,28 @@ A much faster but non-interactive example is the 06_duino example.
 It runs fine with the latest version of esp-idf
 
 ```
+
+## Windows 10
+
+Enable the windows subsystem for linux on Windows 10, 
+https://en.wikipedia.org/wiki/Windows_Subsystem_for_Linux
+As admin in power shell, 
+```
+Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux
+```
+Install ubuntu (i.e. 18.04 LTS) from the app store.
+```
+sudo apt-get update && sudo apt-get upgrade
+sudo  apt-get install build-essential
+sudo apt-get install libpixman-1-0 libpixman-1-dev 
+apt-get install libglib2.0-dev zlib1g-dev
+```
+It should also be possible to build with MSYS2 but performance is not so good.
+As an X-server you can use this one,
+https://sourceforge.net/projects/vcxsrv/
+
+
+
 ## Update Jan 2019
 
 Head and version 3.1.2 works fine,
