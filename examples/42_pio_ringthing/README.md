@@ -7,7 +7,9 @@ Parts of this was borrowed from here https://github.com/MisterRager/RingThing & 
 
 ![image](https://github.com/LilyGO/TTGO-T9-RGB_LED-WM8978/blob/master/Images/image1.jpg)
 
-# The code in here is based on V1.0
+# The code in here is based on the V1.0 hardware
+
+Sound is not right, but at least we have some noice.
 
 # Buttons
 
@@ -26,6 +28,14 @@ P_I2S_BCK	| u8 |	33
 P_I2S_WS	| u8 |	25
 P_I2S_IN	| u8 |	27
 P_I2S_OUT	| u8 |	26
+
+Not sure if the i2c pins are connected
+
+Name | type  | pin
+-----| ------ | ----- 
+P_I2C_SDA	| u8 |	19
+P_I2C_SCL	| u8 |	18
+
 
 # SD Card
 
