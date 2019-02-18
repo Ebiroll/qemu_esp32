@@ -33,8 +33,8 @@ The purpose of this project is to understand the gdb-stub and maybe improve it w
 
 https://www-zeuthen.desy.de/dv/documentation/unixguide/infohtml/gdb/Thread-List-Format.html
 
-As all other code here, its for learning about the gdbstub and the gdb protocol
-``` 
+As all other code here, its for learning, and in this case we learn about the gdbstub and the gdb protocol
+
 
 Basic gdb-stub frame
 ``` 
@@ -58,6 +58,7 @@ Interesting gdb commands
 
 (gdb) info threads
 (gdb) monitor help
+(gdb) set debug protocol 5
 
 Not so useful
 (gdb) set debug target 1
@@ -67,16 +68,17 @@ Not so useful
 In qemu
 ======
 
+```
+qemu_flash build/wifigdb.elf
+
 xtensa-softmmu/qemu-system-xtensa -d unimp,guest_errors -cpu esp32 -M esp32 -m 4M   -net nic,model=vlan0 -net user,id=simnet,net=192.168.4.0/24,host=192.168.4.40,hostfwd=tcp::2345-192.168.4.3:2345  -net dump,file=/tmp/vm0.pcap   -s     >  io.txt
 
-No longer needed
-# -kernel /home/olas/esp/qemu_esp32/examples/26_wifigdb/build/wifigdb.elf
 
-xtensa-esp32-elf-gdb.qemu 
+> xtensa-esp32-elf-gdb.qemu 
 (gdb) target extended-remote:2345
 
 However due to far from perfect network emulation, it does not run so well in qemu. :-(
 
 Also try 
 (gdb) target extended-remote:2345
-
+``` 
