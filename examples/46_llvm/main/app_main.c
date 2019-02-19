@@ -32,11 +32,18 @@ void read_sens_task(void *pvParameters)
 	}
 }
 
+int add2(int i,int j) {
+  return(i+j);
+}
+
+
 void app_main()
 {
 	//nvs_flash_init();
 	printf("Start\n");
 	int r=add(1,2);
+	printf("1+2=%d\n",r);
+	r=add2(1,2);
 	printf("1+2=%d\n",r);
 
 	//xTaskCreatePinnedToCore(&read_sens_task, "read_sens_task", 1024, NULL, 5,
