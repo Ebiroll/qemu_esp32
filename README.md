@@ -317,6 +317,20 @@ Also dont forget to prepare this version for use with with qemu.
     cp xtensa-config.c.qemu xtensa-config.c
     ./configure  --without-guile --target=xtensa-esp32-elf
 
+
+## Building gdb 8.1 for qemu
+```
+cd esp
+git clone https://github.com/espressif/binutils-gdb
+cd binutils-gdb
+git checkout remotes/origin/esp32-2018r1_gdb-8_1
+./configure  --without-guile --host=x86_64-build_pc-linux-gnu --target=xtensa-esp32-elf --disable-werror
+make
+When feeling lucky apply this patch
+https://github.com/jcmvbkbc/meta-zephyr-sdk/commit/42be8b49d5915a0bb94ef8dfbde50fe130e7a772
+
+```
+
 ## Building qemu
 ```
 mkdir ../qemu_esp32
