@@ -99,7 +99,7 @@ https://sourceforge.net/projects/vcxsrv/
 
 ## Update Jan 2019
 
-Head and version 3.1.2 works fine,
+Head and version 3.2 works fine,
 If you want to use ethernet emulation in earlier version you must patch this
 https://github.com/Ebiroll/qemu_esp32/commit/bc2b6e2f50261885751ebf2335a82325eafbc656
 
@@ -468,19 +468,19 @@ The emulation has also been some problems with do_global_ctors().
  should be available at this location... 0x3f409fb8
 __init_array_start , however nvs reuses 0x3f40000 as I have not gotten it to recognize that this is already mmapped by the bootloader. However when running full bootloader 
 
+Or you can try version 3.2
+```
+ git checkout v3.2
+ git submodule update --init
+```
+
+
 Or you can try version 3.1.2
 ```
 git checkout v3.1.2
 git submodule update --init
 
 ```
-
-Or you can try version 3.1
-```
- git checkout release/v3.1
- git submodule update --init
-```
-
 
 Or you can try version 2.0
 ```

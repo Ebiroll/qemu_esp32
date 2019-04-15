@@ -49,3 +49,13 @@ pcbreflux, also has nice examples.
     33_pkt_fwd, Fututre project to test as lora gateway
     34_9DoF, (in progress) Arduino library for NXP 9DOF breakout board
     35_gps, (in progress) Arduino library for gps
+    36_nuttxspace, nuttx example (http://nuttx.org/) runs in qemu
+    37_espScope, Arduino scope example
+    38_wifiscope, Web based scope example (in progress)
+    40_bt_a2dp_source, make some noise on a bt speaker
+    41_http_server, esp-idf webserver, should work from 3.2
+    42_pio_ringthing, TTGO T-Audio, flashes the RGB leds
+    43_sdcard, SD card example
+    44_pio_tmthing, TTGO TM example, similar to a m5stack
+    45_m5grey, m5stack with built in gyro, and  VL53L1X to measure distance
+    46_llvm, simple llvm experiment to run in qemu
