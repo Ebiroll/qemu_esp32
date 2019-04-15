@@ -1,5 +1,19 @@
 # Simple HTTPD Server Example
 
+You need the latest version or v3.2 of  esp-idf for this to work
+
+# Running in qemu,
+
+    xtensa-softmmu/qemu-system-xtensa -d guest_errors,unimp  -cpu esp32 -M esp32 -m 4M -net nic,model=vlan0 -net user,id=simnet,ipver4=on,net=192.168.4.0/24,host=192.168.4.40,hostfwd=tcp::10080-192.168.4.3:80  -net dump,file=/tmp/vm0.pcap  -s    > io.txt
+
+Then start browser
+    http://127.0.0.1:10080
+    
+     (25810) httpd_uri: httpd_uri: URI '/' not found
+     (25810) httpd_txrx: httpd_resp_send_err: 404 Not Found - This URI doesn't exist
+     (25850) httpd_uri: httpd_uri: URI '/favicon.ico' not found
+     (25850) httpd_txrx: httpd_resp_send_err: 404 Not Found - This URI doesn't exist
+
 The Example consists of HTTPD server demo with demostration of URI handling :
     1. URI \hello for GET command returns "Hello World!" message
     2. URI \echo for POST command echoes back the POSTed message
