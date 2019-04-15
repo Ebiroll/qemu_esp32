@@ -14,6 +14,16 @@ Then start browser
      (25850) httpd_uri: httpd_uri: URI '/favicon.ico' not found
      (25850) httpd_txrx: httpd_resp_send_err: 404 Not Found - This URI doesn't exist
 
+
+Or use curl
+
+    curl -X PUT -d "0" 127.0.0.1:10080/ctrl
+    curl -X PUT -d "0" 127.0.0.1:10080/ctrl
+
+After running you can look at the captured data,
+    wireshark /tmp/vm0.pcap 
+    
+
 The Example consists of HTTPD server demo with demostration of URI handling :
     1. URI \hello for GET command returns "Hello World!" message
     2. URI \echo for POST command echoes back the POSTed message
