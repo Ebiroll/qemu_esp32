@@ -35,6 +35,7 @@ class MainWindow: public QMainWindow
 
 	private slots:
 		void slotOpen();
+        void slotDiff();
 		void slotAbout();
         void slotPretty();
 		void slotToOffset();
