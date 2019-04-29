@@ -65,6 +65,11 @@ int main(int argc, char **argv)
     //QMainWindow w;
 
     MainWindow wgt;
+
+    if (argc>1) {
+
+        wgt.process(argv[argc-1]);
+    }
     wgt.show();
 
     return app.exec();

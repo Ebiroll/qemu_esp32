@@ -55,7 +55,8 @@ QMainWindow(parent, flags)
 	QHexView *pwgt = new QHexView;
     setCentralWidget(pwgt);
 
-    connect(pwgt, SIGNAL(minimumWidthChanged(int)), this, SLOT(fixWidth(int)));
+   // Old behaviour
+   // connect(pwgt, SIGNAL(minimumWidthChanged(int)), this, SLOT(fixWidth(int)));
 /*
     QHBoxLayout *layout = new QHBoxLayout(pwgt);
     layout->addWidget(pwgt);
