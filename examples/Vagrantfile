@@ -43,7 +43,7 @@ Vagrant.configure("2") do |config|
   # documentation for more information about their specific syntax and use.
   config.vm.provision "shell", inline: <<-SHELL
     apt-get -qq update && apt-get -qq upgrade -y
-    apt-get -qq install -y gcc git wget make libncurses-dev flex bison gperf python python-pip python-setuptools python-serial python-cryptography python-future python-pyparsing
+    apt-get -qq install -y gcc git wget make libncurses-dev flex bison gperf python python-pip python-setuptools python-serial python-cryptography python-future python-pyparsing libpixman-1-0 libpixman-1-dev libglib2.0-dev zlib1g-dev
     if [ ! -d /opt/local/espressif/ ]; then
       mkdir -p /opt/local/espressif/
     fi
