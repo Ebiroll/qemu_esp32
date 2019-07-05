@@ -17,6 +17,7 @@
 #include "lwip/pbuf.h"
 #include "lwip/sys.h"
 #include "lwip/timeouts.h"
+//#include "lwip/timers.h"
 #include <lwip/stats.h>
 #include "lwip/netif.h"
 #include "netif/etharp.h"
@@ -25,8 +26,13 @@
 #include "esp_event.h"
 #include "esp_event_loop.h"
 
+
 #include "arch/sys_arch.h"
+//#include "port/arch/sys_arch.h"
 // -- Generic network interface --
+
+
+//QueueHandle_t esp_event_loop_get_queue(void);
 
 extern err_t ethoc_init(struct netif *netif);
 
@@ -60,7 +66,7 @@ void task_lwip_init(void * pParam)
   // From esp-idf
   //lwip_init();
   //sys_init();
-
+  tcpip_adapter_init();
   //ethernet_hardreset();//hard reset of EthernetDaughterCard
   // This should be done in lwip_init
 # if 0  
@@ -107,8 +113,8 @@ void task_lwip_init(void * pParam)
   netif_set_up(&ethoc_if); 
 
  // Fake got_ip event
-
- if (esp_event_loop_get_queue()!=NULL) {
+  
+ //if (esp_event_loop_get_queue()!=NULL) {
    system_event_t evt;
 
    //ip4_addr_set(&ip_info->ip, ip_2_ip4(&netif->ip_addr));
@@ -117,12 +123,14 @@ void task_lwip_init(void * pParam)
 
    //notify event
    evt.event_id = SYSTEM_EVENT_STA_GOT_IP;
-
-   memcpy(&evt.event_info.got_ip.ip_info, &ipaddr, sizeof(tcpip_adapter_ip_info_t));
+   memcpy(&evt.event_info.got_ip.ip_info.ip, &ipaddr, sizeof(ipaddr));
+   memcpy(&evt.event_info.got_ip.ip_info.netmask, &netmask, sizeof(netmask));
+   memcpy(&evt.event_info.got_ip.ip_info.gw, &gw, sizeof(gw));
+ 
+   //memcpy(&evt.event_info.got_ip.ip_info, &ipaddr, sizeof(tcpip_adapter_ip_info_t));
 
    esp_event_send(&evt);
- }
-
+   //}
 
 
   printf("Applications started.\n");
