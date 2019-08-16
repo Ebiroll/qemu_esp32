@@ -450,7 +450,9 @@ Workaround until the problem is fixed,
 You can probably use head of esp-idf
 
 This version works anyways,
-git checkout b540322dc10ee2a0ce773086da42627468897325
+git checkout release/v3.3
+git submodule update --recursive
+git submodule update --init
 
 For a short time there was a divide by zero.
 
