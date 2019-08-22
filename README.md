@@ -95,7 +95,13 @@ It should also be possible to build with MSYS2 but performance is not so good.
 As an X-server you can use this one,
 https://sourceforge.net/projects/vcxsrv/
 
+## Build with cmake
+Latest version of esp-idf recomends
+    idf.py menuconfig
+    idf.py build
 
+As location of partition is different for cmake
+    gcc ../../toflash-cmake.c -o qemu_flash
 
 ## Update Jan 2019
 
