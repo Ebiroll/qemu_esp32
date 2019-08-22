@@ -459,6 +459,11 @@ This version works anyways,
 git checkout release/v3.3
 git submodule update --recursive
 git submodule update --init
+If you get strange errors like, 
+No rulte to create, esp/esp-idf/tools/kconfig/conf-idf
+try cd $IDF_PATH/tools/kconfig; 
+    make clean 
+    make
 
 For a short time there was a divide by zero.
 
