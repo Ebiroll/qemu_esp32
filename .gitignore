@@ -4,6 +4,14 @@ build
 *.ko
 *.obj
 *.elf
+sdkconfig.*
+qemu_flash
+*.bin
+
+# sdkconfig
+*/sdkconfig
+sdkconfig
+/examples/01_max_malloc/sdkconfig
 
 # Precompiled Headers
 *.gch

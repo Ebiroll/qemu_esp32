@@ -5,61 +5,15 @@
 https://code.visualstudio.com/download
 
 Install extension C/C++ & Native debug (webfreak)
+Also install the C/C++ extension from Microsoft 
 ```
 
 Look att my examples in the directory .vscode
 
-#Compiling
+# Compiling
 Visual studio code works fine for navigating both qemu and esp32 sources
 Press ctrl-shift-P 
 type tasks, select configure task runner, select other, This is for compiling qemu.
-```
-{
-    "version": "0.1.0",
-    "command": "make",
-    "isShellCommand": true,
-    "options": {
-        "cwd": "${workspaceRoot}/../qemu_esp32"
-    },
-    "tasks": [
-        {
-            "taskName": "Makefile",
-            // Make this the default build command.
-            "isBuildCommand": true,
-            // Show the output window only if unrecognized errors occur.
-            "showOutput": "always",
-            // No args
-            "args": ["all"],
-            // Use the standard less compilation problem matcher.
-            "problemMatcher": {
-                "owner": "cpp",
-                "fileLocation": ["relative", "${workspaceRoot}"],
-                "pattern": {
-                    "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
-                    "file": 1,
-                    "line": 2,
-                    "column": 3,
-                    "severity": 4,
-                    "message": 5
-                }
-            }
-        },
-        {
-            "taskName": "clean app",
-            "args": ["make app-clean"]
-        },
-        {
-            "taskName": "monitor",
-            "args": ["make monitor"]
-        },
-        {
-            "taskName": "flash app",
-            "args": ["make app-flash"]
-        }
-
-    ]
-}
-```
 
 Newer versions of visual studio expects something like this
 
@@ -105,12 +59,37 @@ Newer versions of visual studio expects something like this
 }
 ```
 
+# Navigating source when using CMake
+
+.vscode/c_cpp_properties.json 
+```
+
+{
+    "configurations": [
+        {
+            "name": "linux",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/sdkconfig",
+                "${workspaceFolder}/build",
+                "${env:IDF_PATH}/components",
+                ""
+            ],
+           
+            "compilerPath": "~/esp/xtensa-esp32-elf/bin/xtensa-esp32-elf-gcc",
+            "cStandard": "c99",
+            "cppStandard": "c++11",
+            "intelliSenseMode": "clang-x64",
+            "compileCommands": "${workspaceFolder}/build/compile_commands.json"
+        }
+    ],
+    "version": 4
+}
+```
 
 
 
-
-
-#  Header files 
+#  Navigating sources  (Make version)
 .vscode/c_cpp_properties.json 
 ```
 {
