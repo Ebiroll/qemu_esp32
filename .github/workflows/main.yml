@@ -20,7 +20,6 @@ jobs:
         #git clone --recursive https://github.com/espressif/esp-idf.git
         git clone --recursive -b release/v4.0 --single-branch  https://github.com/espressif/esp-idf.git
         cd ~/esp/esp-idf
-	
         ./install.sh
     - name: Compile example 01_max_malloc
       run: |
