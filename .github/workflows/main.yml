@@ -14,16 +14,16 @@ jobs:
     - name: Run a multi-line script
       run: |
         pwd
-	mkdir ~/esp
-	cd ~/esp
+        mkdir ~/esp
+        cd ~/esp
         git clone --recursive https://github.com/espressif/esp-idf.git
-	cd ~/esp/esp-idf
+        cd ~/esp/esp-idf
         ./install.sh
-	. $HOME/esp/esp-idf/export.sh
-	export BATCH_BUILD=1
+        . $HOME/esp/esp-idf/export.sh
+        export BATCH_BUILD=1
         export V=0
-	cd  ~/qemu_esp/examples/01_max_malloc
-	make
+        cd  ~/qemu_esp/examples/01_max_malloc
+        make
         echo Add other actions to build,
         echo test, and deploy your project.
-	exit 0
+        exit 0
