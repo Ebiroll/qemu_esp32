@@ -12,6 +12,18 @@ jobs:
     - name: Run a one-line script
       run: echo Hello, world!
     - name: Run a multi-line script
-      run: exit 0
+      run: |
+        pwd
+	mkdir ~/esp
+	cd ~/esp
+        git clone --recursive https://github.com/espressif/esp-idf.git
+	cd ~/esp/esp-idf
+        ./install.sh
+	. $HOME/esp/esp-idf/export.sh
+	export BATCH_BUILD=1
+        export V=0
+	cd  ~/qemu_esp/examples/01_max_malloc
+	make
         echo Add other actions to build,
         echo test, and deploy your project.
+	exit 0
