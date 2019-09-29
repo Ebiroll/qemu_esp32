@@ -3,7 +3,7 @@
 #include <freertos/task.h>
 #include <esp_attr.h>
 #include <sys/time.h>
-#include <esp_crosscore_int.h>
+#include <crosscore_int_p.h>
 #include "esp_system.h"
 #include "nvs_flash.h"
 #include <stdio.h>
@@ -177,6 +177,8 @@ void pinned_tests(void *ignore) {
    xTaskCreatePinnedToCore(&test1, "task3", 2048, &param[3], 5, NULL,0);
    xTaskCreatePinnedToCore(&test1, "task4", 2048,&param[4], 5, NULL,1);
    xTaskCreatePinnedToCore(&test1, "task5", 2048,&param[5], 5, NULL,0);
+   xTaskCreatePinnedToCore(&test1, "task6", 2048,&param[4], 5, NULL,1);
+   xTaskCreatePinnedToCore(&test1, "task7", 2048,&param[5], 5, NULL,0);
    vTaskDelete(NULL);
 }
 
@@ -200,7 +202,7 @@ void app_main()
     
     printf("starting\n");
 
-    xTaskCreate(&task_tests, "test", 2048, "test", 5, NULL);
+    xTaskCreate(&pinned_tests, "test", 2048, "test", 5, NULL);
     //xTaskCreate(&pinned_tests, "test", 2048, "test", 5, NULL);
     //xTaskCreate(&pinned_to_pro_tests, "test", 2048, "test", 5, NULL);
     //pinned_to_pro_tests(NULL);

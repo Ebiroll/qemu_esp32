@@ -3,11 +3,12 @@
 #include <freertos/task.h>
 #include <esp_attr.h>
 #include <sys/time.h>
-#include <esp_crosscore_int.h>
+//#include <esp_crosscore_int.h>
 #include "esp_system.h"
 #include "nvs_flash.h"
 #include <stdio.h>
 #include <string.h>
+
 
 //#include "c_timeutils.h"
 #include "sdkconfig.h"
@@ -27,6 +28,8 @@ static inline uint32_t get_ccount(void)
   return ccount;
 }
 
+
+// ADC1_CHANNEL_6
 
 /**
  * Subtract one timeval from another.
@@ -125,7 +128,9 @@ static void test1(void *param) {
       int volatile j=0;
       core[taskno]=xPortGetCoreID();
       if (xPortGetCoreID()==1) {
-	printf("Running on APP CPU!!!!!!!!\n");
+	printf("Running on APP CPU!!!!!\n");
+      } else {
+	printf("Running on PRO CPU!!!!\n");
       }
       for (i=0; i<9000000; i++) {
          j=j+1;

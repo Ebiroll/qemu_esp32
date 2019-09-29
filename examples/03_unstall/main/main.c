@@ -4,7 +4,7 @@
 #include <esp_attr.h>
 #include <sys/time.h>
 #include "esp_system.h"
-#include <esp_crosscore_int.h>
+//#include <esp_crosscore_int.h>
 #include "esp_system.h"
 #include "nvs_flash.h"
 #include <stdio.h>
@@ -12,7 +12,7 @@
 #include "rom/uart.h"
 #include "soc/dport_reg.h" 
 #include "soc/cpu.h" 
-#include "rom/cache.h" 
+#include "esp32/rom/cache.h" 
 #include "esp_newlib.h"
 #include "driver/rtc_io.h"
 #include "esp_task.h"
@@ -24,7 +24,7 @@
 #include "soc/timer_group_reg.h"
 #include "soc/rtc_cntl_reg.h"
 #include "esp_ipc.h"
-#include "esp_heap_alloc_caps.h"
+//#include "esp_heap_alloc_caps.h"
 
 
 //extern void heap_alloc_caps_init();
