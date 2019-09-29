@@ -19,11 +19,10 @@ jobs:
         git clone --recursive https://github.com/espressif/esp-idf.git
         cd ~/esp/esp-idf
         ./install.sh
+      run: |
         . $HOME/esp/esp-idf/export.sh
         export BATCH_BUILD=1
         export V=0
-        cd  ~/qemu_esp/examples/01_max_malloc
-        make
-        echo Add other actions to build,
-        echo test, and deploy your project.
+        cd  /home/runner/work/qemu_esp32/qemu_esp32/examples/01_max_malloc
+        idf.py build
         exit 0
