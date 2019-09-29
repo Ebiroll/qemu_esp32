@@ -16,9 +16,9 @@ jobs:
         pwd
         mkdir ~/esp
         cd ~/esp
-	#git clone -b branch --single-branch	git://github/repository.git
+        #git clone -b branch --single-branch	git://github/repository.git
         #git clone --recursive https://github.com/espressif/esp-idf.git
-	git clone --recursive -b release/v4.0 --single-branch  https://github.com/espressif/esp-idf.git
+        git clone --recursive -b release/v4.0 --single-branch  https://github.com/espressif/esp-idf.git
         cd ~/esp/esp-idf
 	
         ./install.sh
