@@ -31,5 +31,6 @@ jobs:
         cd /home/runner/work/qemu_esp32/qemu_esp32/examples/04_sha
         idf.py build
     - name: Compile all
+      run: |    
         cd /home/runner/work/qemu_esp32/qemu_esp32/examples
         ./compile_all.sh
