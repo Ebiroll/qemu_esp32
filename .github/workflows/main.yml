@@ -32,4 +32,4 @@ jobs:
         idf.py build
     - name: Compile all
         cd /home/runner/work/qemu_esp32/qemu_esp32/examples
-	./compile_all.sh
+        ./compile_all.sh
