@@ -31,6 +31,9 @@ jobs:
         cd /home/runner/work/qemu_esp32/qemu_esp32/examples/04_sha
         idf.py build
     - name: Compile all
-      run: |    
+      run: |
+        . $HOME/esp/esp-idf/export.sh
+        export BATCH_BUILD=1
+        export V=0
         cd /home/runner/work/qemu_esp32/qemu_esp32/examples
         ./compile_all.sh
