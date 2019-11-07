@@ -5,6 +5,22 @@ If booting from the romdump we start here, _ResetVector, 0x40000400
 0x40000400      j      0x40000450                    // _ResetHandler, 0x40000450
 ```
 
+One interesting note,
+The datasheet clains that rom in 384KB but if you put a breakoint here
+    b  *0x40062a6c
+    x/10b 0x40062a6c
+You wil end up here
+
+Most probably the rtc_boot_control must return a different value
+   b *0x4000792b
+
+
+(gdb) add-symbol-file rom.elf 0x40000000
+
+https://www.espressif.com/sites/default/files/documentation/esp32_datasheet_en.pdf
+
+
+
 ## _ResetHandler
 ```
     0x40000450      movi   a0, 0 
