@@ -13,7 +13,7 @@ It is a good way to learn about qemu , esp32 and the esp32 rom.
 git clone git://github.com/Ebiroll/qemu-xtensa-esp32
 mkdir qemu_esp32
 cd qemu_esp32
-../qemu-xtensa-esp32/configure --disable-werror --prefix=`pwd`/root --target-list=xtensa-softmmu,xtensaeb-softmmu
+../qemu-xtensa-esp32/configure --disable-capstone --disable-werror --prefix=`pwd`/root --target-list=xtensa-softmmu,xtensaeb-softmmu
 make
 
 2. Dump rom1 and rom.bin
@@ -102,6 +102,30 @@ Latest version of esp-idf recomends
 
 As location of partition is different for cmake
     gcc ../../toflash-cmake.c -o qemu_flash
+
+## Update Nov 2019
+Espressif has released a qemu for esp32
+    https://github.com/espressif/qemu
+However they have not yet released a usable rom.elf
+Here is one which is not yet usable, https://dl.espressif.com/dl/esp32_rom.elf
+
+This version is more accurate than my implementation but lacks some features like 1306 emulation. 
+In the future, I will start using this instead and have created a branch, esp-develop.
+After clone you can switch to this branch,
+    git checkout esp-develop
+
+But then you have to start qemu with,
+    xtensa-softmmu/qemu-system-xtensa -nographic  -M esp32   -drive file=esp32flash.bin,if=mtd,format=raw
+
+To start with different boot strapping value (boot)
+    -global driver=esp32.gpio,property=strap_mode,value=0x0f
+
+To connect the serial deviice to port 8880
+    -serial tcp::8880,server,nowait
+
+    export ESPPORT=socket://localhost:8880
+    idf.py flash
+
 
 ## Update Jan 2019
 
@@ -416,6 +440,9 @@ When running I advise that you build a patched gdb as described in this document
 When debugging in the rom you can use,
 ```
     (gdb) add-symbol-file rom.elf 0x40000000
+An even better rom file is located here    
+https://dl.espressif.com/dl/esp32_rom.elf
+
 ```
 This also works for the original gdb and gives you all names of the functions in rom0.
 
