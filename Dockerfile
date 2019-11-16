@@ -8,7 +8,7 @@ FROM ubuntu:18.04
  
 # Make sure the image is updated, install some prerequisites,
  RUN apt-get update && apt-get install -y \
-   xz-utils \
+   xz-utils libpixman-1-0 libpng16-16 libjpeg8 libglib2.0 \
    wget \
    unzip \   
    && wget https://github.com/Ebiroll/qemu-xtensa-esp32/suites/309734438/artifacts/315433  && \
