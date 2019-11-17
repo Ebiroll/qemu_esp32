@@ -107,7 +107,7 @@ As location of partition is different for cmake
 Espressif has released a qemu for esp32
     https://github.com/espressif/qemu
 However they have not yet released a usable rom.elf
-Here is one which is not yet usable, https://dl.espressif.com/dl/esp32_rom.elf
+Here is one which might be usable in the future, https://dl.espressif.com/dl/esp32_rom.elf
 
 This version is more accurate than my implementation but lacks some features like 1306 emulation. 
 In the future, I will start using this instead and have created a branch, esp-develop.
@@ -120,12 +120,29 @@ But then you have to start qemu with,
 To start with different boot strapping value (boot)
     -global driver=esp32.gpio,property=strap_mode,value=0x0f
 
-To connect the serial deviice to port 8880
+To connect the serial deviice to port 8880, However I was not able to flash.
     -serial tcp::8880,server,nowait
 
     export ESPPORT=socket://localhost:8880
     idf.py flash
 
+To start with the openeth example 
+
+# Espressif qemu, openeth examples, requires esp-idf 4.1 
+
+    Top) → Component config → Ethernet
+    Espressif IoT Development Framework Configuration
+     [ ] Support ESP32 internal EMAC controller ----
+     [ ] Support SPI to Ethernet Module ----
+     [*] Support OpenCores Ethernet MAC (for use with QEMU) --->
+
+And
+    (Top) → Example Connection Configuration
+     Espressif IoT Development Framework Configuration
+     Connect using (Ethernet) --->
+
+Starting with ethernet emulation
+    qemu-system-xtensa -nographic -M esp32 -drive file=esp32flash.bin,if=mtd,format=raw -nographic -nic user,model=open_eth,hostfwd=tcp::10080-:80 -s
 
 ## Update Jan 2019
 

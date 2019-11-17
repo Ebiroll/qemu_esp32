@@ -7,12 +7,18 @@
    CONDITIONS OF ANY KIND, either express or implied.
  */
 
+#define CONFIG_EXAMPLE_CONNECT_ETHERNET 1
+#define CONFIG_EXAMPLE_USE_OPENETH 1
+
+
 #include <string.h>
 #include "protocol_examples_common.h"
 #include "sdkconfig.h"
 #include "esp_event.h"
 #include "esp_wifi.h"
+#if CONFIG_EXAMPLE_CONNECT_ETHERNET
 #include "esp_eth.h"
+#endif
 #include "esp_log.h"
 #include "tcpip_adapter.h"
 #include "freertos/FreeRTOS.h"
@@ -20,9 +26,6 @@
 #include "freertos/event_groups.h"
 #include "lwip/err.h"
 #include "lwip/sys.h"
-
-
-#define CONFIG_EXAMPLE_USE_OPENETH 1
 
 #define GOT_IPV4_BIT BIT(0)
 #define GOT_IPV6_BIT BIT(1)
@@ -32,6 +35,11 @@
 #else
 #define CONNECTED_BITS (GOT_IPV4_BIT)
 #endif
+
+// Externally defined somewhere...
+esp_eth_mac_t *esp_eth_mac_new_openeth(const eth_mac_config_t *config);
+
+
 
 static EventGroupHandle_t s_connect_event_group;
 static ip4_addr_t s_ip_addr;
@@ -44,10 +52,10 @@ static ip6_addr_t s_ipv6_addr;
 static const char *TAG = "example_connect";
 
 /* set up connection, Wi-Fi or Ethernet */
-static void start();
+static void start(void);
 
 /* tear down connection, release resources */
-static void stop();
+static void stop(void);
 
 static void on_got_ip(void *arg, esp_event_base_t event_base,
                       int32_t event_id, void *event_data)
@@ -69,13 +77,14 @@ static void on_got_ipv6(void *arg, esp_event_base_t event_base,
 
 #endif // CONFIG_EXAMPLE_CONNECT_IPV6
 
-esp_err_t example_connect()
+esp_err_t example_connect(void)
 {
     if (s_connect_event_group != NULL) {
         return ESP_ERR_INVALID_STATE;
     }
     s_connect_event_group = xEventGroupCreate();
     start();
+    ESP_ERROR_CHECK(esp_register_shutdown_handler(&stop));
     xEventGroupWaitBits(s_connect_event_group, CONNECTED_BITS, true, true, portMAX_DELAY);
     ESP_LOGI(TAG, "Connected to %s", s_connection_name);
     ESP_LOGI(TAG, "IPv4 address: " IPSTR, IP2STR(&s_ip_addr));
@@ -85,7 +94,7 @@ esp_err_t example_connect()
     return ESP_OK;
 }
 
-esp_err_t example_disconnect()
+esp_err_t example_disconnect(void)
 {
     if (s_connect_event_group == NULL) {
         return ESP_ERR_INVALID_STATE;
@@ -98,13 +107,22 @@ esp_err_t example_disconnect()
     return ESP_OK;
 }
 
+
 #ifdef CONFIG_EXAMPLE_CONNECT_WIFI
+// This is for wifi
+#if 0
+
+
 
 static void on_wifi_disconnect(void *arg, esp_event_base_t event_base,
                                int32_t event_id, void *event_data)
 {
     ESP_LOGI(TAG, "Wi-Fi disconnected, trying to reconnect...");
-    ESP_ERROR_CHECK(esp_wifi_connect());
+    esp_err_t err = esp_wifi_connect();
+    if (err == ESP_ERR_WIFI_NOT_STARTED) {
+        return;
+    }
+    ESP_ERROR_CHECK(err);
 }
 
 #ifdef CONFIG_EXAMPLE_CONNECT_IPV6
@@ -117,7 +135,9 @@ static void on_wifi_connect(void *arg, esp_event_base_t event_base,
 
 #endif // CONFIG_EXAMPLE_CONNECT_IPV6
 
-static void start()
+
+
+static void start(void)
 {
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
@@ -144,7 +164,7 @@ static void start()
     s_connection_name = CONFIG_EXAMPLE_WIFI_SSID;
 }
 
-static void stop()
+static void stop(void)
 {
     ESP_ERROR_CHECK(esp_event_handler_unregister(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, &on_wifi_disconnect));
     ESP_ERROR_CHECK(esp_event_handler_unregister(IP_EVENT, IP_EVENT_STA_GOT_IP, &on_got_ip));
@@ -152,9 +172,14 @@ static void stop()
     ESP_ERROR_CHECK(esp_event_handler_unregister(IP_EVENT, IP_EVENT_GOT_IP6, &on_got_ipv6));
     ESP_ERROR_CHECK(esp_event_handler_unregister(WIFI_EVENT, WIFI_EVENT_STA_CONNECTED, &on_wifi_connect));
 #endif
-    ESP_ERROR_CHECK(esp_wifi_stop());
+    esp_err_t err = esp_wifi_stop();
+    if (err == ESP_ERR_WIFI_NOT_INIT) {
+        return;
+    }
+    ESP_ERROR_CHECK(err);
     ESP_ERROR_CHECK(esp_wifi_deinit());
 }
+#endif
 #endif // CONFIG_EXAMPLE_CONNECT_WIFI
 
 #ifdef CONFIG_EXAMPLE_CONNECT_ETHERNET
@@ -181,7 +206,7 @@ static esp_eth_handle_t s_eth_handle = NULL;
 static esp_eth_mac_t *s_mac = NULL;
 static esp_eth_phy_t *s_phy = NULL;
 
-static void start()
+static void start(void)
 {
     ESP_ERROR_CHECK(tcpip_adapter_set_default_eth_handlers());
     ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_ETH_GOT_IP, &on_got_ip, NULL));
@@ -230,12 +255,14 @@ static void start()
     phy_config.autonego_timeout_ms = 100;
     s_mac = esp_eth_mac_new_openeth(&mac_config);
     s_phy = esp_eth_phy_new_dp83848(&phy_config);
-#endif    esp_eth_config_t config = ETH_DEFAULT_CONFIG(s_mac, s_phy);
+#endif
+
+    esp_eth_config_t config = ETH_DEFAULT_CONFIG(s_mac, s_phy);
     ESP_ERROR_CHECK(esp_eth_driver_install(&config, &s_eth_handle));
     s_connection_name = "Ethernet";
 }
 
-static void stop()
+static void stop(void)
 {
     ESP_ERROR_CHECK(esp_event_handler_unregister(IP_EVENT, IP_EVENT_ETH_GOT_IP, &on_got_ip));
 #ifdef CONFIG_EXAMPLE_CONNECT_IPV6

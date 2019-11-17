@@ -12,7 +12,7 @@
 #include "esp_wifi.h"
 #include "esp_system.h"
 #include "nvs_flash.h"
-#include "esp_event_loop.h"
+#include "esp_event.h"
 #include "protocol_examples_common.h"
 
 #include "freertos/FreeRTOS.h"
@@ -23,7 +23,7 @@
 #include "esp_log.h"
 #include "esp_websocket_client.h"
 #include "esp_event.h"
-#include "esp_event_loop.h"
+//#include "esp_event_loop.h"
 
 static const char *TAG = "WEBSOCKET";
 static const char *WEBSOCKET_ECHO_ENDPOINT = CONFIG_WEBSOCKET_URI;
@@ -45,6 +45,7 @@ static void websocket_event_handler(void *handler_args, esp_event_base_t base, i
 
         case WEBSOCKET_EVENT_DATA:
             ESP_LOGI(TAG, "WEBSOCKET_EVENT_DATA");
+            ESP_LOGI(TAG, "Received opcode=%d", data->op_code);
             ESP_LOGW(TAG, "Received=%.*s\r\n", data->data_len, (char*)data->data_ptr);
             break;
         case WEBSOCKET_EVENT_ERROR:
@@ -80,7 +81,7 @@ static void websocket_app_start(void)
     esp_websocket_client_destroy(client);
 }
 
-void app_main()
+void app_main(void)
 {
     ESP_LOGI(TAG, "[APP] Startup..");
     ESP_LOGI(TAG, "[APP] Free memory: %d bytes", esp_get_free_heap_size());

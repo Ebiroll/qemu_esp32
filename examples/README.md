@@ -2,6 +2,15 @@
 Most of these examples has run in qemu but they can break as
 esp-idf evolves. All of them should run on the esp32.
 
+To batch build faster, the examples all include the common.cmake file
+
+    if (DEFINED ENV{BATCH_BUILD})
+    SET(LIBRARY_OUTPUT_PATH $ENV{HOME}/esp/qemu_esp32/lib)
+    endif()
+
+This is not standard way to do thing but speeds up building
+
+
 pcbreflux, also has nice examples.
     https://github.com/pcbreflux/espressif/tree/master/esp32/app
 

@@ -9,6 +9,10 @@
 
 #pragma once
 
+
+#define CONFIG_EXAMPLE_CONNECT_ETHERNET 1
+#define CONFIG_EXAMPLE_USE_OPENETH 1
+
 #ifdef __cplusplus
 extern "C" {
 #endif
