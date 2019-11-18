@@ -114,8 +114,14 @@ In the future, I will start using this instead and have created a branch, esp-de
 After clone you can switch to this branch,
     git checkout esp-develop
 
+
 But then you have to start qemu with,
     xtensa-softmmu/qemu-system-xtensa -nographic  -M esp32   -drive file=esp32flash.bin,if=mtd,format=raw
+
+you must also copy the file
+    esp32-r0-rom.bin 
+    cp ../qemu-xtensa-esp32/pc-bios/esp32-r0-rom.bin .
+
 
 To start with different boot strapping value (boot)
     -global driver=esp32.gpio,property=strap_mode,value=0x0f
@@ -126,7 +132,8 @@ To connect the serial deviice to port 8880, However I was not able to flash.
     export ESPPORT=socket://localhost:8880
     idf.py flash
 
-To start with the openeth example 
+To start with the openeth emulation, add
+    -nic user,model=open_eth,hostfwd=tcp::10080-:80 -s
 
 # Espressif qemu, openeth examples, requires esp-idf 4.1 
 
