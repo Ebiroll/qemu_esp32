@@ -1,6 +1,6 @@
 # docker build -t qemu_esp32/ubuntu -f ./Dockerfile .
 # run image with:
-# docker run -v ~/shared-vm:/home/src -ti qemu_esp32/ubuntu /bin/bash
+# docker run -v ~/shared-vm:/home/src -ti qemu_esp32/ubuntu -p 1234:1234 /bin/bash
 # where ~/shared-vm is a shared folder, and /home/src is where you work in this docker container.
 # The romfiles must be in the shared-vm path
 
@@ -11,9 +11,11 @@ FROM ubuntu:18.04
    xz-utils libpixman-1-0 libpng16-16 libjpeg8 libglib2.0 \
    wget \
    unzip \   
-   && wget https://github.com/Ebiroll/qemu-xtensa-esp32/suites/309734438/artifacts/315433  && \
+   && wget https://github.com/Ebiroll/qemu-xtensa-esp32/suites/317165267/artifacts/360727  && \
+   wget https://github.com/espressif/qemu/raw/esp-develop/pc-bios/esp32-r0-rom.bin  && \
    unzip 315433  -d .
 
+ EXPOSE 1234
 
  # Start from a Bash prompt
  CMD [ "/bin/bash" ]
