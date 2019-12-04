@@ -6,6 +6,7 @@ This documents how to add an esp32 cpu and a simple esp32 board to qemu in order
 It is a good way to learn about qemu , esp32 and the esp32 rom.
 
 
+
 ## Quick Start
 
 ```
@@ -75,6 +76,26 @@ A much faster but non-interactive example is the 06_duino example.
 It runs fine with the latest version of esp-idf
 
 ```
+
+## Docker run
+This uses the espressif version under windows, rom provided by espressif
+```
+docker build -t qemu_esp32/ubuntu -f .\Dockerfile .
+docker run -v C:\work\qemu_esp32\:/home/src -p 1234:1234 -ti qemu_esp32/ubuntu  /bin/bash
+Inside the container
+> chmod a+x qemu-system-xtensa/qemu-system-xtensa
+You must have built a runnable flash file.
+> cp /home/src/esp32flash.bin .
+> qemu-system-xtensa/qemu-system-xtensa  -nographic -M esp32 -drive file=esp32flash.bin,if=mtd,format=raw -s -S
+Outside container
+xtensa-esp32-elf-gdb   build/app-template.elf -ex 'target remote:1234'
+(gdb) b app_main
+(gdb) c
+(gdb) monitor system_reset
+(gdb) monitor info mtree
+(gdb) monitor quit
+```
+
 
 ## Windows 10
 

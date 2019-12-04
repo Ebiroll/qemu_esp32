@@ -1,8 +1,10 @@
 # docker build -t qemu_esp32/ubuntu -f ./Dockerfile .
 # run image with:
-# docker run -v ~/shared-vm:/home/src -ti qemu_esp32/ubuntu -p 1234:1234 /bin/bash
+# docker run -v ~/shared-vm:/home/src  -p 1234:1234 -ti qemu_esp32/ubuntu /bin/bash
 # where ~/shared-vm is a shared folder, and /home/src is where you work in this docker container.
-# The romfiles must be in the shared-vm path
+# In windows
+# docker run -v C:\work\qemu_esp32\:/home/src -p 1234:1234 -ti qemu_esp32/ubuntu   /bin/bash
+# The esp32flash.bin must be in the shared-vm path
 
 FROM ubuntu:18.04
 
@@ -15,7 +17,7 @@ ENV DEBIAN_FRONTEND=noninteractive
    unzip \   
    && wget https://github.com/Ebiroll/qemu-xtensa-esp32/suites/317165267/artifacts/360727  && \
    wget https://github.com/espressif/qemu/raw/esp-develop/pc-bios/esp32-r0-rom.bin  && \
-   unzip 315433  -d .
+   unzip 360727  -d .
 
  EXPOSE 1234
 
