@@ -5,7 +5,9 @@
 # The romfiles must be in the shared-vm path
 
 FROM ubuntu:18.04
- 
+
+ENV DEBIAN_FRONTEND=noninteractive
+
 # Make sure the image is updated, install some prerequisites,
  RUN apt-get update && apt-get install -y \
    xz-utils libpixman-1-0 libpng16-16 libjpeg8 libglib2.0 \
