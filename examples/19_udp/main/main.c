@@ -39,7 +39,6 @@ SOFTWARE.
 #include <lwip/sys.h>
 #include <lwip/netdb.h>
 #include <lwip/dns.h>
-#include "emul_ip.h"
 
 
 #define EXAMPLE_WIFI_PORT CONFIG_WIFI_PORT
@@ -285,20 +284,12 @@ static void initialise_wifi(void)
 
 void app_main()
 {
-  // ESP_ERROR_CHECK( nvs_flash_init() );
+    ESP_ERROR_CHECK( nvs_flash_init() );
 
     wifi_event_group = xEventGroupCreate();
     ESP_ERROR_CHECK( esp_event_loop_init(esp32_wifi_eventHandler, NULL) );
 
     // Is this required for udp?
     tcpip_adapter_init();
-
-    if (is_running_qemu()) {
-      xTaskCreate(&task_lwip_init, "task_lwip_init",2*4096, NULL, 20, NULL); 
-    }
-    else
-    {
-      initialise_wifi();
-    }
-
+    initialise_wifi();
 }
