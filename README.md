@@ -96,7 +96,6 @@ xtensa-esp32-elf-gdb   build/app-template.elf -ex 'target remote:1234'
 (gdb) monitor quit
 ```
 
-
 ## Windows 10
 
 Enable the windows subsystem for linux on Windows 10, 
@@ -123,6 +122,25 @@ Latest version of esp-idf recomends
 
 As location of partition is different for cmake
     gcc ../../toflash-cmake.c -o qemu_flash
+
+## Update May 2020
+Espressifs implementation is a bit to slow but more accurate.
+They have also released a useable rom file.
+This shows a way of how to have this version in parallell.
+Unless yoou have a really fast computer I do not recomend this version as
+it is way too slow. And debugging does not work so well.
+To build a parallell qeum_espressif qemu binary with espressifs implementation.
+```
+cd
+git clone https://github.com/Ebiroll/qemu-xtensa-esp32 -b  esp-develop esp-develop
+mkdir qemu_espressif
+cd qemu_espressif
+ ../esp-develop/configure --target-list=xtensa-softmmu     --enable-debug --enable-sanitizers     --disable-strip     --disable-capstone --disable-vnc
+make
+cp ../esp-develop/pc-bios/esp32-r0-rom.bin .
+Make sure you have a usable esp32flash.bin file then start with
+xtensa-softmmu/qemu-system-xtensa -nographic -M esp32 -drive file=esp32flash.bin,if=mtd,format=raw -s
+```
 
 ## Update Nov 2019
 Espressif has released a qemu for esp32
