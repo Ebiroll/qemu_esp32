@@ -94,6 +94,10 @@ xtensa-esp32-elf-gdb   build/app-template.elf -ex 'target remote:1234'
 (gdb) monitor system_reset
 (gdb) monitor info mtree
 (gdb) monitor quit
+To attach and kill qemu
+docker ps
+docker exec -ti [container]  bash  
+Ctrl-p Ctrl-q
 ```
 
 ## Windows 10
@@ -124,12 +128,10 @@ As location of partition is different for cmake
     gcc ../../toflash-cmake.c -o qemu_flash
 
 ## Update May 2020
-Espressifs implementation is a bit to slow but more accurate.
-They have also released a useable rom file.
-This shows a way of how to have this version in parallell.
-Unless yoou have a really fast computer I do not recomend this version as
-it is way too slow. And debugging does not work so well.
-To build a parallell qeum_espressif qemu binary with espressifs implementation.
+Espressifs implementation is a bit more accurate but a bit slow on my old computer.
+They have also released a useable rom file. If you want to run gdb I recommend the gdb version from the bin directory here.
+This shows a way of how I compile the espressif version in parallell.
+To build a parallell qeum_espressif qemu binary with espressifs implementation do:
 ```
 cd
 git clone https://github.com/Ebiroll/qemu-xtensa-esp32 -b  esp-develop esp-develop
@@ -1696,5 +1698,83 @@ componenets/esp32/ld
   /* IRAM for PRO cpu. Not sure if happy with this, this is MMU area... */
   iram0_0_seg (RX) :                 org = 0x40080000, len = 0x20000
 ```
+
+Monitor info tree from espressifs qemu
+```
+memory-region: system
+  0000000000000000-ffffffffffffffff (prio 0, i/o): system
+    000000003ff00000-000000003ff3ffff (prio 0, i/o): misc.esp32.dport
+      000000003ff000dc-000000003ff000eb (prio -1, i/o): misc.esp32.crosscoreint
+      000000003ff00104-000000003ff0032b (prio -1, i/o): misc.esp32.intmatrix
+    000000003ff03000-000000003ff030bf (prio 0, i/o): misc.esp32.sha
+    000000003ff40000-000000003ff4007b (prio 0, i/o): esp_soc.uart
+    000000003ff42000-000000003ff42fff (prio 0, i/o): ssi.esp32.spi
+    000000003ff43000-000000003ff43fff (prio 0, i/o): ssi.esp32.spi
+    000000003ff44000-000000003ff44fff (prio 0, i/o): esp32.gpio
+    000000003ff47000-000000003ff47013 (prio 0, i/o): timer.esp32.frc
+    000000003ff47020-000000003ff47033 (prio 0, i/o): timer.esp32.frc
+    000000003ff48000-000000003ff4813f (prio 0, i/o): misc.esp32.rtc_cntl
+    000000003ff48400-000000003ff487ff (prio -1000, i/o): esp32.rtcio
+    000000003ff48800-000000003ff48bff (prio -1000, i/o): esp32.rtcio
+    000000003ff49000-000000003ff4afff (prio -1000, i/o): esp32.iomux
+    000000003ff4b000-000000003ff4bfff (prio -1000, i/o): esp32.hinf
+    000000003ff4e000-000000003ff4efff (prio -1000, i/o): esp32.analog
+    000000003ff4f000-000000003ff4ffff (prio -1000, i/o): esp32.i2s0
+    000000003ff50000-000000003ff5007b (prio 0, i/o): esp_soc.uart
+    000000003ff53000-000000003ff53fff (prio -1000, i/o): esp32.i2c0
+    000000003ff55000-000000003ff55fff (prio -1000, i/o): esp32.slchost
+    000000003ff58000-000000003ff58fff (prio -1000, i/o): esp32.slc
+    000000003ff5a000-000000003ff5a1ff (prio 0, i/o): nvram.esp32.efuse
+    000000003ff5f000-000000003ff5f0ff (prio 0, i/o): timer.esp32.timg
+    000000003ff60000-000000003ff600ff (prio 0, i/o): timer.esp32.timg
+    000000003ff64000-000000003ff64fff (prio 0, i/o): ssi.esp32.spi
+    000000003ff65000-000000003ff65fff (prio 0, i/o): ssi.esp32.spi
+    000000003ff66000-000000003ff66fff (prio -1000, i/o): esp32.apbctrl
+    000000003ff67000-000000003ff67fff (prio -1000, i/o): esp32.i2c1
+    000000003ff69000-000000003ff69053 (prio 0, i/o): open_eth.regs
+    000000003ff69400-000000003ff697ff (prio 0, i/o): open_eth.desc
+    000000003ff6d000-000000003ff6dfff (prio -1000, i/o): esp32.i2s1
+    000000003ff6e000-000000003ff6e07b (prio 0, i/o): esp_soc.uart
+    000000003ff75144-000000003ff75147 (prio 0, i/o): misc.esp32.rng
+    000000003ff90000-000000003ff9ffff (prio 0, i/o): alias esp32.drom @esp32.irom 0000000000060000-000000000006ffff
+    000000003ffae000-000000003fffffff (prio 0, ram): esp32.dram
+    0000000040000000-000000004006ffff (prio 0, rom): esp32.irom
+    0000000040070000-0000000040077fff (prio 0, ram): esp32.icache0
+    0000000040078000-000000004007ffff (prio 0, ram): esp32.icache1
+    0000000040080000-000000004009ffff (prio 0, ram): esp32.iram
+    0000000050000000-0000000050001fff (prio 0, ram): esp32.rtcslow
+    000000005ffc3000-000000005ffc30bf (prio 0, i/o): alias mr-apb-0x3ff03000 @misc.esp32.sha 0000000000000000-00000000000000bf
+    0000000060000000-000000006000007b (prio 0, i/o): alias mr-apb-0x3ff40000 @esp_soc.uart 0000000000000000-000000000000007b
+    0000000060002000-0000000060002fff (prio 0, i/o): alias mr-apb-0x3ff42000 @ssi.esp32.spi 0000000000000000-0000000000000fff
+    0000000060003000-0000000060003fff (prio 0, i/o): alias mr-apb-0x3ff43000 @ssi.esp32.spi 0000000000000000-0000000000000fff
+    0000000060004000-0000000060004fff (prio 0, i/o): alias mr-apb-0x3ff44000 @esp32.gpio 0000000000000000-0000000000000fff
+    0000000060007000-0000000060007013 (prio 0, i/o): alias mr-apb-0x3ff47000 @timer.esp32.frc 0000000000000000-0000000000000013
+    0000000060007020-0000000060007033 (prio 0, i/o): alias mr-apb-0x3ff47020 @timer.esp32.frc 0000000000000000-0000000000000013
+    0000000060008000-000000006000813f (prio 0, i/o): alias mr-apb-0x3ff48000 @misc.esp32.rtc_cntl 0000000000000000-000000000000013f
+    0000000060008400-00000000600087ff (prio -1000, i/o): esp32.rtcio-apb
+    0000000060008800-0000000060008bff (prio -1000, i/o): esp32.rtcio-apb
+    0000000060009000-000000006000afff (prio -1000, i/o): esp32.iomux-apb
+    000000006000b000-000000006000bfff (prio -1000, i/o): esp32.hinf-apb
+    000000006000e000-000000006000efff (prio -1000, i/o): esp32.analog-apb
+    000000006000f000-000000006000ffff (prio -1000, i/o): esp32.i2s0-apb
+    0000000060010000-000000006001007b (prio 0, i/o): alias mr-apb-0x3ff50000 @esp_soc.uart 0000000000000000-000000000000007b
+    0000000060013000-0000000060013fff (prio -1000, i/o): esp32.i2c0-apb
+    0000000060015000-0000000060015fff (prio -1000, i/o): esp32.slchost-apb
+    0000000060018000-0000000060018fff (prio -1000, i/o): esp32.slc-apb
+    000000006001a000-000000006001a1ff (prio 0, i/o): alias mr-apb-0x3ff5a000 @nvram.esp32.efuse 0000000000000000-00000000000001ff
+    000000006001f000-000000006001f0ff (prio 0, i/o): alias mr-apb-0x3ff5f000 @timer.esp32.timg 0000000000000000-00000000000000ff
+    0000000060020000-00000000600200ff (prio 0, i/o): alias mr-apb-0x3ff60000 @timer.esp32.timg 0000000000000000-00000000000000ff
+    0000000060024000-0000000060024fff (prio 0, i/o): alias mr-apb-0x3ff64000 @ssi.esp32.spi 0000000000000000-0000000000000fff
+    0000000060025000-0000000060025fff (prio 0, i/o): alias mr-apb-0x3ff65000 @ssi.esp32.spi 0000000000000000-0000000000000fff
+    0000000060026000-0000000060026fff (prio -1000, i/o): esp32.apbctrl-apb
+    0000000060027000-0000000060027fff (prio -1000, i/o): esp32.i2c1-apb
+    000000006002d000-000000006002dfff (prio -1000, i/o): esp32.i2s1-apb
+    000000006002e000-000000006002e07b (prio 0, i/o): alias mr-apb-0x3ff6e000 @esp_soc.uart 0000000000000000-000000000000007b
+    0000000060035144-0000000060035147 (prio 0, i/o): alias mr-apb-0x3ff75144 @misc.esp32.rng 0000000000000000-0000000000000003
+
+memory-region: esp32.rtcfast_i
+  00000000400c0000-00000000400c1fff (prio 0, ram): esp32.rtcfast_i
+```
+
 
 
