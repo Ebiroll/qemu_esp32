@@ -96,7 +96,8 @@ int main(int argc,char *argv[])
     // Add bootloader
     merge_flash("build/bootloader/bootloader.bin","esp32flash.bin",0x1000,0);
     // Add partitions, test OTA here
-    merge_flash("build/partitions_two_ota.bin","esp32flash.bin",0x8000,0);
+    merge_flash("build/ota_data_initial.bin","esp32flash.bin",0xd000 ,0);    
+    merge_flash("build/partition_table/partition-table.bin","esp32flash.bin",0x8000,0);
     // Add application
     merge_flash(argv[1],"esp32flash.bin",0x10000,0);
 

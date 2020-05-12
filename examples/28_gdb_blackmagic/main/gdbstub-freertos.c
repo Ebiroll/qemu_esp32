@@ -22,6 +22,8 @@ static size_t task_count = 0;
 static size_t task_selected = 0;
 static int task_array_filled=0;
 
+
+
 static struct {
 	uint32_t * stack;
 	TaskHandle_t handle;
@@ -117,7 +119,7 @@ static void putEntry(uint32_t pc, uint32_t sp)
     printf(":0x%X",sp);
 }
 
-bool esp_stack_ptr_is_sane(uint32_t sp)
+bool local_stack_ptr_is_sane(uint32_t sp)
 {
 	return !(sp < 0x3ffae010UL || sp > 0x3ffffff0UL || ((sp & 0xf) != 0));
 }
@@ -131,7 +133,7 @@ static void doBacktrace(uint32_t s_pc,uint32_t s_a0,uint32_t s_a1)
     pc = s_a0;
     while (i++ < 100) {
         uint32_t psp = sp;
-        if (!esp_stack_ptr_is_sane(sp) || i++ > 100) {
+        if (!local_stack_ptr_is_sane(sp) || i++ > 100) {
             break;
         }
         sp = *((uint32_t *) (sp - 0x10 + 4));
@@ -344,3 +346,5 @@ void gdbstub_freertos_report_thread() {
 	gdb_packet_hex(task_index + 1, 8);
 	gdb_packet_str(";");
 }
+
+

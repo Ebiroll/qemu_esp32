@@ -20,7 +20,6 @@
 #include "lwip/sys.h"
 #include "lwip/netdb.h"
 #include "lwip/dns.h"
-#include "emul_ip.h"
 #include "freertos/queue.h"
 #include "gdb_main.h"
 #include "gdbstub-freertos.h"
@@ -180,16 +179,7 @@ void app_main()
 
     //gdbstub_freertos_task_list("qXfer:threads:read::0,18");
 
-    if (is_running_qemu()) {
-     tcpip_adapter_init();
-     wifi_event_group = xEventGroupCreate();
-     ESP_ERROR_CHECK( esp_event_loop_init(event_handler, NULL) );
-     xTaskCreate(&task_lwip_init, "task_lwip_init",2*4096, NULL, 22, NULL); 
-    }
-    else
-    {
-      initialise_wifi();
-    }
+    initialise_wifi();
 
 
     // Dont yet do this...
@@ -199,19 +189,4 @@ void app_main()
 
     xTaskCreate(&gdb_application_thread, "gdb_thread", 4*4096, NULL, 17, NULL);
 
-    // qemu testing
-    #if 0
-    fill_task_array();
-    gdbstub_freertos_task_select(3);
-    gdbstub_freertos_regs_read();
-
-    set_exception_handler(29);
-    int *ptr=0;
-	*ptr=0xff;
-
-    // Execusion stops here,
-    // Could be useful when testing memory
-
-    gdb_port=1234;
-    #endif
 }

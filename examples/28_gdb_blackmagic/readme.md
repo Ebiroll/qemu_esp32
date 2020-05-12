@@ -18,6 +18,8 @@ extern List_t pxReadyTasksLists[configMAX_PRIORITIES];
 
 ``` 
 
+For the cmake build system there is some bug, you must do
+export CFLAGS="-DportREMOVE_STATIC_QUALIFIER -DINCLUDE_pcTaskGetTaskName=1"
 
 xtensa-esp32-elf-gdb build/wifigdb.elf   -ex 'target remote 192.168.4.3:2345'
 
