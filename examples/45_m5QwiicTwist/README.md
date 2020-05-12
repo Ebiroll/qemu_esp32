@@ -1,5 +1,5 @@
 
-# This demonstrates the gyro of the m5stack grey
+# This demonstrates the gyro of the m5stack grey and the quick twist
 
 The m5stack grey has a build in gyro. (MPU9250)
 
@@ -9,7 +9,7 @@ https://github.com/kriswiner/MPU9250
 
 # Distance sensor laser TOF
 
-Also this demonstrates the distance.
+Not used in this project
 https://www.sparkfun.com/products/14722
 
 

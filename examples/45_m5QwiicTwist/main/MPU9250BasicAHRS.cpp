@@ -17,15 +17,18 @@
 #include "utility/MPU9250.h"
 #include "utility/quaternionFilters.h"
 #include <Wire.h>
-#include <VL53L1X.h>
+#include <math.h>
+#ifndef M_PI
+#define 	M_PI   3.14159265358979323846
+#endif
 
-VL53L1X sensor;
-
+#include "SparkFun_Qwiic_Twist_Arduino_Library.h" //Click here to get the library: http://librarymanager/All#SparkFun_Twist
+TWIST twist; //Create instance of this object
 
 
 #define processing_out false
-#define AHRS true         // Set to false for basic data read
-#define SerialDebug true  // Set to true to get Serial output for debugging
+#define AHRS true            // Set to false for basic data read
+#define SerialDebug false  // Set to true to get Serial output for debugging
 #define LCD
 
 MPU9250 IMU;
@@ -33,8 +36,20 @@ MPU9250 IMU;
 
 void setup()
 {
+  Serial.begin(9600); 
   M5.begin();
   Wire.begin();
+
+  if (twist.begin() == false)
+  {
+    Serial.println("Twist does not appear to be connected. Please check wiring. ");
+    M5.Lcd.fillScreen(BLACK);
+    M5.Lcd.setTextColor(WHITE ,BLACK); // Set pixel color; 1 on the monochrome screen
+    M5.Lcd.setTextSize(8);
+    M5.Lcd.setCursor(0, 20); M5.Lcd.print("No Twist connected");
+    delay(2000);
+
+  }
 
 #ifdef LCD
   // Start device display with ID of sensor
@@ -55,8 +70,8 @@ void setup()
 
   // Read the WHO_AM_I register, this is a good test of communication
   byte c = IMU.readByte(MPU9250_ADDRESS, WHO_AM_I_MPU9250);
-  Serial.print("MPU9250 "); Serial.print("I AM "); Serial.print(c, HEX);
-  Serial.print(" I should be "); Serial.println(0x71, HEX);
+  //Serial.print("MPU9250 "); Serial.print("I AM "); Serial.print(c, HEX);
+  //Serial.print(" I should be "); Serial.println(0x71, HEX);
 
 #ifdef LCD
   M5.Lcd.setCursor(20,0); M5.Lcd.print("MPU9250");
@@ -68,7 +83,7 @@ void setup()
 #endif // LCD
 
   // if (c == 0x71) // WHO_AM_I should always be 0x68
-  {
+  if(SerialDebug) {
     Serial.println("MPU9250 is online...");
 
     // Start by performing self test and reporting values
@@ -110,13 +125,13 @@ void setup()
     IMU.initMPU9250();
     // Initialize device for active mode read of acclerometer, gyroscope, and
     // temperature
-    Serial.println("MPU9250 initialized for active data mode....");
+    if(SerialDebug) Serial.println("MPU9250 initialized for active data mode....");
 
     // Read the WHO_AM_I register of the magnetometer, this is a good test of
     // communication
     byte d = IMU.readByte(AK8963_ADDRESS, WHO_AM_I_AK8963);
-    Serial.print("AK8963 "); Serial.print("I AM "); Serial.print(d, HEX);
-    Serial.print(" I should be "); Serial.println(0x48, HEX);
+    if(SerialDebug) Serial.print("AK8963 "); Serial.print("I AM "); Serial.print(d, HEX);
+    if(SerialDebug) Serial.print(" I should be "); Serial.println(0x48, HEX);
 
 #ifdef LCD
     M5.Lcd.fillScreen(BLACK);
@@ -166,36 +181,8 @@ void setup()
   M5.Lcd.setTextColor(GREEN ,BLACK);
   M5.Lcd.fillScreen(BLACK);
 
-
-
-
-
-
-  // Range Sensor 
-  sensor.setTimeout(500);
-  if (!sensor.init())
-  {
-    Serial.println("Failed to detect and initialize sensor!");
-    while (1);
-  }
-  
-  // Use long distance mode and allow up to 50000 us (50 ms) for a measurement.
-  // You can change these settings to adjust the performance of the sensor, but
-  // the minimum timing budget is 20 ms for short distance mode and 33 ms for
-  // medium and long distance modes. See the VL53L1X datasheet for more
-  // information on range and timing limits.
-  sensor.setDistanceMode(VL53L1X::Long);
-  sensor.setMeasurementTimingBudget(50000);
-
-  // Start continuous readings at a rate of one measurement every 50 ms (the
-  // inter-measurement period). This period should be at least as long as the
-  // timing budget.
-  sensor.startContinuous(50);
 }
 
-#define NUM_AVG 10
-int avg[NUM_AVG];
-int avg_ix=0;
 
 void loop()
 {
@@ -464,43 +451,37 @@ void loop()
   } // if (AHRS)
 
 
-  // Sensor https://platformio.org/lib/show/5481/VL53L1X/examples
-  sensor.read();
+  //Serial.print("Count: ");
+  //Serial.print(twist.getCount());
+
+#define CENTER_X 140
+#define CENTER_Y 150
+#define COLOR 0x0000FF
+
+  if(twist.isPressed()) Serial.print("P");
+
+  int val=twist.getCount();
+  double angle=(M_PI/2+val*2*M_PI/22);
+
+  M5.Lcd.fillCircle(CENTER_X,CENTER_Y,25,0);
+  M5.Lcd.drawCircle(CENTER_X,CENTER_Y,20,COLOR);
+  double fromY=18*sin(angle);
+  double toY=22*sin(angle);
+
+  double fromX=18*cos(angle);
+  double toX=22*cos(angle);
+
+  M5.Lcd.drawLine(CENTER_X+fromX,CENTER_Y+fromY,CENTER_X+toX,CENTER_Y+toY,COLOR);
+
+  M5.Lcd.setCursor(0,  120);
   
-
-//#define NUM_AVG 10
-//int avg[NUM_AVG];
-//int avg_ix=0;
-  avg[avg_ix]=(int)sensor.ranging_data.range_mm;
-  int aix;
-  int a=0;
-  avg_ix++;
-  if (avg_ix==NUM_AVG) {
-    avg_ix=0;
-  }
-
-  for (aix=0;aix<NUM_AVG;aix++) {
-    a+=avg[avg_ix];
-  }
-  a=a/NUM_AVG;
-
-  //M5.Lcd.setCursor(0,  122);
-  //M5.Lcd.printf("% 6d mm\r\n",(int)sensor.ranging_data.range_mm);
-
-  M5.Lcd.setTextFont(4);
-  M5.Lcd.setCursor(8,  140);
-  M5.Lcd.printf("% 6d mm\r\n",(int)a);
-
-
-  Serial.print("range: ");
-  Serial.print(sensor.ranging_data.range_mm);
-  Serial.print("\tstatus: ");
-  Serial.print(VL53L1X::rangeStatusToString(sensor.ranging_data.range_status));
-  Serial.print("\tpeak signal: ");
-  Serial.print(sensor.ranging_data.peak_signal_count_rate_MCPS);
-  Serial.print("\tambient: ");
-  Serial.print(sensor.ranging_data.ambient_count_rate_MCPS);
+  //twist.getDiff():
+  //Serial.println();
+  M5.Lcd.printf("C=%d\n",val);
+  Serial.print("C=");
+  Serial.println(val);
   
-  Serial.println();
+  //Serial.println();
+  delay(100); 
 
 }
