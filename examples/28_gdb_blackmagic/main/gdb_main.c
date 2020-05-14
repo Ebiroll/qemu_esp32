@@ -36,6 +36,7 @@
 #include "platform.h"
 #include "gdbstub-freertos.h"
 
+#define USE_SERIAL CONFIG_USE_SERIAL
 
 enum gdb_signal {
 	GDB_SIGINT = 2,

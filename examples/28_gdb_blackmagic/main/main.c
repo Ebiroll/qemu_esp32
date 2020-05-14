@@ -41,6 +41,7 @@ unsigned short gdb_port = 2345;
 */
 #define EXAMPLE_WIFI_SSID CONFIG_WIFI_SSID
 #define EXAMPLE_WIFI_PASS CONFIG_WIFI_PASSWORD
+#define USE_SERIAL CONFIG_USE_SERIAL
 
 /* FreeRTOS event group to signal when we are connected & ready to make a request */
 static EventGroupHandle_t wifi_event_group;
@@ -55,13 +56,14 @@ static const char *TAG = "blackmagic";
 
 
 #if !defined(USE_SERIAL) 
-    #pragma GCC diagnostic warning "USE WIFI"
+    #pragma GCC diagnostic warning "Configured to USE WIFI"
 #endif
 
 #if defined(USE_SERIAL) 
-    #pragma GCC diagnostic warning "USE SERIAL"
+    #pragma GCC diagnostic warning "Configured to USE SERIAL"
 #endif
 
+#if !defined(USE_SERIAL) 
 
 static esp_err_t event_handler(void *ctx, system_event_t *event)
 {
@@ -103,6 +105,8 @@ static void initialise_wifi(void)
     ESP_ERROR_CHECK( esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config) );
     ESP_ERROR_CHECK( esp_wifi_start() );
 }
+
+#endif
 
 void set_gdb_socket(int socket);
 
@@ -184,35 +188,34 @@ void app_main()
 {
     ESP_ERROR_CHECK( nvs_flash_init() );
 
+    xTaskCreate(&demo_thread, "demo", 4*1024, NULL, 10, NULL);
+
     //gdbstub_freertos_task_list("qXfer:threads:read::0,18");
-
+#if !defined(USE_SERIAL) 
     initialise_wifi();
-
+    xTaskCreate(&gdb_application_thread, "gdb_thread", 4*4096, NULL, 17, NULL);
+#else
+    printf("CONNECT DEBUGGER!\n\n");
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
+    printf("5\n");
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    printf("4\n");
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    printf("3\n");
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    printf("2\n");
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    printf("1\n");
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
+ 
+     gdb_main();
+#endif
 
     // Dont yet do this...
     // set_all_exception_handlers();
 
-    xTaskCreate(&demo_thread, "demo", 4*1024, NULL, 10, NULL);
 
-    xTaskCreate(&gdb_application_thread, "gdb_thread", 4*4096, NULL, 17, NULL);
 
 }
 
-#define ATTR_GDBFN
 
-#if defined(USE_SERIAL) 
-
-static int ATTR_GDBFN gdbRecvChar() {
-	int i;
-	while (((READ_PERI_REG(UART_STATUS_REG(0))>>UART_RXFIFO_CNT_S)&UART_RXFIFO_CNT)==0) ;
-	i=READ_PERI_REG(UART_FIFO_REG(0));
-	return i;
-}
-
-//Send a char to the uart.
-static void ATTR_GDBFN gdbSendChar(char c) {
-	while (((READ_PERI_REG(UART_STATUS_REG(0))>>UART_TXFIFO_CNT_S)&UART_TXFIFO_CNT)>=126) ;
-	WRITE_PERI_REG(UART_FIFO_REG(0), c);
-}
-
-#endif
