@@ -503,7 +503,11 @@ handle_v_packet(char *packet, int plen)
 	int bin;
 	static uint8_t flash_mode = 0;
 
-	if (sscanf(packet, "vAttach;%08lx", &addr) == 1) {
+
+
+    if (!strcmp(packet, "vMustReplyEmpty")) {
+		gdb_putpacketz("");
+	} else if (sscanf(packet, "vAttach;%08lx", &addr) == 1) {
 		/* Attach to remote target processor */
 		cur_target = target_attach_n(addr, &gdb_controller);
 		if(cur_target)

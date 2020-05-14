@@ -54,6 +54,13 @@ const int CONNECTED_BIT = BIT0;
 static const char *TAG = "blackmagic";
 
 
+#if !defined(USE_SERIAL) 
+    #pragma GCC diagnostic warning "USE WIFI"
+#endif
+
+#if defined(USE_SERIAL) 
+    #pragma GCC diagnostic warning "USE SERIAL"
+#endif
 
 
 static esp_err_t event_handler(void *ctx, system_event_t *event)
@@ -190,3 +197,22 @@ void app_main()
     xTaskCreate(&gdb_application_thread, "gdb_thread", 4*4096, NULL, 17, NULL);
 
 }
+
+#define ATTR_GDBFN
+
+#if defined(USE_SERIAL) 
+
+static int ATTR_GDBFN gdbRecvChar() {
+	int i;
+	while (((READ_PERI_REG(UART_STATUS_REG(0))>>UART_RXFIFO_CNT_S)&UART_RXFIFO_CNT)==0) ;
+	i=READ_PERI_REG(UART_FIFO_REG(0));
+	return i;
+}
+
+//Send a char to the uart.
+static void ATTR_GDBFN gdbSendChar(char c) {
+	while (((READ_PERI_REG(UART_STATUS_REG(0))>>UART_TXFIFO_CNT_S)&UART_TXFIFO_CNT)>=126) ;
+	WRITE_PERI_REG(UART_FIFO_REG(0), c);
+}
+
+#endif

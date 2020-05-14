@@ -54,6 +54,9 @@ int ATTR_GDBFN gdbRecvChar() {
 	{
 		if ((i = read(gdb_socket, inbuf, IN_BUFFER_LEN)) < 0) {
 				printf("%s: error reading from socket %d, closing socket\r\n", __FUNCTION__, gdb_socket);
+				close(gdb_socket);
+				gdb_socket=0;
+				in_buf_received=0;
 				return 0;
 			}
 			inbuf[i]=0;
@@ -91,6 +94,7 @@ void ATTR_GDBFN gdbSendChar(char c) {
 	if (c=='\n' || (c=='+') || (c=='-')  || buf_head==OUT_BUFFER_LEN) {
 		if ((nwrote = write(gdb_socket, outbuf, buf_head)) < 0) {
 			printf("%s: ERROR responding to gdb request. written = %d\r\n",__FUNCTION__, nwrote);
+			close(gdb_socket);
 			gdb_socket=0;
 			//printf("Closing socket %d\r\n", sd);
 			return;
@@ -135,7 +139,7 @@ unsigned char gdb_if_getchar(void) {
 
 unsigned char gdb_if_getchar_to(int timeout) {
 	fd_set readset;
-    int ret=1;
+    int ret=0;
 
     const TickType_t xTicksToWait = pdMS_TO_TICKS(timeout);
 	struct timeval tv;
@@ -147,16 +151,16 @@ unsigned char gdb_if_getchar_to(int timeout) {
     FD_SET(gdb_socket, &readset);
 
 	// Only wait if no char in buffer
-    if (in_buf_received==0) {
-  	   ret = lwip_select(gdb_socket + 1, &readset, NULL, NULL, &tv);
-	}
+	while (ret!=1 && gdb_socket!=0) {
+		if (in_buf_received==0) {
+  		  ret = select( gdb_socket + 1, &readset, NULL, NULL, &tv);
+		}
 
-	if (ret==1) {
- 	   return gdbRecvChar();
+		if (ret==1) {
+	  	  return gdbRecvChar();
+		}
 	}
-	else {
-		return 0;
-	}
+	return 0;
 }
 
 

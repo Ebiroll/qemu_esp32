@@ -1,5 +1,11 @@
 menu "Example Configuration"
 
+config USE_SERIAL
+        bool "Use serial port to connect"
+        default n
+        help
+            Set to y to use serial port for blackmagic
+
 config WIFI_SSID
     string "WiFi SSID"
 	default "myssid"
