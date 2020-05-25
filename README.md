@@ -127,7 +127,28 @@ Latest version of esp-idf recomends
 As location of partition is different for cmake
     gcc ../../toflash-cmake.c -o qemu_flash
 
-## Update May 2020
+## End of May 2020
+esp32s2 emulation. First try, not sure if I have time to complete this but it starts. branch esp32s2
+qemu-system-xtensa -M esp32s2 -s   -d unimp,guest_errors,page -nographic
+
+```
+esp32.extmem: unimplemented device read (size 4, offset 0x44)
+esp32.extmem: unimplemented device write (size 4, value 0x7, offset 0x44)
+esp32.extmem: unimplemented device read (size 4, offset 0x4)
+esp32.extmem: unimplemented device write (size 4, value 0x7, offset 0x4)
+ESP-ROM:esp32s2-rc4-20191025
+Build:Oct 25 2019
+rst:0x0 (N/A),boot:0x12 (DOWNLOAD(USB/UART0/1/SPI))
+ets_main.c 460 
+
+Rom dumps
+(gdb) dump binary memory irom0.bin 0x3ffa0000 0x3ffaffff
+(gdb) dump binary memory s2rom.bin 0x40000000 0x4000ffff 
+```
+
+
+
+## May 2020
 Espressifs implementation is a bit more accurate but a bit slow on my old computer.
 They have also released a useable rom file. If you want to run gdb I recommend the gdb version from the bin directory here.
 This shows a way of how I compile the espressif version in parallell.
