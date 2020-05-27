@@ -84,6 +84,9 @@ void add_listbox_items(listbox& lsbox,std::string csv_filename) {
 	lsbox.append_header("Size");
 	lsbox.append_header("Flags");
 
+	lsbox.at(0).append({ SS("bootloader"), SS("app"), SS("nvs"), SS("0x1000"),  SS("0x1000") });
+	lsbox.at(0).append({ SS("partition"), SS("par"), SS("nvs"), SS("0x8000"),  SS("0x1000") });
+
 	if (!file.is_open())
 	{
 
@@ -94,7 +97,6 @@ void add_listbox_items(listbox& lsbox,std::string csv_filename) {
 		lsbox.at(0).append({ SS("spiffs"), SS("data"), SS("spiffs"), SS("0x180000"),  SS("0x80000") });
 	} else {
 		CSVRow              row;
-		lsbox.at(0).append({ SS("bootloader"), SS("app"), SS("nvs"), SS("0x1000"),  SS("0x1000") });
 		while (file >> row)
 		{
 			if (row.size() > 0) {
@@ -302,7 +304,7 @@ int main(int argc, char *argv[])
 
 	fm.events().mouse_move([&](const nana::arg_mouse& a_m)
 		{
-			std::cout << a_m.pos.x << "\n";
+			//std::cout << a_m.pos.x << "\n";
 			if (is_click) {
 				gOffset = a_m.pos.x * 512;
 				unsigned char* ptr = &*buffer.begin() + gOffset;
@@ -313,7 +315,7 @@ int main(int argc, char *argv[])
 				tbox.show();
 				dw.update();
 			}
-			//nana::API::refresh_window(fm);
+			nana::API::refresh_window(fm);
 		});
 
 	tbox.typeface(nana::paint::font("monospace", 10, true));
