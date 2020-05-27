@@ -357,8 +357,10 @@ int main(int argc, char *argv[])
 	{
 		int pos = 0;
 		for (int i = 0; i < buffer.size() && pos < 1024; i+=STEP_LEN) {
-			if ( buffer[i]!=0xff) {
+			if ((buffer[i]!=0xff) && (buffer[i]!=0x0)) {
 				graph.line(point(pos, 0), point(pos, 20), colors::blue);
+			} else if (buffer[i]==0x0) {
+				graph.line(point(pos, 0), point(pos, 20), colors::green);
 			} else {
 				graph.line(point(pos, 0), point(pos, 20), colors::white);
 			}
@@ -404,6 +406,16 @@ int main(int argc, char *argv[])
 			} else {
 				gOffset=0;
 			}
+			setData(tbox);
+			//Ignore the input. the member ignore only valid in key_char.
+			_arg.ignore = true;
+		}
+		if (' ' == _arg.key)
+		{
+			gOffset+=16;
+			while (gOffset<buffer.size() && ( buffer[gOffset] == 0 || buffer[gOffset] == 0xff)) {
+				gOffset++;
+			} 
 			setData(tbox);
 			//Ignore the input. the member ignore only valid in key_char.
 			_arg.ignore = true;
