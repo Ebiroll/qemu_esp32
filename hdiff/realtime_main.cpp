@@ -25,7 +25,7 @@ int main()
 
         // create timer to provide new data regularly
         timer theTimer;
-        theTimer.interval( 10 );
+        theTimer.interval(std::chrono::milliseconds(10));
         theTimer.elapse([ &t1 ]()
         {
             static int p = 0;

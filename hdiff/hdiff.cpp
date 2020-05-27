@@ -28,6 +28,28 @@ using namespace nana;
 
 #define SS(s) std::string(s)
 
+#define STEP_LEN 2048
+
+std::vector<std::string> gFlashFiles;
+std::vector<int> gFlashOffsets;
+std::string file_to_load;
+std::vector<unsigned char> buffer;
+bool is_click=false;
+unsigned int gOffset = 0;
+
+
+/*
+class goto_form 
+        : public nana::form 
+ { 
+    public: 
+    goto_form(); 
+  private: 
+    void _m_pick_door  (const nana::arg_click& ei); 
+  private: 
+    nana::label  label_; 
+ }; 
+*/
 
 class CSVRow
 {
@@ -82,7 +104,7 @@ void add_listbox_items(listbox& lsbox,std::string csv_filename) {
 	lsbox.append_header("SubType");
 	lsbox.append_header("Offset");
 	lsbox.append_header("Size");
-	lsbox.append_header("Flags");
+	lsbox.append_header("File");
 
 	lsbox.at(0).append({ SS("bootloader"), SS("app"), SS("nvs"), SS("0x1000"),  SS("0x1000") });
 	lsbox.at(0).append({ SS("partition"), SS("par"), SS("nvs"), SS("0x8000"),  SS("0x1000") });
@@ -101,7 +123,15 @@ void add_listbox_items(listbox& lsbox,std::string csv_filename) {
 		{
 			if (row.size() > 0) {
 				if (row[0].at(0) != '#') {
-					lsbox.at(0).append({row[0],row[1],row[2],row[3],row[4]});
+					std::string filename;
+					if(row.size()>4) {
+						filename=row[5];
+						gFlashFiles.push_back(filename);
+						int off; //=atoi(row[2]);
+						off=strtol(row[3].c_str(), NULL, 16);
+						gFlashOffsets.push_back(off);
+					}
+					lsbox.at(0).append({row[0],row[1],row[2],row[3],row[4],filename});
 				}
 			}
 		}
@@ -142,7 +172,7 @@ static const char* dumpline(char*dest, int linelen, const char*src, const char*s
 }
 
 
-std::string log_dumpf(const char*fmt, const void*addr, int len, int linelen, textbox &tb)
+std::string log_dumpf(const char*fmt, const void*addr, int len, int linelen)
 {
 	std::string ret;
 #if LEN_LIMIT
@@ -164,9 +194,9 @@ std::string log_dumpf(const char*fmt, const void*addr, int len, int linelen, tex
 	return ret;
 }
 
-std::string log_dump(const void*addr, int len, int linelen, textbox &tb)
+std::string log_dump(const void*addr, int len, int linelen)
 {
-	return(log_dumpf("%s\n", addr, len, linelen, tb));
+	return(log_dumpf("%s\n", addr, len, linelen));
 }
 
 std::string load_file_dialog() {
@@ -181,32 +211,127 @@ std::string load_file_dialog() {
 	return(files.front().string());
 }
 
+void merge_flash(const char *binfile,const char *flashfile,int flash_pos)
+{
+    FILE *fbin;
+    FILE *fflash;
+    unsigned char *tmp_data;
+
+    int file_size=0;
+    int flash_size=0;
+
+    fbin = fopen(binfile, "rb");
+    if (fbin == NULL) {
+        printf("   Can't open '%s' for reading.\n", binfile);
+		return;
+	}
+
+    if (fseek(fbin, 0 , SEEK_END) != 0) {
+        printf("   Can't seek end of '%s'.\n", binfile);
+       /* Handle Error */
+    }
+    file_size = ftell(fbin);
+    if (fseek(fbin, 0 , SEEK_SET) != 0) {
+      /* Handle Error */
+    }
+
+    fflash  = fopen(flashfile, "rb+");
+    if (fflash == NULL) {
+        printf("   Can't open '%s' for writing.\n", flashfile);
+        return;
+    }
+    if (fseek(fflash, 0 , SEEK_END) != 0) {
+          printf("   Can't seek end of '%s'.\n", flashfile);
+       /* Handle Error */
+    }
+    flash_size = ftell(fflash);
+    rewind(fflash);
+    fseek(fflash,flash_pos,SEEK_SET);
+
+
+    tmp_data=(unsigned char *)malloc((1+file_size)*sizeof(char));
+
+    if (file_size<=0) {
+      printf("Not able to get file size %s",binfile);
+    }
+
+    int len_read=fread(tmp_data,sizeof(char),file_size,fbin);    
+    int len_write=fwrite(tmp_data,sizeof(char),file_size,fflash);
+
+    if (len_read!=len_write) {
+      printf("Not able to merge %s, %d bytes read,%d to write,%d file_size\n",binfile,len_read,len_write,file_size);
+    }
+
+    fclose(fbin);
+    if (fseek(fflash, 0x3E8000*4 , SEEK_SET) != 0) {
+    }
+    fclose(fflash);
+    free(tmp_data);
+}
+
+void reloadFile() {
+	std::streamsize size;
+	std::ifstream file(file_to_load.c_str(), std::ios::binary | std::ios::ate);
+	size = file.tellg();
+	file.seekg(0, std::ios::beg);
+	buffer.resize(size);
+
+	if (file.read((char *)&*buffer.begin(), size))
+	{
+		/* worked! */
+	}
+	return;
+}
 
 void run_qemu()
 {
-	std::system("pwd"); 
-	std::cout << "run" << std::endl;
+	//std::system("pwd"); 
+	std::string launch="~/qemu_espressif/xtensa-softmmu/qemu-system-xtensa -nographic -s \
+    -machine esp32 \
+    -drive file=" + file_to_load + ",if=mtd,format=raw &";
+	std::cout << launch << std::endl;
+	std::system(launch.c_str());
 }
+
+void stop_qemu() {
+	std::system("killall -9 qemu-system-xtensa");
+	std::cout << "\n\n" << std::endl;
+}
+
 
 void qemu_flash()
 {
 	std::system("pwd");
 	std::cout << "flash" << std::endl;
+	for(unsigned int i=0;i<gFlashFiles.size(); i++) {
+		std::cout <<  gFlashFiles[i] << " " << gFlashOffsets[i] << "\n";
+		merge_flash(gFlashFiles[i].c_str(),file_to_load.c_str(),gFlashOffsets[i]);
+	};
+
+	reloadFile();
 }
 
-std::vector<unsigned char> buffer;
-bool is_click=false;
+
+void setData(textbox &tbox) {
+	unsigned char *ptr = &*buffer.begin() + gOffset;
+	std::string new_text = log_dump(ptr, buffer.size(), 16);
+	tbox.hide();
+	tbox.reset(new_text, false);
+	// Force redraw of line, (Should be done differently)
+	tbox.show();
+}
+
+
 
 int main(int argc, char *argv[])
 {
 	using namespace nana;
 	bool disable_draw = false;
-	std::string file_to_load;
 
 	form fm(API::make_center(860, 800), nana::appear::decorate<nana::appear::sizable>());
 	fm.div("vert <dw weight=5%>"
 		"<lsbox weight=20%>"
-		"<<flash_btn><qemu_btn> weight=4%>"
+		"<<flash_btn><qemu_btn><stop_btn> weight=4%>"
 		"<<line weight=40><marginr=20 width=90% tbox>>");
 	//form fm(API::make_center(800, 800),nana::appear::decorate<nana::appear::sizable>());
 	//fm.div("horizontal <lsbox>"
@@ -214,43 +339,24 @@ int main(int argc, char *argv[])
 
 	//Define a panel widget to draw line numbers.
 	panel<true> line(fm);
-
-	std::streamsize size;
-	unsigned int gOffset = 0;
-
 	textbox tbox(fm);
 
-	
-
 	if (argc == 1) {
-		printf("Usage %s <file1> <file2> -p partition.csv\n", argv[0]);
+		printf("Usage %s <file1> -p qemu_partition.csv\n", argv[0]);
 		file_to_load= load_file_dialog();
 	} else {
 		file_to_load = std::string(argv[1]);
 	}
 
 	if (file_to_load.size() > 1) {
-		std::ifstream file(file_to_load.c_str(), std::ios::binary | std::ios::ate);
-		size = file.tellg();
-		file.seekg(0, std::ios::beg);
-		buffer.resize(size);
-
-		if (file.read((char *)&*buffer.begin(), size))
-		{
-			std::string new_text = log_dump(&(*buffer.begin()), size, 16, tbox);
-			tbox.append(new_text, false);
-			/* worked! */
-		}
-		else
-		{
-			return 0;
-		}
+		reloadFile();
+		setData(tbox);
 	}
 	drawing dw(fm);
 	dw.draw([&](paint::graphics& graph)
 	{
 		int pos = 0;
-		for (int i = 0; i < buffer.size() && pos < 1024; i+=512) {
+		for (int i = 0; i < buffer.size() && pos < 1024; i+=STEP_LEN) {
 			if ( buffer[i]!=0xff) {
 				graph.line(point(pos, 0), point(pos, 20), colors::blue);
 			} else {
@@ -258,32 +364,60 @@ int main(int argc, char *argv[])
 			}
 			pos++;
 		}
-		graph.rectangle(rectangle{(int) (gOffset /512), 0, 4, 20 }, true, colors::red);
+		graph.rectangle(rectangle{(int) (gOffset /STEP_LEN), 0, 4, 20 }, true, colors::red);
 
 	});
 
 	listbox lsbox(fm); // , rectangle{ 10, 10, 80, 100 }
-	add_listbox_items(lsbox,"partitions_example.csv");
+	add_listbox_items(lsbox,"qemu_partitions.csv");
 
 	lsbox.events().selected([&](const nana::arg_listbox &event) {
 		//API::refresh_window(line);
 		auto test = event.item.text(3);
 		if (event.item.selected()) {
-			std::cout << "Click " << test << "\n";
+			//std::cout << "Click " << test << "\n";
 			gOffset = std::strtol(test.c_str(), NULL, 16);
-			unsigned char *ptr = &*buffer.begin() + gOffset;
-			std::string new_text = log_dump(ptr, size, 16, tbox);
-			tbox.hide();
-			tbox.reset(new_text, false);
-			// Force redraw of line, (Should be done differently)
-			tbox.show();
+			setData(tbox);
 
 			//tbox.set_highlight("test", colors::dark_blue, colors::yellow);
 			//tbox.set_keywords("test", false, true, { "password", "ssid", "ESP_OK" });
-
 			//tbox.caret_pos(upoint(0, 10));
 		}
 		dw.update();
+	});
+
+    inputbox ibox(fm, "Goto adress.", "title");
+    inputbox::integer integer{"goto", 0, 0, 1024*1024*4, 512};
+
+	tbox.events().key_char([&](const nana::arg_keyboard& _arg) {
+		if ('n' == _arg.key)
+		{
+			gOffset = gOffset + 512;
+			setData(tbox);
+			//Ignore the input. the member ignore only valid in key_char.
+			_arg.ignore = true;
+		}
+		if ('p' == _arg.key)
+		{
+			if (gOffset>512) { 
+				gOffset= gOffset - 512;
+			} else {
+				gOffset=0;
+			}
+			setData(tbox);
+			//Ignore the input. the member ignore only valid in key_char.
+			_arg.ignore = true;
+		}
+		if ('g' == _arg.key)
+		{
+
+			if (ibox.show(integer)){
+				 auto n = integer.value();
+				 gOffset= n;
+			}
+			setData(tbox);
+			_arg.ignore = true;
+		}
 	});
 
 	fm.events().click([&](const nana::arg_click& a_m)
@@ -301,18 +435,12 @@ int main(int argc, char *argv[])
 			is_click = false;
 		});
 
-
 	fm.events().mouse_move([&](const nana::arg_mouse& a_m)
 		{
 			//std::cout << a_m.pos.x << "\n";
 			if (is_click) {
-				gOffset = a_m.pos.x * 512;
-				unsigned char* ptr = &*buffer.begin() + gOffset;
-				std::string new_text = log_dump(ptr, size, 16, tbox);
-				tbox.hide();
-				tbox.reset(new_text, false);
-				// Force redraw of line, (Should be done differently)
-				tbox.show();
+				gOffset = a_m.pos.x * STEP_LEN;
+				setData(tbox);
 				dw.update();
 			}
 			nana::API::refresh_window(fm);
@@ -336,10 +464,6 @@ int main(int argc, char *argv[])
 	{
 		if (disable_draw)
 			return;
-
-
-
-
 
 		auto line_px = tbox.line_pixels();
 		if (0 == line_px)
@@ -381,9 +505,6 @@ int main(int argc, char *argv[])
 		}
 	});
 
-
-
-
 	//When the text is exposing in the textbox, refreshs
 	//the panel widget to redraw new line numbers.
 	tbox.events().text_exposed([&line]
@@ -398,14 +519,15 @@ int main(int argc, char *argv[])
 	button btn2(fm, "Start qemu");
 	btn2.events().click(run_qemu);
 
-//	flash_form["list"] << btn;
-//	flash_form["list"] << lsbox;
+	button btn3(fm, "Stop qemu");
+	btn3.events().click(stop_qemu);
 
 
 	//fm["dw"] << dw;
 	fm["lsbox"] << lsbox;
 	fm["flash_btn"] << btn;
 	fm["qemu_btn"] << btn2;
+	fm["stop_btn"] << btn3;
 	fm["line"] << line;
 	fm["tbox"] << tbox;
 

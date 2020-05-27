@@ -106,7 +106,7 @@ elseif(UNIX)
 endif(APPLE)
 
 if(UNIX)
-    set(NANA_LINKS "${NANA_LINKS} -lX11 -lfontconfig")
+    set(NANA_LINKS "${NANA_LINKS} -lX11 -lXcursor -lfontconfig")
     set(NANA_INSTALL_PATH ${NANA_INSTALL_PATH_L})
     find_package(Freetype)
     if (FREETYPE_FOUND)
@@ -118,7 +118,7 @@ endif(UNIX)
 
 ########### Compilers
 #
-# Using gcc: gcc 4.8 don't support C++14 and make_unique. You may want to update at least to 4.9.
+# Using gcc: gcc 4.8 don't support C++17 and make_unique. You may want to update at least to 4.9.
 # In Windows, the gcc which come with CLion was 4.8 from MinGW. You may want to install MinGW-w64 from the
 # TDM-GCC Compiler Suite for Windows which will update you to gcc 5.1.
 # gcc 5.3 and 5.4 include filesytem, but you need to add the link flag: -lstdc++fs
@@ -128,10 +128,10 @@ endif(UNIX)
 if(CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")    # Clang || GNU
 
     if  ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++14 -Wall -g")       # Clang
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++17 -Wall -g")       # Clang
 
     else ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14  -Wall -g")       # GNU
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17  -Wall -g")       # GNU
 
     endif("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 
@@ -307,7 +307,7 @@ message("nana_include= " ${nana_include})
 function(set_nana_test dir files)
     foreach ( test ${${files}})
         add_executable(${test} "${${dir}}${test}.cpp")
-        set_property( TARGET ${test} PROPERTY CXX_STANDARD 14 )
+        set_property( TARGET ${test} PROPERTY CXX_STANDARD 17 )
         target_link_libraries(${test} ${nana_lib} ${NANA_LINKS})
         #if(NANA_CMAKE_AUTOMATIC_GUI_TESTING)
         #add_custom_command( TARGET  ${test} POST_BUILD COMMAND  ${test} )
@@ -332,7 +332,7 @@ if (NANA_CMAKE_INCLUDE_EXPERIMENTAL_DEMOS)
 endif (NANA_CMAKE_INCLUDE_EXPERIMENTAL_DEMOS)
 
 add_executable(plot plot.cpp realtime_main.cpp)
-set_property( TARGET ${test} PROPERTY CXX_STANDARD 14 )
+set_property( TARGET ${test} PROPERTY CXX_STANDARD 17 )
 target_link_libraries(plot ${nana_lib} ${NANA_LINKS})
 
 set_nana_test(demos_dir demos)

@@ -140,7 +140,7 @@ int main()
     });
 #endif
 
-    tmr.interval(20);
+    tmr.interval(std::chrono::milliseconds(20));
     tmr.start();
 
     fm.show();
