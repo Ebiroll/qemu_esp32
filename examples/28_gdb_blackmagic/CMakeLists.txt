@@ -2,7 +2,7 @@
 # in this exact order for cmake to work correctly
 cmake_minimum_required(VERSION 3.5)
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}" -DportREMOVE_STATIC_QUALIFIER -DINCLUDE_pcTaskGetTaskName=1)
-#add_definitions(portREMOVE_STATIC_QUALIFIER)
-#add_definitions(INCLUDE_pcTaskGetTaskName=1)
+add_compile_definitions(portREMOVE_STATIC_QUALIFIER)
+add_compile_definitions(INCLUDE_pcTaskGetTaskName=1)
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(wifidbg)
