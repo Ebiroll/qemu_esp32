@@ -5,6 +5,9 @@
 
 #include <nana/gui.hpp>
 #include <nana/gui/widgets/panel.hpp>
+#include <nana/gui/widgets/label.hpp>
+#include <nana/gui/widgets/checkbox.hpp>
+#include <nana/gui/widgets/combox.hpp>
 #include <nana/gui/widgets/textbox.hpp>
 #include <nana/gui/widgets/skeletons/text_editor.hpp>
 #include <nana/gui/widgets/listbox.hpp>
@@ -38,18 +41,6 @@ bool is_click=false;
 unsigned int gOffset = 0;
 
 
-/*
-class goto_form 
-        : public nana::form 
- { 
-    public: 
-    goto_form(); 
-  private: 
-    void _m_pick_door  (const nana::arg_click& ei); 
-  private: 
-    nana::label  label_; 
- }; 
-*/
 
 class CSVRow
 {
@@ -283,12 +274,114 @@ void reloadFile() {
 	return;
 }
 
+class qemu_settings_form
+	: public nana::form
+{
+public:
+	qemu_settings_form();
+
+	nana::combox   choice_;
+	nana::label    label_;
+	nana::checkbox chk_;
+	nana::button run_;
+	nana::button cancel_;
+
+private:
+	void click_something(const nana::arg_click& ei);
+
+};
+
+std::unique_ptr<qemu_settings_form>  gSettings;
+
+void run_qemu();
+
+qemu_settings_form::qemu_settings_form()
+	: nana::form(nana::API::make_center(400, 150))
+{
+	chk_.create(*this, nana::rectangle(10, 10, 200, 30));
+	chk_.caption("wait for debugger");
+
+	choice_.create(*this, nana::rectangle(10, 40, 200, 30));
+
+	choice_.push_back("Espressif qemu");
+	choice_.push_back("Ebi qemu");
+	choice_.push_back("Esp32s2 qemu");
+	choice_.option(0);
+
+	run_.create(*this, nana::rectangle(320, 40, 50, 20));
+	run_.caption("Run");
+	run_.events().click([]() {
+		run_qemu();
+		});
+
+
+	cancel_.create(*this, nana::rectangle(320, 100, 50, 20));
+	cancel_.caption("Cancel");
+	
+	cancel_.events().click([]() {
+		gSettings->hide();
+		});
+
+	this->events().unload([](const arg_unload& arg) {
+		//arg.cancel = true;
+		gSettings.reset(nullptr);
+		//gSettings->hide();
+	});
+
+	/*
+	checkbox ckbox{ fm, rectangle{10, 10, 200, 30} };
+	ckbox.caption("Checkbox");
+	ckbox.events().click([&] {
+		std::cout << "The checkbox is " << (ckbox.checked() ? "checked" : "unchecked") << std::endl;
+		});
+		*/
+}
+
+
 void run_qemu()
 {
+	static bool run_with_debugger = false;
+	static int run_option = 0;
+	std::string launch;
+
+	// Remember settings if dialog is destroyed
+	if (gSettings) {
+		if (gSettings->chk_.checked()) {
+			run_with_debugger = true;
+		}
+		else {
+			run_with_debugger = false;
+		}
+		run_option = gSettings->choice_.option();
+	}
+
 	//std::system("pwd"); 
-	std::string launch="~/qemu_espressif/xtensa-softmmu/qemu-system-xtensa -nographic -s \
+	switch (run_option) {
+		case 0:
+			launch = "~/qemu_espressif/xtensa-softmmu/qemu-system-xtensa -nographic -s \
     -machine esp32 \
-    -drive file=" + file_to_load + ",if=mtd,format=raw &";
+    -drive file=" + file_to_load + ",if=mtd,format=raw ";
+			break;
+		case 1: {
+			//std::system(");
+			std::string copy_file = "cp " + file_to_load + " ~/qemu_esp32/";
+			//std::system(copy_file.cstr());
+			std::cout << copy_file << std::endl;
+			launch = "~/qemu_esp32/xtensa-softmmu/qemu-system-xtensa -nographic -s  -M esp32 > io.txt ";
+			}
+			break;
+		case 2:
+			launch = "~/qemu_esp32s2/xtensa-softmmu/qemu-system-xtensa -nographic -s \
+			-machine esp32 \
+			-drive file=" + file_to_load + ",if=mtd,format=raw ";
+		break;
+	}
+
+	if (run_with_debugger) {
+   	   launch += " -S ";
+	}
+
+	launch += " &";
 	std::cout << launch << std::endl;
 	std::system(launch.c_str());
 }
@@ -529,7 +622,17 @@ int main(int argc, char *argv[])
 	btn.events().click(qemu_flash);
 	
 	button btn2(fm, "Start qemu");
-	btn2.events().click(run_qemu);
+	btn2.events().click([&](const nana::arg_click& a_m) {
+			if (a_m.mouse_args && a_m.mouse_args->shift) {
+				if (!gSettings) {
+					gSettings = std::make_unique<qemu_settings_form>();
+				}
+				if (gSettings) gSettings->show();
+			} else {
+				run_qemu();
+			}
+		});
+		
 
 	button btn3(fm, "Stop qemu");
 	btn3.events().click(stop_qemu);
@@ -545,6 +648,14 @@ int main(int argc, char *argv[])
 
 	fm.collocate();
 
+	fm.events().unload([](const arg_unload& arg) {
+		//arg.cancel = true;
+		if (gSettings) {
+			gSettings->hide();
+			gSettings.reset(nullptr);
+		}
+		});
 	fm.show();
 	exec();
 }
+
