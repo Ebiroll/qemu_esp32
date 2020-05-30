@@ -41,9 +41,7 @@ void merge_rom(const unsigned char *data,char *flashfile,int flash_pos,int size)
 int main(int argc,char *argv[])
 {
  static const unsigned char patch_ret[] = {
-                 0x06,0x04,0x00,  // Jump
-                 0x3d,0xf0,   // NOP 
-                 0x3d,0xf0,   // NOP 
+                 0x06,0x03,0x00,  // Jump
                  0x3d,0xf0,   // NOP 
                  0x3d,0xf0,   // NOP
                  0xff,        // To get next instruction correctly
