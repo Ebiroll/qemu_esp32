@@ -1,0 +1,17 @@
+idf_component_register(SRCS "ePaper.c" "img_hacking.c"
+"DefaultFont.c"
+"DejaVuSans18.c"
+"DejaVuSans24.c"
+"dejavuX.c"
+"ePaper.c"
+"EPD.c"
+"EPDspi.c"
+"img_hacking.c"
+"minya24.c"
+"SmallFont.c"
+"spi_master_lobo.c"
+"tooney32.c"
+"Ubuntu16.c"
+"comic24.c"
+                    INCLUDE_DIRS ".")
+#set(COMPONENTS_DIRS, "components")
