@@ -128,13 +128,34 @@ As location of partition is different for cmake
     gcc ../../toflash-cmake.c -o qemu_flash
 
 ##  June 2020
-esp32s2 emulation. Bootloader runs but SHA256 probably needs to be implemented.
-Also MMU emulation might be wrong.
+esp32s2 emulation. Starting to work,  SHA256 does not work properly, so checksums are patched to 0 with qemu_flash
+also MMU emulation is not right
 
-    branch esp32s2
+     Rom dumps
+       (gdb) dump binary memory irom0.bin 0x3ffa0000 0x3ffaffff
+       (gdb) dump binary memory s2rom.bin 0x40000000 0x4001ffff 
+
+    The s2rom.bin requires some  patching as done by s2rompatch.c
+    irom0.bin is actually a data rom.
+
+    git clone https://github.com/Ebiroll/qemu-xtensa-esp32s2
+    ../qemu-xtensa-esp32s2/configure --target-list=xtensa-softmmu     --enable-debug --enable-sanitizers     --disable-strip     --disable-capstone --disable-vnc    
     qemu-system-xtensa -M esp32s2 -s   -d unimp,guest_errors,page -nographic
+    xtensa-esp32s2-elf-gdb build/led.elf  -ex 'target remote:1234'
+    
+Requires load after halt
 
-Requires patching of the rom by s2rompatch.c
+    0x4000f254 in ?? ()
+    (gdb) load
+    Loading section .flash.rodata, size 0x576c lma 0x3f000020
+    Loading section .dram0.data, size 0x1e74 lma 0x3ffbe150
+    Loading section .iram0.vectors, size 0x403 lma 0x40024000
+    Loading section .iram0.text, size 0x9d40 lma 0x40024404
+    Loading section .flash.text, size 0x147f7 lma 0x40080020
+    Start address 0x40025528, load size 155418
+
+    You needs to singlestep wth n. (not sure why)
+
 
 ```
 ESP-ROM:esp32s2-rc4-20191025
@@ -151,30 +172,30 @@ SHA-256 comparison failed:
 Calculated: 0000000000000000000000000000000000000000000000000000000000000000
 Expected: 4944baaa4edc3b31e938597047c92c74b9ba1454c182196b0147204d7c2e1cdb
 Attempting to boot anyway...
-[0;32mI (229) boot: ESP-IDF v4.2-dev-1660-g7d7521367 2nd stage bootloader[0m
-[0;32mI (239) boot: compile time 22:45:23[0m
+(229) boot: ESP-IDF v4.2-dev-1660-g7d7521367 2nd stage bootloader[0m
+(239) boot: compile time 22:45:23
 unimp write  000012FC,00008000
 MMU Map flash 00000000 to 3FFC0000
 FFFFFFFF,FFFFFFFF,b 100204E9,p 020150AA
-[0;32mI (245) boot: chip revision: 0[0m
-[0;32mI (2500) boot.esp32s2: SPI Speed      : 40MHz[0m
-[0;32mI (2501) boot.esp32s2: SPI Mode       : DIO[0m
-[0;32mI (2502) boot.esp32s2: SPI Flash Size : 2MB[0m
+(245) boot: chip revision: 0[0m
+(2500) boot.esp32s2: SPI Speed      : 40MHz
+(2501) boot.esp32s2: SPI Mode       : DIO
+(2502) boot.esp32s2: SPI Flash Size : 2MB
 unimp read  00000040
 unimp write  00000040,00080001
 read RTC_CNTL_RESET_STATE_REG
-[0;32mI (2508) boot: Enabling RNG early entropy source...[0m
+(2508) boot: Enabling RNG early entropy source...
 unimp write  00001200,00008000
 MMU Map flash 00000000 to 3F000000
 FFFFFFFF,FFFFFFFF,b 100204E9,p 020150AA
 unimp read  00000040
 unimp write  00000040,00080001
-[0;32mI (2513) boot: Partition Table:[0m
-[0;32mI (2514) boot: ## Label            Usage          Type ST Offset   Length[0m
-[0;32mI (2516) boot:  0 nvs              WiFi data        01 02 00009000 00006000[0m
-[0;32mI (2517) boot:  1 phy_init         RF data          01 01 0000f000 00001000[0m
-[0;32mI (2519) boot:  2 factory          factory app      00 00 00010000 00100000[0m
-[0;32mI (2521) boot: End of partition table[0m
+(2513) boot: Partition Table:[0m
+(2514) boot: ## Label            Usage          Type ST Offset   Length[0m
+(2516) boot:  0 nvs              WiFi data        01 02 00009000 00006000[0m
+(2517) boot:  1 phy_init         RF data          01 01 0000f000 00001000[0m
+(2519) boot:  2 factory          factory app      00 00 00010000 00100000[0m
+(2521) boot: End of partition table[0m
 MMU Map flash 00010000 to 3F3F0000
 100206E9,40025524,b 632F6664,p 51EB851F
 read RTC_CNTL_RESET_STATE_REG
@@ -183,25 +204,25 @@ unimp write  000012FC,00008001
 MMU Map flash 00010000 to 3F3F0000
 100206E9,40025524,b 632F6664,p 51EB851F
 read RTC_CNTL_RESET_STATE_REG
-[0;32mI (2187) esp_image: segment 0: paddr=0x00010020 vaddr=0x3f000020 size=0x0576c ( 22380) map[0m
+(2187) esp_image: segment 0: paddr=0x00010020 vaddr=0x3f000020 size=0x0576c ( 22380) map[0m
 MMU Map flash 00010000 to 3F000000
 100206E9,40025524,b 632F6664,p 51EB851F
 MMU Map flash 00010000 to 3F3F0000
 100206E9,40025524,b 632F6664,p 51EB851F
 read RTC_CNTL_RESET_STATE_REG
-[0;32mI (2208) esp_image: segment 1: paddr=0x00015794 vaddr=0x3ffbe150 size=0x01e74 (  7796) load[0m
+(2208) esp_image: segment 1: paddr=0x00015794 vaddr=0x3ffbe150 size=0x01e74 (  7796) load[0m
 MMU Map flash 00010000 to 3F000000
 100206E9,40025524,b 632F6664,p 51EB851F
 MMU Map flash 00010000 to 3F3F0000
 100206E9,40025524,b 632F6664,p 51EB851F
 read RTC_CNTL_RESET_STATE_REG
-[0;32mI (2218) esp_image: segment 2: paddr=0x00017610 vaddr=0x40024000 size=0x00404 (  1028) load[0m
+(2218) esp_image: segment 2: paddr=0x00017610 vaddr=0x40024000 size=0x00404 (  1028) load[0m
 MMU Map flash 00010000 to 3F000000
 100206E9,40025524,b 632F6664,p 51EB851F
 MMU Map flash 00010000 to 3F3F0000
 100206E9,40025524,b 632F6664,p 51EB851F
 read RTC_CNTL_RESET_STATE_REG
-[0;32mI (2220) esp_image: segment 3: paddr=0x00017a1c vaddr=0x40024404 size=0x085fc ( 34300) load[0m
+(2220) esp_image: segment 3: paddr=0x00017a1c vaddr=0x40024404 size=0x085fc ( 34300) load[0m
 MMU Map flash 00010000 to 3F000000
 100206E9,40025524,b 632F6664,p 51EB851F
 MMU Map flash 00020000 to 3F010000
@@ -222,28 +243,42 @@ MMU Map flash 00030000 to 3F3F0000
 BF65A421,1E3A56FA,b 00236507,p 7A3C7480
 MMU Map flash 00030000 to 3F000000
 BF65A421,1E3A56FA,b 00236507,p 7A3C7480
-[0;31mE (442) esp_image: Image hash failed - image is corrupt[0m
-MMU Map flash 00030000 to 3F000000
-BF65A421,1E3A56FA,b 00236507,p 7A3C7480
-[0;31mE (445) boot: Factory app partition is not bootable[0m
-[0;31mE (446) boot: No bootable app partitions in the partition table[0m
+I (963) cache: Instruction cache 	: size 8KB, 4Ways, cache line size 32Byte
+I (983) cpu_start: Pro cpu up.
+I (1010) cpu_start: Application information:
+I (1032) cpu_start: Project name:     led
+I (1054) cpu_start: App version:      b8c968e-dirty
+I (1076) cpu_start: Compile time:     Jun 13 2020 03:13:53
+I (1108) cpu_start: ELF file SHA256:  0000000000000000...
+I (1131) cpu_start: ESP-IDF:          v4.2-dev-1660-g7d7521367
+I (1153) cpu_start: Single core mode
+I (1185) heap_init: Initializing. RAM available for dynamic allocation:
+I (1199) heap_init: At 3FFC07C8 len 0003B838 (238 KiB): DRAM
+I (1202) heap_init: At 3FFFC000 len 00003A10 (14 KiB): DRAM
+I (1213) cpu_start: Pro cpu start user code
+W (2561) rtc_init: o_code calibration fail
+pi write  00000018,10000000
+spi read  00000028,00000000
+WTF
+spi write  00000028,00000017
+spi read  00000000,00000000
+M25P80: Unknown cmd 9d
+I (1378) spi_flash: detected chip: issi
+I (1394) spi_flash: flash io: dio
+W (1395) spi_flash: Detected size(4096k) larger than the size in the binary image header(2048k). Using the size in the binary image header.
+I (1397) cpu_start: Starting scheduler on PRO CPU.
 
 
+The fun ends here as there is no timer interrupts and therefore freertos will not tick.
+// TODO!!! FIX OLAS
+#define ETS_WIFI_MAC_INTR_SOURCE 
 
-The fun ends here
-log_invalid_app_partition
-
-
-
-First try,
+On first try, we got this
 ESP-ROM:esp32s2-rc4-20191025
 Build:Oct 25 2019
 rst:0x0 (N/A),boot:0x12 (DOWNLOAD(USB/UART0/1/SPI))
 ets_main.c 460 
 
-Rom dumps
-(gdb) dump binary memory irom0.bin 0x3ffa0000 0x3ffaffff
-(gdb) dump binary memory s2rom.bin 0x40000000 0x4001ffff 
 ```
 
 ```
