@@ -128,22 +128,23 @@ As location of partition is different for cmake
     gcc ../../toflash-cmake.c -o qemu_flash
 
 ##  June 2020
-esp32s2 emulation. Starting to work,  SHA256 does not work properly, so checksums are patched to 0 with qemu_flash
-also MMU emulation is not right
+esp32s2 emulation. Starting to work,  SHA256 does not work properly, so checksums are patched to 0 byt the toflash-s2.c file.
 
      Rom dumps
-       (gdb) dump binary memory irom0.bin 0x3ffa0000 0x3ffaffff
+       (gdb) dump binary memory drom0.bin 0x3ffa0000 0x3ffaffff
        (gdb) dump binary memory s2rom.bin 0x40000000 0x4001ffff 
 
+     The data rom is equal to the second half of s2rom.bin but can be convenient to have
+
     The s2rom.bin requires some  patching as done by s2rompatch.c
-    irom0.bin is actually a data rom.
+    Compile and run it to patch s2rom.bin
+
 
     git clone https://github.com/Ebiroll/qemu-xtensa-esp32s2
     ../qemu-xtensa-esp32s2/configure --target-list=xtensa-softmmu     --enable-debug --enable-sanitizers     --disable-strip     --disable-capstone --disable-vnc    
     qemu-system-xtensa -M esp32s2 -s   -d unimp,guest_errors,page -nographic
     xtensa-esp32s2-elf-gdb build/led.elf  -ex 'target remote:1234'
     
-Requires load after halt
 
     0x4000f254 in ?? ()
     (gdb) load
@@ -154,7 +155,6 @@ Requires load after halt
     Loading section .flash.text, size 0x147f7 lma 0x40080020
     Start address 0x40025528, load size 155418
 
-    You needs to singlestep wth n. (not sure why)
 
 
 ```
@@ -177,7 +177,7 @@ Attempting to boot anyway...
 unimp write  000012FC,00008000
 MMU Map flash 00000000 to 3FFC0000
 FFFFFFFF,FFFFFFFF,b 100204E9,p 020150AA
-(245) boot: chip revision: 0[0m
+(245) boot: chip revision: 0
 (2500) boot.esp32s2: SPI Speed      : 40MHz
 (2501) boot.esp32s2: SPI Mode       : DIO
 (2502) boot.esp32s2: SPI Flash Size : 2MB
@@ -190,12 +190,12 @@ MMU Map flash 00000000 to 3F000000
 FFFFFFFF,FFFFFFFF,b 100204E9,p 020150AA
 unimp read  00000040
 unimp write  00000040,00080001
-(2513) boot: Partition Table:[0m
-(2514) boot: ## Label            Usage          Type ST Offset   Length[0m
-(2516) boot:  0 nvs              WiFi data        01 02 00009000 00006000[0m
-(2517) boot:  1 phy_init         RF data          01 01 0000f000 00001000[0m
-(2519) boot:  2 factory          factory app      00 00 00010000 00100000[0m
-(2521) boot: End of partition table[0m
+(2513) boot: Partition Table:
+(2514) boot: ## Label            Usage          Type ST Offset   Length
+(2516) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+(2517) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+(2519) boot:  2 factory          factory app      00 00 00010000 00100000
+(2521) boot: End of partition table
 MMU Map flash 00010000 to 3F3F0000
 100206E9,40025524,b 632F6664,p 51EB851F
 read RTC_CNTL_RESET_STATE_REG
@@ -204,25 +204,25 @@ unimp write  000012FC,00008001
 MMU Map flash 00010000 to 3F3F0000
 100206E9,40025524,b 632F6664,p 51EB851F
 read RTC_CNTL_RESET_STATE_REG
-(2187) esp_image: segment 0: paddr=0x00010020 vaddr=0x3f000020 size=0x0576c ( 22380) map[0m
+(2187) esp_image: segment 0: paddr=0x00010020 vaddr=0x3f000020 size=0x0576c ( 22380) map
 MMU Map flash 00010000 to 3F000000
 100206E9,40025524,b 632F6664,p 51EB851F
 MMU Map flash 00010000 to 3F3F0000
 100206E9,40025524,b 632F6664,p 51EB851F
 read RTC_CNTL_RESET_STATE_REG
-(2208) esp_image: segment 1: paddr=0x00015794 vaddr=0x3ffbe150 size=0x01e74 (  7796) load[0m
+(2208) esp_image: segment 1: paddr=0x00015794 vaddr=0x3ffbe150 size=0x01e74 (  7796) load
 MMU Map flash 00010000 to 3F000000
 100206E9,40025524,b 632F6664,p 51EB851F
 MMU Map flash 00010000 to 3F3F0000
 100206E9,40025524,b 632F6664,p 51EB851F
 read RTC_CNTL_RESET_STATE_REG
-(2218) esp_image: segment 2: paddr=0x00017610 vaddr=0x40024000 size=0x00404 (  1028) load[0m
+(2218) esp_image: segment 2: paddr=0x00017610 vaddr=0x40024000 size=0x00404 (  1028) load
 MMU Map flash 00010000 to 3F000000
 100206E9,40025524,b 632F6664,p 51EB851F
 MMU Map flash 00010000 to 3F3F0000
 100206E9,40025524,b 632F6664,p 51EB851F
 read RTC_CNTL_RESET_STATE_REG
-(2220) esp_image: segment 3: paddr=0x00017a1c vaddr=0x40024404 size=0x085fc ( 34300) load[0m
+(2220) esp_image: segment 3: paddr=0x00017a1c vaddr=0x40024404 size=0x085fc ( 34300) load
 MMU Map flash 00010000 to 3F000000
 100206E9,40025524,b 632F6664,p 51EB851F
 MMU Map flash 00020000 to 3F010000
@@ -230,13 +230,13 @@ MMU Map flash 00020000 to 3F010000
 MMU Map flash 00020000 to 3F3F0000
 3350FFAD,0020C010,b 8A88000A,p 23571A62
 read RTC_CNTL_RESET_STATE_REG
-[0;32mI (2246) esp_image: segment 4: paddr=0x00020020 vaddr=0x40080020 size=0x147f8 ( 83960) map[0m
+[0;32mI (2246) esp_image: segment 4: paddr=0x00020020 vaddr=0x40080020 size=0x147f8 ( 83960) map
 MMU Map flash 00020000 to 3F000000
 3350FFAD,0020C010,b 8A88000A,p 23571A62
 MMU Map flash 00030000 to 3F010000
 BF65A421,1E3A56FA,b 00236507,p 7A3C7480
 read RTC_CNTL_RESET_STATE_REG
-[0;32mI (431) esp_image: segment 5: paddr=0x00034820 vaddr=0x4002ca00 size=0x01748 (  5960) load[0m
+[0;32mI (431) esp_image: segment 5: paddr=0x00034820 vaddr=0x4002ca00 size=0x01748 (  5960) load
 MMU Map flash 00030000 to 3F000000
 BF65A421,1E3A56FA,b 00236507,p 7A3C7480
 MMU Map flash 00030000 to 3F3F0000
@@ -272,6 +272,7 @@ I (1397) cpu_start: Starting scheduler on PRO CPU.
 The fun ends here as there is no timer interrupts and therefore freertos will not tick.
 // TODO!!! FIX OLAS
 #define ETS_WIFI_MAC_INTR_SOURCE 
+https://github.com/espressif/esp-idf/blob/master/components/freertos/xtensa/readme_xtensa.txt
 
 On first try, we got this
 ESP-ROM:esp32s2-rc4-20191025
@@ -282,7 +283,7 @@ ets_main.c 460
 ```
 
 ```
-Same 
+Same elf loaded with gdb
 (gdb) load
 Loading section .flash.rodata, size 0x576c lma 0x3f000020
 Loading section .dram0.data, size 0x1e74 lma 0x3ffbe150
@@ -1552,7 +1553,7 @@ io write e0,1   if coreId==1
 
 ##  Making free_rtos tick.
 Good information here,
-https://github.com/espressif/esp-idf/blob/master/components/freertos/readme_xtensa.txt
+https://github.com/espressif/esp-idf/blob/master/components/freertos/xtensa/readme_xtensa.txt
 
 ```
 The timer tick is handled here,
