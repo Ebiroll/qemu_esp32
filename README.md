@@ -682,10 +682,10 @@ https://dl.espressif.com/dl/esp32_rom.elf
 This also works for the original gdb and gives you all names of the functions in rom0.
 
 You can get and compile your own elf file from rom.S found here,
-https://github.com/cesanta/mongoose-os/tree/master/common/platforms/esp32/rom
+https://github.com/cesanta/mongoose-os/tree/6ccea79b028d8d76191b9c64855ef40c67e096b8/platforms/esp32/src/rom
 Or build your own  from esp-idf/components/esp32/ld/esp32.rom.ld:
-//   sort -k 5 esp32.rom.ld | perl -npe 's/=/,/; s/;//'
-
+    //   sort -k 5 esp32.rom.ld | perl -npe 's/=/,/; s/;//'
+    xtensa-esp32-elf-gcc -Wl,-N,-Ttext,0x40000000 -nostdlib rom.S -o rom.elf 
 
 To setup esp-idf do, 
 ```
