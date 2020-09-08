@@ -20,6 +20,9 @@ make
 2. Dump rom1 and rom.bin
 ~/esp/esp-idf/components/esptool_py/esptool/esptool.py --chip esp32 -b 921600 -p /dev/ttyUSB0 dump_mem 0x40000000 0x000C2000 rom.bin
 ~/esp/esp-idf/components/esptool_py/esptool/esptool.py --chip esp32 -b 921600 -p /dev/ttyUSB0 dump_mem 0x3FF90000 0x00010000 rom1.bin
+If you have rev3 of the rom, then it is more safe to use espressifs rom0 dump
+wget https://github.com/espressif/qemu/raw/esp-develop/pc-bios/esp32-r0-rom.bin
+mv esp32-r0-rom.bin rom.bin
 
 3. Build an esp32 application
 Open a new window to build example app, and set env variables
