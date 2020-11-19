@@ -15,9 +15,9 @@ ENV DEBIAN_FRONTEND=noninteractive
    xz-utils libpixman-1-0 libpng16-16 libjpeg8 libglib2.0 \
    wget \
    unzip \   
-   && wget https://github.com/Ebiroll/qemu-xtensa-esp32/suites/317165267/artifacts/360727  && \
+   && wget https://github.com/Ebiroll/qemu-xtensa-esp32/suites/1160719439/artifacts/16816963  && \
    wget https://github.com/espressif/qemu/raw/esp-develop/pc-bios/esp32-r0-rom.bin  && \
-   unzip 360727  -d .
+   unzip 16816963 -d .
 
  EXPOSE 1234
 
