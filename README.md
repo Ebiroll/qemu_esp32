@@ -120,7 +120,7 @@ apt-get install libglib2.0-dev zlib1g-dev
 ```
 It should also be possible to build with MSYS2 but performance is not so good.
 As an X-server you can use this one,
-https://sourceforge.net/projects/vcxsrv/
+https://mobaxterm.mobatek.net/
 
 ## Build with cmake
 Latest version of esp-idf recomends
@@ -129,6 +129,21 @@ Latest version of esp-idf recomends
 
 As location of partition is different for cmake
     gcc ../../toflash-cmake.c -o qemu_flash
+
+##  March 2021
+  Updated latest version with espressifs latest qemu changes, it now runs qemu 5.2 (New build system)
+    S2 emulation has regressed, but probably good enough to step into the rom dump.
+    git clone https://github.com/Ebiroll/qemu-xtensa-esp32s2
+    mkdir qemu_esp32s2 ;cd qemu_esp32s2
+    ../qemu-xtensa-esp32s2/configure --target-list=xtensa-softmmu,riscv32-softmmu     --enable-debug --enable-sanitizers     --disable-strip     --disable-capstone --disable-vnc    
+    qemu-system-xtensa -M esp32s2 -s   -d unimp,guest_errors,page -nographic
+    xtensa-esp32s2-elf-gdb build/led.elf  -ex 'target remote:1234'
+    (gdb) monitor quit
+# esp32
+    The esp32 emulation has gotten better with i2c support. I also added an ssd1306 to the i2c bus 0. adress 0x3c
+    cp ../qemu-xtensa-esp32s2/pc-bios/esp32-v3-rom.bin .
+    xtensa-softmmu/qemu-system-xtensa  -M esp32 -drive file=esp32flash.bin,if=mtd,format=raw -s  -serial stdio
+
 
 ##  June 2020
 esp32s2 emulation. Starting to work,  SHA256 does not work properly, so checksums are patched to 0 byt the toflash-s2.c file.
