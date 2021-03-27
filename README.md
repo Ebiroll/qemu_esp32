@@ -132,10 +132,11 @@ As location of partition is different for cmake
 
 ##  March 2021
   Updated latest version with espressifs latest qemu changes, it now runs qemu 5.2 (New build system)
-    S2 emulation has regressed, but probably good enough to step into the rom dump.
+  S2 emulation has regressed, but probably good enough to step into the rom dump.
+    
     git clone https://github.com/Ebiroll/qemu-xtensa-esp32s2
     mkdir qemu_esp32s2 ;cd qemu_esp32s2
-    ../qemu-xtensa-esp32s2/configure --target-list=xtensa-softmmu,riscv32-softmmu     --enable-debug --enable-sanitizers     --disable-strip     --disable-capstone --disable-vnc    
+    ../qemu-xtensa-esp32s2/configure --target-list=xtensa-softmmu,riscv32-softmmu     --enable-debug --enable-sanitizers     --disable-strip     --disable-capstone --disable-vnc --enable-gcrypt --disable-seccomp        
     qemu-system-xtensa -M esp32s2 -s   -d unimp,guest_errors,page -nographic
     xtensa-esp32s2-elf-gdb build/led.elf  -ex 'target remote:1234'
     (gdb) monitor quit
