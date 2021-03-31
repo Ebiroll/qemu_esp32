@@ -130,13 +130,15 @@ Latest version of esp-idf recomends
 As location of partition is different for cmake
     gcc ../../toflash-cmake.c -o qemu_flash
 ##  April 2021
-  Updated original esp32-qemu to use espressifs sha calculations due to changes in latest versions of sp-idf.
+  Updated original esp32-qemu to use espressifs sha calculations due to changes in latest versions of esp-idf.
+  
   Also no need to dump or use rom1.bin as they point to the same data.
   The reason you might want to use the original rathere than espressifs
   more complete implementation is: 
-     1. that it boots much faster on slower computer
-     2. Works much better with the xtensa-esp32-elf-gdb.qemu debugger
-     3. Boots from you own romdump
+  
+    1. that it boots much faster on slower computer
+    2. Works much better with the xtensa-esp32-elf-gdb.qemu debugger
+    3. Boots from you own romdump
 
 ##  March 2021
   Updated latest version with espressifs latest qemu changes, it now runs qemu 5.2 (New build system)
