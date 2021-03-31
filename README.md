@@ -14,7 +14,7 @@ It is a good way to learn about qemu , esp32 and the esp32 rom.
 git clone git://github.com/Ebiroll/qemu-xtensa-esp32
 mkdir qemu_esp32
 cd qemu_esp32
-../qemu-xtensa-esp32/configure --disable-capstone --disable-werror --prefix=`pwd`/root --target-list=xtensa-softmmu,xtensaeb-softmmu
+../qemu-xtensa-esp32/configure --disable-werror --prefix=`pwd`/root --target-list=xtensa-softmmu,xtensaeb-softmmu
 make
 
 2. Dump rom1 and rom.bin
@@ -129,6 +129,14 @@ Latest version of esp-idf recomends
 
 As location of partition is different for cmake
     gcc ../../toflash-cmake.c -o qemu_flash
+##  April 2021
+  Updated original esp32-qemu to use espressifs sha calculations due to changes in latest versions of sp-idf.
+  Also no need to dump or use rom1.bin as they point to the same data.
+  The reason you might want to use the original rathere than espressifs
+  more complete implementation is: 
+     1. that it boots much faster on slower computer
+     2. Works much better with the xtensa-esp32-elf-gdb.qemu debugger
+     3. Boots from you own romdump
 
 ##  March 2021
   Updated latest version with espressifs latest qemu changes, it now runs qemu 5.2 (New build system)
@@ -139,6 +147,7 @@ As location of partition is different for cmake
     qemu-system-xtensa -M esp32s2 -s   -d unimp,guest_errors,page -nographic
     xtensa-esp32s2-elf-gdb build/led.elf  -ex 'target remote:1234'
     (gdb) monitor quit
+    Remember to use toflash-s2.c as sha calculations is not implemented.
 # esp32
     The esp32 emulation has gotten better with i2c support. I also added an ssd1306 to the i2c bus 0. adress 0x3c
     cp ../qemu-xtensa-esp32s2/pc-bios/esp32-v3-rom.bin .
@@ -619,12 +628,12 @@ https://github.com/jcmvbkbc/meta-zephyr-sdk/commit/42be8b49d5915a0bb94ef8dfbde50
 mkdir ../qemu_esp32
 cd ../qemu_esp32
 Then run configure as,
-../qemu-xtensa-esp32/configure --disable-werror --prefix=`pwd`/root --target-list=xtensa-softmmu,xtensaeb-softmmu
+../qemu-xtensa-esp32/configure --disable-werror --prefix=`pwd`/root --target-list=xtensa-softmmu --python=/usr/bin/python2
 ```
 
 # Build qemu on linux with python3, i.e. on arch linux
 ```
-../qemu-xtensa-esp32/configure --disable-werror --prefix=`pwd`/root --target-list=xtensa-softmmu,xtensaeb-softmmu --python=/usr/bin/python2
+../qemu-xtensa-esp32/configure --disable-werror --prefix=`pwd`/root --target-list=xtensa-softmmu --python=/usr/bin/python2
 ```
 
 
