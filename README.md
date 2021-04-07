@@ -57,7 +57,8 @@ cp qemu_esp32/bin/xtensa-esp32-elf-gdb    $HOME/esp/xtensa-esp32-elf/bin/xtensa-
     (gdb) b bootloader_main
     (gdb) b app_main
     (gdb) c
-When breakpoint is hit try Ctrl-X then O
+When breakpoint is hit try Ctrl-X then O, also consider starting with data directory to where you cloned this
+   xtensa-esp32-elf-gdb.qemu --data-directory ~/esp/qemu_esp32/gdb
 
 Or to debug the bootloader,
     xtensa-esp32-elf-gdb.qemu   build/bootloader/bootloader.elf -ex 'target remote:1234'
