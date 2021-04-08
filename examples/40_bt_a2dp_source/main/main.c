@@ -352,7 +352,7 @@ static void bt_av_hdl_stack_evt(uint16_t event, void *p_param)
         esp_a2d_source_init();
 
         /* set discoverable and connectable mode */
-        esp_bt_gap_set_scan_mode(ESP_BT_SCAN_MODE_CONNECTABLE_DISCOVERABLE);
+        esp_bt_gap_set_scan_mode(ESP_BT_CONNECTABLE,ESP_BT_GENERAL_DISCOVERABLE);
 
         /* start device discovery */
         ESP_LOGI(BT_AV_TAG, "Starting device discovery...");
@@ -508,7 +508,8 @@ static void bt_app_av_state_connecting(uint16_t event, void *param)
             ESP_LOGI(BT_AV_TAG, "a2dp connected");
             s_a2d_state =  APP_AV_STATE_CONNECTED;
             s_media_state = APP_AV_MEDIA_STATE_IDLE;
-            esp_bt_gap_set_scan_mode(ESP_BT_SCAN_MODE_NONE);
+            //esp_bt_gap_set_scan_mode(ESP_BT_SCAN_MODE_NONE);
+            esp_bt_gap_set_scan_mode(ESP_BT_NON_CONNECTABLE,ESP_BT_NON_DISCOVERABLE);
         } else if (a2d->conn_stat.state == ESP_A2D_CONNECTION_STATE_DISCONNECTED) {
             s_a2d_state =  APP_AV_STATE_UNCONNECTED;
         }
@@ -604,7 +605,8 @@ static void bt_app_av_state_connected(uint16_t event, void *param)
         if (a2d->conn_stat.state == ESP_A2D_CONNECTION_STATE_DISCONNECTED) {
             ESP_LOGI(BT_AV_TAG, "a2dp disconnected");
             s_a2d_state = APP_AV_STATE_UNCONNECTED;
-            esp_bt_gap_set_scan_mode(ESP_BT_SCAN_MODE_CONNECTABLE_DISCOVERABLE);
+            //esp_bt_gap_set_scan_mode(ESP_BT_SCAN_MODE_CONNECTABLE_DISCOVERABLE);
+	    esp_bt_gap_set_scan_mode(ESP_BT_CONNECTABLE,ESP_BT_GENERAL_DISCOVERABLE);
         }
         break;
     }
@@ -638,7 +640,8 @@ static void bt_app_av_state_disconnecting(uint16_t event, void *param)
         if (a2d->conn_stat.state == ESP_A2D_CONNECTION_STATE_DISCONNECTED) {
             ESP_LOGI(BT_AV_TAG, "a2dp disconnected");
             s_a2d_state =  APP_AV_STATE_UNCONNECTED;
-            esp_bt_gap_set_scan_mode(ESP_BT_SCAN_MODE_CONNECTABLE_DISCOVERABLE);
+	    esp_bt_gap_set_scan_mode(ESP_BT_CONNECTABLE,ESP_BT_GENERAL_DISCOVERABLE);	    
+            //esp_bt_gap_set_scan_mode(ESP_BT_SCAN_MODE_CONNECTABLE_DISCOVERABLE);
         }
         break;
     }
