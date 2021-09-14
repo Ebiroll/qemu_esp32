@@ -130,6 +130,16 @@ Latest version of esp-idf recomends
 
 As location of partition is different for cmake
     gcc ../../toflash-cmake.c -o qemu_flash
+
+## Sept 2021
+Although I have not so much time to update this, I want to point at the following interesting projects.
+Docker container.
+  https://github.com/mluis/qemu-esp32
+QEMU with a TTGo TDisplay
+https://github.com/a159x36/qemu
+Espressifs latest qemu release (QEMU 6.1.0)
+  https://github.com/espressif/qemu/releases/tag/esp-develop-20210826
+
 ##  April 2021
   Updated original esp32-qemu to use espressifs sha calculations due to changes in latest versions of esp-idf.
   
@@ -305,7 +315,7 @@ I (1397) cpu_start: Starting scheduler on PRO CPU.
 The fun ends here as there is no timer interrupts and therefore freertos will not tick.
 // TODO!!! FIX OLAS
 #define ETS_WIFI_MAC_INTR_SOURCE 
-https://github.com/espressif/esp-idf/blob/master/components/freertos/xtensa/readme_xtensa.txt
+https://github.com/espressif/esp-idf/blob/master/components/freertos/port/xtensa/readme_xtensa.txt
 
 On first try, we got this
 ESP-ROM:esp32s2-rc4-20191025
@@ -1586,7 +1596,7 @@ io write e0,1   if coreId==1
 
 ##  Making free_rtos tick.
 Good information here,
-https://github.com/espressif/esp-idf/blob/master/components/freertos/xtensa/readme_xtensa.txt
+https://github.com/espressif/esp-idf/blob/master/components/freertos/port/xtensa/readme_xtensa.txt
 
 ```
 The timer tick is handled here,
