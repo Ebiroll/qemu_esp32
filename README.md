@@ -11,7 +11,7 @@ It is a good way to learn about qemu , esp32 and the esp32 rom.
 
 ```
 1. Build qemu
-git clone git://github.com/Ebiroll/qemu-xtensa-esp32
+git clone https://github.com/Ebiroll/qemu-xtensa-esp32
 mkdir qemu_esp32
 cd qemu_esp32
 ../qemu-xtensa-esp32/configure --disable-werror --prefix=`pwd`/root --target-list=xtensa-softmmu,xtensaeb-softmmu
