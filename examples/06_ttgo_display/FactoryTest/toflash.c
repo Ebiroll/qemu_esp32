@@ -7,7 +7,7 @@
 // python /home/olas/esp/esp-idf/components/esptool_py/esptool/esptool.py --chip esp32 --port /dev/ttyUSB0 --baud 115200 --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_freq 40m --flash_size detect 
 // 0x1000  .pio/build/lilygo-t-display/bootloader.bin  
 // 0x10000 .pio/build/lilygo-t-display/firmware.bin
-// 0xe000  .pio/build/lilygo-t-display/partitions.bin 
+// 0x8000  .pio/build/lilygo-t-display/partitions.bin 
 //
 
 void merge_flash(char *binfile,char *flashfile,int flash_pos,int patch_hash)
