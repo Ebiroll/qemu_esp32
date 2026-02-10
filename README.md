@@ -1,13 +1,97 @@
- qemu_esp32
-Add tensilica esp32 cpu and a board to qemu and dump the rom to learn more about esp-idf
-###   ESP32 in QEMU.
+# qemu_esp32
 
-This documents how to add an esp32 cpu and a simple esp32 board to qemu in order to run an app compiled with the SDK (esp-idf) in QEMU. Esp32 is a 240 MHz dual core Tensilica LX6 microcontroller.
-It is a good way to learn about qemu , esp32 and the esp32 rom.
+ESP32 emulation in QEMU (2026) with Bluetooth, WiFi and TTGO T-Display support.
 
+## Overview
 
+This project provides ESP32 emulation in QEMU, including:
+- **Bluetooth/BLE** - VHCI (Virtual HCI) controller emulation with slot-based execution
+- **WiFi** - ESP32 WiFi emulation via the esp32_wifi NIC model with slirp networking
+- **TTGO T-Display** - ST7789V LCD display emulation with board skin
+- **GPIO visualization** - Real-time GPIO pin state display window
+- **Dual-core** - Full dual-core Tensilica LX6 emulation
+- **SPI Flash** - MMU-mapped flash boot from esp32flash.bin
 
-## Quick Start
+ESP32 is a 240 MHz dual core Tensilica LX6 microcontroller. This is a good way to learn about QEMU, ESP32 and the ESP32 ROM.
+
+## Quick Start (2026)
+
+### 1. Clone and build QEMU
+
+```bash
+git clone https://github.com/Ebiroll/calib
+cd calib
+mkdir build && cd build
+../configure --target-list=xtensa-softmmu --enable-gtk --enable-slirp --disable-werror
+make -j$(nproc)
+```
+
+> **Note:** On Linux, use `--enable-gtk` for the display backend. The SDL display has known issues with multiple console windows on Linux/WSL. GTK works correctly.
+
+### 2. Get the ROM file
+
+```bash
+wget https://github.com/espressif/qemu/raw/esp-develop/pc-bios/esp32-r0-rom.bin
+cp esp32-r0-rom.bin rom.bin
+```
+
+### 3. Build your ESP32 application
+
+Build your ESP-IDF application and create a flash image:
+```bash
+idf.py build
+gcc toflash.c -o qemu_flash
+./qemu_flash build/<your-app>.bin
+```
+
+### 4. Run QEMU
+
+Basic run with GTK display:
+```bash
+./build/qemu-system-xtensa -M esp32 -drive file=esp32flash.bin,if=mtd,format=raw \
+    -serial stdio -display gtk \
+    -global driver=timer.esp32.timg,property=wdt_disable,value=true
+```
+
+### WiFi Emulation
+
+To enable WiFi emulation, add the `-nic` option with the `esp32_wifi` model:
+
+```bash
+-nic user,model=esp32_wifi
+```
+
+Full example with port forwarding (forward host port 16555 to ESP32's port 80):
+```bash
+./build/qemu-system-xtensa -M esp32 -drive file=esp32flash.bin,if=mtd,format=raw \
+    -serial stdio -display gtk \
+    -global driver=timer.esp32.timg,property=wdt_disable,value=true \
+    -nic user,model=esp32_wifi,net=192.168.4.0/24,hostfwd=tcp::16555-192.168.4.1:80 \
+    -parallel none -monitor none
+```
+
+### Debugging
+
+Start QEMU with `-s -S` to wait for GDB:
+```bash
+./build/qemu-system-xtensa -M esp32 -drive file=esp32flash.bin,if=mtd,format=raw \
+    -serial stdio -display gtk -s -S
+```
+
+Then attach GDB:
+```bash
+xtensa-esp32-elf-gdb build/<your-app>.elf -ex 'target remote:1234'
+(gdb) b app_main
+(gdb) c
+```
+
+---
+
+## Legacy Documentation
+
+The following sections contain historical documentation from earlier versions of this project.
+
+### Original Quick Start (legacy)
 
 ```
 1. Build qemu
@@ -130,6 +214,10 @@ Latest version of esp-idf recomends
 
 As location of partition is different for cmake
     gcc ../../toflash-cmake.c -o qemu_flash
+
+## Feb 2026
+Updated to QEMU 9.2 base. Added Bluetooth/BLE VHCI emulation, WiFi emulation via esp32_wifi NIC model, and improved TTGO T-Display support. The main development repo is now:
+  https://github.com/Ebiroll/calib
 
 ## Sept 2021
 Although I have not so much time to update this, I want to point at the following interesting projects.
