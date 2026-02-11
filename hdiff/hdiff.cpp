@@ -7,7 +7,6 @@
 #include <nana/gui/widgets/panel.hpp>
 #include <nana/gui/widgets/label.hpp>
 #include <nana/gui/widgets/checkbox.hpp>
-#include <nana/gui/widgets/combox.hpp>
 #include <nana/gui/widgets/textbox.hpp>
 #include <nana/gui/widgets/skeletons/text_editor.hpp>
 #include <nana/gui/widgets/listbox.hpp>
@@ -32,6 +31,18 @@ using namespace nana;
 #define SS(s) std::string(s)
 
 #define STEP_LEN 2048
+
+#ifndef QEMU_PATH
+#define QEMU_PATH "/home/olof/play/calib/build"
+#endif
+
+#ifndef QEMU_MACHINE
+#define QEMU_MACHINE "esp32"
+#endif
+
+#ifndef QEMU_FLASH_FILE
+#define QEMU_FLASH_FILE "esp32flash.bin"
+#endif
 
 std::vector<std::string> gFlashFiles;
 std::vector<int> gFlashOffsets;
@@ -299,15 +310,14 @@ class qemu_settings_form
 public:
 	qemu_settings_form();
 
-	nana::combox   choice_;
-	nana::label    label_;
-	nana::checkbox chk_;
-	nana::button run_;
-	nana::button cancel_;
-
-private:
-	void click_something(const nana::arg_click& ei);
-
+	nana::checkbox chk_debugger_;
+	nana::checkbox chk_display_;
+	nana::checkbox chk_wifi_;
+	nana::checkbox chk_serial_;
+	nana::textbox  txt_extra_;
+	nana::label    lbl_extra_;
+	nana::button   run_;
+	nana::button   cancel_;
 };
 
 std::unique_ptr<qemu_settings_form>  gSettings;
@@ -315,94 +325,96 @@ std::unique_ptr<qemu_settings_form>  gSettings;
 void run_qemu();
 
 qemu_settings_form::qemu_settings_form()
-	: nana::form(nana::API::make_center(400, 150))
+	: nana::form(nana::API::make_center(450, 250))
 {
-	chk_.create(*this, nana::rectangle(10, 10, 200, 30));
-	chk_.caption("wait for debugger");
+	this->caption("QEMU Settings");
 
-	choice_.create(*this, nana::rectangle(10, 40, 200, 30));
+	chk_debugger_.create(*this, nana::rectangle(10, 10, 200, 25));
+	chk_debugger_.caption("Wait for debugger (-S)");
 
-	choice_.push_back("Espressif qemu");
-	choice_.push_back("Ebi qemu");
-	choice_.push_back("Esp32s2 qemu");
-	choice_.option(0);
+	chk_display_.create(*this, nana::rectangle(10, 40, 200, 25));
+	chk_display_.caption("Display window");
+	chk_display_.check(true);
 
-	run_.create(*this, nana::rectangle(320, 40, 50, 20));
+	chk_wifi_.create(*this, nana::rectangle(10, 70, 200, 25));
+	chk_wifi_.caption("WiFi NIC");
+	chk_wifi_.check(true);
+
+	chk_serial_.create(*this, nana::rectangle(10, 100, 200, 25));
+	chk_serial_.caption("Serial to stdio");
+	chk_serial_.check(true);
+
+	lbl_extra_.create(*this, nana::rectangle(10, 135, 80, 20));
+	lbl_extra_.caption("Extra args:");
+
+	txt_extra_.create(*this, nana::rectangle(90, 133, 250, 25));
+
+	run_.create(*this, nana::rectangle(370, 40, 60, 25));
 	run_.caption("Run");
 	run_.events().click([]() {
 		run_qemu();
 		});
 
-
-	cancel_.create(*this, nana::rectangle(320, 100, 50, 20));
+	cancel_.create(*this, nana::rectangle(370, 100, 60, 25));
 	cancel_.caption("Cancel");
-	
+
 	cancel_.events().click([]() {
 		gSettings->hide();
 		});
 
 	this->events().unload([](const arg_unload& arg) {
-		//arg.cancel = true;
 		gSettings.reset(nullptr);
-		//gSettings->hide();
 	});
-
-	/*
-	checkbox ckbox{ fm, rectangle{10, 10, 200, 30} };
-	ckbox.caption("Checkbox");
-	ckbox.events().click([&] {
-		std::cout << "The checkbox is " << (ckbox.checked() ? "checked" : "unchecked") << std::endl;
-		});
-		*/
 }
 
 
 void run_qemu()
 {
-	static bool run_with_debugger = false;
-	static int run_option = 0;
-	std::string launch;
+	static bool opt_debugger = false;
+	static bool opt_display = true;
+	static bool opt_wifi = true;
+	static bool opt_serial = true;
+	static std::string opt_extra;
 
-	// Remember settings if dialog is destroyed
 	if (gSettings) {
-		if (gSettings->chk_.checked()) {
-			run_with_debugger = true;
-		}
-		else {
-			run_with_debugger = false;
-		}
-		run_option = gSettings->choice_.option();
+		opt_debugger = gSettings->chk_debugger_.checked();
+		opt_display = gSettings->chk_display_.checked();
+		opt_wifi = gSettings->chk_wifi_.checked();
+		opt_serial = gSettings->chk_serial_.checked();
+		opt_extra = gSettings->txt_extra_.text();
 	}
 
-	//std::system("pwd"); 
-	switch (run_option) {
-		case 0:
-			launch = "~/qemu_espressif/xtensa-softmmu/qemu-system-xtensa -nographic -s \
-    -machine esp32 \
-    -drive file=" + file_to_load + ",if=mtd,format=raw ";
-			break;
-		case 1: {
-			//std::system(");
-			std::string copy_file = "cp " + file_to_load + " ~/qemu_esp32/";
-			//std::system(copy_file.cstr());
-			std::cout << copy_file << std::endl;
-			launch = "~/qemu_esp32/xtensa-softmmu/qemu-system-xtensa -nographic -s  -M esp32 > io.txt ";
-			}
-			break;
-		case 2:
-			launch = "~/qemu_esp32s2/xtensa-softmmu/qemu-system-xtensa -nographic -s \
-			-machine esp32 \
-			-drive file=" + file_to_load + ",if=mtd,format=raw ";
-		break;
-	}
+	const char *flash = file_to_load.empty() ? QEMU_FLASH_FILE : file_to_load.c_str();
 
-	if (run_with_debugger) {
-   	   launch += " -S ";
-	}
+	std::string cmd = std::string(QEMU_PATH) + "/qemu-system-xtensa"
+		" -machine " + QEMU_MACHINE +
+		" -drive file=" + flash + ",if=mtd,format=raw"
+		" -parallel none"
+		" -monitor none"
+		" -global driver=timer.esp32.timg,property=wdt_disable,value=true"
+		" -serial stdio";
 
-	launch += " &";
-	std::cout << launch << std::endl;
-	std::system(launch.c_str());
+	if (opt_display)
+		cmd += " -display default,show-cursor=on";
+	else
+		cmd += " -nographic";
+
+	if (opt_wifi)
+		cmd += " -nic user,model=esp32_wifi,net=192.168.4.0/24,hostfwd=tcp::16555-192.168.4.1:80";
+
+	if (!opt_serial)
+		cmd.replace(cmd.find(" -serial stdio"), 14, "");
+
+	if (opt_debugger)
+		cmd += " -S";
+
+	if (!opt_extra.empty())
+		cmd += " " + opt_extra;
+
+	cmd += " 2> log.txt &";
+
+	std::cout << cmd << std::endl;
+	std::system(cmd.c_str());
 }
 
 void stop_qemu() {
