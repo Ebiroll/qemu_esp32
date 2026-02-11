@@ -506,7 +506,7 @@ void run_qemu()
 	if (!opt_extra.empty())
 		cmd += " " + opt_extra;
 
-	cmd += " 2> log.txt &";
+	cmd += " 2> log.txt ";
 
 	std::cout << cmd << std::endl;
 	std::system(cmd.c_str());
@@ -582,6 +582,10 @@ int main(int argc, char *argv[])
 	panel<true> line(fm);
 	textbox tbox(fm);
 
+	API::window_cursor(fm, nana::cursor::arrow);
+	API::window_cursor(overview, nana::cursor::hand);
+	API::window_cursor(line, nana::cursor::arrow);
+
 	if (!file_to_load.empty()) {
 		reloadFile();
 		if (!buffer.empty()) {
@@ -629,8 +633,8 @@ int main(int argc, char *argv[])
 		API::refresh_window(overview);
 	});
 
-    inputbox ibox(fm, "Goto adress.", "title");
-    inputbox::integer integer{"goto", 0, 0, 1024*1024*4, 512};
+    inputbox ibox(fm, "Goto address (hex: 0x1000, decimal: 4096)", "Goto");
+    inputbox::text goto_addr{"Address", "0xf000"};
 
 	tbox.events().key_char([&](const nana::arg_keyboard& _arg) {
 		if ('n' == _arg.key)
@@ -663,10 +667,9 @@ int main(int argc, char *argv[])
 		}
 		if ('g' == _arg.key)
 		{
-
-			if (ibox.show(integer)){
-				 auto n = integer.value();
-				 gOffset= n;
+			if (ibox.show(goto_addr)){
+				 auto s = goto_addr.value();
+				 gOffset = strtol(s.c_str(), NULL, 0);
 			}
 			setData(tbox);
 			_arg.ignore = true;
