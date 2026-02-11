@@ -25,9 +25,20 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(nana)
 
+# ---- QEMU options ----
+set(QEMU_PATH "/home/olof/play/calib/build" CACHE STRING "Path to qemu build directory")
+set(QEMU_MACHINE "esp32" CACHE STRING "QEMU machine type (esp32, esp32s2, esp32s3)")
+set(QEMU_FLASH_FILE "esp32flash.bin" CACHE STRING "Default flash file name")
+
 # ---- Your apps ----
 add_executable(hdiff
     hdiff.cpp
+)
+
+target_compile_definitions(hdiff PRIVATE
+    QEMU_PATH="${QEMU_PATH}"
+    QEMU_MACHINE="${QEMU_MACHINE}"
+    QEMU_FLASH_FILE="${QEMU_FLASH_FILE}"
 )
 
 target_link_libraries(hdiff PRIVATE

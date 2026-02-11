@@ -28,6 +28,9 @@
 
 using namespace nana;
 
+#include <cstring>
+#include <cinttypes>
+
 #define SS(s) std::string(s)
 
 #define STEP_LEN 2048
@@ -304,6 +307,98 @@ void reloadFile() {
 	return;
 }
 
+// ESP32 partition table entry (32 bytes)
+struct esp_partition_entry {
+	uint16_t magic;      // 0x50AA
+	uint8_t  type;
+	uint8_t  subtype;
+	uint32_t offset;
+	uint32_t size;
+	char     label[16];
+	uint32_t flags;
+} __attribute__((packed));
+
+static const char* partition_type_str(uint8_t type) {
+	switch (type) {
+		case 0x00: return "app";
+		case 0x01: return "data";
+		default:   return "unknown";
+	}
+}
+
+static const char* partition_subtype_str(uint8_t type, uint8_t subtype) {
+	if (type == 0x00) { // app
+		switch (subtype) {
+			case 0x00: return "factory";
+			case 0x20: return "test";
+			default:
+				if ((subtype & 0xF0) == 0x10) return "ota";
+				return "unknown";
+		}
+	} else if (type == 0x01) { // data
+		switch (subtype) {
+			case 0x00: return "ota";
+			case 0x01: return "phy";
+			case 0x02: return "nvs";
+			case 0x03: return "coredump";
+			case 0x04: return "nvs_keys";
+			case 0x05: return "efuse";
+			case 0x80: return "esphttpd";
+			case 0x81: return "fat";
+			case 0x82: return "spiffs";
+			default:   return "unknown";
+		}
+	}
+	return "unknown";
+}
+
+void add_listbox_from_flash(listbox& lsbox, unsigned int table_offset) {
+	lsbox.append_header("Name");
+	lsbox.append_header("Type");
+	lsbox.append_header("SubType");
+	lsbox.append_header("Offset");
+	lsbox.append_header("Size");
+
+	// Always add bootloader and partition table entries
+	char pt_off_str[16];
+	snprintf(pt_off_str, sizeof(pt_off_str), "0x%x", table_offset);
+	lsbox.at(0).append({ SS("bootloader"), SS("app"), SS("boot"), SS("0x1000"), SS("0x7000") });
+	lsbox.at(0).append({ SS("partition_table"), SS(""), SS(""), SS(pt_off_str), SS("0x1000") });
+
+	if (table_offset + sizeof(esp_partition_entry) > buffer.size()) {
+		std::cerr << "Partition table offset 0x" << std::hex << table_offset << " beyond file size" << std::endl;
+		return;
+	}
+
+	for (int i = 0; i < 96; i++) {
+		size_t pos = table_offset + i * sizeof(esp_partition_entry);
+		if (pos + sizeof(esp_partition_entry) > buffer.size()) break;
+
+		const esp_partition_entry *e = reinterpret_cast<const esp_partition_entry*>(&buffer[pos]);
+
+		// End of table: magic 0xEBEB (MD5) or not 0x50AA
+		if (e->magic == 0xEBEB || e->magic != 0x50AA) break;
+
+		char off_str[16], size_str[16];
+		snprintf(off_str, sizeof(off_str), "0x%x", e->offset);
+		snprintf(size_str, sizeof(size_str), "0x%x", e->size);
+
+		// Ensure label is null-terminated
+		char label[17] = {};
+		memcpy(label, e->label, 16);
+
+		lsbox.at(0).append({
+			SS(label),
+			SS(partition_type_str(e->type)),
+			SS(partition_subtype_str(e->type, e->subtype)),
+			SS(off_str),
+			SS(size_str)
+		});
+
+		gFlashOffsets.push_back(e->offset);
+	}
+}
+
 class qemu_settings_form
 	: public nana::form
 {
@@ -453,18 +548,26 @@ int main(int argc, char *argv[])
 	using namespace nana;
 	bool disable_draw = false;
 
-	std::string csv_file = "qemu_partitions.csv";
+	std::string csv_file;
+	int partition_table_offset = -1;
 
 	for (int i = 1; i < argc; i++) {
 		if (std::string(argv[i]) == "-p" && i + 1 < argc) {
 			csv_file = argv[++i];
+		} else if (std::string(argv[i]) == "-t" && i + 1 < argc) {
+			partition_table_offset = strtol(argv[++i], NULL, 0);
 		} else {
 			file_to_load = argv[i];
 		}
 	}
 
+	// Default: parse partition table from flash at 0x8000
+	if (csv_file.empty() && partition_table_offset < 0) {
+		partition_table_offset = 0x8000;
+	}
+
 	if (file_to_load.empty()) {
-		printf("Usage %s [file1] -p qemu_partition.csv\n", argv[0]);
+		printf("Usage: %s [flash_file] [-t partition_offset] [-p partitions.csv]\n", argv[0]);
 		file_to_load = load_file_dialog();
 	}
 
@@ -474,7 +577,8 @@ int main(int argc, char *argv[])
 		"<<flash_btn><qemu_btn><stop_btn> weight=4%>"
 		"<<line weight=40><marginr=20 width=90% tbox>>");
 
-	//Define a panel widget to draw line numbers.
+	//Define panel widgets for overview bar and line numbers.
+	panel<true> overview(fm);
 	panel<true> line(fm);
 	textbox tbox(fm);
 
@@ -484,26 +588,31 @@ int main(int argc, char *argv[])
 			setData(tbox);
 		}
 	}
-	drawing dw(fm);
-	dw.draw([&](paint::graphics& graph)
+	overview.drawing([&](paint::graphics& graph)
 	{
+		graph.rectangle(false, colors::black);
 		int pos = 0;
-		for (int i = 0; i < buffer.size() && pos < 1024; i+=STEP_LEN) {
+		for (size_t i = 0; i < buffer.size() && pos < (int)graph.width(); i+=STEP_LEN) {
 			if ((buffer[i]!=0xff) && (buffer[i]!=0x0)) {
-				graph.line(point(pos, 0), point(pos, 20), colors::blue);
+				graph.line(point(pos, 0), point(pos, graph.height()), colors::blue);
 			} else if (buffer[i]==0x0) {
-				graph.line(point(pos, 0), point(pos, 20), colors::green);
+				graph.line(point(pos, 0), point(pos, graph.height()), colors::green);
 			} else {
-				graph.line(point(pos, 0), point(pos, 20), colors::white);
+				graph.line(point(pos, 0), point(pos, graph.height()), colors::white);
 			}
 			pos++;
 		}
-		graph.rectangle(rectangle{(int) (gOffset /STEP_LEN), 0, 4, 20 }, true, colors::red);
-
+		graph.rectangle(rectangle{(int)(gOffset / STEP_LEN), 0, 4, (unsigned)graph.height()}, true, colors::red);
 	});
 
-	listbox lsbox(fm); // , rectangle{ 10, 10, 80, 100 }
-	add_listbox_items(lsbox, csv_file);
+	listbox lsbox(fm);
+	if (partition_table_offset >= 0 && !buffer.empty()) {
+		add_listbox_from_flash(lsbox, partition_table_offset);
+	} else if (!csv_file.empty()) {
+		add_listbox_items(lsbox, csv_file);
+	} else {
+		add_listbox_items(lsbox, "qemu_partitions.csv");
+	}
 
 	lsbox.events().selected([&](const nana::arg_listbox &event) {
 		//API::refresh_window(line);
@@ -517,7 +626,7 @@ int main(int argc, char *argv[])
 			//tbox.set_keywords("test", false, true, { "password", "ssid", "ESP_OK" });
 			//tbox.caret_pos(upoint(0, 10));
 		}
-		dw.update();
+		API::refresh_window(overview);
 	});
 
     inputbox ibox(fm, "Goto adress.", "title");
@@ -564,30 +673,26 @@ int main(int argc, char *argv[])
 		}
 	});
 
-	fm.events().click([&](const nana::arg_click& a_m)
+	overview.events().mouse_down([&](const nana::arg_mouse& a_m)
 		{
 			is_click = true;
+			gOffset = a_m.pos.x * STEP_LEN;
+			setData(tbox);
+			API::refresh_window(overview);
 		});
 
-	fm.events().mouse_down([&]()
-		{
-			is_click = true;
-		});
-
-	fm.events().mouse_up([&]()
+	overview.events().mouse_up([&]()
 		{
 			is_click = false;
 		});
 
-	fm.events().mouse_move([&](const nana::arg_mouse& a_m)
+	overview.events().mouse_move([&](const nana::arg_mouse& a_m)
 		{
-			//std::cout << a_m.pos.x << "\n";
 			if (is_click) {
 				gOffset = a_m.pos.x * STEP_LEN;
 				setData(tbox);
-				dw.update();
+				API::refresh_window(overview);
 			}
-			nana::API::refresh_window(fm);
 		});
 
 	tbox.typeface(nana::paint::font("monospace", 10, true));
@@ -604,7 +709,7 @@ int main(int argc, char *argv[])
 	//fm.collocate();
 
 	//Draw the line numbers
-	drawing{ line }.draw([&](paint::graphics& graph)
+	line.drawing([&](paint::graphics& graph)
 	{
 		if (disable_draw)
 			return;
@@ -677,7 +782,7 @@ int main(int argc, char *argv[])
 	btn3.events().click(stop_qemu);
 
 
-	//fm["dw"] << dw;
+	fm["dw"] << overview;
 	fm["lsbox"] << lsbox;
 	fm["flash_btn"] << btn;
 	fm["qemu_btn"] << btn2;
