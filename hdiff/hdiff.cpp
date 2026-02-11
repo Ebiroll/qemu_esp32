@@ -191,15 +191,20 @@ std::string log_dump(const void*addr, int len, int linelen)
 }
 
 std::string load_file_dialog() {
-	filebox fb(0, true);
+	// Create a temporary hidden owner form — nana's filebox needs a valid parent window
+	form owner;
+	owner.show();
+	filebox fb(owner, true);
 	fb.add_filter(("Text File"), ("*.bin"));
 	fb.add_filter(("All Files"), ("*.*"));
 	auto files = fb();
+	owner.close();
 	if (!files.empty())
 	{
 		std::cout << "Selected file:  " << files.front().string() << std::endl;
+		return files.front().string();
 	}
-	return(files.front().string());
+	return {};
 }
 
 void merge_flash(const char *binfile,const char *flashfile,int flash_pos)
@@ -261,11 +266,25 @@ void merge_flash(const char *binfile,const char *flashfile,int flash_pos)
 }
 
 void reloadFile() {
-	std::streamsize size;
+	if (file_to_load.empty()) {
+		std::cerr << "No file specified" << std::endl;
+		buffer.clear();
+		return;
+	}
 	std::ifstream file(file_to_load.c_str(), std::ios::binary | std::ios::ate);
-	size = file.tellg();
+	if (!file.is_open()) {
+		std::cerr << "Cannot open file: " << file_to_load << std::endl;
+		buffer.clear();
+		return;
+	}
+	std::streamsize size = file.tellg();
+	if (size <= 0 || static_cast<size_t>(size) > 64 * 1024 * 1024) {
+		std::cerr << "Empty or invalid file (size=" << size << "): " << file_to_load << std::endl;
+		buffer.clear();
+		return;
+	}
 	file.seekg(0, std::ios::beg);
-	buffer.resize(size);
+	buffer.resize(static_cast<size_t>(size));
 
 	if (file.read((char *)&*buffer.begin(), size))
 	{
@@ -406,8 +425,9 @@ void qemu_flash()
 
 
 void setData(textbox &tbox) {
+	if (buffer.empty() || gOffset >= buffer.size()) return;
 	unsigned char *ptr = &*buffer.begin() + gOffset;
-	std::string new_text = log_dump(ptr, buffer.size(), 16);
+	std::string new_text = log_dump(ptr, buffer.size() - gOffset, 16);
 	tbox.hide();
 	tbox.reset(new_text, false);
 	// Force redraw of line, (Should be done differently)
@@ -421,29 +441,36 @@ int main(int argc, char *argv[])
 	using namespace nana;
 	bool disable_draw = false;
 
+	std::string csv_file = "qemu_partitions.csv";
+
+	for (int i = 1; i < argc; i++) {
+		if (std::string(argv[i]) == "-p" && i + 1 < argc) {
+			csv_file = argv[++i];
+		} else {
+			file_to_load = argv[i];
+		}
+	}
+
+	if (file_to_load.empty()) {
+		printf("Usage %s [file1] -p qemu_partition.csv\n", argv[0]);
+		file_to_load = load_file_dialog();
+	}
+
 	form fm(API::make_center(860, 800), nana::appear::decorate<nana::appear::sizable>());
 	fm.div("vert <dw weight=5%>"
 		"<lsbox weight=20%>"
 		"<<flash_btn><qemu_btn><stop_btn> weight=4%>"
 		"<<line weight=40><marginr=20 width=90% tbox>>");
-	//form fm(API::make_center(800, 800),nana::appear::decorate<nana::appear::sizable>());
-	//fm.div("horizontal <lsbox>"
-	//       "margin=5 <line weight=15><marginr=100 weight=30 tbox>");
 
 	//Define a panel widget to draw line numbers.
 	panel<true> line(fm);
 	textbox tbox(fm);
 
-	if (argc == 1) {
-		printf("Usage %s <file1> -p qemu_partition.csv\n", argv[0]);
-		file_to_load= load_file_dialog();
-	} else {
-		file_to_load = std::string(argv[1]);
-	}
-
-	if (file_to_load.size() > 1) {
+	if (!file_to_load.empty()) {
 		reloadFile();
-		setData(tbox);
+		if (!buffer.empty()) {
+			setData(tbox);
+		}
 	}
 	drawing dw(fm);
 	dw.draw([&](paint::graphics& graph)
@@ -464,7 +491,7 @@ int main(int argc, char *argv[])
 	});
 
 	listbox lsbox(fm); // , rectangle{ 10, 10, 80, 100 }
-	add_listbox_items(lsbox,"qemu_partitions.csv");
+	add_listbox_items(lsbox, csv_file);
 
 	lsbox.events().selected([&](const nana::arg_listbox &event) {
 		//API::refresh_window(line);
